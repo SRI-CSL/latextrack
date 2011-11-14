@@ -5,7 +5,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>com.sri.ltc</groupId>
-    <artifactId>LTC2</artifactId>
+    <artifactId>LTC</artifactId>
     <version>0.9</version>
     <name>LaTeX Track Changes</name>
     <description>
