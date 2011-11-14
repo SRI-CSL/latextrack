@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<project name="LaTeX Track Changes">
+
+    <body>
+        <links>
+            <item name="SRI" href="http://www.sri.com/" />
+        </links>
+
+        <menu name="LTC">
+            <item name="Introduction" href="index.html"/>
+        </menu>
+        <menu ref="reports"/>
+
+    </body>
+</project>
