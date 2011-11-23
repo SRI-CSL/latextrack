@@ -21,7 +21,7 @@ import java.util.Properties;
 public final class LogConfiguration extends Properties {
 
     public LogConfiguration() throws IOException {
-        load(LogConfiguration.class.getResourceAsStream("/src/main/resources/com/sri/ltc/logging/logging.properties"));
+        load(LogConfiguration.class.getResourceAsStream("/com/sri/ltc/logging/logging.properties"));
     }
 
     public InputStream asInputStream() throws IOException {

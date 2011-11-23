@@ -1,0 +1,47 @@
+README for LTC with Maven 3
+===========================
+
+Requirements
+------------
+
+- Java 6 or higher
+- git 1.7.2.2 or higher
+- Maven 3
+- JGraphT 0.8.2 in local Maven repository:
+
+For the time being, you will have to install the supplied JGraphT library into your local Maven repository by hand:
+
+$> mvn install:install-file -Dfile=lib/jgrapht-jdk1.6.jar \
+   -DgroupId=org.jgrapht -DartifactId=jgrapht-jdk1.6 -Dversion=0.8.2 -Dpackaging=jar
+
+which should produce a little bit of output containing "BUILD SUCCESS".  This step has to be done only once.
+
+
+Developing
+----------
+
+Common Maven goals are:
+
+$> mvn clean
+$> mvn compile
+$> mvn test
+
+
+Running the server
+------------------
+
+$> mvn clean  [if needed]
+$> mvn package appassembler:assemble
+$> sh ltc-server/target/appassembler/bin/ltc -h
+usage: java -cp ... com.sri.ltc.server.LTC [options...] with
+ -h       : display usage and exit
+[...]
+
+
+Running the Java editor
+-----------------------
+
+$> mvn clean  [if needed]
+$> mvn package appassembler:assemble
+$> sh ltc-editor/target/appassembler/bin/editor -h
+[...]
