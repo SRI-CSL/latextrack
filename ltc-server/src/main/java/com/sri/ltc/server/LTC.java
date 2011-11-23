@@ -17,6 +17,7 @@ import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
 
+import javax.servlet.ServletException;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.util.logging.Level;
@@ -71,19 +72,19 @@ public final class LTC {
             logger.log(Level.SEVERE, "Cannot obtain GIT executable", e);
         }
 
-//        try {
-//            // set up RPC server - this will enable us to receive XML-RPC calls
-//            Server rpcserver = new Server(
-//                    LTCserverInterface.class,
-//                    LTCserverImpl.class,
-//                    LTCOptions.port);
-//            rpcserver.start();
-//            logger.info("Started RPC server on port "+ LTCOptions.port+".");
-//        } catch (ServletException e) {
-//            logger.log(Level.SEVERE, "Cannot start RPC server", e);
-//        } catch (IOException e) {
-//            logger.log(Level.SEVERE, "Cannot start RPC server", e);
-//        }
+        try {
+            // set up RPC server - this will enable us to receive XML-RPC calls
+            Server rpcserver = new Server(
+                    LTCserverInterface.class,
+                    LTCserverImpl.class,
+                    LTCOptions.port);
+            rpcserver.start();
+            logger.info("Started RPC server on port "+ LTCOptions.port+".");
+        } catch (ServletException e) {
+            logger.log(Level.SEVERE, "Cannot start RPC server", e);
+        } catch (IOException e) {
+            logger.log(Level.SEVERE, "Cannot start RPC server", e);
+        }
     }
 
     private static void printUsage(PrintStream out, CmdLineParser parser) {
@@ -115,11 +116,12 @@ public final class LTC {
             logConfig.setProperty("java.util.logging.ConsoleHandler.level",options.consoleLogLevel.getName());
             logConfig.setProperty("java.util.logging.FileHandler.level",options.consoleLogLevel.getName());
             LogManager.getLogManager().readConfiguration(logConfig.asInputStream());
+            logger.config("Logging configured to level " + options.consoleLogLevel.getName());
         } catch (IOException e) {
             logger.log(Level.SEVERE, "Cannot configure logging", e);
         }
 
-        LTC.getInstance(); // start up server
+        LTC.getInstance(); // start up server (if not already running)
     }
 
     static class LTCOptions {
@@ -129,7 +131,7 @@ public final class LTC {
         @Option(name="-h",usage="display usage and exit")
         boolean displayHelp = false;
 
-//        @Option(name="-p",usage="port on localhost used for XML-RPC")
-//        static int port = LTCserverInterface.PORT;
+        @Option(name="-p",usage="port on localhost used for XML-RPC")
+        static int port = LTCserverInterface.PORT;
     }
 }

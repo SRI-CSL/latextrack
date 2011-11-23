@@ -6,18 +6,17 @@
  *
  * Copyright 2009-2010, SRI International.
  */
-package edu.nyu.cs.javagit;
+package com.sri.ltc;
 
 import com.sri.ltc.server.LTC;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Test;
+import org.junit.*;
 
 /**
  * @author linda
  */
 public final class TestLTCserver {
+
+    private LTC ltc = LTC.getInstance();
 
     @Before
     public void newline() {
@@ -29,14 +28,17 @@ public final class TestLTCserver {
         LTC.main(new String[] {"-h"});
     }
 
-    @Ignore
+    @Test
     public void mainLevel() {
-        LTC.main(new String[] {"-l","FINE"});
+        for (String level : new String[]{"FINE", "INFO"}) {
+            System.out.println("Setting log level to "+level+":");
+            LTC.main(new String[] {"-l",level});
+            // TODO: assert that no log output if level == INFO
+        }
     }
 
     @Test
     public void instance() {
-        LTC ltc = LTC.getInstance();
         Assert.assertEquals(ltc, LTC.getInstance());
     }
 }
