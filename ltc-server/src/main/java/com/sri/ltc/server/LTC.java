@@ -60,11 +60,19 @@ public final class LTC {
 
     // --- end of singleton pattern ---------------------------------------- //
 
+    static {
+        try {
+            LogManager.getLogManager().readConfiguration(new LogConfiguration().asInputStream());
+            Logger.getLogger(LTC.class.getName()).config("Default logging configuration complete");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
     private static final Logger logger = Logger.getLogger(LTC.class.getName());
 
     private void init() {
         // TODO: test for Java version 6 or higher (graph algorithms)
-        
+
         try {
             // test for git
             logger.info("Git version: "+ JavaGitConfiguration.getGitVersion());
