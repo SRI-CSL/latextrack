@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<project name="LaTeX Track Changes">
+
+    <bannerRight>
+        <name>SRI</name>
+        <src>images/sri-logo.jpg</src>
+        <href>http://www.sri.com</href>
+    </bannerRight>
+
+    <skin>
+        <groupId>org.apache.maven.skins</groupId>
+        <artifactId>maven-fluido-skin</artifactId>
+        <version>1.0</version>
+    </skin>
+
+    <poweredBy>
+        <logo name="git" href="http://git-scm.com/"
+              img="images/git-logo.png"/>
+        <logo name="Maven" href="http://maven.apache.org/"
+              img="http://maven.apache.org/images/logos/maven-feather.png"/>
+    </poweredBy>
+
+    <body>
+        <menu name="LTC">
+            <item name="Introduction" href="index.html"/>
+            <item name="Download" href="download.html"/>
+            <item name="Usage" href="usage.html"/>
+        </menu>
+        <menu ref="reports"/>
+
+    </body>
+</project>

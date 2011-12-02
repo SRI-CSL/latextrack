@@ -1,0 +1,42 @@
+    ------
+    Usage
+    ------
+    Linda Briesemeister
+    ------
+    ------
+
+Usage
+
+  LTC consists of a base system running under Java and the LaTeX editor specific user interface.  We provide a Java
+  application called LTC Editor that contains the base system as well as a simple text editor as the user interface.
+  The main usage, although, is to run the base system as a server and have an editor-specific LTC implementation
+  connect to the base system via XML-RPC on the localhost.  Our first editor-specific implementation is the Emacs
+  <<<ltc-mode>>>, which is a minor mode to the <<<latex-mode>>>.
+
+  Future implementations for popular LaTeX editors such as TeXShop and TeXWorks are planned or could be contributed by
+  the community using the API of the base system.
+
+Quick Start
+
+  To run the base system, execute the downloaded JAR file in a terminal (if you want to see logging output) or otherwise
+  (using a double-click under Mac OS X, for example):
+
++----
+$> java -jar LTC-all-${project.version}.jar
+Thu Dec 01 13:57:23 CST 2011 | CONFIG: 	Default logging configuration complete
+Thu Dec 01 13:57:23 CST 2011 | CONFIG: 	Logging configured to level CONFIG
+Thu Dec 01 13:57:23 CST 2011 | INFO: 	Git version: 1.7.3.3
+--log4j: 01 Dec 2011 13:57:23,867 [main] INFO  org.apache.xmlrpc.webserver.XmlRpcServlet - init
+Thu Dec 01 13:57:23 CST 2011 | INFO: 	Started RPC server on port 7777.
+
++----
+
+Manual
+
+  Available in these formats:
+
+  * {{{./manual/manual.pdf}PDF}}
+
+  * {{{./html_singlepage/manual/manual.html}HTML on a single page}}
+
+  * {{{./html_multipage/manual/manual.html}HTML on multiple pages}}

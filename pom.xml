@@ -7,12 +7,6 @@
     <groupId>com.sri.ltc</groupId>
     <artifactId>LTC</artifactId>
     <version>0.9-SNAPSHOT</version>
-    <!--<name>LTC Parent</name>-->
-    <description>
-        LaTeX Track Changes (LTC) provides a system to view changes made over time to a LaTeX document that is stored
-        under git (a distributed source code management system).
-    </description>
-    <url>https://wiki.sri.com/display/LTC</url>
     <packaging>pom</packaging>
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -24,6 +18,30 @@
         <module>ltc-server</module>
         <module>ltc-editor</module>
     </modules>
+
+    <organization>
+        <name>SRI International</name>
+        <url>http://www.sri.com</url>
+    </organization>
+
+    <developers>
+        <developer>
+            <name>Linda Briesemeister</name>
+            <email>linda.briesemeister at sri dot com</email>
+            <organization>SRI International</organization>
+            <organizationUrl>http://www.sri.com</organizationUrl>
+        </developer>
+    </developers>
+
+    <pluginRepositories>
+        <pluginRepository>
+            <id>maven-latex-plugin-repo</id>
+            <url>http://akquinet.github.com/maven-latex-plugin/maven2/</url>
+            <releases>
+                <enabled>true</enabled>
+            </releases>
+        </pluginRepository>
+    </pluginRepositories>
 
     <dependencies>
         <dependency>
@@ -47,45 +65,6 @@
                 <configuration>
                     <source>1.6</source>
                     <target>1.6</target>
-                </configuration>
-            </plugin>
-            <plugin>
-                <artifactId>maven-site-plugin</artifactId>
-                <version>3.0-beta-3</version>
-                <configuration>
-                    <reportPlugins>
-                        <plugin>
-                            <groupId>org.apache.maven.plugins</groupId>
-                            <artifactId>maven-project-info-reports-plugin</artifactId>
-                            <version>2.4</version>
-                            <reports>
-                                <report>index</report>
-                                <report>project-team</report>
-                                <report>license</report>
-                                <report>dependencies</report>
-                                <!--<report>dependency-convergence</report>-->
-                                <!--<report>scm</report>-->
-                                <report>summary</report>
-                            </reports>
-                        </plugin>
-                        <!--<plugin>-->
-                            <!--<groupId>org.apache.maven.plugins</groupId>-->
-                            <!--<artifactId>maven-javadoc-plugin</artifactId>-->
-                            <!--<version>2.7</version>-->
-                            <!--<configuration>-->
-                                <!--<defaultAuthor>Linda Briesemeister</defaultAuthor>-->
-                                <!--<defaultVersion>${project.version}</defaultVersion>-->
-                                <!--<links>-->
-                                    <!--<link>http://download.oracle.com/javase/6/docs/api</link>-->
-                                <!--</links>-->
-                            <!--</configuration>-->
-                        <!--</plugin>-->
-                        <!--<plugin>-->
-                        <!--<groupId>org.apache.maven.plugins</groupId>-->
-                        <!--<artifactId>maven-checkstyle-plugin</artifactId>-->
-                        <!--<version>2.6</version>-->
-                        <!--</plugin>-->
-                    </reportPlugins>
                 </configuration>
             </plugin>
         </plugins>

@@ -1,0 +1,21 @@
+    ------
+    Download
+    ------
+    Linda Briesemeister
+    ------
+    ------
+
+Download LTC
+
+  The main system is packaged in {{{./downloads/LTC-all-${project.version}.jar}<<<LTC-all-${project.version}.jar>>>}}
+
+* System Requirements
+
+*---------------------------+------------------------------------+-----------------------+
+| <<Java>>                  | 1.6 or above                       | <<<$> java -version>>>
+*---------------------------+------------------------------------+-----------------------+
+| <<git>>                   | 1.7.2 or above                     | <<<$> git --version>>>
+*---------------------------+------------------------------------+-----------------------+
+| <<Emacs>>                 | 23 or above; no support for XEmacs | <<<$> emacs --version>>>
+| (if using <<<ltc-mode>>>) |                                    |
+*---------------------------+------------------------------------+-----------------------+

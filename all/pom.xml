@@ -15,7 +15,8 @@
     <artifactId>all</artifactId>
     <name>LaTeX Track Changes</name>
     <description>
-        Aggregation of LTC project for deployment.
+        LaTeX Track Changes (LTC) provides a system to view changes made over time to a LaTeX document that is stored
+        under git (a distributed source code management system).
     </description>
     <packaging>jar</packaging>
 
@@ -61,7 +62,105 @@
                 </executions>
                 <configuration>
                     <finalName>LTC-all-${project.version}</finalName>
-                    <!--<shadedArtifactAttached>true</shadedArtifactAttached>-->
+                </configuration>
+            </plugin>
+            <!-- a crude way of copying the shaded jar into the site's downloads folder: -->
+            <plugin>
+                <artifactId>maven-resources-plugin</artifactId>
+                <version>2.5</version>
+                <executions>
+                    <execution>
+                        <id>copy-shaded-jar</id>
+                        <!-- here the phase you need -->
+                        <phase>pre-integration-test</phase>
+                        <goals>
+                            <goal>copy-resources</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>${project.reporting.outputDirectory}/downloads</outputDirectory>
+                            <resources>
+                                <resource>
+                                    <directory>${project.build.directory}</directory>
+                                    <includes>
+                                        <include>LTC-all-${project.version}.jar</include>
+                                    </includes>
+                                </resource>
+                            </resources>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>de.akquinet.maven</groupId>
+                <artifactId>maven-latex-plugin</artifactId>
+                <version>1.1</version>
+                <inherited>false</inherited>
+                <executions>
+                    <!--<execution>-->
+                        <!--<phase>site</phase>-->
+                        <!--<goals>-->
+                            <!--<goal>latex</goal>-->
+                        <!--</goals>-->
+                    <!--</execution>-->
+                    <execution>
+                        <id>HTML multipage</id>
+                        <configuration>
+                            <settings>
+                                <cleanUp>true</cleanUp>
+                                <tempDirectory>m2latex/html_multipage</tempDirectory>
+                                <outputDirectory>html_multipage</outputDirectory>
+                                <tex4htCommandArgs>
+                                    <tex4htCommandArg>tex4ht,2</tex4htCommandArg>
+                                    <tex4htCommandArg></tex4htCommandArg>
+                                    <tex4htCommandArg></tex4htCommandArg>
+                                    <tex4htCommandArg>-interaction=nonstopmode --src-specials</tex4htCommandArg>
+                                </tex4htCommandArgs>
+                            </settings>
+                        </configuration>
+                        <phase>site</phase>
+                        <goals>
+                            <goal>tex4ht</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <artifactId>maven-site-plugin</artifactId>
+                <version>3.0-beta-3</version>
+                <configuration>
+                    <reportPlugins>
+                        <plugin>
+                            <groupId>org.apache.maven.plugins</groupId>
+                            <artifactId>maven-project-info-reports-plugin</artifactId>
+                            <version>2.4</version>
+                            <reports>
+                                <report>index</report>
+                                <report>project-team</report>
+                                <report>license</report>
+                                <report>dependencies</report>
+                                <!--<report>dependency-convergence</report>-->
+                                <!--<report>scm</report>-->
+                                <report>summary</report>
+                            </reports>
+                        </plugin>
+                        <!--<plugin>-->
+                        <!--<groupId>org.apache.maven.plugins</groupId>-->
+                        <!--<artifactId>maven-javadoc-plugin</artifactId>-->
+                        <!--<version>2.7</version>-->
+                        <!--<configuration>-->
+                        <!--<defaultAuthor>Linda Briesemeister</defaultAuthor>-->
+                        <!--<defaultVersion>${project.version}</defaultVersion>-->
+                        <!--<links>-->
+                        <!--<link>http://download.oracle.com/javase/6/docs/api</link>-->
+                        <!--</links>-->
+                        <!--</configuration>-->
+                        <!--</plugin>-->
+                        <!--<plugin>-->
+                        <!--<groupId>org.apache.maven.plugins</groupId>-->
+                        <!--<artifactId>maven-checkstyle-plugin</artifactId>-->
+                        <!--<version>2.6</version>-->
+                        <!--</plugin>-->
+                    </reportPlugins>
                 </configuration>
             </plugin>
         </plugins>

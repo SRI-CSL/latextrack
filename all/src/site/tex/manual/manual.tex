@@ -1,0 +1,60 @@
+\documentclass{report}
+
+% ----- useful packages
+\usepackage[letterpaper,verbose,pdftex]{geometry}
+\usepackage{graphicx} % for including figures
+%\usepackage{pgf,pgfarrows} % for portable graphics
+%\usepackage{amsmath} % align and other math constructs
+%\usepackage{amssymb} % math symbols
+%\usepackage{textcomp} % higher quality text symbols if using Times
+\usepackage{booktabs} % tables in publication quality
+\usepackage{fancyvrb,courier} % for more elaborate verbatim envs 
+                              % (and bold-face fonts)
+\usepackage[parfill]{parskip} % paragraphs begin with empty line rather than indent
+\usepackage{url} % for typesetting URL's
+%\usepackage[pdftex]{thumbpdf} % for thumbnails in PDF: run thumbpdf perlscript
+\usepackage{color}
+%\definecolor{mylinkcolor}{rgb}{0,0,0.5}
+\usepackage[%pdftex, % driver
+  hyperfootnotes=false, % if using "footnotes" package
+  colorlinks=false, % don't color links
+  bookmarks=true,bookmarksnumbered=true, % show numbered bookmarks
+  pdfsubject={},pdftitle={},pdfauthor={Linda Briesemeister} % document info
+]{hyperref} % more hyperlinks in PDF
+%\usepackage{pdfpages} % to include coverpage generated from Word
+
+% ----- title information
+\title{The \LaTeX{} Track Changes Manual}
+\author{%
+Linda Briesemeister\\
+\texttt{linda.briesemeister@sri.com}\\
+SRI International
+}
+\date{\today} 
+
+\begin{document}
+\maketitle
+%{\pagestyle{empty}\cleardoublepage} % uncomment for empty page after title
+
+\tableofcontents
+
+\chapter*{Acknowledgements and Disclaimer}
+
+\include{installation}
+\include{tutorial}
+
+\chapter{Using LTC}
+\include{emacs}
+\include{java}
+
+\include{bugs}
+
+\include{api}
+
+% ----- references 
+%
+\bibliographystyle{plain}
+\bibliography{ltc}
+%\addcontentsline{toc}{chapter}{Bibliography} 
+
+\end{document}     
