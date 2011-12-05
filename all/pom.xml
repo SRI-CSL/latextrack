@@ -107,10 +107,10 @@
                         <configuration>
                             <settings>
                                 <cleanUp>true</cleanUp>
-                                <tempDirectory>m2latex/html_multipage</tempDirectory>
+                                <tempDirectory>m2latex_multipage</tempDirectory>
                                 <outputDirectory>html_multipage</outputDirectory>
                                 <tex4htCommandArgs>
-                                    <tex4htCommandArg>tex4ht,2</tex4htCommandArg>
+                                    <tex4htCommandArg>manual,2</tex4htCommandArg>
                                     <tex4htCommandArg></tex4htCommandArg>
                                     <tex4htCommandArg></tex4htCommandArg>
                                     <tex4htCommandArg>-interaction=nonstopmode --src-specials</tex4htCommandArg>
