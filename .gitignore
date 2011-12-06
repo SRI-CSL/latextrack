@@ -2,4 +2,4 @@ target/
 */target/
 
 # /src/java/com/sri/ltc/latexdiff/
-#/src/java/com/sri/ltc/latexdiff/Lexer.java
+ltc-server/src/main/java/com/sri/ltc/latexdiff/Lexer.java

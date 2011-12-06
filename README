@@ -38,14 +38,20 @@ $> mvn package
 Running
 -------
 
-  a) Server
+
+a) Server
 
   After packaging or wherever you downloaded the JAR:
 
   $> java -jar LTC-all-<version>.jar
 
 
-  b) Java Editor
+b) Java Editor
 
   $> java -cp LTC-all-<version>.jar com.sri.ltc.viewer.GitViewer
 
+
+Testing
+-------
+
+TODO: write
