@@ -8,6 +8,7 @@
     <artifactId>LTC</artifactId>
     <version>0.9-SNAPSHOT</version>
     <packaging>pom</packaging>
+    <inceptionYear>2009</inceptionYear>
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <!--<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>-->
@@ -32,6 +33,15 @@
             <organizationUrl>http://www.sri.com</organizationUrl>
         </developer>
     </developers>
+
+    <licenses>
+        <license>
+            <name>GNU General Public License, version 3 (GPL-3.0)</name>
+            <url>http://www.gnu.org/licenses/gpl-3.0.html</url>
+            <distribution>manual</distribution>
+            <comments>Still looking for the right open-source license!</comments>
+        </license>
+    </licenses>
 
     <pluginRepositories>
         <pluginRepository>
