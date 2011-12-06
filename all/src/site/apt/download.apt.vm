@@ -7,7 +7,7 @@
 
 Download LTC
 
-  The main system is packaged in {{{./downloads/LTC-all-${project.version}.jar}<<<LTC-all-${project.version}.jar>>>}}
+  The whole system is packaged in {{{./downloads/LTC-all-${project.version}.jar}<<<LTC-all-${project.version}.jar>>>}}
 
 * System Requirements
 

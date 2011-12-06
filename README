@@ -26,22 +26,26 @@ $> mvn clean
 $> mvn compile
 $> mvn test
 
+To create the site (with a link to download the JAR):
 
-Running the server
-------------------
+$> mvn verify site
 
-$> mvn clean  [if needed]
-$> mvn package appassembler:assemble
-$> sh ltc-server/target/appassembler/bin/ltc -h
-usage: java -cp ... com.sri.ltc.server.LTC [options...] with
- -h       : display usage and exit
-[...]
+To create the distributable:
+
+$> mvn package
 
 
-Running the Java editor
------------------------
+Running
+-------
 
-$> mvn clean  [if needed]
-$> mvn package appassembler:assemble
-$> sh ltc-editor/target/appassembler/bin/editor -h
-[...]
+  a) Server
+
+  After packaging or wherever you downloaded the JAR:
+
+  $> java -jar LTC-all-<version>.jar
+
+
+  b) Java Editor
+
+  $> java -cp LTC-all-<version>.jar com.sri.ltc.viewer.GitViewer
+

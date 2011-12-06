@@ -34,6 +34,33 @@
         </developer>
     </developers>
 
+    <contributors>
+        <contributor>
+            <name>Peter Karp</name>
+            <email>pkarp at AI dot sri dot com</email>
+            <organization>SRI International</organization>
+            <organizationUrl>http://www.sri.com</organizationUrl>
+            <roles>
+                <role>project founder</role>
+            </roles>
+        </contributor>
+        <contributor>
+            <name>Grit Denker</name>
+            <email>grit.denker at sri dot com</email>
+            <organization>SRI International</organization>
+            <organizationUrl>http://www.sri.com</organizationUrl>
+            <roles>
+                <role>project leader</role>
+            </roles>
+        </contributor>
+        <contributor>
+            <name>Tomer Altman</name>
+            <email>taltman at AI dot sri dot com</email>
+            <organization>SRI International</organization>
+            <organizationUrl>http://www.sri.com</organizationUrl>
+        </contributor>
+    </contributors>
+
     <licenses>
         <license>
             <name>GNU General Public License, version 3 (GPL-3.0)</name>

@@ -35,8 +35,8 @@ Manual
 
   Available in these formats:
 
-  * {{{./manual/manual.pdf}PDF}}
+~~  * {{{./manual/manual.pdf}PDF}}
 
-  * {{{./html_singlepage/manual/manual.html}HTML on a single page}}
+~~  * {{{./html_singlepage/manual/manual.html}HTML on a single page}}
 
   * {{{./html_multipage/manual/manual.html}HTML on multiple pages}}
