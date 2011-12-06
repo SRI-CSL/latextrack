@@ -71,7 +71,6 @@
                 <executions>
                     <execution>
                         <id>copy-shaded-jar</id>
-                        <!-- here the phase you need -->
                         <phase>pre-integration-test</phase>
                         <goals>
                             <goal>copy-resources</goal>
@@ -84,6 +83,21 @@
                                     <includes>
                                         <include>LTC-all-${project.version}.jar</include>
                                     </includes>
+                                </resource>
+                            </resources>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>copy-emacs-files</id>
+                        <phase>pre-integration-test</phase>
+                        <goals>
+                            <goal>copy-resources</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>${project.reporting.outputDirectory}/downloads/emacs</outputDirectory>
+                            <resources>
+                                <resource>
+                                    <directory>../ltc-server/src/main/emacs</directory>
                                 </resource>
                             </resources>
                         </configuration>
