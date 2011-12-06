@@ -7,7 +7,7 @@
 
 Download LTC
 
-  The whole system is packaged in {{{./downloads/LTC-all-${project.version}.jar}}}
+  The whole system is packaged in {{{./downloads/LTC-all-${project.version}.jar}LTC-all-${project.version}.jar}}.
 
 * System Requirements
 
@@ -45,11 +45,11 @@ Download LTC
 
   We recommend to avoid adding a hook from <<<latex-mode>>> to <<<ltc-mode>>> as our mode requires the <<<latex-mode>>> to be fully executed before it works. The hooks are not guaranteed to be executed in particular order, so it is best to manually invoke LTC mode.
 
-  * {{{./downloads/emacs/xml-rpc.el}}}
+  * {{{./downloads/emacs/xml-rpc.el}xml-rpc.el}}
 
-  * {{{./downloads/emacs/versions.el}}}
+  * {{{./downloads/emacs/versions.el}versions.el}}
 
-  * {{{./downloads/emacs/ltc-mode.el}}}
+  * {{{./downloads/emacs/ltc-mode.el}ltc-mode.el}}
 
 ** Configuring and Invoking LTC Mode
 
