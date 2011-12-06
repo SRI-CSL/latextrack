@@ -29,6 +29,7 @@ $> mvn test
 To create the site (with a link to download the JAR):
 
 $> mvn verify site
+$> mvn clean verify site site:deploy
 
 To create the distributable:
 
