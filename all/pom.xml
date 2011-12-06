@@ -111,10 +111,10 @@
                 <inherited>false</inherited>
                 <executions>
                     <!--<execution>-->
-                        <!--<phase>site</phase>-->
-                        <!--<goals>-->
-                            <!--<goal>latex</goal>-->
-                        <!--</goals>-->
+                    <!--<phase>site</phase>-->
+                    <!--<goals>-->
+                    <!--<goal>latex</goal>-->
+                    <!--</goals>-->
                     <!--</execution>-->
                     <execution>
                         <id>HTML multipage</id>
