@@ -20,6 +20,11 @@
     </description>
     <packaging>jar</packaging>
 
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <ueber.jar>LTC-all-${project.version}</ueber.jar>
+    </properties>
+
     <dependencies>
         <dependency>
             <groupId>${project.groupId}</groupId>
@@ -35,19 +40,8 @@
 
     <build>
         <plugins>
-            <plugin>
-                <artifactId>maven-jar-plugin</artifactId>
-                <version>2.3.1</version>
-                <configuration>
-                    <finalName>${project.artifactId}-${project.version}-tmp</finalName>
-                    <archive>
-                        <manifest>
-                            <addClasspath>true</addClasspath>
-                            <mainClass>com.sri.ltc.server.LTC</mainClass>
-                        </manifest>
-                    </archive>
-                </configuration>
-            </plugin>
+
+            <!-- assemble ueber-jar with all dependencies during package phase -->
             <plugin>
                 <artifactId>maven-shade-plugin</artifactId>
                 <version>1.5</version>
@@ -61,10 +55,24 @@
                     </execution>
                 </executions>
                 <configuration>
-                    <finalName>LTC-all-${project.version}</finalName>
+                    <finalName>${ueber.jar}</finalName>
+                    <transformers>
+                        <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+                            <manifestEntries>
+                                <Main-Class>com.sri.ltc.server.LTC</Main-Class>
+                                <Specification-Title>${project.name}</Specification-Title>
+                                <Specification-Version>${project.version}</Specification-Version>
+                                <Specification-Vendor>${project.organization.name}</Specification-Vendor>
+                                <Implementation-Title>LTC</Implementation-Title>
+                                <Implementation-Version>123</Implementation-Version> <!-- TODO: replace by meaningful build nr. -->
+                                <Implementation-Vendor>${project.organization.name}</Implementation-Vendor>
+                            </manifestEntries>
+                        </transformer>
+                    </transformers>
                 </configuration>
             </plugin>
-            <!-- a crude way of copying the shaded jar into the site's downloads folder: -->
+
+            <!-- handling resources for packaging and site -->
             <plugin>
                 <artifactId>maven-resources-plugin</artifactId>
                 <version>2.5</version>
@@ -81,7 +89,7 @@
                                 <resource>
                                     <directory>${project.build.directory}</directory>
                                     <includes>
-                                        <include>LTC-all-${project.version}.jar</include>
+                                        <include>${ueber.jar}</include>
                                     </includes>
                                 </resource>
                             </resources>
@@ -123,6 +131,8 @@
                     </execution>
                 </executions>
             </plugin>
+
+            <!-- running latex and htlatex on manual for site -->
             <plugin>
                 <groupId>de.akquinet.maven</groupId>
                 <artifactId>maven-latex-plugin</artifactId>
@@ -139,7 +149,7 @@
                         <id>HTML multipage</id>
                         <configuration>
                             <settings>
-                                <cleanUp>false</cleanUp>
+                                <cleanUp>true</cleanUp>
                                 <tempDirectory>m2latex_multipage</tempDirectory>
                                 <outputDirectory>html_multipage</outputDirectory>
                                 <tex4htCommandArgs>
@@ -157,6 +167,8 @@
                     </execution>
                 </executions>
             </plugin>
+
+            <!-- generating site for this module -->
             <plugin>
                 <artifactId>maven-site-plugin</artifactId>
                 <version>3.0-beta-3</version>
