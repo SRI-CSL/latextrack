@@ -30,13 +30,13 @@ import java.util.logging.Level;
  */
 public class LTCSession {
 
-    private final GitViewer gitViewer;
+    private final LTCEditor LTCEditor;
 
     private int ID = -1;
     private String canonicalPath = "";
 
-    public LTCSession(GitViewer gitViewer) {
-        this.gitViewer = gitViewer;
+    public LTCSession(LTCEditor LTCEditor) {
+        this.LTCEditor = LTCEditor;
     }
 
     public String getCanonicalPath() {
@@ -53,7 +53,7 @@ public class LTCSession {
         canonicalPath = file.getCanonicalPath();
 
         // create new worker to init session
-        (new LTCWorker<Integer,Void>(gitViewer, ID,
+        (new LTCWorker<Integer,Void>(LTCEditor, ID,
                 "Initializing...", "<html>Initializing track changes of file<br>"+canonicalPath+"</html>", true) {
             List<Object[]> authors = null;
             java.util.List<Object[]> commits = null;
@@ -83,11 +83,11 @@ public class LTCSession {
             protected void done() {
                 if (isCancelled()) {
                     ID = -1;
-                    gitViewer.finishInit(null, null, null);
+                    LTCEditor.finishInit(null, null, null);
                 } else
                     try {
                         ID = get();
-                        gitViewer.finishInit(authors, commits, self);
+                        LTCEditor.finishInit(authors, commits, self);
                         startUpdate(date, rev, recentEdits);
                     } catch (InterruptedException e) {
                         LOGGER.log(Level.SEVERE, e.getMessage(), e);
@@ -102,7 +102,7 @@ public class LTCSession {
         if (!isValid()) return;
 
         // create new worker to close session
-        executeWorkerAndWait(new LTCWorker<String,Void>(gitViewer, ID,
+        executeWorkerAndWait(new LTCWorker<String,Void>(LTCEditor, ID,
                 "Closing...", "<html>Closing track changes of file<br>"+getCanonicalPath()+"</html>", false) {
             @Override
             protected String callLTCinBackground() throws XmlRpcException {
@@ -112,7 +112,7 @@ public class LTCSession {
             @Override
             protected void done() {
                 ID = -1;
-                gitViewer.finishClose();
+                LTCEditor.finishClose();
             }
         });
     }
@@ -122,7 +122,7 @@ public class LTCSession {
 
         // create new worker to update session
         // TODO: decide if and how to make get_changes interruptible in order to support cancel button
-        (new LTCWorker<Map,Void>(gitViewer, ID,
+        (new LTCWorker<Map,Void>(LTCEditor, ID,
                 "Updating...", "<html>Updating changes of<br>"+getCanonicalPath()+"</html>", false) {
             java.util.List<Object[]> commits = null;
             List<Object[]> remotes = null;
@@ -157,7 +157,7 @@ public class LTCSession {
                 } else
                     try {
                         Map map = get();
-                        gitViewer.finishUpdate(
+                        LTCEditor.finishUpdate(
                                 (Map<Integer,Object[]>) map.get(LTCserverInterface.KEY_AUTHORS),
                                 (String) map.get(LTCserverInterface.KEY_TEXT),
                                 (java.util.List<Integer[]>) map.get(LTCserverInterface.KEY_STYLES),
@@ -176,7 +176,7 @@ public class LTCSession {
         if (ID == -1) return;
 
         // create new worker to save file in session
-        executeWorkerAndWait(new LTCWorker<Void,Void>(gitViewer, ID,
+        executeWorkerAndWait(new LTCWorker<Void,Void>(LTCEditor, ID,
                 "Saving...", "<html>Saving file<br>"+getCanonicalPath()+"</html>", false) {
             @Override
             protected Void callLTCinBackground() throws XmlRpcException {
@@ -190,7 +190,7 @@ public class LTCSession {
         if (!isValid()) return;
 
         // create new worker to set self in session
-        (new LTCWorker<Integer,Void>(gitViewer, ID,
+        (new LTCWorker<Integer,Void>(LTCEditor, ID,
                 "Setting...", "Setting current self", false) {
             Object[] last_commit = null;
 
@@ -219,7 +219,7 @@ public class LTCSession {
                     int code = get();
                     if (code == 5 && saveButton.isEnabled()) {
                         // dialog if nothing to commit && unsaved edits
-                        if (JOptionPane.YES_OPTION == JOptionPane.showConfirmDialog(gitViewer,
+                        if (JOptionPane.YES_OPTION == JOptionPane.showConfirmDialog(LTCEditor,
                                 "Save file first before committing?",
                                 "Nothing to commit but unsaved edits",
                                 JOptionPane.YES_NO_OPTION,
@@ -228,7 +228,7 @@ public class LTCSession {
                             commit(message, saveButton);
                         }
                     } else if (code == 0)
-                        gitViewer.finishCommit(last_commit);
+                        LTCEditor.finishCommit(last_commit);
                 } catch (InterruptedException e) {
                     LOGGER.log(Level.SEVERE, e.getMessage(), e);
                 } catch (ExecutionException e) {
@@ -242,7 +242,7 @@ public class LTCSession {
         if (!isValid()) return;
 
         // create new worker to set self in session
-        (new LTCWorker<Void,Void>(gitViewer, ID,
+        (new LTCWorker<Void,Void>(LTCEditor, ID,
                 "Setting...", "Setting current self", false) {
             @Override
             protected Void callLTCinBackground() throws XmlRpcException {
@@ -260,7 +260,7 @@ public class LTCSession {
         if (!isValid()) return;
 
         // create new worker to set limited authors in session
-        (new LTCWorker<Void,Void>(gitViewer, ID,
+        (new LTCWorker<Void,Void>(LTCEditor, ID,
                 "Setting...", "Setting limited authors", false) {
             Map<Integer,Object[]> authors = null;
             @Override
@@ -278,7 +278,7 @@ public class LTCSession {
         if (!isValid()) return;
 
         // create new worker to get authors in session
-        (new LTCWorker<List,Void>(gitViewer, ID,
+        (new LTCWorker<List,Void>(LTCEditor, ID,
                 "Retrieving...", "Retrieving currently known authors", false) {
             @Override
             protected List callLTCinBackground() throws XmlRpcException {
@@ -289,7 +289,7 @@ public class LTCSession {
             @Override
             protected void done() {
                 try {
-                    gitViewer.finishAuthors(get());
+                    LTCEditor.finishAuthors(get());
                 } catch (InterruptedException e) {
                     LOGGER.log(Level.SEVERE, e.getMessage(), e);
                 } catch (ExecutionException e) {
@@ -303,7 +303,7 @@ public class LTCSession {
         if (!isValid()) return;
 
         // create new worker to add remote in session
-        (new LTCWorker<Void,Void>(gitViewer, ID,
+        (new LTCWorker<Void,Void>(LTCEditor, ID,
                 "Updating Remote...", "Updating remote alias", false) {
             @Override
             protected Void callLTCinBackground() throws XmlRpcException {
@@ -322,7 +322,7 @@ public class LTCSession {
         // create new worker to add remote in session
         final String verb = (usePull?"Pulling":"Pushing");
         String preposition = (usePull?" from ":" to ");
-        (new LTCWorker<String,Void>(gitViewer, ID,
+        (new LTCWorker<String,Void>(LTCEditor, ID,
                 verb+"...",
                 verb+preposition+"remote repository\n"+repository, false) {
             @Override
@@ -340,7 +340,7 @@ public class LTCSession {
                     if ("".equals(error))
                         startUpdate(date, rev, recentEdits);
                     else
-                        JOptionPane.showMessageDialog(gitViewer, error, verb+" Error", JOptionPane.ERROR_MESSAGE);
+                        JOptionPane.showMessageDialog(LTCEditor, error, verb+" Error", JOptionPane.ERROR_MESSAGE);
                 } catch (InterruptedException e) {
                     LOGGER.log(Level.SEVERE, e.getMessage(), e);
                 } catch (ExecutionException e) {
@@ -354,7 +354,7 @@ public class LTCSession {
         // if color == null then get otherwise set color
 
         // create new worker to set or get
-        executeWorkerAndWait(new LTCWorker<String,Void>(gitViewer, ID,
+        executeWorkerAndWait(new LTCWorker<String,Void>(LTCEditor, ID,
                 "...", "getting or setting color", false) {
             @Override
             protected String callLTCinBackground() throws XmlRpcException {

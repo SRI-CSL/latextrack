@@ -1,6 +1,6 @@
 /**
  ************************ 80 columns *******************************************
- * GitViewer
+ * LTCEditor
  *
  * Created on Jul 29, 2010.
  *
@@ -48,7 +48,7 @@ import static java.awt.datatransfer.DataFlavor.stringFlavor;
  * @author linda
  */
 @SuppressWarnings("serial")
-public class GitViewer extends JFrame {
+public class LTCEditor extends JFrame {
 
     // static initializations
     private final Preferences preferences = Preferences.userNodeForPackage(this.getClass());
@@ -59,7 +59,7 @@ public class GitViewer extends JFrame {
     private final static String KEY_LAST_HEIGHT = "last height of window";
     private final static String KEY_LAST_X = "last X of window";
     private final static String KEY_LAST_Y = "last Y of window";
-    static final Logger LOGGER = Logger.getLogger(GitViewer.class.getName());
+    static final Logger LOGGER = Logger.getLogger(LTCEditor.class.getName());
     private static DataFlavor DATE_FLAVOR;
     static {
         try {
@@ -283,7 +283,7 @@ public class GitViewer extends JFrame {
         filePane.add(new JButton(new AbstractAction("Choose...") {
             private static final long serialVersionUID = 138311848972917973L;
             public void actionPerformed(ActionEvent e) {
-                if (fileChooser.showOpenDialog(GitViewer.this) == JFileChooser.APPROVE_OPTION) {
+                if (fileChooser.showOpenDialog(LTCEditor.this) == JFileChooser.APPROVE_OPTION) {
                     File file = fileChooser.getSelectedFile();
                     fileField.setText(file.getAbsolutePath());
                     updateButton.doClick();
@@ -368,7 +368,7 @@ public class GitViewer extends JFrame {
                     Object o = authorModel.getElementAt(authorList.locationToIndex(e.getPoint()));
                     if (o instanceof AuthorCell) {
                         AuthorCell ac = (AuthorCell) o;
-                        Color newColor = JColorChooser.showDialog(GitViewer.this,
+                        Color newColor = JColorChooser.showDialog(LTCEditor.this,
                                 "Choose Author Color",
                                 ac.getColor());
                         if (newColor != null) {
@@ -555,7 +555,7 @@ public class GitViewer extends JFrame {
         return contentTrackingPane;
     }
 
-    public GitViewer() {
+    public LTCEditor() {
         super("LTC Editor");
 
         // create UI components and put everything together
@@ -567,36 +567,36 @@ public class GitViewer extends JFrame {
         addWindowListener(new WindowAdapter() {
             @Override
             public void windowOpened(WindowEvent windowEvent) {
-                GitViewer.this.setBounds(
+                LTCEditor.this.setBounds(
                         preferences.getInt(KEY_LAST_X, 0),
                         preferences.getInt(KEY_LAST_Y, 0),
                         preferences.getInt(KEY_LAST_WIDTH, 1000),
                         preferences.getInt(KEY_LAST_HEIGHT, 650));
-                LOGGER.config("Window opened: "+GitViewer.this.getSize()+" at "+GitViewer.this.getLocation());
+                LOGGER.config("Window opened: "+LTCEditor.this.getSize()+" at "+LTCEditor.this.getLocation());
                 // after this resizing and moving events can now be recorded:
-                GitViewer.this.addComponentListener(new ComponentAdapter() {
+                LTCEditor.this.addComponentListener(new ComponentAdapter() {
                     @Override
                     public void componentMoved(ComponentEvent componentEvent) {
-                        preferences.putInt(KEY_LAST_X, GitViewer.this.getX());
-                        preferences.putInt(KEY_LAST_Y, GitViewer.this.getY());
-                        LOGGER.config("Window position: "+GitViewer.this.getLocation());
+                        preferences.putInt(KEY_LAST_X, LTCEditor.this.getX());
+                        preferences.putInt(KEY_LAST_Y, LTCEditor.this.getY());
+                        LOGGER.config("Window position: "+LTCEditor.this.getLocation());
                     }
                     @Override
                     public void componentResized(ComponentEvent componentEvent) {
-                        preferences.putInt(KEY_LAST_WIDTH, GitViewer.this.getWidth());
-                        preferences.putInt(KEY_LAST_HEIGHT, GitViewer.this.getHeight());
-                        LOGGER.config("Window size: "+GitViewer.this.getSize());
+                        preferences.putInt(KEY_LAST_WIDTH, LTCEditor.this.getWidth());
+                        preferences.putInt(KEY_LAST_HEIGHT, LTCEditor.this.getHeight());
+                        LOGGER.config("Window size: "+LTCEditor.this.getSize());
                     }
                 });
             }
             @Override
             public void windowClosing(WindowEvent windowEvent) {
                 // save size and location
-                preferences.putInt(KEY_LAST_WIDTH, GitViewer.this.getWidth());
-                preferences.putInt(KEY_LAST_HEIGHT, GitViewer.this.getHeight());
-                preferences.putInt(KEY_LAST_X, GitViewer.this.getX());
-                preferences.putInt(KEY_LAST_Y, GitViewer.this.getY());
-                LOGGER.config("Window closing: "+GitViewer.this.getSize()+" at "+GitViewer.this.getLocation());
+                preferences.putInt(KEY_LAST_WIDTH, LTCEditor.this.getWidth());
+                preferences.putInt(KEY_LAST_HEIGHT, LTCEditor.this.getHeight());
+                preferences.putInt(KEY_LAST_X, LTCEditor.this.getX());
+                preferences.putInt(KEY_LAST_Y, LTCEditor.this.getY());
+                LOGGER.config("Window closing: "+LTCEditor.this.getSize()+" at "+LTCEditor.this.getLocation());
             }
         });
     }
@@ -623,7 +623,7 @@ public class GitViewer extends JFrame {
     }
 
     private static void printUsage(PrintStream out, CmdLineParser parser) {
-        out.println("usage: java -cp ... com.sri.ltc.viewer.GitViewer [options...] [FILE] \nwith:");
+        out.println("usage: java -cp ... com.sri.ltc.viewer.LTCEditor [options...] [FILE] \nwith:");
         parser.printUsage(out);
     }
 
@@ -654,7 +654,7 @@ public class GitViewer extends JFrame {
             LOGGER.log(Level.SEVERE, "Cannot configure logging", e);
         }
 
-        final GitViewer frame = new GitViewer();
+        final LTCEditor frame = new LTCEditor();
 
         //Schedule a job for the event dispatch thread:
         //creating and showing this application's GUI.

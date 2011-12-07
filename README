@@ -49,7 +49,7 @@ a) Server
 
 b) Java Editor
 
-  $> java -cp LTC-all-<version>.jar com.sri.ltc.viewer.GitViewer
+  $> java -cp LTC-all-<version>.jar com.sri.ltc.viewer.LTCEditor
 
 
 Testing

@@ -25,15 +25,15 @@ import java.util.logging.Logger;
 public abstract class LTCWorker<T,V> extends SwingWorker<T,V> implements ProgressReceiver {
 
     protected final Logger LOGGER = Logger.getLogger(LTCWorker.class.getName());
-    protected final GitViewer gitViewer;
+    protected final LTCEditor LTCEditor;
     protected final LTCserverInterface LTC = new LTCserverImpl(this);
     protected final int sessionID;
 
-    protected LTCWorker(GitViewer gitViewer, int sessionID, String progressTitle, String progressText, boolean withCancel) {
-        this.gitViewer = gitViewer;
+    protected LTCWorker(LTCEditor LTCEditor, int sessionID, String progressTitle, String progressText, boolean withCancel) {
+        this.LTCEditor = LTCEditor;
         this.sessionID = sessionID;
         // initialize progress
-        ProgressDialog.showDialog(this.gitViewer, progressTitle, progressText, withCancel?this:null);
+        ProgressDialog.showDialog(this.LTCEditor, progressTitle, progressText, withCancel?this:null);
         addPropertyChangeListener(new PropertyChangeListener() {
             @Override
             public void propertyChange(PropertyChangeEvent e) {
