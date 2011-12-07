@@ -24,7 +24,9 @@
         <menu name="LTC">
             <item name="Introduction" href="index.html"/>
             <item name="Download" href="download.html"/>
-            <item name="Usage" href="usage.html"/>
+            <item name="Usage" href="usage.html">
+                <item name="Manual" href="html_multipage/manual/manual.html" collapse="false"/>
+            </item>
         </menu>
         <menu ref="reports"/>
 
