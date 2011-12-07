@@ -1,5 +1,8 @@
 target/
 */target/
 
-# /src/java/com/sri/ltc/latexdiff/
+# generated Lexer class
 ltc-server/src/main/java/com/sri/ltc/latexdiff/Lexer.java
+
+# generated version number for manual
+all/src/site/tex/manual/version.txt
