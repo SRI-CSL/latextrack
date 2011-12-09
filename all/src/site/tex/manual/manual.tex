@@ -18,7 +18,7 @@
   bookmarks=true,bookmarksnumbered=true, % show numbered bookmarks
   pdfsubject={},pdftitle={},pdfauthor={Linda Briesemeister} % document info
 ]{hyperref} % more hyperlinks in PDF
-\usepackage{lipsum} % for test text
+%\usepackage{lipsum} % for test text
 
 % --- version string
 \newcommand{\version}{}
@@ -35,6 +35,7 @@ SRI International
 
 \begin{document}
 \maketitle
+{\pagestyle{empty}\cleardoublepage} % empty page after title (since we are using 'twopage' option)
 
 \tableofcontents
 
@@ -42,17 +43,20 @@ SRI International
 
 This project would not exist without Peter Karp, who had the original idea to bring track changes to the LaTeX world.  My colleagues Grit Denker and Tomer Altman have also been involved in furthering this project.  Finally, we thank SRI International to provide the funding to pursue this project.
 
-[Disclaimer]
+%TODO: Disclaimer
 
 \input{installation}
+
 \input{tutorial}
 
 \chapter{Using LTC}
-\lipsum[9]
+
+The intended use of LTC is running the base system as a server and have a plugin of the user's preferred LaTeX editor connect to it.  The provided Emacs \texttt{ltc-mode} is an example of such a plugin and its use is described in Section~\ref{sec:emacs}.  We hope to add more plugins for other popular LaTeX editors in the future.
+
+As a minimum implementation of a user interface to LTC, we also provide a Java application ``LTC Editor'' that uses the base system API but does not rely on running a separate LTC server.  Its use is explained in Section~\ref{sec:java}.
+
 \input{emacs}
 \input{java}
-
-\input{bugs}
 
 \input{api}
 
