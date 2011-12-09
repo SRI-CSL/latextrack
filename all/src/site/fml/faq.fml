@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<faqs xmlns="http://maven.apache.org/FML/1.0.1"
+      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:schemaLocation="http://maven.apache.org/FML/1.0.1 http://maven.apache.org/xsd/fml-1.0.1.xsd"
+      title="Frequently Asked Questions"
+      toplink="false">
+
+    <part id="general">
+        <title>General</title>
+
+        <faq id="compare-msword">
+            <question>
+                Is LTC the same as Track Changes in Microsoft Word?
+            </question>
+            <answer>
+                <p>No.  LTC was inspired by the general capability of Word to track changes.  However, we made a few conscious design choices that sets LTC apart from track changes in Word.  The most important difference is that the author does not have to accept or reject changes.  Also, the author does not have to turn the feature on or off in order to track changes.  He or she, however, has to create a history of the document by committing versions of the file to a version control system.  To date, we support <a href="http://git-scm.com/">git</a> because of its popularity, free availability and distributed nature, which fits well with the intended use in a collaboration on a writing project among scientific authors. </p>
+            </answer>
+        </faq>
+
+        <faq id="only-git">
+            <question>
+                Why use git?  Could other version control systems be used?
+            </question>
+            <answer>
+                <p><a href="http://git-scm.com/">Git</a> is free and open source and as the version control system for the Linux kernel and other high-profile open source systems under very active development.  Git is also a distributed version control system, which suits the idea of collaborating authors working mostly offline (some people write best when not connected to the Internet with all its distractions).</p>
+                <p>That said, in principle, LTC could work with other version control systems to obtain the history of a .tex file of interest.  We leave this as a future exercise for the open source community to provide a different back-end  for say subversion.</p>
+            </answer>
+        </faq>
+    </part>
+
+    <part id="Troubleshooting">
+
+        <title>Troubleshooting</title>
+
+        <faq id="how-install">
+            <question>
+                When I try to invoke ltc-mode in Emacs, it fails with a cryptic error message.
+            </question>
+            <answer>
+                <p>The following error message is displayed in the minibuffer or in the *Messages* buffer:</p>
+                <source>Error while initializing session: Why? url-http-response-status is nil</source>
+                <p>Possible causes are that the server is not running or that the server uses a different port than the Emacs mode. If the server is running, the port being used was output on the command line where it was started and can also be found in the beginning of the log file ~/.LTC.log in a line similar to the following.</p>
+                <source> INFO: Started RPC server on port 8765.</source>
+                <p>To check the port setting in Emacs, go to the menu Options > Customize > Browse Customization Groups, which opens a browser in a new buffer. Then navigate to group Emacs > Wp > Tex > LTC where you will find the option "Port" that contains the current port configuration. Or invoke the command M-x customize-group &lt;RET&gt; ltc &lt;RET&gt;. The LTC option is only available if ltc-mode has been loaded since starting Emacs.  Changing this option may require restarting Emacs to become effective.</p>
+            </answer>
+        </faq>
+
+    </part>
+
+</faqs>
