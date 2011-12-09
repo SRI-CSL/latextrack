@@ -50,6 +50,7 @@
                     <skip>true</skip>
                 </configuration>
             </plugin>
+
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>exec-maven-plugin</artifactId>
@@ -74,6 +75,7 @@
                     </arguments>
                 </configuration>
             </plugin>
+
             <plugin>
                 <artifactId>maven-shade-plugin</artifactId>
                 <version>1.5</version>
@@ -85,10 +87,59 @@
                         <phase>package</phase>
                         <configuration>
                             <shadedArtifactAttached>true</shadedArtifactAttached>
+                            <transformers>
+                                <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+                                    <manifestEntries>
+                                        <Main-Class>com.sri.ltc.server.LTC</Main-Class>
+                                        <Specification-Title>${project.name}</Specification-Title>
+                                        <Specification-Version>${project.version}</Specification-Version>
+                                        <Specification-Vendor>${project.organization.name}</Specification-Vendor>
+                                        <Implementation-Title>LTC Server</Implementation-Title>
+                                        <Implementation-Version>${maven.build.timestamp}</Implementation-Version> <!-- TODO: replace by git scm build nr. -->
+                                        <Implementation-Vendor>${project.organization.name}</Implementation-Vendor>
+                                    </manifestEntries>
+                                </transformer>
+                            </transformers>
                         </configuration>
                     </execution>
                 </executions>
             </plugin>
+
         </plugins>
     </build>
+
+    <profiles>
+        <profile>
+            <id>ltc-server-osx-bundle</id>
+            <activation>
+                <os><family>mac-SKIP</family></os>
+            </activation>
+            <build>
+                <plugins>
+
+                    <!-- building a Mac OS X installer -->
+                    <plugin>
+                        <groupId>org.codehaus.mojo</groupId>
+                        <artifactId>osxappbundle-maven-plugin</artifactId>
+                        <version>1.0-alpha-1</version>
+                        <configuration>
+                            <mainClass>com.sri.ltc.server.LTC</mainClass>
+                            <bundleName>LTC Server</bundleName>
+                            <jvmVersion>1.6+</jvmVersion>
+                            <!--<dictionaryFile>${basedir}/src/main/app-resources/Info.plist</dictionaryFile>-->
+                        </configuration>
+                        <executions>
+                            <execution>
+                                <phase>package</phase>
+                                <goals>
+                                    <goal>bundle</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
 </project>

@@ -9,14 +9,29 @@
 package com.sri.ltc;
 
 import com.sri.ltc.server.LTC;
+import edu.nyu.cs.javagit.api.JavaGitConfiguration;
+import edu.nyu.cs.javagit.api.JavaGitException;
 import org.junit.*;
+
+import java.io.IOException;
 
 /**
  * @author linda
  */
 public final class TestLTCserver {
 
-    private LTC ltc = LTC.getInstance();
+    private final static String gitPath = "/usr/local/git/bin"; // location of git if not on PATH
+    private static LTC ltc;
+    static {
+        try {
+            JavaGitConfiguration.setGitPath(gitPath);
+        } catch (IOException e) {
+            e.printStackTrace();
+        } catch (JavaGitException e) {
+            e.printStackTrace();
+        }
+        ltc = LTC.getInstance();
+    }
 
     @Before
     public void newline() {

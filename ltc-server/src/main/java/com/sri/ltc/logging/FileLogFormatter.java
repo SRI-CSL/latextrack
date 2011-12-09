@@ -48,7 +48,7 @@ public final class FileLogFormatter extends Formatter {
         buf.append(record.getSourceClassName());
         buf.append(' ');
         buf.append(record.getSourceMethodName());
-        buf.append(lineSep);
+        buf.append(" \t");
 
         // second line
         buf.append(record.getLevel());

@@ -18,6 +18,7 @@ import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
 
 import javax.servlet.ServletException;
+import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.util.logging.Level;
@@ -100,6 +101,17 @@ public final class LTC {
         parser.printUsage(out);
     }
 
+    private static void setGitDir(String gitDir, String message) {
+        if (gitDir != null && !"".equals(gitDir)) {
+            logger.info("Trying to set git path to \""+gitDir+"\" "+message);
+            try {
+                JavaGitConfiguration.setGitPath(gitDir);
+            } catch (Exception e) {
+                logger.log(Level.SEVERE, "Cannot set git path", e);
+            }
+        }
+    }
+
     public static void main(String[] args) {
         // parse arguments
         CmdLineParser.registerHandler(Level.class, LevelOptionHandler.class);
@@ -129,6 +141,10 @@ public final class LTC {
             logger.log(Level.SEVERE, "Cannot configure logging", e);
         }
 
+        // handling path information to git executable (if given in environment or via argument
+        setGitDir(System.getenv("GIT_DIR"),"from environment");
+        setGitDir(options.gitDir,"from commandline");
+
         LTC.getInstance(); // start up server (if not already running)
     }
 
@@ -141,5 +157,8 @@ public final class LTC {
 
         @Option(name="-p",usage="port on localhost used for XML-RPC")
         static int port = LTCserverInterface.PORT;
+
+        @Option(name="-g",usage="path to directory with git executable",required=false,metaVar="PATH")
+        String gitDir = null;
     }
 }
