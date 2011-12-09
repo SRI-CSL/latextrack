@@ -64,7 +64,7 @@
                                 <Specification-Version>${project.version}</Specification-Version>
                                 <Specification-Vendor>${project.organization.name}</Specification-Vendor>
                                 <Implementation-Title>LTC</Implementation-Title>
-                                <Implementation-Version>123</Implementation-Version> <!-- TODO: replace by meaningful build nr. -->
+                                <Implementation-Version>${maven.build.timestamp}</Implementation-Version> <!-- TODO: replace by git scm build nr. -->
                                 <Implementation-Vendor>${project.organization.name}</Implementation-Vendor>
                             </manifestEntries>
                         </transformer>
@@ -139,12 +139,12 @@
                 <version>1.1</version>
                 <inherited>false</inherited>
                 <executions>
-                    <!--<execution>-->
-                    <!--<phase>site</phase>-->
-                    <!--<goals>-->
-                    <!--<goal>latex</goal>-->
-                    <!--</goals>-->
-                    <!--</execution>-->
+                    <execution>
+                        <phase>site</phase>
+                        <goals>
+                            <goal>latex</goal>
+                        </goals>
+                    </execution>
                     <execution>
                         <id>HTML multipage</id>
                         <configuration>
@@ -154,6 +154,26 @@
                                 <outputDirectory>html_multipage</outputDirectory>
                                 <tex4htCommandArgs>
                                     <tex4htCommandArg>manual,2</tex4htCommandArg>
+                                    <tex4htCommandArg></tex4htCommandArg>
+                                    <tex4htCommandArg></tex4htCommandArg>
+                                    <tex4htCommandArg>-interaction=nonstopmode --src-specials</tex4htCommandArg>
+                                </tex4htCommandArgs>
+                            </settings>
+                        </configuration>
+                        <phase>site</phase>
+                        <goals>
+                            <goal>tex4ht</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>HTML singlepage</id>
+                        <configuration>
+                            <settings>
+                                <cleanUp>true</cleanUp>
+                                <tempDirectory>m2latex_singlepage</tempDirectory>
+                                <outputDirectory>html_singlepage</outputDirectory>
+                                <tex4htCommandArgs>
+                                    <tex4htCommandArg>manual,1</tex4htCommandArg>
                                     <tex4htCommandArg></tex4htCommandArg>
                                     <tex4htCommandArg></tex4htCommandArg>
                                     <tex4htCommandArg>-interaction=nonstopmode --src-specials</tex4htCommandArg>
@@ -210,4 +230,5 @@
             </plugin>
         </plugins>
     </build>
+
 </project>

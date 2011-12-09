@@ -29,6 +29,9 @@ $> mvn test
 To create the site (with a link to download the JAR):
 
 $> mvn verify site
+
+Before deploying, need to log into CSL Unix cluster to manually delete the directory ~linda/public_html/LTC/all!
+
 $> mvn clean verify site site:deploy
 
 To create the distributable:

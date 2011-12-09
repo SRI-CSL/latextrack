@@ -25,7 +25,8 @@
             <item name="Introduction" href="index.html"/>
             <item name="Download" href="download.html"/>
             <item name="Usage" href="usage.html">
-                <item name="Manual" href="html_multipage/manual/manual.html" collapse="false"/>
+                <item name="Manual (1 page)" href="html_singlepage/manual/manual.html" collapse="false"/>
+                <item name="Manual (pages)" href="html_multipage/manual/manual.html" collapse="false"/>
             </item>
         </menu>
         <menu ref="reports"/>
