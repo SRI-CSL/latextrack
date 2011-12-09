@@ -1,4 +1,4 @@
-\documentclass{report}
+\documentclass[twoside]{report}
 
 % ----- useful packages
 \usepackage[letterpaper,verbose,pdftex]{geometry}
@@ -6,23 +6,19 @@
 %\usepackage{pgf,pgfarrows} % for portable graphics
 %\usepackage{amsmath} % align and other math constructs
 %\usepackage{amssymb} % math symbols
-%\usepackage{textcomp} % higher quality text symbols if using Times
-\usepackage{booktabs} % tables in publication quality
+%\usepackage{booktabs} % tables in publication quality
 \usepackage{fancyvrb,courier} % for more elaborate verbatim envs 
                               % (and bold-face fonts)
 \usepackage[parfill]{parskip} % paragraphs begin with empty line rather than indent
 \usepackage{url} % for typesetting URL's
-%\usepackage[pdftex]{thumbpdf} % for thumbnails in PDF: run thumbpdf perlscript
 \usepackage{color}
-%\definecolor{mylinkcolor}{rgb}{0,0,0.5}
 \usepackage[%pdftex, % driver
   hyperfootnotes=false, % if using "footnotes" package
   colorlinks=false, % don't color links
   bookmarks=true,bookmarksnumbered=true, % show numbered bookmarks
   pdfsubject={},pdftitle={},pdfauthor={Linda Briesemeister} % document info
 ]{hyperref} % more hyperlinks in PDF
-%\usepackage{pdfpages} % to include coverpage generated from Word
-\usepackage{lipsum}
+\usepackage{lipsum} % for test text
 
 % --- version string
 \newcommand{\version}{}
@@ -39,23 +35,26 @@ SRI International
 
 \begin{document}
 \maketitle
-%{\pagestyle{empty}\cleardoublepage} % uncomment for empty page after title
 
 \tableofcontents
 
 \chapter*{Acknowledgements and Disclaimer}
-\lipsum[1]
 
-\include{installation}
-\include{tutorial}
+This project would not exist without Peter Karp, who had the original idea to bring track changes to the LaTeX world.  My colleagues Grit Denker and Tomer Altman have also been involved in furthering this project.  Finally, we thank SRI International to provide the funding to pursue this project.
+
+[Disclaimer]
+
+\input{installation}
+\input{tutorial}
 
 \chapter{Using LTC}
-\include{emacs}
-\include{java}
+\lipsum[9]
+\input{emacs}
+\input{java}
 
-\include{bugs}
+\input{bugs}
 
-\include{api}
+\input{api}
 
 % ----- references 
 %

@@ -7,7 +7,7 @@
 
 Download LTC
 
-  The whole system is packaged in {{{./downloads/LTC-all-${project.version}.jar}LTC-all-${project.version}.jar}}.
+  The whole system is packaged in {{{./downloads/LTC-${project.version}.jar}LTC-${project.version}.jar}}.
 
 * System Requirements
 
@@ -61,7 +61,7 @@ Download LTC
   If you need to customize LTC, for example to change the port number, start the base system with option <<<-p <PORT>>>:
 
 +---
-$ java -jar LTC-all-0.9-SNAPSHOT.jar -p 5555
+$ java -jar LTC-${project.version}.jar -p 5555
 Tue Dec 06 12:00:38 CST 2011 | CONFIG: 	Default logging configuration complete
 Tue Dec 06 12:00:38 CST 2011 | CONFIG: 	Logging configured to level CONFIG
 Tue Dec 06 12:00:38 CST 2011 | INFO: 	Git version: X.Y.Z

@@ -22,7 +22,7 @@
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <ueber.jar>LTC-all-${project.version}</ueber.jar>
+        <ueber.jar>LTC-${project.version}</ueber.jar>
     </properties>
 
     <dependencies>
@@ -173,7 +173,7 @@
                                 <tempDirectory>m2latex_singlepage</tempDirectory>
                                 <outputDirectory>html_singlepage</outputDirectory>
                                 <tex4htCommandArgs>
-                                    <tex4htCommandArg>manual,1</tex4htCommandArg>
+                                    <tex4htCommandArg>manual,0</tex4htCommandArg>
                                     <tex4htCommandArg></tex4htCommandArg>
                                     <tex4htCommandArg></tex4htCommandArg>
                                     <tex4htCommandArg>-interaction=nonstopmode --src-specials</tex4htCommandArg>

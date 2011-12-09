@@ -23,7 +23,7 @@ Quick Start
   <<<GIT_DIR>>> to point to the directory containing the git executable.
 
 +----
-$> java -jar LTC-all-${project.version}.jar
+$> java -jar LTC-${project.version}.jar
 Thu Dec 01 13:57:23 CST 2011 | CONFIG: 	Default logging configuration complete
 Thu Dec 01 13:57:23 CST 2011 | CONFIG: 	Logging configured to level CONFIG
 Thu Dec 01 13:57:23 CST 2011 | INFO: 	Git version: X.Y.Z
