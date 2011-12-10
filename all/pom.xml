@@ -23,6 +23,7 @@
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <ueber.jar>LTC-${project.version}</ueber.jar>
+        <temp.url>http://www.csl.sri.com/users/linda/LTC/all/</temp.url> <!-- TODO: change to <url> when we have a proper location -->
     </properties>
 
     <dependencies>
@@ -111,7 +112,7 @@
                         </configuration>
                     </execution>
                     <execution>
-                        <id>generate-version.txt</id>
+                        <id>generate-txt</id>
                         <phase>pre-site</phase>
                         <goals>
                             <goal>copy-resources</goal>
@@ -123,6 +124,7 @@
                                     <directory>src/site/resources</directory>
                                     <includes>
                                         <include>version.txt</include>
+                                        <include>baseurl.txt</include>
                                     </includes>
                                     <filtering>true</filtering>
                                 </resource>

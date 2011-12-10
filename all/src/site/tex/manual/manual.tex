@@ -19,10 +19,25 @@
   pdfsubject={},pdftitle={},pdfauthor={Linda Briesemeister} % document info
 ]{hyperref} % more hyperlinks in PDF
 %\usepackage{lipsum} % for test text
+\usepackage{ifpdf} % to detect whether pdflatex or htlatex is runnning
 
-% --- version string
+%% version string
 \newcommand{\version}{}
 \input{version.txt}
+
+%% base URL of web site
+\newcommand{\baseurl}{}
+\input{baseurl.txt}
+
+%% specifying different links for PDF vs. HTML
+% 1 - URL for pdf, 2 - URL for html, 3 - text of link
+\newcommand{\hlink}[3]{%
+\ifpdf 
+  \href{#1}{#3} 
+\else 
+  \href{#2}{#3} 
+\fi
+}
 
 % ----- title information
 \title{The \LaTeX{} Track Changes Manual \version}
