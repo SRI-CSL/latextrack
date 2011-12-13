@@ -34,7 +34,7 @@
 
         <faq id="emacs-ltc-no-match">
             <question>
-                When I try to invoke ltc-mode in Emacs, it says [No match].
+                When I try to invoke ltc-mode in Emacs, it says "[No match]".
             </question>
             <answer>
                 <p>You need to tell Emacs about ltc-mode in your Emacs configuration file adding the line</p>
@@ -44,8 +44,7 @@
 
         <faq id="emacs-ltc-not-found">
             <question>
-                When I try to invoke ltc-mode in Emacs, it says
-                <source>Cannot open load file: ltc-mode</source>
+                When I try to invoke ltc-mode in Emacs, it says "Cannot open load file: ltc-mode"
             </question>
             <answer>
                 <p>Emacs is not able to find the Emacs Lisp files from the LTC distribution.
@@ -56,14 +55,12 @@
 
         <faq id="how-install">
             <question>
-                When I try to invoke ltc-mode in Emacs, it fails with a cryptic error message.
+                When I try to invoke ltc-mode in Emacs, it says "Error while initializing session: Why? url-http-response-status is nil".
             </question>
             <answer>
-                <p>The following error message is displayed in the minibuffer or in the *Messages* buffer:</p>
-                <source>Error while initializing session: Why? url-http-response-status is nil</source>
-                <p>Possible causes are that the server is not running or that the server uses a different port than the Emacs mode. If the server is running, the port being used was output on the command line where it was started and can also be found in the beginning of the log file ~/.LTC.log in a line similar to the following.</p>
-                <source> INFO: Started RPC server on port 8765.</source>
-                <p>To check the port setting in Emacs, go to the menu Options > Customize > Browse Customization Groups, which opens a browser in a new buffer. Then navigate to group Emacs > Wp > Tex > LTC where you will find the option "Port" that contains the current port configuration. Or invoke the command M-x customize-group &lt;RET&gt; ltc &lt;RET&gt;. The LTC option is only available if ltc-mode has been loaded since starting Emacs.  Changing this option may require restarting Emacs to become effective.</p>
+                <p>Possible causes are that the server is not running or that the server uses a different port than the Emacs mode. If the server is running, check whether Emacs uses the same port as the server.  The port that the server uses was output on the command line where it was started and can also be found in the beginning of the log file ~/.LTC.log in a line ending similarly to the following.</p>
+                <source>... | INFO:    Started RPC server on port 8765.</source>
+                <p>To check the port setting in Emacs, invoke the command "C-h v ltc-port &lt;RET&gt;" (this requires ltc-mode to be loaded at least once, possibly with the failure above).  See the manual for more details on configuring Emacs.</p>
             </answer>
         </faq>
 

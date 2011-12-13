@@ -2,17 +2,18 @@
 
 \section{Requirements}
 
-\section{Obtaining LTC}
+We have tested the system on Mac OS X and Linux. It is designed to run on Unix platforms. Windows is not supported although it may run with a Unix-like shell under Windows.
 
-Download JAR
-
-Emacs files
-
-Example files
+Further requirements for running LTC are as follows.
+\begin{description}
+\item[Java] 1.6 or above.  If using the \Code{jar} tool to extract Emacs Lisp files, you will need the JDK, otherwise the JRE should suffice.
+\item[git] 1.7.2 or above.  We currently use the git command line interface and thus the system may break if git changes substantially.  In the future, we will move to the JGit library to avoid this dependency.
+\item[Emacs] 23 or above.  Only if the user wants to use \Code{ltc-mode} in Emacs to interact with LTC.  XEmacs is not supported.
+\end{description}
 
 \section{Installation}
 
-Currently, everything is wrapped into the \Code{LTC-\version.jar} file.  In the future, we may provide packaged applications or even installers for the target platforms.  Let us assume for the remainder of this manual, that you have placed the downloaded jar file into a directory called \Code{\$LTC}. 
+Currently, everything is wrapped into the \Code{LTC-\version.jar} file, which can be downloaded from the \hlink{\baseurl download.html}{../../download.html}{LTC web site.}  In the future, we may provide packaged applications or even installers for the target platforms.  Let us assume for the remainder of this manual, that you have placed the downloaded jar file into a directory called \Code{\$LTC}. 
 
 \section{Configuration}
 
@@ -56,11 +57,11 @@ Then, issue the git config command below (with a possibly adjusted file name and
 $> git config --global core.excludesfile ~/.gitignore_global
 \end{CodeVerbatim}
 
-\subsection{LTC Server}
+%\subsection{LTC Server}
 
-Another option is to declare a specific environment variable \Code{GIT\_DIR} to point to the directory that contains the git binary.
+%Another option is to declare a specific environment variable \Code{GIT\_DIR} to point to the directory that contains the git binary.
 
-\subsection{Emacs \texttt{ltc-mode}}
+\subsection{Emacs \texttt{ltc-mode}} \label{sec:config-emacs}
 
 To prepare your Emacs for using the supplied \Code{ltc-mode}, you will have to put the relevant mode files into a directory where Emacs can load them. There are two alternatives of letting Emacs know where to find Emacs Lisp files:
 \begin{enumerate}
@@ -93,7 +94,11 @@ We recommend to avoid adding a hook from \Code{latex-mode} to \Code{ltc-mode} as
 \caption{Customizing LTC port number in Emacs} \label{fig:emacs-port}
 \end{figure}
 
-If you need to change the port number that Emacs uses to communicate with the LTC Server, you first have to load \Code{ltc-mode} at least once (possibly with a failure) using command \Code{M-x ltc-mode}.  Then, you can customize the port number using \Code{M-x customize-group <RET> ltc <RET>} or open the customization buffer and browse to the LTC group under the Tex group, which may be located under the Wp (word processing) top-level group.  See Figure~\ref{fig:emacs-port} for a screenshot when customizing the port number using Aquamacs under Mac OS X.
+If you need to change the port number that Emacs uses to communicate with the LTC Server, you first have to load \Code{ltc-mode} at least once (possibly with a failure) using command \Code{M-x ltc-mode}.  Then, you can view the current port setting using \Code{C-h v ltc-port <RET>}.  You can customize the port number using \Code{M-x customize-group <RET> ltc <RET>} or open the customization buffer and browse to the LTC group under the Tex group, which may be located under the Wp (word processing) top-level group.  See Figure~\ref{fig:emacs-port} for a screenshot when customizing the port number using the customization buffer in Aquamacs under Mac OS X.
+
+%\subsubsection{Git from Emacs}
+%
+%The user can interact with git from within Emacs.  One of the many implementations is called ``magit'' mode.
 
 \section{Troubleshooting}
 

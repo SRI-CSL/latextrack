@@ -123,6 +123,21 @@
                         </configuration>
                     </execution>
                     <execution>
+                        <id>copy-examples</id>
+                        <phase>pre-integration-test</phase>
+                        <goals>
+                            <goal>copy-resources</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>${project.reporting.outputDirectory}/downloads/examples</outputDirectory>
+                            <resources>
+                                <resource>
+                                    <directory>src/site/examples</directory>
+                                </resource>
+                            </resources>
+                        </configuration>
+                    </execution>
+                    <execution>
                         <id>generate-txt</id>
                         <phase>pre-site</phase>
                         <goals>
