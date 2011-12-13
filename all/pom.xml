@@ -37,6 +37,12 @@
             <version>${project.version}</version>
             <artifactId>ltc-editor</artifactId>
         </dependency>
+        <!-- TODO: add dependency when Java sources exist in ltc-emacs -->
+        <!--<dependency>-->
+            <!--<groupId>${project.groupId}</groupId>-->
+            <!--<version>${project.version}</version>-->
+            <!--<artifactId>ltc-emacs</artifactId>-->
+        <!--</dependency>-->
     </dependencies>
 
     <build>
@@ -90,7 +96,7 @@
                                 <resource>
                                     <directory>${project.build.directory}</directory>
                                     <includes>
-                                        <include>${ueber.jar}</include>
+                                        <include>${ueber.jar}.jar</include>
                                     </includes>
                                 </resource>
                             </resources>
@@ -106,7 +112,12 @@
                             <outputDirectory>${project.reporting.outputDirectory}/downloads/emacs</outputDirectory>
                             <resources>
                                 <resource>
-                                    <directory>../ltc-server/src/main/emacs</directory>
+                                    <directory>../ltc-emacs/src/main/resources</directory>
+                                    <includes>
+                                        <include>xml-rpc.el</include>
+                                        <include>versions.el</include>
+                                        <include>ltc-mode.el</include>
+                                    </includes>
                                 </resource>
                             </resources>
                         </configuration>
@@ -127,6 +138,43 @@
                                         <include>baseurl.txt</include>
                                     </includes>
                                     <filtering>true</filtering>
+                                </resource>
+                            </resources>
+                        </configuration>
+                    </execution>
+                    <!-- copy all *.png files to (1) html_singlepage, and (2) html_multipage -->
+                    <execution>
+                        <id>copy-png-files-to-single</id>
+                        <phase>site</phase>
+                        <goals>
+                            <goal>copy-resources</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>${project.reporting.outputDirectory}/html_singlepage/manual/figures</outputDirectory>
+                            <resources>
+                                <resource>
+                                    <directory>src/site/tex/manual/figures</directory>
+                                    <includes>
+                                        <include>*.png</include>
+                                    </includes>
+                                </resource>
+                            </resources>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>copy-png-files-to-multi</id>
+                        <phase>site</phase>
+                        <goals>
+                            <goal>copy-resources</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>${project.reporting.outputDirectory}/html_multipage/manual/figures</outputDirectory>
+                            <resources>
+                                <resource>
+                                    <directory>src/site/tex/manual/figures</directory>
+                                    <includes>
+                                        <include>*.png</include>
+                                    </includes>
                                 </resource>
                             </resources>
                         </configuration>
@@ -155,7 +203,7 @@
                                 <tempDirectory>m2latex_multipage</tempDirectory>
                                 <outputDirectory>html_multipage</outputDirectory>
                                 <tex4htCommandArgs>
-                                    <tex4htCommandArg>manual,2</tex4htCommandArg>
+                                    <tex4htCommandArg>manual,2,png</tex4htCommandArg>
                                     <tex4htCommandArg></tex4htCommandArg>
                                     <tex4htCommandArg></tex4htCommandArg>
                                     <tex4htCommandArg>-interaction=nonstopmode --src-specials</tex4htCommandArg>
@@ -175,7 +223,7 @@
                                 <tempDirectory>m2latex_singlepage</tempDirectory>
                                 <outputDirectory>html_singlepage</outputDirectory>
                                 <tex4htCommandArgs>
-                                    <tex4htCommandArg>manual,0</tex4htCommandArg>
+                                    <tex4htCommandArg>manual,0,png</tex4htCommandArg>
                                     <tex4htCommandArg></tex4htCommandArg>
                                     <tex4htCommandArg></tex4htCommandArg>
                                     <tex4htCommandArg>-interaction=nonstopmode --src-specials</tex4htCommandArg>

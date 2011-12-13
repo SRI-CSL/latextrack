@@ -8,11 +8,21 @@
 Download LTC
 
   The whole system is packaged in {{{./downloads/LTC-${project.version}.jar}LTC-${project.version}.jar}}.
+  This package also contains the Emacs Lisp files for our <<<ltc-mode>>>.  You can extract those files
+  with the <<<jar>>> tool or you may download the files individually here:
+
+  * {{{./downloads/emacs/xml-rpc.el}xml-rpc.el}}
+
+  * {{{./downloads/emacs/versions.el}versions.el}}
+
+  * {{{./downloads/emacs/ltc-mode.el}ltc-mode.el}}
+
 
 * System Requirements
 
 *---------------------------+------------------------------------+-----------------------+
 | <<Java>>                  | 1.6 or above                       | <<<$> java -version>>>
+| (JDK if using <<<jar>>>)  |                                    |
 *---------------------------+------------------------------------+-----------------------+
 | <<git>>                   | 1.7.2 or above                     | <<<$> git --version>>>
 *---------------------------+------------------------------------+-----------------------+
@@ -23,52 +33,15 @@ Download LTC
   We have tested the system on Mac OS X and Linux.  It is designed to run on Unix platforms.  Windows is not supported
   although it may run with a Unix-like shell under Windows.
 
-* Emacs Mode
 
-** Emacs Mode Files
+~~  Before you can use LTC, you must start the base system first.  See {{{./usage.html}Usage}} for more details.
+~~  Now you should be able to invoke LTC from Emacs using <<<M-x ltc-mode>>>.
 
-  To use the <<<ltc-mode>>>, you will need to copy the following files into a location that Emacs finds.  There are 2 alternatives of letting Emacs know where to find Emacs Lisp files:
+~~  If you need to customize LTC, for example to change the port number, start the base system with option <<<-p <PORT>>>:
 
-  [[1]] Use a location that is already included in the <<<load-path>>>.  To view the <<<load-path>>> in your Emacs, execute the command <<<C-h v load-path>>>.  Then, download the <<<.el>>> files to one of those directories.
-
-  [[2]] Add a directory that contains the downloaded <<<.el>>> files to the <<<load-path>>>.  Assuming you downloaded the files to a directory <<<~/LTC/emacs/>>>, add the following line to your <<<.emacs>>> or other Emacs configuration file:
-
----
-(add-to-list 'load-path "~/LTC/emacs")
----
-  You may want to confirm that the <<<load-path>>> indeed contains the new location using the command <<<C-h v load-path>>> after starting Emacs with the updated configuration file.
-
-  []
-
-  In order to enable the LTC mode in Emacs, add the following line to your <<<.emacs>>> or other Emacs configuration file:
-
----
-(autoload 'ltc-mode "ltc-mode" "" t)
----
-
-  We recommend to avoid adding a hook from <<<latex-mode>>> to <<<ltc-mode>>> as our mode requires the <<<latex-mode>>> to be fully executed before it works. The hooks are not guaranteed to be executed in particular order, so it is best to manually invoke LTC mode.
-
-  * {{{./downloads/emacs/xml-rpc.el}xml-rpc.el}}
-
-  * {{{./downloads/emacs/versions.el}versions.el}}
-
-  * {{{./downloads/emacs/ltc-mode.el}ltc-mode.el}}
-
-** Configuring and Invoking LTC Mode
-
-  Before you can use LTC, you must start the base system first.  See {{{./usage.html}Usage}} for more details.  Now you should be able to invoke LTC from Emacs using <<<M-x ltc-mode>>>.
-
-  If you need to customize LTC, for example to change the port number, start the base system with option <<<-p <PORT>>>:
-
-+---
-$ java -jar LTC-${project.version}.jar -p 5555
-Tue Dec 06 12:00:38 CST 2011 | CONFIG: 	Default logging configuration complete
-Tue Dec 06 12:00:38 CST 2011 | CONFIG: 	Logging configured to level CONFIG
-Tue Dec 06 12:00:38 CST 2011 | INFO: 	Git version: X.Y.Z
---log4j: 06 Dec 2011 12:00:38,617 [main] INFO  org.apache.xmlrpc.webserver.XmlRpcServlet - init
-Tue Dec 06 12:00:38 CST 2011 | INFO: 	Started RPC server on port 5555.
-
-+---
-
-  In Emacs, assuming that you have loaded <<<ltc-mode>>> at least once (possibly with a failure if the base system wasn't running yet), you can customize the port number using <<<M-x customize-group <RET> ltc <RET> >>>
-  or browse to the LTC group under the Tex group, which may be located under the Wp (word processing) top-level group.
+~~$ java -jar LTC-${project.version}.jar -p 5555
+~~Tue Dec 06 12:00:38 CST 2011 | CONFIG: 	Default logging configuration complete
+~~Tue Dec 06 12:00:38 CST 2011 | CONFIG: 	Logging configured to level CONFIG
+~~Tue Dec 06 12:00:38 CST 2011 | INFO: 	Git version: X.Y.Z
+~~--log4j: 06 Dec 2011 12:00:38,617 [main] INFO  org.apache.xmlrpc.webserver.XmlRpcServlet - init
+~~Tue Dec 06 12:00:38 CST 2011 | INFO: 	Started RPC server on port 5555.

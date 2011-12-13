@@ -18,6 +18,7 @@
         <module>all</module>
         <module>ltc-server</module>
         <module>ltc-editor</module>
+        <module>ltc-emacs</module>
     </modules>
 
     <organization>

@@ -1,1 +1,1 @@
-\renewcommand{\version}{\\ {\large v${project.version}}}
+\renewcommand{\version}{${project.version}}

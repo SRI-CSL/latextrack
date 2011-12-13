@@ -21,6 +21,7 @@
 %\usepackage{lipsum} % for test text
 \usepackage{ifpdf} % to detect whether pdflatex or htlatex is runnning
 
+
 %% version string
 \newcommand{\version}{}
 \input{version.txt}
@@ -39,8 +40,30 @@
 \fi
 }
 
+%% custom verbatim commands and environments (PDF vs. HTML)
+%\DefineVerbatimEnvironment{BaseVerbatim}{Verbatim}{fontsize=\normalsize} % common definitions to PDF and HTML
+\definecolor{BoxBackground}{gray}{0.1} % 10%
+\ifpdf
+  \DefineVerbatimEnvironment{CodeVerbatim}{Verbatim}{fontsize=\small,frame=single}
+  \newcommand{\Code}[1]{{\small\tt #1}}
+\else 
+  \DefineVerbatimEnvironment{CodeVerbatim}{Verbatim}{frame=none}
+  \newcommand{\Code}[1]{{\tt #1}}
+\fi
+
+%% figures under PDF and HTML
+%\graphicspath{{./figures/}}
+\DeclareGraphicsExtensions{.png}
+\ifpdf
+  \newcommand{\mygraphics}[2]{\includegraphics[#1]{#2}}
+\else
+%  \DeclareGraphicsExtensions{.eps}
+  \newcommand{\mygraphics}[2]{\includegraphics{#2}}
+\fi
+
+
 % ----- title information
-\title{The \LaTeX{} Track Changes Manual \version}
+\title{The \LaTeX{} Track Changes Manual \\ {\large v\version}}
 \author{%
 Linda Briesemeister\\
 \texttt{linda.briesemeister@sri.com}\\

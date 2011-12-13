@@ -12,9 +12,88 @@ Example files
 
 \section{Installation}
 
-Currently, everything is wrapped into the JAR.  In the future, we may provide packaged applications or even installers for the target platforms.
+Currently, everything is wrapped into the \Code{LTC-\version.jar} file.  In the future, we may provide packaged applications or even installers for the target platforms.  Let us assume for the remainder of this manual, that you have placed the downloaded jar file into a directory called \Code{\$LTC}. 
 
 \section{Configuration}
+
+This section contains details of configuring git, LTC and Emacs to work together.  Most of these steps only need to be carried out once per installation of LTC.
+
+\subsection{Git}
+
+The current version of LTC requires git as the underlying version control system, which manages the history of the LaTeX files of interest. If you are already using git for other things, you may skip the following few steps as your git is probably already configured. However, we do recommend to add the common LaTeX build products with wildcards to the list of ignored files as outlined at the end of this section, which may not be configured if git has not been used to manage repositories with LaTeX files.
+
+First, test that the git installation is found. Otherwise, add the git binary directory to the \Code{PATH} environment variable.  
+\begin{CodeVerbatim}
+$> git --version
+git version 1.7.2
+\end{CodeVerbatim}
+
+If you haven't done already, configure git with your name and email address:
+\begin{CodeVerbatim}
+$> git config --global user.name "John Doe"
+$> git config --global user.email doe@inter.net
+\end{CodeVerbatim}
+
+Typically, you don't want to track automatic backups and build products of your LaTeX project, so create a file \Code{\char`\~/.gitignore\_global} (or any name and location of your choice) and add the following lines as contents. 
+\begin{CodeVerbatim}
+*~
+*.out
+*.aux
+*.bbl
+*.blg
+*.bst
+*.dvi
+*.idx
+*.lof
+*.log
+*.toc
+*.lol
+*.lot
+\end{CodeVerbatim}
+Then, issue the git config command below (with a possibly adjusted file name and location).
+
+\begin{CodeVerbatim}
+$> git config --global core.excludesfile ~/.gitignore_global
+\end{CodeVerbatim}
+
+\subsection{LTC Server}
+
+Another option is to declare a specific environment variable \Code{GIT\_DIR} to point to the directory that contains the git binary.
+
+\subsection{Emacs \texttt{ltc-mode}}
+
+To prepare your Emacs for using the supplied \Code{ltc-mode}, you will have to put the relevant mode files into a directory where Emacs can load them. There are two alternatives of letting Emacs know where to find Emacs Lisp files:
+\begin{enumerate}
+\item Use a location that is already included in the \Code{load-path}. To view the contents of this path in your Emacs, execute the command \Code{C-h v load-path}. Then, extract the Emacs Lisp files to one of those directories.
+\item Add a new directory where you will extract the Emacs Lisp files to the \Code{load-path}. Assuming the Emacs Lisp files reside in a directory \Code{\char`\~/LTC/emacs/}, add the following line to your \Code{.emacs} or other Emacs configuration file:
+  \begin{CodeVerbatim}
+(add-to-list 'load-path "~/LTC/emacs")
+  \end{CodeVerbatim}
+\end{enumerate}
+
+Now based on which method of the above you choose, change into that directory and extract the Emacs Lisp files from the downloaded LTC installation:
+\begin{CodeVerbatim}[commandchars=\\\{\}]
+$> jar xvf $LTC/LTC-\version.jar xml-rpc.el versions.el ltc-mode.el
+ inflated: ltc-mode.el
+ inflated: versions.el
+ inflated: xml-rpc.el
+\end{CodeVerbatim}
+
+In order to enable the LTC mode in Emacs, add the following line to your \Code{.emacs} or other Emacs configuration file:
+
+\begin{CodeVerbatim}
+(autoload 'ltc-mode "ltc-mode" "" t)
+\end{CodeVerbatim}
+
+We recommend to avoid adding a hook from \Code{latex-mode} to \Code{ltc-mode} as our mode requires the \Code{latex-mode} to be fully executed before it works. The hooks are not guaranteed to be executed in particular order, so it is best to manually invoke LTC mode.
+
+\begin{figure}[t]
+\centering
+\mygraphics{width=\textwidth,height=.5\textheight,keepaspectratio}{figures/emacs-port}
+\caption{Customizing LTC port number in Emacs} \label{fig:emacs-port}
+\end{figure}
+
+If you need to change the port number that Emacs uses to communicate with the LTC Server, you first have to load \Code{ltc-mode} at least once (possibly with a failure) using command \Code{M-x ltc-mode}.  Then, you can customize the port number using \Code{M-x customize-group <RET> ltc <RET>} or open the customization buffer and browse to the LTC group under the Tex group, which may be located under the Wp (word processing) top-level group.  See Figure~\ref{fig:emacs-port} for a screenshot when customizing the port number using Aquamacs under Mac OS X.
 
 \section{Troubleshooting}
 

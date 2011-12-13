@@ -28,9 +28,31 @@
         </faq>
     </part>
 
-    <part id="Troubleshooting">
+    <part id="troubleshooting">
 
-        <title>Troubleshooting</title>
+        <title>Troubleshooting Emacs Mode</title>
+
+        <faq id="emacs-ltc-no-match">
+            <question>
+                When I try to invoke ltc-mode in Emacs, it says [No match].
+            </question>
+            <answer>
+                <p>You need to tell Emacs about ltc-mode in your Emacs configuration file adding the line</p>
+                <source>(autoload 'ltc-mode "ltc-mode" "" t)</source>
+            </answer>
+        </faq>
+
+        <faq id="emacs-ltc-not-found">
+            <question>
+                When I try to invoke ltc-mode in Emacs, it says
+                <source>Cannot open load file: ltc-mode</source>
+            </question>
+            <answer>
+                <p>Emacs is not able to find the Emacs Lisp files from the LTC distribution.
+                Check that the load-path in Emacs contains the directory where you extracted or saved the LTC Emacs Lisp
+                files.</p>
+            </answer>
+        </faq>
 
         <faq id="how-install">
             <question>
