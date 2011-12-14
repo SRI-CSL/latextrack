@@ -649,6 +649,8 @@ public class LTCEditor extends JFrame {
         try {
             LogConfiguration logConfig = new LogConfiguration();
             logConfig.setProperty("java.util.logging.ConsoleHandler.level",options.consoleLogLevel.getName());
+            logConfig.setProperty("java.util.logging.FileHandler.level",options.consoleLogLevel.getName());
+            logConfig.setProperty("java.util.logging.FileHandler.pattern","%h/.LTCEditor.log");
             LogManager.getLogManager().readConfiguration(logConfig.asInputStream());
         } catch (IOException e) {
             LOGGER.log(Level.SEVERE, "Cannot configure logging", e);
@@ -680,13 +682,13 @@ public class LTCEditor extends JFrame {
     }
 
     static class GitViewerOptions {
-        @Option(name="-l", usage="set console log level")
+        @Option(name="-l",usage="set console log level\nSEVERE, WARNING, INFO, CONFIG (default), FINE, FINER, FINEST")
         Level consoleLogLevel = Level.CONFIG;
 
         @Option(name="-h", usage="display usage and exit")
         boolean displayHelp = false;
 
-        @Argument(required = false, metaVar = "FILE", usage = "load given file to track changes")
+        @Argument(required=false, metaVar="FILE", usage="load given file to track changes")
         File file;
     }
 

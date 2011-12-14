@@ -20,7 +20,7 @@ Quick Start
 
   To run the base system, execute the downloaded JAR file in a terminal (if you want to see logging output).  If you
   launch the JAR using a double-click under Mac OS X, for example, you would need to set the environment variable
-  <<<GIT_DIR>>> to point to the directory containing the git executable.
+  <<<GIT_BIN_DIR>>> to point to the directory containing the git executable.
 
 +----
 $> java -jar LTC-${project.version}.jar

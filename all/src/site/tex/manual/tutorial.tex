@@ -50,12 +50,14 @@ with:
  FILE     : load given file to track changes
  -h       : display usage and exit
  -l LEVEL : set console log level
+            SEVERE, WARNING, INFO, CONFIG (default), FINE, FINER, FINEST
 \end{CodeVerbatim}
 
-To open our tutorial file when starting the editor, execute the following command.  This will open the editor as a window similar to the screen shot in Figure~\ref{fig:editor-open}.
+To open our tutorial file when starting the editor, execute the following command.  We will also set the logging level to INFO to tone down the chatter.  This will open the editor as a window similar to the screen shot in Figure~\ref{fig:editor-open}.
 \begin{CodeVerbatim}[samepage=true,commandchars=\\\{\}]
-$> java -cp $LTC/LTC-\version.jar \\
-   com.sri.ltc.editor.LTCEditor $TUTORIAL/independence/independence.tex
+$> cd $TUTORIAL/independence
+$> java -cp $LTC/LTC-\version.jar \textbackslash
+   com.sri.ltc.editor.LTCEditor -l INFO independence.tex
 \end{CodeVerbatim}
 \begin{figure}[t]
 \centering
@@ -93,3 +95,5 @@ Now draw your attention back to the graph with the history of the current file u
 \section{Collaborating}
 
 \subsection{Resolving Merge Conflicts}
+
+\section{Using Emacs in Example Git Repository}

@@ -142,7 +142,7 @@ public final class LTC {
         }
 
         // handling path information to git executable (if given in environment or via argument
-        setGitDir(System.getenv("GIT_DIR"),"from environment");
+        setGitDir(System.getenv("GIT_BIN_DIR"),"from environment");
         setGitDir(options.gitDir,"from commandline");
 
         LTC.getInstance(); // start up server (if not already running)
