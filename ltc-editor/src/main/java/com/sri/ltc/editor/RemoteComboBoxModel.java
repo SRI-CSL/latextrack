@@ -6,7 +6,7 @@
  *
  * Copyright 2009-2010, SRI International.
  */
-package com.sri.ltc.viewer;
+package com.sri.ltc.editor;
 
 import com.sri.ltc.git.Remote;
 

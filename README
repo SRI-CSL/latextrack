@@ -52,10 +52,23 @@ a) Server
 
 b) Java Editor
 
-  $> java -cp LTC-all-<version>.jar com.sri.ltc.viewer.LTCEditor
+  $> java -cp all/target/LTC-<version>.jar com.sri.ltc.editor.LTCEditor -h
 
 
 Testing
 -------
 
 TODO: write
+
+
+Git Repositories etc.
+---------------------
+
+a) bundling git repositories for download as examples.  See:
+  http://stackoverflow.com/questions/2545765/how-can-i-email-someone-a-git-repository
+  http://progit.org/2010/03/10/bundles.html
+
+  $> cd independence
+  $> git bundle create ../independence.bundle --all
+  $> cd $Tutorial
+  $> git clone ../LTCmanual/independence.bundle independence

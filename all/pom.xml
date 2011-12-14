@@ -124,7 +124,7 @@
                     </execution>
                     <execution>
                         <id>copy-examples</id>
-                        <phase>pre-integration-test</phase>
+                        <phase>pre-site</phase>
                         <goals>
                             <goal>copy-resources</goal>
                         </goals>

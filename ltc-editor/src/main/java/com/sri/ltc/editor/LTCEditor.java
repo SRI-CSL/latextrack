@@ -6,7 +6,7 @@
  *
  * Copyright 2009-2010, SRI International.
  */
-package com.sri.ltc.viewer;
+package com.sri.ltc.editor;
 
 import com.sri.ltc.git.Commit;
 import com.sri.ltc.git.Remote;
@@ -623,7 +623,7 @@ public class LTCEditor extends JFrame {
     }
 
     private static void printUsage(PrintStream out, CmdLineParser parser) {
-        out.println("usage: java -cp ... com.sri.ltc.viewer.LTCEditor [options...] [FILE] \nwith:");
+        out.println("usage: java -cp ... com.sri.ltc.editor.LTCEditor [options...] [FILE] \nwith:");
         parser.printUsage(out);
     }
 

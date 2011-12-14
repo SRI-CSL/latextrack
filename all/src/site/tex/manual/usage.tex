@@ -1,0 +1,87 @@
+\chapter{Using LTC}
+
+The intended use of LTC is running the base system as a server and have a plugin of the user's preferred LaTeX editor connect to it.  The provided Emacs \texttt{ltc-mode} is an example of such a plugin and its use is described in Section~\ref{sec:emacs}.  We hope to add more plugins for other popular LaTeX editors in the future.
+
+As a minimum implementation of a user interface to LTC, we also provide a Java application ``LTC Editor'' that uses the base system API but does not rely on running a separate LTC server.  Its use is explained in Section~\ref{sec:java}.
+
+Before we address using these specific user interfaces, we discuss how to setup your git repository for a LaTeX writing project (Section~\ref{sec:git-use}) and the general usage of LTC in Section~\ref{sec:general-use}.
+
+\section{Git Repository} \label{sec:git-use}
+
+For each writing project, LTC expects the history of the .tex files contained in a git repository.  As git is a distributed version control system, this repository is local to your machine.  If you need to exchange data with a collaborating author, you will push your repository or pull their repository and merge it with your local copy.
+
+This section only covers how to set up the git repository for your writing project.  Please refer to other git documentation about general git usage and how to manage your writing project with git.
+
+\subsection{Initializing a Local Repository}
+
+Assuming that your current LaTeX source files (and other files) are located in a directory structure called \Code{\$PROJECT}.  To initialize the top-level directory for git perform the following commands.
+\begin{CodeVerbatim}
+$> cd $PROJECT
+$> git init 
+Initialized empty Git repository in $PROJECT
+\end{CodeVerbatim}
+
+Decide, what the final build products in your project will be.  These should be ignored by git so as not to complain every time you recompile your LaTeX project.  Let's assume your project will create a file called ``proposal.pdf,'' then create a file called \Code{.gitignore} in this directory that contains in each line the name of every build product.  In a bash shell, you can do the following.
+\begin{CodeVerbatim}
+$ cat > .gitignore <<EOF
+> proposal.pdf
+> EOF
+\end{CodeVerbatim}
+
+Then check the contents of the file:
+\begin{CodeVerbatim}
+$> less .gitignore
+proposal.pdf
+\end{CodeVerbatim}
+
+If you decide on more build products (e.g., files called ``proposal-vol1.pdf'' and ``proposal-vol2.pdf'') in the future, simply edit the \Code{.gitignore} file to include these file names in new lines.  Make sure to do this before using a command such as \Code{git add .}, which would mark any existing build products for addition.
+
+Checking the current status of git, the output should be similar to the following.
+
+\begin{CodeVerbatim}
+$> git status
+# On branch master
+#
+# Initial commit
+#
+# Untracked files:
+#   (use "git add <file>..." to include in what will be committed)
+#
+#	.gitignore
+#	proposal.tex
+nothing added to commit but untracked files present (use "git add" to track)
+\end{CodeVerbatim}
+
+Then, add the files already in your directory as well as the newly created file \Code{.gitignore} and commit the first version:
+
+\begin{CodeVerbatim}
+$> git add .
+$> git commit -a -m "Initial commit of project"
+[master (root-commit) dfbf239] Initial commit of project
+ 2 files changed, 7 insertions(+), 0 deletions(-)
+ create mode 100644 .gitignore
+ create mode 100644 proposal.tex
+\end{CodeVerbatim}
+
+The option \Code{-m} stands for a brief message that you would like to attach to your commit. Note that you have to give some sort of message for every commit you make. Do \textit{not} try to skip the message part. Moreover, having meaningful one-line message for commit is always useful as other and you yourself can refer to later on to see what changes you made and why.
+
+\subsection{Cloning a Repository}
+
+To start a git repository from an existing one, you want to clone it.  Assuming that your local copy should be located in a directory \Code{my\_project}, you would need to execute the following command from the parent directory of \Code{my\_project}.
+\begin{CodeVerbatim}
+$> git clone user@server:path-to-git-repos/project.git my_project
+Cloning into my_project...
+done.
+$> cd my_project
+\end{CodeVerbatim}
+
+\section{General Usage} \label{sec:general-use}
+
+In this section we describe abstractly how one would use LTC in a pattern of a work cycle. %TODO: more
+
+graph operations
+
+filtering
+
+\input{emacs}
+\input{java}
