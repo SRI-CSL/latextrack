@@ -30,6 +30,23 @@
 
     <part id="troubleshooting">
 
+        <title>Troubleshooting</title>
+
+        <faq id="bug-reports">
+            <question>How do I submit a bug report?</question>
+            <answer>
+                <p>Thank you for contributing to this project by filing a bug report.  To help us debugging, please
+                provide the log file at ~/.LTC.log or ~/.LTCEditor.log that should contain log output from the session
+                that exhibited the problem.  Furthermore, if you can share your git repository with us to enable us to
+                reproduce the problem better, you could bundle it using the following command inside the root directory
+                of your repository:</p>
+                <source>git bundle create myrepo.bundle --all</source>
+            </answer>
+        </faq>
+    </part>
+
+    <part id="troubleshooting-emacs">
+
         <title>Troubleshooting Emacs Mode</title>
 
         <faq id="emacs-ltc-no-match">
@@ -64,6 +81,16 @@
             </answer>
         </faq>
 
+        <faq id="strikethrough-emacs">
+            <question>
+                My ltc-mode seems to be working but deletions are only colored without showing strike-through markup.
+            </question>
+            <answer>
+                <p>This is the current behavior of the ltc-mode due to an error in Emacs under Mac OS X where the Courier
+                font in strike-through is not available.  Other operating systems such as Linux do not have this problem.
+                We hope that future releases of Emacs on Mac OS X have fixed this bug.</p>
+            </answer>
+        </faq>
     </part>
 
 </faqs>

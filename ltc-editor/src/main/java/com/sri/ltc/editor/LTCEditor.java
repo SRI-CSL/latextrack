@@ -652,6 +652,8 @@ public class LTCEditor extends JFrame {
             logConfig.setProperty("java.util.logging.FileHandler.level",options.consoleLogLevel.getName());
             logConfig.setProperty("java.util.logging.FileHandler.pattern","%h/.LTCEditor.log");
             LogManager.getLogManager().readConfiguration(logConfig.asInputStream());
+            LOGGER.config("Logging configured to level " + options.consoleLogLevel.getName());
+            LOGGER.config("Logging output written to file " + logConfig.getProperty("java.util.logging.FileHandler.pattern"));
         } catch (IOException e) {
             LOGGER.log(Level.SEVERE, "Cannot configure logging", e);
         }
