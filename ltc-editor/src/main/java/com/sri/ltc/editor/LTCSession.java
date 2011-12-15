@@ -217,16 +217,22 @@ public class LTCSession {
             protected void done() {
                 try {
                     int code = get();
-                    if (code == 5 && saveButton.isEnabled()) {
-                        // dialog if nothing to commit && unsaved edits
-                        if (JOptionPane.YES_OPTION == JOptionPane.showConfirmDialog(LTCEditor,
-                                "Save file first before committing?",
-                                "Nothing to commit but unsaved edits",
-                                JOptionPane.YES_NO_OPTION,
-                                JOptionPane.WARNING_MESSAGE)) {
-                            saveButton.doClick();
-                            commit(message, saveButton);
-                        }
+                    if (code == 5) {
+                        if (saveButton.isEnabled()) {
+                            // dialog if nothing to commit && unsaved edits
+                            if (JOptionPane.YES_OPTION == JOptionPane.showConfirmDialog(LTCEditor,
+                                    "Save file first before committing?",
+                                    "Nothing to commit but unsaved edits",
+                                    JOptionPane.YES_NO_OPTION,
+                                    JOptionPane.WARNING_MESSAGE)) {
+                                saveButton.doClick();
+                                commit(message, saveButton);
+                            }
+                        } else
+                            JOptionPane.showMessageDialog(LTCEditor,
+                                    "Nothing to commit.",
+                                    "Nothing to commit",
+                                    JOptionPane.INFORMATION_MESSAGE);
                     } else if (code == 0)
                         LTCEditor.finishCommit(last_commit);
                 } catch (InterruptedException e) {
