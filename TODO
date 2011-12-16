@@ -7,7 +7,6 @@ short-term:
 
 - Emacs bug when editing
 - packaging and installation:
-  - include Emacs files into jar
   - new application to update Emacs?
 - manual: write, write, write
 - web site: where to deploy?

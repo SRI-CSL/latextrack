@@ -97,7 +97,9 @@ public final class LTC {
     }
 
     private static void printUsage(PrintStream out, CmdLineParser parser) {
-        out.println("usage: java -cp ... com.sri.ltc.server.LTC [options...] with");
+        out.println("usage: java -cp ... com.sri.ltc.server.LTC [options...]");
+        out.println("   or: java -jar LTC-<...>.jar [options...]");
+        out.println("with");
         parser.printUsage(out);
     }
 

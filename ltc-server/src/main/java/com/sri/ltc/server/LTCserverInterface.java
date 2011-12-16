@@ -544,6 +544,7 @@ public interface LTCserverInterface {
      * Test method for implementing XML-RPC clients.
      *
      * @return 42
+     * @throws XmlRpcException if something went wrong
      */
-    public int hello();
+    public int hello() throws XmlRpcException;
 }

@@ -10,6 +10,7 @@ package com.sri.ltc;
 
 import com.sri.ltc.filter.Author;
 import com.sri.ltc.git.Commit;
+import com.sri.ltc.server.HelloLTC;
 import com.sri.ltc.server.LTCserverInterface;
 import org.apache.xmlrpc.XmlRpcException;
 import org.apache.xmlrpc.client.XmlRpcClient;
@@ -54,6 +55,7 @@ public class RpcClient {
         System.out.println(" j - reset_limited_rev(int sessionID)\n");
         System.out.println(" e - get_color(String name, String email) and set_color(String name, String email, String color)");
         System.out.println(" f - reset_all_colors()\n");
+        System.out.println(" z - hello()\n");
         System.out.println(" h - HELP");
         System.out.println(" q - QUIT");
         System.out.println();
@@ -69,7 +71,7 @@ public class RpcClient {
     @SuppressWarnings("unchecked")
     public static void main(String[] args) throws IOException {
         // obtain server instance:
-        Client client = new Client(new URL("http://localhost:"+ LTCserverInterface.PORT+"/xmlrpc"));
+        HelloLTC.Client client = new HelloLTC.Client(new URL("http://localhost:"+LTCserverInterface.PORT+"/xmlrpc"));
         server = (LTCserverInterface) client.GetProxy(LTCserverInterface.class);
 
         // get STDIN:
@@ -236,22 +238,6 @@ public class RpcClient {
                 System.err.println(" *** ERROR="+e.code);
                 e.printStackTrace();
             }
-        }
-    }
-
-    private static class Client {
-        private XmlRpcClientConfigImpl config;
-        private XmlRpcClient client;
-
-        public Client(URL url) {
-            config = new XmlRpcClientConfigImpl();
-            config.setServerURL(url);
-            client = new XmlRpcClient();
-            client.setConfig(config);
-        }
-
-        public Object GetProxy(Class ifClass) {
-            return new ClientFactory(client).newInstance(ifClass);
         }
     }
 }
