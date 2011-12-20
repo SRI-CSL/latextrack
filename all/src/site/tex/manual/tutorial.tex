@@ -138,15 +138,68 @@ Now delete other characters that are either rendered black or a different color 
 
 Finally, you will want to click ``Save'' to save the current file to disk.  This will cause the label ``modified'' to change to ``on disk.''  If you would then again edit, the label would switch back to ``modified'' of course.
 
-Saving the file, however, does not tell git to create a new version under its management.  In order to commit the current file to git, you have to give it a commit message such as \Code{added comment about list of charges} in the text field next to the ``Commit'' button.  Once the text field is not empty, the ``Commit'' button becomes enabled.  After you commit, the commit graph will list the new entry and the editor panel will be updated.  But why is the newly added comment no longer marked up in red with underlining?  Check your settings for what to show and hide when tracking changes.  After updating the editor from the commit history, we actually perform some simple lexical analysis on the .tex file to distinguish preamble, commands, and comments in LaTeX.  Now the newly entered comment is recognized as such, and if we hide changes in comments, the markup will not show.  Check the box for ``changes in comments'' to see your latest text marked up as an addition.  Your editor should now look similar to the part shown in Figure~\ref{fig:commit-comment}.
+Saving the file, however, does not tell git to create a new version under its management.  In order to commit the current file to git, you have to give it a commit message such as \Code{added comment about list of charges} in the text field next to the ``Commit'' button.  Once the text field is not empty, the ``Commit'' button becomes enabled.  After you commit, the commit graph will list the new entry and the editor panel will be updated.  
+
+But why is the newly added comment no longer marked up in red with underlining?  Check your settings for what to show and hide when tracking changes.  After updating the editor from the commit history, we actually perform some simple lexical analysis on the .tex file to distinguish preamble, commands, and comments in LaTeX.  Now the newly entered comment is recognized as such, and if we hide changes in comments, the markup will not show.  Check the box for ``changes in comments'' to see your latest text marked up as an addition.  Your editor should now look similar to the part shown in Figure~\ref{fig:commit-comment}.
 \begin{figure}[t]
 \centering
 \mygraphics{width=\textwidth,height=.5\textheight,keepaspectratio}{figures/commit-comment}
 \caption{Committing a comment and showing it as an addition} \label{fig:commit-comment}
 \end{figure}
 
+The ``Commit'' button is an interface to the underlying git version control management, but you can also interact with git directly from the command line.  You will want to make sure to have changes saved and the first line in the commit graph set to ``on disk.''  Then, from the command line in the \Code{\$TUTORIAL/independence} directory, you would call something similar to
+\begin{CodeVerbatim}
+$> git commit -o -m "first charge" -- independence.tex 
+[master 0b52499] first charge
+ 1 files changed, 4 insertions(+), 0 deletions(-)
+\end{CodeVerbatim}
+Now update your editor window and see the addition of the commit from the command line to the commit graph as seen in Figure~\ref{fig:commit-cmd-line}.
+\begin{figure}[t]
+\centering
+\mygraphics{scale=.5}{figures/commit-cmd-line}
+\caption{Updated commit graph after command line commit} \label{fig:commit-cmd-line}
+\end{figure}
+
 \section{Collaborating}
 
-\subsection{Resolving Merge Conflicts}
+Collaboration on your writing project mainly happens through git.  It depends on your setup how you exchange git repositories.  Whatever the configuration, it will probably show up under the list of registered remotes for your repository.  In the example, we cloned from the downloaded .bundle file, so looking at the remotes will look like this:
+\begin{CodeVerbatim}
+$> git remote -v
+origin	$TUTORIAL/independence.bundle (fetch)
+origin	$TUTORIAL/independence.bundle (push)
+\end{CodeVerbatim}
+
+If you need to declare a remote location to be used in your writing project, you can use a command similar to the following.  Make sure to replace all the relevant information about the \Code{alias} and \Code{URL} in this command.
+\begin{CodeVerbatim}
+$> git remote add alias user@server:path-to-git-repos/project.git
+\end{CodeVerbatim}
+
+As an example of interacting with another repository, let us create a second one on our local file system.  In practice, the remote repository will be on a different computer and accessed via certain network protocols reflected in the URL.  Feel free to adjust the file locations in the example below to your taste.
+\begin{CodeVerbatim}
+$> cd $TUTORIAL/independence
+$> git clone . ~/independence.git
+Cloning into ~/independence.git...
+done.
+$> git remote add philadelphia ~/independence.git
+$> git remote -v
+philadelphia	~/independence.git (fetch)
+philadelphia	~/independence.git (push)
+\end{CodeVerbatim}
+
+Now, you can pull and push from and to the remote repository using its alias ``philadelphia'' with the following commands.  At this point, the two repositories are synched so the operations do not perform any changes.  These two commands are also available through the LTC Editor user interface---after choosing the remote from the pull-down menu in the lower-right corner, click the ``Pull'' or ``Push'' buttons.  If the menu is empty you may have to update the editor to obtain the latest git changes that you may have performed on the command line or using a graphical git tool.
+\begin{CodeVerbatim}
+$> git push philadelphia master
+Everything up-to-date
+$> $ git pull philadelphia master
+From /Users/linda/git/independence
+ * branch            master     -> FETCH_HEAD
+Already up-to-date.
+\end{CodeVerbatim}
+
+% TODO: create example that shows branches in commit graph => independence2.bundle?
+
+%\subsection{Resolving Merge Conflicts}
 
 \section{Using Emacs with Example Git Repository}
+
+% TODO: screen shots
