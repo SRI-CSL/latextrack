@@ -66,8 +66,15 @@ public final class LTCserverImpl implements LTCserverInterface {
     private final static Logger LOGGER = Logger.getLogger(LTCserverImpl.class.getName());
     static { // init git
         try {
+            if (JavaGitConfiguration.getGitPath() == null) { // only set from env if not explicitly set before
+                String gitDir = System.getenv("GIT_BIN_DIR");
+                if (gitDir != null && !"".equals(gitDir)) {
+                    LOGGER.info("Trying to set git path to \""+gitDir+"\" as obtained from GIT_BIN_DIR");
+                    JavaGitConfiguration.setGitPath(gitDir);
+                }
+            }
             LOGGER.config("git version: "+ JavaGitConfiguration.getGitVersion());
-        } catch (JavaGitException e) {
+        } catch (Exception e) {
             LOGGER.log(Level.SEVERE, "Cannot obtain GIT executable", e);
         }
     }
@@ -242,7 +249,7 @@ public final class LTCserverImpl implements LTCserverInterface {
                         // replace last reader and SHA1
                         readers.remove(readers.size()-1);
                         sha1.remove(sha1.size()-1);
-                    } else 
+                    } else
                         // add self as author
                         authors.add(self);
                     readers.add(fileReader);
@@ -263,7 +270,7 @@ public final class LTCserverImpl implements LTCserverInterface {
             }
             // if no readers, then use text from file and self as author
             if (readers.size() == 0 && authors.size() == 0) {
-                authors.add(self);                      
+                authors.add(self);
                 readers.add(new FileReaderWrapper(session.gitFile.getFile().getCanonicalPath()));
                 sha1.add("");
             }
@@ -608,7 +615,7 @@ public final class LTCserverImpl implements LTCserverInterface {
         // obtain any stored color from preferences
         Color storedColor;
         synchronized (preferences) {
-             storedColor = new Color(preferences.getInt(
+            storedColor = new Color(preferences.getInt(
                     getColorKey(author),
                     randomColor.getRGB()));
         }

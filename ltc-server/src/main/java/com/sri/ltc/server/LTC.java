@@ -12,13 +12,11 @@ package com.sri.ltc.server;
 import com.sri.ltc.logging.LevelOptionHandler;
 import com.sri.ltc.logging.LogConfiguration;
 import edu.nyu.cs.javagit.api.JavaGitConfiguration;
-import edu.nyu.cs.javagit.api.JavaGitException;
 import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
 
 import javax.servlet.ServletException;
-import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.util.logging.Level;
@@ -72,15 +70,7 @@ public final class LTC {
     private static final Logger logger = Logger.getLogger(LTC.class.getName());
 
     private void init() {
-        // TODO: test for Java version 6 or higher (graph algorithms)
-
-        try {
-            // test for git
-            logger.info("Git version: "+ JavaGitConfiguration.getGitVersion());
-        } catch (JavaGitException e) {
-            logger.log(Level.SEVERE, "Cannot obtain GIT executable", e);
-        }
-
+        new LTCserverImpl(); // to initialize from LTCserverImpl.static { }
         try {
             // set up RPC server - this will enable us to receive XML-RPC calls
             Server rpcserver = new Server(
@@ -101,17 +91,6 @@ public final class LTC {
         out.println("   or: java -jar LTC-<...>.jar [options...]");
         out.println("with");
         parser.printUsage(out);
-    }
-
-    private static void setGitDir(String gitDir, String message) {
-        if (gitDir != null && !"".equals(gitDir)) {
-            logger.info("Trying to set git path to \""+gitDir+"\" "+message);
-            try {
-                JavaGitConfiguration.setGitPath(gitDir);
-            } catch (Exception e) {
-                logger.log(Level.SEVERE, "Cannot set git path", e);
-            }
-        }
     }
 
     public static void main(String[] args) {
@@ -143,9 +122,15 @@ public final class LTC {
             logger.log(Level.SEVERE, "Cannot configure logging", e);
         }
 
-        // handling path information to git executable (if given in environment or via argument
-        setGitDir(System.getenv("GIT_BIN_DIR"),"from environment");
-        setGitDir(options.gitDir,"from commandline");
+        // handling path information to git executable
+        if (options.gitDir != null && !"".equals(options.gitDir)) {
+            logger.info("Trying to set git path to \""+options.gitDir+"\" from command line");
+            try {
+                JavaGitConfiguration.setGitPath(options.gitDir);
+            } catch (Exception e) {
+                logger.log(Level.SEVERE, "Cannot set git path", e);
+            }
+        }
 
         LTC.getInstance(); // start up server (if not already running)
     }

@@ -20,16 +20,15 @@ Quick Start
 
   To run the base system, execute the downloaded JAR file in a terminal (if you want to see logging output).  If you
   launch the JAR using a double-click under Mac OS X, for example, you would need to set the environment variable
-  <<<GIT_BIN_DIR>>> to point to the directory containing the git executable.
+  <<<GIT_BIN_DIR>>> in <<<~/.MacOSX/environment.plist>>> to point to the directory containing the git executable.
 
 +----
 $> java -jar LTC-${project.version}.jar
-Thu Dec 01 13:57:23 CST 2011 | CONFIG: 	Default logging configuration complete
-Thu Dec 01 13:57:23 CST 2011 | CONFIG: 	Logging configured to level CONFIG
-Thu Dec 01 13:57:23 CST 2011 | INFO: 	Git version: X.Y.Z
---log4j: 01 Dec 2011 13:57:23,867 [main] INFO  org.apache.xmlrpc.webserver.XmlRpcServlet - init
-Thu Dec 01 13:57:23 CST 2011 | INFO: 	Started RPC server on port 7777.
-
+Tue Dec 20 09:27:07 CST 2011 | CONFIG: 	Default logging configuration complete
+Tue Dec 20 09:27:07 CST 2011 | CONFIG: 	Logging configured to level CONFIG
+Tue Dec 20 09:27:07 CST 2011 | CONFIG: 	git version: X.Y.Z
+--log4j: 20 Dec 2011 09:27:07,618 [main] INFO  org.apache.xmlrpc.webserver.XmlRpcServlet - init
+Tue Dec 20 09:27:07 CST 2011 | INFO: 	Started RPC server on port 7777.
 +----
 
 Manual
