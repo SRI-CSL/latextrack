@@ -28,6 +28,8 @@ public final class Accumulate {
     private final PropertyChangeSupport pcs = new PropertyChangeSupport(this);
     public final static String PROGRESS_PROPERTY = "float_progress";
 
+    private final static LatexDiff latexDiff = new LatexDiff();
+
     private final StyledDocument document;
 
     private final static String ADDITION_STYLE = "addition";
@@ -123,7 +125,7 @@ public final class Accumulate {
         // compare oldest version with next and so on:
         float step_increment = 0.5f/(float) (priorText.length - 1);
         for (int i=0; i<(priorText.length-1); i++) {
-            changes.add(new LatexDiff().getChanges(priorText[i],priorText[i+1]));
+            changes.add(latexDiff.getChanges(priorText[i], priorText[i + 1]));
             pcs.firePropertyChange(PROGRESS_PROPERTY, new Float(progress), new Float(progress+step_increment));
             progress += step_increment;
         }
@@ -186,9 +188,9 @@ public final class Accumulate {
 
             // compare prior text (index) to current text for translocations of the next loop
             if (index > 0)
-                translocations = buildTranslocationMap(new LatexDiff().getTranslocations(
+                translocations = buildTranslocationMap(latexDiff.getTranslocations(
                         priorText[index],
-                        new StringReaderWrapper(document.getText(0,document.getLength()))));
+                        new StringReaderWrapper(document.getText(0, document.getLength()))));
 
             // update progress counter
             pcs.firePropertyChange(PROGRESS_PROPERTY, new Float(progress), new Float(progress+step_increment));
@@ -256,19 +258,23 @@ public final class Accumulate {
             int end_position = -1;
             if (lexemes.size() > 0) {
                 // perform lexical analysis of current text to match against addition's lexemes
-                LatexDiff latexDiff = new LatexDiff();
+                // note: small additions have empty lexemes so they will be treated below
+                //       and regular additions contain at least 2 lexemes---the addition plus the next one
                 List<Lexeme> current_lexemes = latexDiff.analyze(
                         new StringReaderWrapper(current_text),
                         LexemeType.COMMENT.equals(lexemes.get(0).type));
-                List<List<Lexeme>> twoLexemeLists = new ArrayList<List<Lexeme>>();
-                twoLexemeLists.add(lexemes);
-                twoLexemeLists.add(current_lexemes);
+//                List<List<Lexeme>> twoLexemeLists = new ArrayList<List<Lexeme>>();
+//                twoLexemeLists.add(lexemes);
+//                twoLexemeLists.add(current_lexemes);
                 // figure out last matching lexeme to get end position of addition:
                 int index1 = -1;
-                for (Diff.change hunk = latexDiff.diff(twoLexemeLists); hunk != null; hunk = hunk.link)
+                for (Diff.change hunk = latexDiff.diff(
+                        (List<List<Lexeme>>) Arrays.asList(lexemes, current_lexemes)
+                ); hunk != null; hunk = hunk.link)
                     index1 = hunk.line1 - 1;
                 if (index1 >= 0 && index1 < current_lexemes.size())
-                    end_position = start_position + current_lexemes.get(index1).pos+current_lexemes.get(index1).length;
+                    // remember that each addition carries one extra lexeme (that was matching) at end
+                    end_position = start_position + current_lexemes.get(index1).pos;
             } else {
                 // handle small additions
                 String current = current_text.substring(0, Math.min(current_text.length(),text.length()));

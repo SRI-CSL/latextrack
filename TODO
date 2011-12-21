@@ -5,7 +5,12 @@ Planning
 short-term:
 ===========
 
-- Emacs bug when editing
+- bug: marking up comment when hiding comments in wrong color
+- test cases:
+  - Accumulate with various white space additions
+- Emacs bugs when editing:
+  - deleting itemize environment in indie2.bundle leaves 2 characters
+- feature: collapsing removals (recent edits) in LTCEditor for performance
 - packaging and installation:
   - new application to update Emacs?
 - manual: write, write, write

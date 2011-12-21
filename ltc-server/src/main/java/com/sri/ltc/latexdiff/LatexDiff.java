@@ -9,17 +9,20 @@
 package com.sri.ltc.latexdiff;
 
 import com.bmsi.gnudiff.Diff;
-import com.bmsi.gnudiff.DiffPrint;
+import com.sri.ltc.logging.LevelOptionHandler;
+import org.kohsuke.args4j.Argument;
+import org.kohsuke.args4j.CmdLineException;
+import org.kohsuke.args4j.CmdLineParser;
+import org.kohsuke.args4j.Option;
 
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.Reader;
+import java.io.*;
 import java.util.*;
+import java.util.logging.Level;
 
 /**
  * @author linda
  */
-public class LatexDiff {
+public final class LatexDiff {
 
     private static final Set<LexemeType> SPACE = new HashSet<LexemeType>();
     static {
@@ -53,7 +56,7 @@ public class LatexDiff {
      * @return List of Lexemes obtained from analysis (never null)
      * @throws IOException if the scanner encounters an IOException
      */
-    public final List<Lexeme> analyze(ReaderWrapper wrapper, boolean startInComment) throws IOException {
+    public List<Lexeme> analyze(ReaderWrapper wrapper, boolean startInComment) throws IOException {
         List<Lexeme> list = new ArrayList<Lexeme>();
         Lexer scanner = new Lexer(wrapper.createReader());
         if (startInComment) scanner.startInComment();
@@ -143,7 +146,6 @@ public class LatexDiff {
     }
 
     // calculate pairs of indices that indicate successive COMMENT or COMMAND lexemes in given input list.
-    // if returned list is empty, it doesn't contain any COMMENT or COMMAND lexemes.
     private final List<IndexPair> getIndices(List<Lexeme> list, int offset) {
         List<IndexPair> result = new ArrayList<IndexPair>();
         if (list == null || list.isEmpty())
@@ -284,11 +286,11 @@ public class LatexDiff {
                 List<IndexPair> indices = getIndices(list1.subList(hunk.line1, hunk.line1+hunk.inserted), hunk.line1);
                 for (IndexPair indexPair : indices) {
                     start_position = list1.get(indexPair.left).pos;
-                    end_position1 = list1.get(indexPair.right-1).pos+list1.get(indexPair.right-1).length;
+                    end_position1 = list1.get(indexPair.right).pos; // use next lexeme for end position
                     result.add(new Addition(
                             start_position,
                             contents[1].substring(start_position, end_position1),
-                            list1.subList(indexPair.left, indexPair.right),
+                            list1.subList(indexPair.left, indexPair.right+1), // add the first matching lexeme
                             inPreamble,
                             LexemeType.COMMENT.equals(list1.get(indexPair.left).type),
                             LexemeType.COMMAND.equals(list1.get(indexPair.left).type)));
@@ -299,7 +301,7 @@ public class LatexDiff {
             if (hunk.deleted > 0) {
                 List<IndexPair> indices = getIndices(list0.subList(hunk.line0, hunk.line0+hunk.deleted), hunk.line0);
                 for (IndexPair indexPair : indices) {
-                    end_position0 = list0.get(indexPair.right).pos; // use next lexeme for deletions
+                    end_position0 = list0.get(indexPair.right).pos; // use next lexeme for end position
                     result.add(new Deletion(
                             start_position,
                             contents[0].substring(list0.get(indexPair.left).pos, end_position0),
@@ -332,6 +334,17 @@ public class LatexDiff {
         return latest;
     }
 
+    /**
+     * Obtain changes from two texts given as wrapped readers.  The return value is a list of changes ordered 
+     * by position in the new text.  If positions are the same, the change is ordered by an order imposed on 
+     * the subclasses of Change (see {@link Change.ORDER}).  Finally, we also employ unique sequence numbers
+     * for each diff operation, which will be used if the subclasses are of the same class.
+     * 
+     * @param readerWrapper1 text that denotes old version
+     * @param readerWrapper2 text that denotes new version
+     * @return an ordered list of changes from old to new version
+     * @throws IOException if the text cannot be extracted from the wrapped reader
+     */
     public List<Change> getChanges(ReaderWrapper readerWrapper1, ReaderWrapper readerWrapper2)
             throws IOException {
 
@@ -378,15 +391,8 @@ public class LatexDiff {
         return (script = new Diff(diffInputs[0],diffInputs[1]).diff_2(false));
     }
 
-    private static void printUsage() {
-        System.err.println("Usage: java LatexDiff [options] <inputfile1> <inputfile2>");
-        System.err.println("  where options are:");
-        System.err.println("  -u   output as Unix diff (with location information appended) [default]");
-        System.err.println("  -x   output as XML");
-    }
-
-    public static final String copyText(Reader reader) throws IOException {
-        StringBuffer buffer = new StringBuffer();
+    public static String copyText(Reader reader) throws IOException {
+        StringBuilder buffer = new StringBuilder();
         int c;
         while (( c = reader.read()) != -1)
             buffer.append((char) c);
@@ -394,41 +400,41 @@ public class LatexDiff {
         return buffer.toString();
     }
 
-    public static void main(String argv[]) {
-        // test arguments and parse options:
-        if (argv.length < 2) {
-            printUsage();
-            System.exit(ReturnCodes.TOO_FEW_ARGUMENTS.ordinal());
+    private static void printUsage(PrintStream out, CmdLineParser parser) {
+        out.println("usage: java -cp ... com.sri.ltc.latexdiff.LatexDiff [options] FILE1 FILE2 \nwith");
+        parser.printUsage(out);
+    }
+
+    public static void main(String args[]) {
+        // parse arguments
+        CmdLineParser.registerHandler(Level.class, LevelOptionHandler.class);
+        final LatexDiffOptions options = new LatexDiffOptions();
+        CmdLineParser parser = new CmdLineParser(options);
+        try {
+            parser.parseArgument(args);
+        } catch (CmdLineException e) {
+            System.err.println(e.getMessage());
+            printUsage(System.err, parser);
+            System.exit(ReturnCodes.PARSING_ARGUMENTS.ordinal());
         }
-        boolean outputUnix = true;
-        for (int i = 0; i < argv.length - 2; ++i) {
-            String f = argv[i];
-            if (f.startsWith("-"))
-                switch (f.charAt(1)) {
-                    case 'x':
-                        outputUnix = false; break;
-                    case 'u':
-                        break;
-                    default:
-                        printUsage();
-                        System.exit(ReturnCodes.UNKNOWN_OPTION.ordinal());
-                }
+
+        if (options.displayHelp) {
+            printUsage(System.out, parser);
+            System.exit(1);
         }
 
         try {
             LatexDiff latexDiff = new LatexDiff();
             List<Change> changes = latexDiff.getChanges(
-                    new FileReaderWrapper(argv[argv.length - 2]),
-                    new FileReaderWrapper(argv[argv.length - 1]));
+                    new FileReaderWrapper(options.file1),
+                    new FileReaderWrapper(options.file2));
             // Convert to output
-            if (outputUnix) {
-                DiffPrint.Base p = new LocationPrint(latexDiff.diffInputs[0],latexDiff.diffInputs[1],
-                        latexDiff.lexemLists.get(0),latexDiff.lexemLists.get(1));
-                p.print_script(latexDiff.script);
-            } else {
+            if (options.asXML)
                 for (Change c : changes)
                     System.out.println(c);
-            }
+            else
+                new LocationPrint(latexDiff.diffInputs[0],latexDiff.diffInputs[1],
+                        latexDiff.lexemLists.get(0),latexDiff.lexemLists.get(1)).print_script(latexDiff.script);
         } catch (FileNotFoundException e) {
             e.printStackTrace();
             System.exit(ReturnCodes.FILE_NOT_FOUND.ordinal());
@@ -440,11 +446,25 @@ public class LatexDiff {
         System.exit(ReturnCodes.SUCCESS.ordinal());
     }
 
-    enum ReturnCodes {
+    private enum ReturnCodes {
         SUCCESS,
-        TOO_FEW_ARGUMENTS,
+        PARSING_ARGUMENTS,
         FILE_NOT_FOUND,
         SCANNING_ERROR,
         UNKNOWN_OPTION;
+    }
+
+    private static class LatexDiffOptions {
+        @Option(name="-h", usage="display usage and exit")
+        boolean displayHelp = false;
+
+        @Option(name="-x", usage="output as XML (default is Unix style)")
+        boolean asXML = false;
+
+        @Argument(required=true, index=0, metaVar="FILE1", usage="first file to diff")
+        String file1;
+
+        @Argument(required=true, index=1, metaVar="FILE2", usage="second file to diff")
+        String file2;
     }
 }

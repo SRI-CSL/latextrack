@@ -48,7 +48,7 @@ public final class Session {
         this.gitFile = gitFile;
         this.text = currentText;
         if (currentText == null || "".equals(currentText)) {
-            // TODO: read file contents into current text
+            // read file contents into current text
             StringBuilder buffer = new StringBuilder();
             int c;
             Reader r = new FileReader(gitFile.getFile());

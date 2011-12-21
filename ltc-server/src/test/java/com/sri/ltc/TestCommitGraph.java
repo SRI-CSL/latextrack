@@ -11,7 +11,6 @@ package com.sri.ltc;
 import com.sri.ltc.filter.Author;
 import com.sri.ltc.git.Commit;
 import com.sri.ltc.git.CommitGraph;
-import junit.framework.Assert;
 import org.jgrapht.DirectedGraph;
 import org.jgrapht.graph.DefaultEdge;
 import org.jgrapht.graph.SimpleDirectedGraph;
@@ -29,7 +28,7 @@ import static junit.framework.Assert.assertTrue;
 /**
  * @author linda
  */
-public class TestCommitGraph {
+public final class TestCommitGraph {
 
     DirectedGraph<String, DefaultEdge> createDirectedGraph() {
         DirectedGraph<String, DefaultEdge> graph =
