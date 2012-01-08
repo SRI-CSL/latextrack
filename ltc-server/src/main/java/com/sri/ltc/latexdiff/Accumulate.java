@@ -96,6 +96,37 @@ public final class Accumulate {
         return builder.toString();
     }
 
+    /**
+     * Perform accumulation of changes over the given array of texts.  If given array of texts is empty or <code>null</code>
+     * then does nothing and returns a map with empty text and styles.  If given a array of texts has at least one entry,
+     * the array of author indices must match up in length or be empty or <code>null</code>.  If there is at least 2 texts
+     * to compare but the author indices is empty, this function assigns author indices [1..(n-1)] for n = length of text
+     * array.
+     * <p>
+     * A number of boolean flags indicates whether to show or hide deletions, small changes, changes in preamble, 
+     * comments, and commands.
+     * <p>
+     * The returned map contains 2 entries for keys {@link LTCserverInterface.KEY_TEXT} and {@link LTCserverInterface.KEY_STYLES}.
+     * The value for the first key is the text obtained from accumulating all changes.  The value for the second key
+     * is a list of 4-tuples denoting the mark up for the text.  Each 4-tuple has integers
+     * <pre>
+     *     <start position (incl.), end position (excl.), addition/deletion, author index>
+     * </pre>, which contain the start and end position of the change (positions in text start with 0), a 1 for
+     * addition or 2 for deletion, and the index of the author who made this change.  The author index is either taken
+     * from the given array or assigned by index of the text array.
+     *
+     * @param priorText an array of text wrappers denoting the oldest to the newest version
+     * @param authorIndices an array of author indices for each version of priorText;
+     *                      must be of the same length as priorText or empty or <code>null</code>
+     * @param showDeletions whether to show or hide deletions in accumulated changes
+     * @param showSmallChanges whether to show or hide small changes in accumulated changes
+     * @param showPreambleChanges whether to show or hide changes in preamble in accumulated changes
+     * @param showCommentChanges whether to show or hide changes in comments in accumulated changes
+     * @param showCommandChanges whether to show or hide changes in commands in accumulated changes
+     * @return Map with 2 entries pointing to the text and the list of styles to mark-up the changes in the text
+     * @throws IOException if given readers cannot load text
+     * @throws BadLocationException if a location in the underlying document does not exist
+     */
     @SuppressWarnings("unchecked")
     public Map perform(ReaderWrapper[] priorText,
                        Integer[] authorIndices,
@@ -179,11 +210,12 @@ public final class Accumulate {
                     current_offset += ((Deletion) change).text.length();
                 }
 
-                if (change instanceof Addition &&
-                        (showSmallChanges || !(change instanceof SmallAddition))) {
+                if (change instanceof Addition && !(change instanceof SmallAddition))
+                    markupAddition(start_position, ((Addition) change).lexemes, ((Addition) change).lastInHunk);
+
+                if (change instanceof SmallAddition && showSmallChanges)
                     // show small additions only if set to do so
-                    markupAddition(start_position, ((Addition) change).text, ((Addition) change).lexemes);
-                }
+                    markupSmallAddition(start_position, ((SmallAddition) change).text);
             }
 
             // compare prior text (index) to current text for translocations of the next loop
@@ -194,7 +226,7 @@ public final class Accumulate {
 
             // update progress counter
             pcs.firePropertyChange(PROGRESS_PROPERTY, new Float(progress), new Float(progress+step_increment));
-            progress += step_increment;            
+            progress += step_increment;
         }
 
         // create return value:
@@ -248,7 +280,7 @@ public final class Accumulate {
         return position;
     }
 
-    private void markupAddition(int start_position, String text, List<Lexeme> lexemes)
+    private void markupAddition(int start_position, List<Lexeme> lexemes, boolean lastInHunk)
             throws BadLocationException, IOException {
         if (document.getLength() > start_position) {
             // get current text to match against addition
@@ -258,36 +290,45 @@ public final class Accumulate {
             int end_position = -1;
             if (lexemes.size() > 0) {
                 // perform lexical analysis of current text to match against addition's lexemes
-                // note: small additions have empty lexemes so they will be treated below
-                //       and regular additions contain at least 2 lexemes---the addition plus the next one
                 List<Lexeme> current_lexemes = latexDiff.analyze(
                         new StringReaderWrapper(current_text),
                         LexemeType.COMMENT.equals(lexemes.get(0).type));
-//                List<List<Lexeme>> twoLexemeLists = new ArrayList<List<Lexeme>>();
-//                twoLexemeLists.add(lexemes);
-//                twoLexemeLists.add(current_lexemes);
                 // figure out last matching lexeme to get end position of addition:
-                int index1 = -1;
-                for (Diff.change hunk = latexDiff.diff(
-                        (List<List<Lexeme>>) Arrays.asList(lexemes, current_lexemes)
-                ); hunk != null; hunk = hunk.link)
+                int index1 = current_lexemes.size() - 1; // if upcoming diff matches for rest of current text,
+                                                         // hunk will be NULL so use last lexeme for end position
+                for (Diff.change hunk = latexDiff.diff(Arrays.asList(lexemes, current_lexemes)) ; hunk != null; hunk = hunk.link)
                     index1 = hunk.line1 - 1;
-                if (index1 >= 0 && index1 < current_lexemes.size())
+                if (index1 >= 0 && index1 < current_lexemes.size()) {
                     // remember that each addition carries one extra lexeme (that was matching) at end
                     end_position = start_position + current_lexemes.get(index1).pos;
-            } else {
-                // handle small additions
-                String current = current_text.substring(0, Math.min(current_text.length(),text.length()));
-                if (current.equals(text))
-                    end_position = start_position + current.length();
+                    // TODO: if addition was last in original hunk, use different end position
+                }
             }
-            // markup everything between start_position and end_position except
-            // currently marked ADDITIONS and DELETIONS:
-            for (int i=start_position; i < end_position; i++) {
-                Object style = document.getCharacterElement(i).getAttributes().getAttribute(StyleConstants.NameAttribute);
-                if (!DELETION_STYLE.equals(style) && !ADDITION_STYLE.equals(style))
-                    document.setCharacterAttributes(i, 1, document.getStyle(ADDITION_STYLE), true);
-            }
+            markUp(start_position, end_position);
+        }
+    }
+
+    private void markupSmallAddition(int start_position, String text) throws BadLocationException {
+        if (document.getLength() > start_position) {
+            // get current text to match against small addition
+            String current_text = document.getText(
+                    start_position,
+                    document.getLength()-start_position);
+            int end_position = -1;
+            String current = current_text.substring(0, Math.min(current_text.length(),text.length()));
+            if (current.equals(text))
+                end_position = start_position + current.length();
+            markUp(start_position, end_position);
+        }
+    }
+
+    private void markUp(int start_position, int end_position) {
+        // markup everything between start_position and end_position except
+        // currently marked ADDITIONS and DELETIONS:
+        for (int i=start_position; i < end_position; i++) {
+            Object style = document.getCharacterElement(i).getAttributes().getAttribute(StyleConstants.NameAttribute);
+            if (!DELETION_STYLE.equals(style) && !ADDITION_STYLE.equals(style))
+                document.setCharacterAttributes(i, 1, document.getStyle(ADDITION_STYLE), true);
         }
     }
 

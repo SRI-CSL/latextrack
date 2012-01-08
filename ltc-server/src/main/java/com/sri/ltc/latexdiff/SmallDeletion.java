@@ -11,7 +11,7 @@ package com.sri.ltc.latexdiff;
 /**
  * @author linda
  */
-public class SmallDeletion extends Deletion {
+public final class SmallDeletion extends Deletion {
 
     public SmallDeletion(int start_position, String text, boolean inPreamble, boolean inComment, boolean isCommand) {
         super(start_position, text, inPreamble, inComment, isCommand);

@@ -16,27 +16,27 @@ import java.util.List;
  */
 public class Addition extends Change {
 
-    public final String text;
     public final List<Lexeme> lexemes;
+    public final boolean lastInHunk;
 
-    public Addition(int start_position, String text, List<Lexeme> lexemes, boolean inPreamble, boolean inComment, boolean isCommand) {
+    public Addition(int start_position, List<Lexeme> lexemes, boolean lastInHunk, boolean inPreamble, boolean inComment, boolean isCommand) {
         super(start_position, inPreamble, inComment, isCommand);
-        if (text == null || "".equals(text))
-            throw new IllegalArgumentException("Text of addition cannot be NULL or empty.");
-        this.text = text;
+        if (lexemes == null)
+            throw new NullPointerException("List of lexemes in addition cannot be NULL.");
         this.lexemes = Collections.unmodifiableList(lexemes);
+        this.lastInHunk = lastInHunk;
     }
 
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (!(o instanceof Addition)) return false;
         if (!super.equals(o)) return false;
 
         Addition addition = (Addition) o;
 
-        if (lexemes != null ? !lexemes.equals(addition.lexemes) : addition.lexemes != null) return false;
-        if (!text.equals(addition.text)) return false;
+        if (lastInHunk != addition.lastInHunk) return false;
+        if (!lexemes.equals(addition.lexemes)) return false;
 
         return true;
     }
@@ -44,16 +44,18 @@ public class Addition extends Change {
     @Override
     public int hashCode() {
         int result = super.hashCode();
-        result = 31 * result + text.hashCode();
-        result = 31 * result + (lexemes != null ? lexemes.hashCode() : 0);
+        result = 31 * result + lexemes.hashCode();
+        result = 31 * result + (lastInHunk ? 1 : 0);
         return result;
     }
 
     String toXMLContents() {
-        StringBuffer buffer = new StringBuffer(super.toXMLContents());
-        buffer.append("  <text>");
-        buffer.append(escapeText(text));
-        buffer.append("</text>\n");        
+        StringBuilder buffer = new StringBuilder(super.toXMLContents());
+        buffer.append("  <lexemes size=");
+        buffer.append(lexemes.size());
+        buffer.append(" last=");
+        buffer.append(lastInHunk);
+        buffer.append("/>\n");
         return buffer.toString();
     }
 

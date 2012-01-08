@@ -11,23 +11,22 @@ short-term:
 - Emacs bugs when editing:
   - deleting itemize environment in indie2.bundle leaves 2 characters
 - feature: collapsing removals (recent edits) in LTCEditor for performance
-- packaging and installation:
-  - new application to update Emacs?
 - manual: write, write, write
 - web site: where to deploy?
 
 mid-term:
 =========
 
-- bug tracker?
+- packaging and installation:
+  - new application to update Emacs?
+- bug and feature tracker?
 - move away from JavaGit (interact with git via command line) to JGit library
-- release open source?
 - write TUG article
 
 long-term:
 ==========
 
 - mailing lists
-- update checking mechanism?
+- automated update mechanism?
 - support TeXworks, TeXShop?
 - promote project?

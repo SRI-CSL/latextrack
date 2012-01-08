@@ -13,10 +13,44 @@ import java.util.Collections;
 /**
  * @author linda
  */
-public class SmallAddition extends Addition {
+public final class SmallAddition extends Addition {
+
+    public final String text;
 
     public SmallAddition(int start_position, String text, boolean inPreamble, boolean inComment, boolean isCommand) {
-        super(start_position, text, Collections.<Lexeme>emptyList(), inPreamble, inComment, isCommand);
+        super(start_position, Collections.<Lexeme>emptyList(), true, inPreamble, inComment, isCommand);
+        if (text == null || "".equals(text))
+            throw new IllegalArgumentException("Text of small addition cannot be NULL or empty.");
+        this.text = text;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        if (!super.equals(o)) return false;
+
+        SmallAddition that = (SmallAddition) o;
+
+        if (!text.equals(that.text)) return false;
+
+        return true;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = super.hashCode();
+        result = 31 * result + text.hashCode();
+        return result;
+    }
+
+    @Override
+    String toXMLContents() {
+        StringBuilder buffer = new StringBuilder(super.toXMLContents());
+        buffer.append("  <text>");
+        buffer.append(escapeText(text));
+        buffer.append("</text>\n");
+        return buffer.toString();
     }
 
     @Override

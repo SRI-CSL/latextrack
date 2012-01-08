@@ -24,6 +24,19 @@ public final class TestLatexDiff {
     private static final LatexDiff latexDiff = new LatexDiff();
     List<Change> changes;
 
+    private static List<Change> getChanges(String text1, String text2) throws IOException {
+        return latexDiff.getChanges(
+                new StringReaderWrapper(text1),
+                new StringReaderWrapper(text2));
+    }
+
+    private void renderXML() {
+        System.out.println();
+        for (Change c : changes)
+            System.out.println(c);
+        System.out.println();
+    }
+
     @Test
     public void additions() throws IOException {
         changes = latexDiff.getChanges(
@@ -125,12 +138,11 @@ public final class TestLatexDiff {
 
     @Test
     public void additionsWithMixedTypes() throws IOException {
-        changes = latexDiff.getChanges(new StringReaderWrapper(
-                "Lorem \n dolor sit amet."
-        ), new StringReaderWrapper(
+        changes = getChanges(
+                "Lorem \n dlor sit amet.",
                 "Lorem ipsum \n%%%  HERE IS A COMMENT WITH SPACE AND MORE %...\n\n\\textbf{dolor} sit amet."
-        ));
-        assertTrue("6 changes", changes.size() == 6);
+        );
+        assertTrue("7 changes", changes.size() == 7);
         // start position of next change equals last lexeme of addition for changes 1-4:
         for (int i=0; i<4; i++) {
             Change change = changes.get(i);
@@ -139,5 +151,20 @@ public final class TestLatexDiff {
             List<Lexeme> lexemes = ((Addition) change).lexemes;
             assertTrue(lexemes.get(lexemes.size()-1).pos == nextChange.start_position);
         }
+        renderXML();
+        changes = getChanges(
+                "Lorem \n dolor   amet.",
+                "Lorem ipsum \n%%%  HERE IS A COMMENT\n dlor sit amet.");
+        assertTrue("4 changes", changes.size() == 4);
+        renderXML();
+    }
+
+    @Test
+    public void replacements() throws IOException {
+        changes = getChanges(
+                "  Lorem ipsum dolor sit amet.\n",
+                "Lorem ipsum \ndolor sit amet, \n "
+        );
+        assertTrue("2 changes", changes.size() == 2);
     }
 }

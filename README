@@ -58,7 +58,7 @@ b) Java Editor
 Testing
 -------
 
-TODO: write
+$> mvn test
 
 
 Git Repositories etc.

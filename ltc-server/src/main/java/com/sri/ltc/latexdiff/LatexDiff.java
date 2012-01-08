@@ -218,7 +218,7 @@ public final class LatexDiff {
                         // small changes := lexemes are not both SPACE and of the same type and
                         //   have a Levenshtein distance less than 3 and less than the length of shorter lexeme
                         // TODO: consider using Damerau-Levenshtein and limit to 1 instead!
-                        // TODO: (http://spider.my/static/contrib/Levenshtein.java)
+                        // see (http://spider.my/static/contrib/Levenshtein.java)
                         if (!(SPACE.contains(lexeme0.type) && SPACE.contains(lexeme1.type)) &&
                                 lexeme0.type.equals(lexeme1.type) &&
                                 Levenshtein.getLevenshteinDistance(lexeme0.contents, lexeme1.contents) <
@@ -284,13 +284,16 @@ public final class LatexDiff {
             // Additions
             if (hunk.inserted > 0) {
                 List<IndexPair> indices = getIndices(list1.subList(hunk.line1, hunk.line1+hunk.inserted), hunk.line1);
+                int lastIndex = hunk.line1+hunk.inserted;
                 for (IndexPair indexPair : indices) {
                     start_position = list1.get(indexPair.left).pos;
-                    end_position1 = list1.get(indexPair.right).pos; // use next lexeme for end position
+                    end_position1 = (indexPair.right < lastIndex?
+                            list1.get(indexPair.right).pos: // use next lexeme for end position if not last
+                            list1.get(lastIndex-1).pos + list1.get(lastIndex-1).length); // use end of lexeme if last
                     result.add(new Addition(
                             start_position,
-                            contents[1].substring(start_position, end_position1),
                             list1.subList(indexPair.left, indexPair.right+1), // add the first matching lexeme
+                            indexPair.right >= lastIndex, // whether addition is last in hunk
                             inPreamble,
                             LexemeType.COMMENT.equals(list1.get(indexPair.left).type),
                             LexemeType.COMMAND.equals(list1.get(indexPair.left).type)));

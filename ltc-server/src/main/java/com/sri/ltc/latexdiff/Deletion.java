@@ -43,7 +43,7 @@ public class Deletion extends Change {
     }
 
     String toXMLContents() {
-        StringBuffer buffer = new StringBuffer(super.toXMLContents());
+        StringBuilder buffer = new StringBuilder(super.toXMLContents());
         buffer.append("  <text>");
         buffer.append(escapeText(text));
         buffer.append("</text>\n");

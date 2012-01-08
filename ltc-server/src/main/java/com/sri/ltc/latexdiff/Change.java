@@ -87,7 +87,7 @@ public abstract class Change implements Comparable<Change> {
     }
 
     String toXMLContents() {
-        StringBuffer buffer = new StringBuffer();
+        StringBuilder buffer = new StringBuilder();
         buffer.append("  <start position="+start_position);
         buffer.append(" />\n");
         buffer.append("  <flags inPreamble="+inPreamble);
