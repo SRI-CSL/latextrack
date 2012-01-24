@@ -36,7 +36,7 @@ $> mvn clean verify site site:deploy
 
 To create the distributable:
 
-$> mvn package
+$> mvn clean package
 
 
 Running

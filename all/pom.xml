@@ -38,11 +38,11 @@
             <artifactId>ltc-editor</artifactId>
         </dependency>
         <!-- TODO: add dependency when Java sources exist in ltc-emacs -->
-        <!--<dependency>-->
-            <!--<groupId>${project.groupId}</groupId>-->
-            <!--<version>${project.version}</version>-->
-            <!--<artifactId>ltc-emacs</artifactId>-->
-        <!--</dependency>-->
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <version>${project.version}</version>
+            <artifactId>ltc-emacs</artifactId>
+        </dependency>
     </dependencies>
 
     <build>

@@ -11,12 +11,11 @@ short-term:
 - Emacs bugs when editing:
   - deleting itemize environment in indie2.bundle leaves 2 characters
 - feature: collapsing removals (recent edits) in LTCEditor for performance
-- manual: write, write, write
-- web site: where to deploy?
 
 mid-term:
 =========
 
+- reformat Emacs style (menu items and help pages)
 - packaging and installation:
   - new application to update Emacs?
 - bug and feature tracker?
@@ -26,7 +25,12 @@ mid-term:
 long-term:
 ==========
 
+- base system:
+  - graph rendering (to be used in front-end) and toggling individual revisions
+  - handling parallel branches
+- handling merge conflicts
 - mailing lists
 - automated update mechanism?
-- support TeXworks, TeXShop?
+- support TeXworks, TeXShop?  MS Word??
+- output changes into PDF?
 - promote project?
