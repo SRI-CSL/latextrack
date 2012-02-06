@@ -52,29 +52,46 @@
             </plugin>
 
             <plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>exec-maven-plugin</artifactId>
-                <version>1.2.1</version>
+                <groupId>de.jflex</groupId>
+                <artifactId>maven-jflex-plugin</artifactId>
+                <version>1.4.3</version>
                 <executions>
                     <execution>
                         <phase>generate-sources</phase>
                         <goals>
-                            <goal>exec</goal>
+                            <goal>generate</goal>
                         </goals>
+                        <configuration>
+                            <outputDirectory>src/main/java</outputDirectory>
+                        </configuration>
                     </execution>
                 </executions>
-                <configuration>
-                    <executable>java</executable>
-                    <arguments>
-                        <argument>-cp</argument>
-                        <argument>../lib/JFlex.jar</argument>
-                        <argument>JFlex.Main</argument>
-                        <argument>-d</argument>
-                        <argument>${project.build.sourceDirectory}/com/sri/ltc/latexdiff</argument>
-                        <argument>src/main/jflex/lexer.jflex</argument>
-                    </arguments>
-                </configuration>
             </plugin>
+
+            <!--<plugin>-->
+                <!--<groupId>org.codehaus.mojo</groupId>-->
+                <!--<artifactId>exec-maven-plugin</artifactId>-->
+                <!--<version>1.2.1</version>-->
+                <!--<executions>-->
+                    <!--<execution>-->
+                        <!--<phase>generate-sources</phase>-->
+                        <!--<goals>-->
+                            <!--<goal>exec</goal>-->
+                        <!--</goals>-->
+                    <!--</execution>-->
+                <!--</executions>-->
+                <!--<configuration>-->
+                    <!--<executable>java</executable>-->
+                    <!--<arguments>-->
+                        <!--<argument>-cp</argument>-->
+                        <!--<argument>../lib/JFlex.jar</argument>-->
+                        <!--<argument>JFlex.Main</argument>-->
+                        <!--<argument>-d</argument>-->
+                        <!--<argument>${project.build.sourceDirectory}/com/sri/ltc/latexdiff</argument>-->
+                        <!--<argument>src/main/jflex/lexer.jflex</argument>-->
+                    <!--</arguments>-->
+                <!--</configuration>-->
+            <!--</plugin>-->
 
             <plugin>
                 <artifactId>maven-shade-plugin</artifactId>

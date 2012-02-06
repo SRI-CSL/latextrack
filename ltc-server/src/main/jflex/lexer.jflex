@@ -67,6 +67,7 @@ whitespace  = {EOL} | {space}
 %%
 /* -----------------Lexical Rules Section------------------------------------ */ 
 
+
 \\[A-Za-z]+          { return new Lexeme(LexemeType.COMMAND, yytext(), yychar, yyline+1, yycolumn, yylength()); } 
   /* commands that are more than one letter long */
 
