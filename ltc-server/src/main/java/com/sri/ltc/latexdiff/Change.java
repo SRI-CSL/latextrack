@@ -29,6 +29,13 @@ public abstract class Change implements Comparable<Change> {
     public final boolean isCommand;
     private final Integer sequenceNumber;
 
+    // TODO: transform boolean flags to numeric ones...
+    public final static int IS_DELETION = 1;
+    public final static int IS_SMALL = 2;
+    public final static int IS_PREAMBLE = 4;
+    public final static int IS_COMMENT = 8;
+    public final static int IS_COMMAND = 16;
+
     private final static Map<Class,Integer> ORDER = new HashMap<Class,Integer>(6);
     static {
         // If normal and small have the same position,
@@ -58,6 +65,16 @@ public abstract class Change implements Comparable<Change> {
         synchronized (sequence) {
             sequenceNumber = sequence++;
         }
+    }
+
+    public final int getFlags() {
+        int flags = 0;
+        if (inPreamble) flags = flags | IS_PREAMBLE;
+        if (inComment) flags = flags | IS_COMMENT;
+        if (isCommand) flags = flags | IS_COMMAND;
+        if (this instanceof SmallAddition || this instanceof SmallDeletion) flags = flags | IS_SMALL;
+        if (this instanceof Deletion) flags = flags | IS_DELETION;
+        return flags;
     }
 
     public int compareTo(Change o) {

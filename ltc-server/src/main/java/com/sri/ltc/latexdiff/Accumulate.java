@@ -35,6 +35,13 @@ public final class Accumulate {
     private final static String ADDITION_STYLE = "addition";
     private final static String DELETION_STYLE = "deletion";
     public final static String AUTHOR_INDEX = "author index";
+    private final static String FLAGS_ATTR = "flag attribute";
+
+    private final static byte SHOW_DELETIONS = 1;
+    private final static byte SHOW_SMALL = 2;
+    private final static byte SHOW_PREAMBLE = 4;
+    private final static byte SHOW_COMMENT = 8;
+    private final static byte SHOW_COMMAND = 16;
 
     public Accumulate(String initialText) throws BadLocationException {
         this((StyledDocument) null);
@@ -211,7 +218,7 @@ public final class Accumulate {
                 }
 
                 if (change instanceof Addition && !(change instanceof SmallAddition))
-                    markupAddition(start_position, ((Addition) change).lexemes, ((Addition) change).lastInHunk);
+                    markupAddition(start_position, ((Addition) change).lexemes);
 
                 if (change instanceof SmallAddition && showSmallChanges)
                     // show small additions only if set to do so
@@ -219,10 +226,10 @@ public final class Accumulate {
             }
 
             // compare prior text (index) to current text for translocations of the next loop
-            if (index > 0)
-                translocations = buildTranslocationMap(latexDiff.getTranslocations(
-                        priorText[index],
-                        new StringReaderWrapper(document.getText(0, document.getLength()))));
+//            if (index > 0)
+//                translocations = buildTranslocationMap(latexDiff.getTranslocations(
+//                        priorText[index],
+//                        new StringReaderWrapper(document.getText(0, document.getLength()))));
 
             // update progress counter
             pcs.firePropertyChange(PROGRESS_PROPERTY, new Float(progress), new Float(progress+step_increment));
@@ -280,7 +287,7 @@ public final class Accumulate {
         return position;
     }
 
-    private void markupAddition(int start_position, List<Lexeme> lexemes, boolean lastInHunk)
+    private void markupAddition(int start_position, List<Lexeme> lexemes)
             throws BadLocationException, IOException {
         if (document.getLength() > start_position) {
             // get current text to match against addition
@@ -296,15 +303,17 @@ public final class Accumulate {
                 // figure out last matching lexeme to get end position of addition:
                 int index1 = current_lexemes.size() - 1; // if upcoming diff matches for rest of current text,
                                                          // hunk will be NULL so use last lexeme for end position
-                for (Diff.change hunk = latexDiff.diff(Arrays.asList(lexemes, current_lexemes)) ; hunk != null; hunk = hunk.link)
-                    index1 = hunk.line1 - 1;
-                if (index1 >= 0 && index1 < current_lexemes.size()) {
+                for (Diff.change hunk = latexDiff.diff(Arrays.asList(
+                        lexemes.subList(0, lexemes.size() - 1), // remove last lexeme for comparison as it was added to
+                                                                // addition to denote end position (but it did not differ)
+                        current_lexemes));
+                     hunk != null; hunk = hunk.link)
+                    index1 = hunk.line1;
+                if (index1 >= 0 && index1 < current_lexemes.size())
                     // remember that each addition carries one extra lexeme (that was matching) at end
                     end_position = start_position + current_lexemes.get(index1).pos;
-                    // TODO: if addition was last in original hunk, use different end position
-                }
             }
-            markUp(start_position, end_position);
+            markUp(start_position, end_position, 0);
         }
     }
 
@@ -318,18 +327,145 @@ public final class Accumulate {
             String current = current_text.substring(0, Math.min(current_text.length(),text.length()));
             if (current.equals(text))
                 end_position = start_position + current.length();
-            markUp(start_position, end_position);
+            markUp(start_position, end_position, 0);
         }
     }
 
-    private void markUp(int start_position, int end_position) {
+    private void markUp(int start_position, int end_position, int flags) {
         // markup everything between start_position and end_position except
         // currently marked ADDITIONS and DELETIONS:
-        for (int i=start_position; i < end_position; i++) {
-            Object style = document.getCharacterElement(i).getAttributes().getAttribute(StyleConstants.NameAttribute);
-            if (!DELETION_STYLE.equals(style) && !ADDITION_STYLE.equals(style))
-                document.setCharacterAttributes(i, 1, document.getStyle(ADDITION_STYLE), true);
+        for (int i = start_position; i < end_position; i++) {
+            Object styleName = document.getCharacterElement(i).getAttributes().getAttribute(StyleConstants.NameAttribute);
+            if (!DELETION_STYLE.equals(styleName) && !ADDITION_STYLE.equals(styleName)) {
+                Style style = document.getStyle(ADDITION_STYLE);
+                style.addAttribute(FLAGS_ATTR, flags);
+                document.setCharacterAttributes(i, 1, style, true);
+            }
         }
+    }
+
+    /**
+     * Perform accumulation of changes over the given array of texts.  If given array of texts is empty or <code>null</code>
+     * then does nothing and returns a map with empty text and styles.  If given a array of texts has at least one entry,
+     * the array of author indices must match up in length or be empty or <code>null</code>.  If there is at least 2 texts
+     * to compare but the author indices is empty, this function assigns author indices [1..(n-1)] for n = length of text
+     * array.
+     * <p>
+     * A number of boolean flags indicates whether to show or hide deletions, small changes, changes in preamble,
+     * comments, and commands.
+     * <p>
+     * The returned map contains 2 entries for keys {@link LTCserverInterface.KEY_TEXT} and {@link LTCserverInterface.KEY_STYLES}.
+     * The value for the first key is the text obtained from accumulating all changes.  The value for the second key
+     * is a list of 4-tuples denoting the mark up for the text.  Each 4-tuple has integers
+     * <pre>
+     *     <start position (incl.), end position (excl.), addition/deletion, author index>
+     * </pre>, which contain the start and end position of the change (positions in text start with 0), a 1 for
+     * addition or 2 for deletion, and the index of the author who made this change.  The author index is either taken
+     * from the given array or assigned by index of the text array.
+     *
+     * @param priorText an array of text wrappers denoting the oldest to the newest version
+     * @param authorIndices an array of author indices for each version of priorText;
+     *                      must be of the same length as priorText or empty or <code>null</code>
+     * @param showDeletions whether to show or hide deletions in accumulated changes
+     * @param showSmallChanges whether to show or hide small changes in accumulated changes
+     * @param showPreambleChanges whether to show or hide changes in preamble in accumulated changes
+     * @param showCommentChanges whether to show or hide changes in comments in accumulated changes
+     * @param showCommandChanges whether to show or hide changes in commands in accumulated changes
+     * @return Map with 2 entries pointing to the text and the list of styles to mark-up the changes in the text
+     * @throws IOException if given readers cannot load text
+     * @throws BadLocationException if a location in the underlying document does not exist
+     */
+    @SuppressWarnings("unchecked")
+    public Map perform2(ReaderWrapper[] priorText,
+                       Integer[] authorIndices,
+                       boolean showDeletions,
+                       boolean showSmallChanges,
+                       boolean showPreambleChanges,
+                       boolean showCommentChanges,
+                       boolean showCommandChanges) throws IOException, BadLocationException {
+
+        // init return value:
+        Map map = new HashMap();
+        map.put(LTCserverInterface.KEY_TEXT, "");
+        map.put(LTCserverInterface.KEY_STYLES, new ArrayList<Integer[]>());
+
+        if (priorText == null || priorText.length == 0)
+            return map;
+
+        // generate color palette
+        int n = Math.max(priorText.length+1,
+                (authorIndices == null || authorIndices.length == 0)?0:new TreeSet<Integer>(Arrays.asList(authorIndices)).last()+1);
+        Color[] colors = new Color[n];
+        for(int i = 0; i < n; i++)
+            colors[i] = Color.getHSBColor((float) i / (float) n, 0.85f, 1.0f);
+
+        float progress = 0f; // TODO: track progress through source code.... (and fire updates)
+
+        // merge everything into one styled document: init document with latest text
+        document.remove(0, document.getLength());
+        document.insertString(0, LatexDiff.copyText(priorText[priorText.length - 1].createReader()), null);
+
+        Style style;
+        int current_offset = 0;
+
+        // go from latest to earliest version: start with comparing current document with second latest
+        for (int index = priorText.length - 1; index > 0; index--) {
+
+            // compare current document with next version
+            List<Change> changes = latexDiff.getChanges(
+                    priorText[index - 1],
+                    new StringReaderWrapper(document.getText(0, document.getLength())));
+            if (changes.isEmpty())
+                continue; // skip to next version if no changes
+
+            // prepare styles with color and author index
+            int authorIndex = (authorIndices == null || authorIndices.length != priorText.length)?
+                    index:authorIndices[index];
+            style = document.getStyle(DELETION_STYLE);
+            StyleConstants.setForeground(style, colors[authorIndex]);
+            style.addAttribute(AUTHOR_INDEX, authorIndex);
+            style = document.getStyle(ADDITION_STYLE);
+            StyleConstants.setForeground(style, colors[authorIndex]);
+            style.addAttribute(AUTHOR_INDEX, authorIndex);
+
+            // go through changes and markup document
+            for (Change change : changes) {
+                int start_position = change.start_position + current_offset;
+
+                if (change instanceof Deletion) {
+                    style = document.getStyle(DELETION_STYLE);
+                    style.addAttribute(FLAGS_ATTR, change.getFlags());
+                    document.insertString(start_position,
+                            ((Deletion) change).text,
+                            style);
+                    current_offset += ((Deletion) change).text.length();
+                }
+
+                if (change instanceof Addition) {
+                    int end_position = -1;
+                    if (change instanceof SmallAddition)
+                        end_position = start_position + ((SmallAddition) change).text.length();
+                    else
+                        end_position = ((Addition) change).lexemes.get(((Addition) change).lexemes.size()-1).pos + current_offset;
+                    markUp(start_position, end_position, change.getFlags());
+                }
+            }
+
+        }
+
+        // create return value:
+        map.put(LTCserverInterface.KEY_TEXT, document.getText(0, document.getLength()));
+        // TODO: apply filtering to marked up text (look at FLAGS_ATTR!)
+        List<Integer[]> list = new ArrayList<Integer[]>();
+        Chunk c = traverse(document.getDefaultRootElement(), null, list);
+        // handle last chunk and add it if not default style:
+        c.end = document.getLength()+1;
+        if (!"default".equals(c.style))
+            list.add(c.asList());
+        map.put(LTCserverInterface.KEY_STYLES, list);
+
+        pcs.firePropertyChange(PROGRESS_PROPERTY, new Float(progress), new Float(1f));
+        return map;
     }
 
     private Chunk traverse(Element element, Chunk last, List<Integer[]> list) {

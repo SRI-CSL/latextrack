@@ -16,8 +16,6 @@ import java.util.regex.Pattern;
 %public
 %type Lexeme
 %char
-%line
-%column
 %unicode
 %state EOF
 %xstate IN_COMMENT
@@ -25,6 +23,7 @@ import java.util.regex.Pattern;
 %{
     private final static Pattern pattern = Pattern.compile(".*(\r\n|\r|\n).*"); // newlines
     private int prior_state = 0;
+
     public void startInComment() {
         yybegin(IN_COMMENT);
     }
@@ -48,6 +47,7 @@ import java.util.regex.Pattern;
         // Run lexical analyzer over given file to get lexeme and locations
         Lexer scanner = new Lexer(reader);
         try {
+            System.out.println(new Lexeme(LexemeType.START_OF_FILE, "", 0, 0));
             while ((lexem = scanner.yylex()) != null)
                 System.out.println(lexem);
             scanner.yyclose();
@@ -62,24 +62,22 @@ EOL         = [\r\n] | \r\n
 punctuation = [.,;:!?\'\"`\^]
 symbol      = [{}\[\]()|#$%&@+\-<=>_\\/*~]
 space       = [ \t\f]
-whitespace  = {EOL} | {space}
 
 %%
 /* -----------------Lexical Rules Section------------------------------------ */ 
 
-
-\\[A-Za-z]+          { return new Lexeme(LexemeType.COMMAND, yytext(), yychar, yyline+1, yycolumn, yylength()); } 
+\\[A-Za-z]+          { return new Lexeme(LexemeType.COMMAND, yytext(), yychar, yylength()); } 
   /* commands that are more than one letter long */
 
-\\[^ \t\r\n\f]       { return new Lexeme(LexemeType.COMMAND, yytext(), yychar, yyline+1, yycolumn, yylength()); }
+\\[^ \t\r\n\f]       { return new Lexeme(LexemeType.COMMAND, yytext(), yychar, yylength()); }
   /* commands that are one non-whitespace character after backslash */
 
-\\begin\{document\}  { return new Lexeme(LexemeType.PREAMBLE, yytext(), yychar, yyline+1, yycolumn, yylength()); }
+\\begin\{document\}  { return new Lexeme(LexemeType.PREAMBLE, yytext(), yychar, yylength()); }
   /* dividing preamble from rest of document */
 
 %                    { prior_state = yystate(); // remember prior state
                        yybegin(IN_COMMENT);
-                       return new Lexeme(LexemeType.COMMENT, yytext(), yychar, yyline+1, yycolumn, yylength()); }
+                       return new Lexeme(LexemeType.COMMENT, yytext(), yychar, yylength()); }
   /* if not escaped, % indicates comments until next newline */
 
 <IN_COMMENT> {
@@ -88,21 +86,21 @@ whitespace  = {EOL} | {space}
   \\[A-Za-z]+ |
   \\[^ \t\r\n\f] |
   [A-Za-z0-9\-]+
-                     { return new Lexeme(LexemeType.COMMENT, yytext(), yychar, yyline+1, yycolumn, yylength()); }
+                     { return new Lexeme(LexemeType.COMMENT, yytext(), yychar, yylength()); }
 }
   /* match COMMENT lexemes until end-of-line */
 
-{punctuation}        { return new Lexeme(LexemeType.PUNCTUATION, yytext(), yychar, yyline+1, yycolumn, yylength()); }
+{punctuation}        { return new Lexeme(LexemeType.PUNCTUATION, yytext(), yychar, yylength()); }
   /* match single punctuation characters */
 
-{symbol}             { return new Lexeme(LexemeType.SYMBOL, yytext(), yychar, yyline+1, yycolumn, yylength()); }
+{symbol}             { return new Lexeme(LexemeType.SYMBOL, yytext(), yychar, yylength()); }
   /* match single symbol characters */
 
-[A-Za-z0-9\-]+       { return new Lexeme(LexemeType.WORD, yytext(), yychar, yyline+1, yycolumn, yylength()); }
+[A-Za-z0-9\-]+       { return new Lexeme(LexemeType.WORD, yytext(), yychar, yylength()); }
   /* words are letters, digits and hyphen */ 
 
 <YYINITIAL,IN_COMMENT> 
-  {space}+           { return new Lexeme(LexemeType.WHITESPACE, yytext(), yychar, yyline+1, yycolumn, yylength()); }
+  {space}+           { return new Lexeme(LexemeType.WHITESPACE, yytext(), yychar, yylength()); }
   /* gobble-up white space before deciding on newlines and paragraphs */
 
 <YYINITIAL,IN_COMMENT> {
@@ -111,19 +109,19 @@ whitespace  = {EOL} | {space}
   \r\n({space}*{EOL})+ 
                      { if (yystate() == IN_COMMENT)
                          yybegin(prior_state);
-                       return new Lexeme(LexemeType.PARAGRAPH, yytext(), yychar, yyline+1, yycolumn, yylength()); }
+                       return new Lexeme(LexemeType.PARAGRAPH, yytext(), yychar, yylength()); }
 }
   /* paragraphs are 2 or more end-of-lines and possibly white space without line breaks in between */
 
 <YYINITIAL,IN_COMMENT> 
   {EOL}{space}*      { if (yystate() == IN_COMMENT) 
 		         yybegin(prior_state);
-                       return new Lexeme(LexemeType.WHITESPACE, yytext(), yychar, yyline+1, yycolumn, yylength()); } 
+                       return new Lexeme(LexemeType.WHITESPACE, yytext(), yychar, yylength()); } 
   /* other, non-paragraph whitespace */
 
 <YYINITIAL,IN_COMMENT> 
   <<EOF>>            { yybegin(EOF);
-                       return new Lexeme(LexemeType.END_OF_FILE, yytext(), yychar, yyline+1, yycolumn, 0); }
+                       return new Lexeme(LexemeType.END_OF_FILE, yytext(), yychar, 0); }
   /* mark end-of-file so that there is always one matching lexeme to determine end position of deletions */ 
 
 .                    { RuntimeException e = new RuntimeException("Cannot parse at position "+yychar+": "+yytext());

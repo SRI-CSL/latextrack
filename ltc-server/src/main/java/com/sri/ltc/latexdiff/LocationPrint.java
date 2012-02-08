@@ -44,7 +44,7 @@ public class LocationPrint extends DiffPrint.Base {
         if (deletes != 0)
             for (int i = first0; i <= last0; i++) {
                 Lexeme lexeme = list0.get(i);
-                print_1_line ("< ", file0[i]+"  ("+ lexeme.line+","+ lexeme.column+") @ "+lexeme.pos+" "+ lexeme.length);
+                print_1_line ("< ", file0[i]+"  @ "+lexeme.pos+" ("+lexeme.length+")");
             }
 
         // Replacements
@@ -57,7 +57,7 @@ public class LocationPrint extends DiffPrint.Base {
         if (inserts != 0)
             for (int i = first1; i <= last1; i++) {
                 Lexeme lexeme = list1.get(i);
-                print_1_line ("> ", file1[i]+"  ("+ lexeme.line+","+ lexeme.column+") @ "+lexeme.pos+" "+ lexeme.length);
+                print_1_line ("> ", file1[i]+"  @ "+lexeme.pos+" ("+lexeme.length+")");
             }
     }
 }

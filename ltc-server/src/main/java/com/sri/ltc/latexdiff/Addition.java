@@ -16,15 +16,15 @@ import java.util.List;
  */
 public class Addition extends Change {
 
+    public final int end_position;
     public final List<Lexeme> lexemes;
-    public final boolean lastInHunk;
 
-    public Addition(int start_position, List<Lexeme> lexemes, boolean lastInHunk, boolean inPreamble, boolean inComment, boolean isCommand) {
+    public Addition(int start_position, int end_position, List<Lexeme> lexemes, boolean inPreamble, boolean inComment, boolean isCommand) {
         super(start_position, inPreamble, inComment, isCommand);
+        this.end_position = end_position;
         if (lexemes == null)
             throw new NullPointerException("List of lexemes in addition cannot be NULL.");
         this.lexemes = Collections.unmodifiableList(lexemes);
-        this.lastInHunk = lastInHunk;
     }
 
     @Override
@@ -35,7 +35,6 @@ public class Addition extends Change {
 
         Addition addition = (Addition) o;
 
-        if (lastInHunk != addition.lastInHunk) return false;
         if (!lexemes.equals(addition.lexemes)) return false;
 
         return true;
@@ -45,7 +44,6 @@ public class Addition extends Change {
     public int hashCode() {
         int result = super.hashCode();
         result = 31 * result + lexemes.hashCode();
-        result = 31 * result + (lastInHunk ? 1 : 0);
         return result;
     }
 
@@ -53,8 +51,6 @@ public class Addition extends Change {
         StringBuilder buffer = new StringBuilder(super.toXMLContents());
         buffer.append("  <lexemes size=");
         buffer.append(lexemes.size());
-        buffer.append(" last=");
-        buffer.append(lastInHunk);
         buffer.append("/>\n");
         return buffer.toString();
     }

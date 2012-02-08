@@ -15,9 +15,9 @@ public class Lexeme {
 
     final LexemeType type;
     final String contents;
-    final int pos, line, column, length;
+    final int pos, length;
 
-    public Lexeme(LexemeType type, String contents, int pos, int line, int column, int length) {
+    public Lexeme(LexemeType type, String contents, int pos, int length) {
         if (type == null)
             throw new IllegalArgumentException("Cannot create Lexeme of type NULL");
         if (contents == null)
@@ -25,8 +25,6 @@ public class Lexeme {
         this.type = type;
         this.contents = contents;
         this.pos = pos;
-        this.line = line;
-        this.column = column;
         this.length = length;
     }
 
@@ -36,6 +34,6 @@ public class Lexeme {
 
     @Override
     public String toString() {
-        return type+" "+displayContents()+"  ("+line+","+column+")@"+pos+" "+length;
+        return type+" "+displayContents()+"  @"+pos+" ("+length+")";
     }
 }

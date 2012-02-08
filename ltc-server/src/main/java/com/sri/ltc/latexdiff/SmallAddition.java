@@ -18,7 +18,7 @@ public final class SmallAddition extends Addition {
     public final String text;
 
     public SmallAddition(int start_position, String text, boolean inPreamble, boolean inComment, boolean isCommand) {
-        super(start_position, Collections.<Lexeme>emptyList(), true, inPreamble, inComment, isCommand);
+        super(start_position, start_position+text.length(), Collections.<Lexeme>emptyList(), inPreamble, inComment, isCommand);
         if (text == null || "".equals(text))
             throw new IllegalArgumentException("Text of small addition cannot be NULL or empty.");
         this.text = text;

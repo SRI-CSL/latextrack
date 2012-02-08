@@ -5,9 +5,17 @@ Planning
 short-term:
 ===========
 
+- refactoring LatexDiff:
+  - positioning without WHITESPACE
+  - removing Translocations
+  - remove yycolumn and yyline etc.
+- refactoring Accumulate:
+  - test (2, 3, 4, and more versions!) and test and implement filtering!!!
+  - remove lexemes in Addition?
+  - use int flags instead of booleans in Change??
+  - remove unused code blocks: perform(), translocations...
 - bug: marking up comment when hiding comments in wrong color
-- test cases:
-  - Accumulate with various white space additions
+- Peter's and Grit's bugs
 - Emacs bugs when editing:
   - deleting itemize environment in indie2.bundle leaves 2 characters
 - feature: collapsing removals (recent edits) in LTCEditor for performance

@@ -8,6 +8,7 @@
  */
 package com.sri.ltc.latexdiff;
 
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.io.IOException;
@@ -19,12 +20,12 @@ import static junit.framework.Assert.assertTrue;
 /**
  * @author linda
  */
-public final class TestLatexDiff {
+public class TestLatexDiff {
 
     private static final LatexDiff latexDiff = new LatexDiff();
-    List<Change> changes;
+    protected List<Change> changes;
 
-    private static List<Change> getChanges(String text1, String text2) throws IOException {
+    protected static List<Change> getChanges(String text1, String text2) throws IOException {
         return latexDiff.getChanges(
                 new StringReaderWrapper(text1),
                 new StringReaderWrapper(text2));
@@ -37,77 +38,63 @@ public final class TestLatexDiff {
         System.out.println();
     }
 
-    @Test
-    public void additions() throws IOException {
-        changes = latexDiff.getChanges(
-                new StringReaderWrapper("Lorem  sit amet. "),
-                new StringReaderWrapper("Lorem ipsum dolor sit amet. "));
-        assertTrue("Exactly one change", changes.size() == 1);
-        assertTrue("Change is addition", changes.get(0) instanceof Addition);
-        assertTrue("Start position is 6", changes.get(0).start_position == 6);
-        assertTrue("Addition contains 3 lexemes", ((Addition) changes.get(0)).lexemes.size() == 3);
-        changes = latexDiff.getChanges(
-                new StringReaderWrapper("Lorem ipsum dolr sit amet. "),
-                new StringReaderWrapper("Lorem ipsum dolor sit amet."));
+    protected void assertAddition(int index, int start_position, int end_position) {
+        assertTrue("at least "+(index+1)+" changes", changes.size() >= index+1);
+        Change change = changes.get(index);
+        assertTrue("change is addition", change instanceof Addition);
+        assertTrue("start is at "+start_position, change.start_position == start_position);
+        assertTrue("end is at " + end_position, ((Addition) change).end_position == end_position);
+    }
+
+    protected void assertDeletion(int index, int start_position, int length) {
+        assertTrue("at least "+(index+1)+" changes", changes.size() >= index+1);
+        Change change = changes.get(index);
+        assertTrue("change is deletion", change instanceof Deletion);
+        assertTrue("start is at "+start_position, change.start_position == start_position);
+        assertTrue("length is "+length, ((Deletion) change).text.length() == length);
+    }
+
+    @Ignore
+    public void smallAdditions() throws IOException {
+        changes = getChanges(
+                "Lorem ipsum dolr sit amet. ",
+                "Lorem ipsum dolor sit amet.");
         assertTrue("Change is small addition", changes.get(0) instanceof SmallAddition);
         assertTrue("Start position is 15", changes.get(0).start_position == 15);
         assertTrue("Small addition contains no lexemes", ((SmallAddition) changes.get(0)).lexemes.size() == 0);
-        changes = latexDiff.getChanges(
-                new StringReaderWrapper("Lorem ipsum dolor sit amet"),
-                new StringReaderWrapper("  Lorem ipsum dolor sit amet. "));
-        assertTrue("Exactly one change", changes.size() == 1);
-        assertTrue("Change is addition", changes.get(0) instanceof Addition);
-        assertTrue("Start position is 28", changes.get(0).start_position == 28);
-        List<Lexeme> lexemes = ((Addition) changes.get(0)).lexemes;
-        assertTrue("Addition contains 2 lexemes", lexemes.size() == 2);
-        assertEquals(LexemeType.END_OF_FILE, lexemes.get(1).type);
     }
 
     @Test(expected = NullPointerException.class)
     public void nullReader() throws IOException {
-        latexDiff.getChanges(
-                new StringReaderWrapper(""),
-                new StringReaderWrapper(null));
+        changes = getChanges("", null);
     }
 
     @Test
     public void whitespace() throws IOException {
-        changes = latexDiff.getChanges(
-                new StringReaderWrapper(""),
-                new StringReaderWrapper(" \n   \t"));
+        changes = getChanges("", " \n   \t");
         assertTrue("Changes is empty", changes.isEmpty());
-        changes = latexDiff.getChanges(
-                new StringReaderWrapper("   Lorem ipsum \n dolor sit amet. "),
-                new StringReaderWrapper("Lorem ipsum dolor sit amet."));
+        changes = getChanges(
+                "   Lorem ipsum \n dolor sit amet. ",
+                "Lorem ipsum dolor sit amet.");
         assertTrue("Changes is empty", changes.isEmpty());
-        changes = latexDiff.getChanges(
-                new StringReaderWrapper("   \n "),
-                new StringReaderWrapper(" \t  "));
+        changes = getChanges("   \n ", " \t  ");
         assertTrue("Changes is empty", changes.isEmpty());
-        changes = latexDiff.getChanges(
-                new StringReaderWrapper("   Lorem ipsum \n \ndolor sit amet. "),
-                new StringReaderWrapper("Lorem ipsum dolor sit amet."));
-        assertTrue("Exactly one change", changes.size() == 1);
-        assertTrue("Change is deletion", changes.get(0) instanceof Deletion);
-        assertTrue("Start position is 12", changes.get(0).start_position == 12);
-        changes = latexDiff.getChanges(
-                new StringReaderWrapper("Lorem ipsum dolor sit amet."),
-                new StringReaderWrapper("   Lorem ipsum \n \ndolor sit amet. "));
-        assertTrue("Exactly one change", changes.size() == 1);
-        assertTrue("Change is addition", changes.get(0) instanceof Addition);
-        assertTrue("Start position is 15", changes.get(0).start_position == 15);
-        List<Lexeme> lexemes = ((Addition) changes.get(0)).lexemes;
-        assertTrue("Addition contains 2 lexemes", lexemes.size() == 2);
-        assertEquals(LexemeType.PARAGRAPH, lexemes.get(0).type);
+        changes = getChanges(
+                "   Lorem ipsum \n \ndolor sit amet. ",
+                "Lorem ipsum dolor sit amet.");
+        assertDeletion(0, 12, 3);
+        changes = getChanges(
+                "Lorem ipsum dolor sit amet.",
+                "   Lorem ipsum \n \ndolor sit amet. ");
+        assertAddition(0, 15, 18);
     }
 
-    @Test
-    public void changeInComment() throws IOException {
-        changes = latexDiff.getChanges(new StringReaderWrapper(
-                " \nLorem ipsum %%%  HERE IS A COMMMENT WITH SPACE...\n dolor sit amet. \n "
-        ), new StringReaderWrapper(
+    @Ignore
+    public void inComment() throws IOException {
+        changes = getChanges(
+                " \nLorem ipsum %%%  HERE IS A COMMMENT WITH SPACE...\n dolor sit amet. \n ",
                 "Lorem ipsum \n%%%  HERE IS A COMMENT WITH SPACE AND MORE %...\n dolor sit amet."
-        ));
+        );
         assertTrue("2 changes", changes.size() == 2);
         Change change = changes.get(0);
         assertTrue("1st change is small deletion", change instanceof SmallDeletion);
@@ -120,13 +107,12 @@ public final class TestLatexDiff {
                 !change.inPreamble && !change.isCommand && change.inComment);
     }
 
-    @Test
-    public void changeInPreamble() throws IOException {
-        changes = latexDiff.getChanges(new StringReaderWrapper(
-                " \n\n \\begin{document}  \n \nLorem ipsum \n dolor sit amet. \n "
-        ), new StringReaderWrapper(
+    @Ignore
+    public void inPreamble() throws IOException {
+        changes = getChanges(
+                " \n\n \\begin{document}  \n \nLorem ipsum \n dolor sit amet. \n ",
                 " \n\\usepackage{lipsum}\n \\begin{document}  \n \nLorem ipsum \n dolor sit amet. \n "
-        ));
+        );
         assertTrue("2 changes", changes.size() == 2);
         Change change = changes.get(0);
         assertTrue("1st change is in preamble and a command",
@@ -134,9 +120,10 @@ public final class TestLatexDiff {
         change = changes.get(1);
         assertTrue("2nd change is in preamble but not command nor a comment",
                 change.inPreamble && !change.isCommand && !change.inComment);
+        // TODO: Test cases before PREAMBLE, such as ignoring changes there or PARAGRAPHs
     }
 
-    @Test
+    @Ignore
     public void additionsWithMixedTypes() throws IOException {
         changes = getChanges(
                 "Lorem \n dlor sit amet.",
@@ -157,14 +144,5 @@ public final class TestLatexDiff {
                 "Lorem ipsum \n%%%  HERE IS A COMMENT\n dlor sit amet.");
         assertTrue("4 changes", changes.size() == 4);
         renderXML();
-    }
-
-    @Test
-    public void replacements() throws IOException {
-        changes = getChanges(
-                "  Lorem ipsum dolor sit amet.\n",
-                "Lorem ipsum \ndolor sit amet, \n "
-        );
-        assertTrue("2 changes", changes.size() == 2);
     }
 }
