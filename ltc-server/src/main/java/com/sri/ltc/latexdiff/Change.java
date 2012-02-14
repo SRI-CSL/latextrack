@@ -8,6 +8,8 @@
  */
 package com.sri.ltc.latexdiff;
 
+import java.util.Collections;
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -24,17 +26,16 @@ import java.util.Map;
 public abstract class Change implements Comparable<Change> {
 
     public final int start_position;
-    public final boolean inPreamble;
-    public final boolean inComment;
-    public final boolean isCommand;
+    public final EnumSet<Flag> flags;
     private final Integer sequenceNumber;
 
-    // TODO: transform boolean flags to numeric ones...
-    public final static int IS_DELETION = 1;
-    public final static int IS_SMALL = 2;
-    public final static int IS_PREAMBLE = 4;
-    public final static int IS_COMMENT = 8;
-    public final static int IS_COMMAND = 16;
+    public enum Flag {
+        DELETION,
+        SMALL,
+        PREAMBLE,
+        COMMENT,
+        COMMAND;
+    };
 
     private final static Map<Class,Integer> ORDER = new HashMap<Class,Integer>(6);
     static {
@@ -46,9 +47,9 @@ public abstract class Change implements Comparable<Change> {
         ORDER.put(Deletion.class, 2);
         ORDER.put(SmallAddition.class, 3);
         ORDER.put(SmallDeletion.class, 4);
-        ORDER.put(Translocation.class, 5);
     }
 
+    // sequence numbering for any Change object created
     private static Integer sequence = 0;
     public static void resetSequenceNumbering() {
         synchronized (sequence) {
@@ -56,25 +57,17 @@ public abstract class Change implements Comparable<Change> {
         }
     }
     
-    protected Change(int start_position, boolean inPreamble, boolean inComment, boolean isCommand) {
-        this.isCommand = isCommand;
+    protected Change(int start_position, EnumSet<Flag> flags) {
         if (start_position < 0) throw new IllegalArgumentException("Start position of change cannot be negative");
         this.start_position = start_position;
-        this.inPreamble = inPreamble;
-        this.inComment = inComment;
+        // compute immutable set of flags:
+        if (this instanceof SmallAddition || this instanceof SmallDeletion) flags.add(Flag.SMALL);
+        if (this instanceof Deletion) flags.add(Flag.DELETION);
+        this.flags = (EnumSet<Flag>) Collections.unmodifiableSet(flags);
+        // set and update sequence number:
         synchronized (sequence) {
             sequenceNumber = sequence++;
         }
-    }
-
-    public final int getFlags() {
-        int flags = 0;
-        if (inPreamble) flags = flags | IS_PREAMBLE;
-        if (inComment) flags = flags | IS_COMMENT;
-        if (isCommand) flags = flags | IS_COMMAND;
-        if (this instanceof SmallAddition || this instanceof SmallDeletion) flags = flags | IS_SMALL;
-        if (this instanceof Deletion) flags = flags | IS_DELETION;
-        return flags;
     }
 
     public int compareTo(Change o) {
@@ -107,10 +100,9 @@ public abstract class Change implements Comparable<Change> {
         StringBuilder buffer = new StringBuilder();
         buffer.append("  <start position="+start_position);
         buffer.append(" />\n");
-        buffer.append("  <flags inPreamble="+inPreamble);
-        buffer.append(" inComment="+inComment);
-        buffer.append(" isCommand="+isCommand);
-        buffer.append(" />\n");
+        buffer.append("  <flags>");
+        buffer.append(flags.toString());
+        buffer.append("</flags>\n");
         return buffer.toString();
     }
 
@@ -122,5 +114,71 @@ public abstract class Change implements Comparable<Change> {
         text = text.replaceAll("'","&apos;");
         text = text.replaceAll("\"","&quot;");
         return text;
-    }    
+    }
+
+//    /**
+//     * Encapsulate possible flags in changes and to annotate characters in a Document.
+//     */
+//    public final class Flags {
+//
+//        private final int flags;
+//
+//        private Flags(FlagsBuilder builder) {
+//            int flag_helper = 0;
+//            if (builder.isSmall) flag_helper |= SMALL;
+//            if (builder.isPreamble) flag_helper |= PREAMBLE;
+//            if (builder.isComment) flag_helper |= COMMENT;
+//            if (builder.isCommand) flag_helper |= COMMAND;
+//            this.flags = flag_helper;
+//        }
+//
+//        public int getFlags() {
+//            return flags;
+//        }
+//
+//        //        public final int getFlags() {
+////            int flags = 0;
+////            if (inPreamble) flags = flags | PREAMBLE;
+////            if (inComment) flags = flags | COMMENT;
+////            if (isCommand) flags = flags | COMMAND;
+////            if (this instanceof SmallAddition || this instanceof SmallDeletion) flags = flags | SMALL;
+////            if (this instanceof Deletion) flags = flags | IS_DELETION;
+////            return flags;
+////        }
+//
+//
+//    }
+//
+//    public final class FlagsBuilder {
+//
+//        boolean isSmall = false;
+//        boolean isPreamble = false;
+//        boolean isComment = false;
+//        boolean isCommand = false;
+//
+//        public FlagsBuilder setSmall() {
+//            this.isSmall = true;
+//            return this;
+//        }
+//
+//        public FlagsBuilder setPreamble() {
+//            this.isPreamble = true;
+//            return this;
+//        }
+//
+//        public FlagsBuilder setComment() {
+//            this.isComment = true;
+//            return this;
+//        }
+//
+//        public FlagsBuilder setCommand() {
+//            this.isCommand = true;
+//            return this;
+//        }
+//
+//        public Flags build() {
+//            return new Flags(this);
+//        }
+//
+//    }
 }

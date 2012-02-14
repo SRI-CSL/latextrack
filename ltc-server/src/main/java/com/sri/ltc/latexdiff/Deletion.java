@@ -8,6 +8,8 @@
  */
 package com.sri.ltc.latexdiff;
 
+import java.util.EnumSet;
+
 /**
  * @author linda
  */
@@ -15,8 +17,8 @@ public class Deletion extends Change {
 
     public final String text;
 
-    public Deletion(int start_position, String text, boolean inPreamble, boolean inComment, boolean isCommand) {
-        super(start_position, inPreamble, inComment, isCommand);
+    public Deletion(int start_position, String text, EnumSet<Flag> flags) {
+        super(start_position, flags);
         if (text == null || "".equals(text))
             throw new IllegalArgumentException("Text of deletion cannot be NULL or empty.");
         this.text = text;

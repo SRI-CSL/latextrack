@@ -9,6 +9,7 @@
 package com.sri.ltc.latexdiff;
 
 import java.util.Collections;
+import java.util.EnumSet;
 import java.util.List;
 
 /**
@@ -19,8 +20,8 @@ public class Addition extends Change {
     public final int end_position;
     public final List<Lexeme> lexemes;
 
-    public Addition(int start_position, int end_position, List<Lexeme> lexemes, boolean inPreamble, boolean inComment, boolean isCommand) {
-        super(start_position, inPreamble, inComment, isCommand);
+    public Addition(int start_position, int end_position, List<Lexeme> lexemes, EnumSet<Flag> flags) {
+        super(start_position, flags);
         this.end_position = end_position;
         if (lexemes == null)
             throw new NullPointerException("List of lexemes in addition cannot be NULL.");

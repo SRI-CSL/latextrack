@@ -79,13 +79,21 @@ public final class LatexDiff {
         return list;
     }
 
-    private final Character[] toCharacters(char[] chars) {
+    private Character[] toCharacters(char[] chars) {
         Character[] characters = new Character[chars.length];
         for (int i = 0; i < chars.length; i++) characters[i] = chars[i];
         return characters;
     }
 
-    private final SortedSet<Change> mergeSmallDiffResult(Diff.change changes, String text0, int pos0, Lexeme lexeme1, boolean inPreamble) {
+    private EnumSet<Change.Flag> buildFlags(boolean inPreamble, LexemeType type) {
+        EnumSet<Change.Flag> flags = EnumSet.noneOf(Change.Flag.class);
+        if (inPreamble) flags.add(Change.Flag.PREAMBLE);
+        if (LexemeType.COMMENT.equals(type)) flags.add(Change.Flag.COMMENT);
+        if (LexemeType.COMMAND.equals(type)) flags.add(Change.Flag.COMMAND);
+        return flags;
+    }
+    
+    private SortedSet<Change> mergeSmallDiffResult(Diff.change changes, String text0, int pos0, Lexeme lexeme1, boolean inPreamble) {
         SortedSet<Change> result = new TreeSet<Change>();
         int index0 = 0, index1 = 0;
 
@@ -96,22 +104,20 @@ public final class LatexDiff {
                 continue;
 
             // Additions
-            if (hunk.inserted != 0)
+            if (hunk.inserted != 0) {
                 result.add(new SmallAddition(
                         lexeme1.pos+hunk.line1,
                         contents[1].substring(lexeme1.pos+hunk.line1, lexeme1.pos+hunk.line1+hunk.inserted),
-                        inPreamble,
-                        LexemeType.COMMENT.equals(lexeme1.type),
-                        LexemeType.COMMAND.equals(lexeme1.type)));
+                        buildFlags(inPreamble, lexeme1.type)));
+            }
 
             // Deletions
-            if (hunk.deleted != 0)
+            if (hunk.deleted != 0) {
                 result.add(new SmallDeletion(
                         lexeme1.pos+hunk.line1,
                         text0.substring(hunk.line0, hunk.line0+hunk.deleted),
-                        inPreamble,
-                        LexemeType.COMMENT.equals(lexeme1.type),
-                        LexemeType.COMMAND.equals(lexeme1.type)));
+                        buildFlags(inPreamble, lexeme1.type)));
+            }
         }
 
         return result;
@@ -119,7 +125,7 @@ public final class LatexDiff {
 
     // find location of preamble in given list of lexemes
     // returns -1 if no preamble exists and otherwise position of first preamble
-    private final int findPreamble(List<Lexeme> list) {
+    private int findPreamble(List<Lexeme> list) {
         List<Lexeme> sortedList = new ArrayList<Lexeme>(list);
         Collections.sort(sortedList, LEXEME_TYPE_COMPARATOR);
         int pos = Collections.binarySearch(sortedList,
@@ -131,32 +137,32 @@ public final class LatexDiff {
     }
 
     // calculate pairs of indices that indicate successive COMMENT or COMMAND lexemes in given input list.
-    private final List<IndexPair> getIndices(List<Lexeme> list, int offset) {
+    private List<IndexPair> getIndices(List<Lexeme> list, int offset) {
         List<IndexPair> result = new ArrayList<IndexPair>();
         if (list == null || list.isEmpty())
             return result;
 
-        result.add(new IndexPair(offset, list.size() + offset)); // TODO: remove after testing and uncomment:
-//        int lastLeft = 0;
-//        for (int i = 1; i < list.size(); i++) {
-//            LexemeType currentType = list.get(i).type;
-//            switch (currentType) {
-//                case COMMAND:
-//                case COMMENT:
-//                    if (!currentType.equals(list.get(lastLeft).type)) {
-//                        result.add(new IndexPair(lastLeft + offset, i + offset));
-//                        lastLeft = i;
-//                    }
-//                    break;
-//                default:
-//                    if (INDICES_TYPES.contains(list.get(lastLeft).type)) {
-//                        result.add(new IndexPair(lastLeft + offset, i + offset));
-//                        lastLeft = i;
-//                    }
-//            }
-//        }
-//        // add last pair
-//        result.add(new IndexPair(lastLeft + offset, list.size() + offset));
+//        result.add(new IndexPair(offset, list.size() + offset)); // TODO: remove after testing and uncomment:
+        int lastLeft = 0;
+        for (int i = 1; i < list.size(); i++) {
+            LexemeType currentType = list.get(i).type;
+            switch (currentType) {
+                case COMMAND:
+                case COMMENT:
+                    if (!currentType.equals(list.get(lastLeft).type)) {
+                        result.add(new IndexPair(lastLeft + offset, i + offset));
+                        lastLeft = i;
+                    }
+                    break;
+                default:
+                    if (INDICES_TYPES.contains(list.get(lastLeft).type)) {
+                        result.add(new IndexPair(lastLeft + offset, i + offset));
+                        lastLeft = i;
+                    }
+            }
+        }
+        // add last pair
+        result.add(new IndexPair(lastLeft + offset, list.size() + offset));
 
         return result;
     }
@@ -249,67 +255,62 @@ public final class LatexDiff {
             boolean inPreamble = last1 < preamble1;
 
             // extracting some indices to compare (for determining white space existence):
-            int sx0 = list0.get(hunk.line0-1).pos+list0.get(hunk.line0-1).length;
-            int sy0 = list0.get(hunk.line0).pos;
-            int ex0 = list0.get(hunk.line0+hunk.deleted-1).pos+list0.get(hunk.line0+hunk.deleted-1).length;
-            int ey0 = list0.get(hunk.line0+hunk.deleted).pos;
-            int sx1 = list1.get(hunk.line1-1).pos+list1.get(hunk.line1-1).length;
-            int sy1 = list1.get(hunk.line1).pos;
-            int ex1 = list1.get(hunk.line1+hunk.inserted-1).pos+list1.get(hunk.line1+hunk.inserted-1).length;
-            int ey1 = list1.get(hunk.line1+hunk.inserted).pos;
+            int ex0 = calcPosition(list0, hunk.line0+hunk.deleted-1, true);
+            int ey0 = calcPosition(list0, hunk.line0+hunk.deleted, false);
+            int sx1 = calcPosition(list1, hunk.line1-1, true);
+            int sy1 = calcPosition(list1, hunk.line1, false);
 
-            // calc start position (whether old text has white space in front of it):
-            int start_position = (sx0 == sy0)?sx1:sy1;
+            // calc start position for deletions and additions:
+            int start_position = sx1;
 
             // Additions
             if (hunk.inserted > 0) {
-                result.add(new Addition(
-                        start_position,
-                        (sx1 == sy1 && ex1 != ey1 && sx0 != sy0)?ex1:ey1,
-                        Collections.<Lexeme>emptyList(), // TODO: decide whether still needed in accumulate()
-                        inPreamble, false, false)); // TODO: deal with inCommand, inComment flags!
-
-//                List<IndexPair> indices = getIndices(list1.subList(hunk.line1, hunk.line1+hunk.inserted), hunk.line1);
-//                for (IndexPair indexPair : indices) {
-//                    result.add(new Addition(
-//                            list1.get(indexPair.left).pos,
-//                            list1.get(indexPair.right).pos, // use next lexeme for end position
-//                            list1.subList(indexPair.left, indexPair.right+1), // add the first matching lexeme
-//                            inPreamble,
-//                            LexemeType.COMMENT.equals(list1.get(indexPair.left).type),
-//                            LexemeType.COMMAND.equals(list1.get(indexPair.left).type)));
-//                }
+                List<IndexPair> indices = getIndices(list1.subList(hunk.line1, hunk.line1+hunk.inserted), hunk.line1);
+                for (IndexPair indexPair : indices)
+                    result.add(new Addition(
+                            indexPair.left == hunk.line1?
+                                    start_position:  // if first pair, use calculated start position
+                                    calcPosition(list1, indexPair.left, false), // if not first pair, use beginning of lexeme
+                            indexPair.right == hunk.line1+hunk.inserted?
+                                    calcPosition(list1, hunk.line1+hunk.inserted, false): // if last pair, use next lexeme
+                                    calcPosition(list1, indexPair.right, false), // if not last pair, use next lexeme for position
+                            Collections.<Lexeme>emptyList(), // TODO: decide whether still needed in accumulate()
+                            buildFlags(inPreamble, list1.get(indexPair.left).type)
+                    ));
             }
 
             // Deletions
             if (hunk.deleted > 0) {
-                // calc text :
-                String text = contents[0].substring(
-                        (sx1 == sy1)?sx0:sy0, // position in new text has white space in front of it?
-                        (sx0 == sy0 && sx1 != sy1)?ex0:ey0); // no white space in front of deletion in old text AND
-                                                             // white space in front of position in new text?
-                result.add(new Deletion(
+                List<IndexPair> indices = getIndices(list0.subList(hunk.line0, hunk.line0+hunk.deleted), hunk.line0);
+                for (IndexPair indexPair : indices) {
+                    // calc text :
+                    int text_start = indexPair.left == hunk.line0?
+                            calcPosition(list0, hunk.line0-1, true): // if first pair, start with prior lexeme
+                            calcPosition(list0, indexPair.left-1, true); // not first pair, use position of prior lexeme
+                    int text_end =  indexPair.right == hunk.line0+hunk.deleted?
+                            (ex0 != ey0 && sx1 != sy1)?ex0:ey0: // if last pair, then depends on whether
+                            // white space at end of deletion in old text AND
+                            // white space in front of position in new text
+                            calcPosition(list0, indexPair.right-1, true); // if not last pair, use end of right lexeme for end position
+                    String text = contents[0].substring(text_start, text_end);
+                    result.add(new Deletion(
                             start_position,
                             text,
-                            inPreamble, false, false)); // TODO: deal with inCommand, inComment flags!
-
-//                List<IndexPair> indices = getIndices(list0.subList(hunk.line0, hunk.line0+hunk.deleted), hunk.line0);
-//                for (IndexPair indexPair : indices) {
-//                    String text = contents[0].substring(
-//                            list0.get(indexPair.left).pos,
-//                            list0.get(indexPair.right).pos); // use next lexeme for end position
-//                    result.add(new Deletion(
-//                            start_position,
-//                            text,
-//                            inPreamble,
-//                            LexemeType.COMMENT.equals(list0.get(indexPair.left).type),
-//                            LexemeType.COMMAND.equals(list0.get(indexPair.left).type)));
-//                    start_position += text.length();
-//                }
+                            buildFlags(inPreamble, list0.get(indexPair.left).type)));
+                    start_position += text.length();
+                }
             }
         }
 
         return new ArrayList<Change>(result);
+    }
+
+    // calc position in given lexeme list at index (either beginning or end of lexeme)
+    private int calcPosition(List<Lexeme> list, int index, boolean atEnd) {
+        if (atEnd)
+            return list.get(index).pos+list.get(index).length;
+        else
+            return list.get(index).pos;
     }
 
     /**
@@ -317,7 +318,7 @@ public final class LatexDiff {
      * by position in the new text.  If positions are the same, the change is ordered by an order imposed on 
      * the subclasses of Change (see {@link Change.ORDER}).  Finally, we also employ unique sequence numbers
      * for each diff operation, which will be used if the subclasses are of the same class.
-     * 
+     *
      * @param readerWrapper1 text that denotes old version
      * @param readerWrapper2 text that denotes new version
      * @return an ordered list of changes from old to new version

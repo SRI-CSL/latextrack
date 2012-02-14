@@ -8,13 +8,15 @@
  */
 package com.sri.ltc.latexdiff;
 
+import java.util.EnumSet;
+
 /**
  * @author linda
  */
 public final class SmallDeletion extends Deletion {
 
-    public SmallDeletion(int start_position, String text, boolean inPreamble, boolean inComment, boolean isCommand) {
-        super(start_position, text, inPreamble, inComment, isCommand);
+    public SmallDeletion(int start_position, String text, EnumSet<Flag> flags) {
+        super(start_position, text, flags);
     }
 
     @Override

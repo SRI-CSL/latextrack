@@ -170,7 +170,7 @@ public final class LatexPane extends JTextPane {
             // reset current document and accumulate changes in it:
             StyledDocument document = clearAndGetDocument();
             Filtering filter = Filtering.getInstance();
-            new Accumulate(document).perform(readers, null,
+            new Accumulate(document).perform2(readers, null,
                     filter.getShowingStatus(LTCserverInterface.Show.DELETIONS),
                     filter.getShowingStatus(LTCserverInterface.Show.SMALL),
                     filter.getShowingStatus(LTCserverInterface.Show.PREAMBLE),

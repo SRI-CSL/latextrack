@@ -9,6 +9,7 @@
 package com.sri.ltc.latexdiff;
 
 import java.util.Collections;
+import java.util.EnumSet;
 
 /**
  * @author linda
@@ -17,8 +18,8 @@ public final class SmallAddition extends Addition {
 
     public final String text;
 
-    public SmallAddition(int start_position, String text, boolean inPreamble, boolean inComment, boolean isCommand) {
-        super(start_position, start_position+text.length(), Collections.<Lexeme>emptyList(), inPreamble, inComment, isCommand);
+    public SmallAddition(int start_position, String text, EnumSet<Flag> flags) {
+        super(start_position, start_position+text.length(), Collections.<Lexeme>emptyList(), flags);
         if (text == null || "".equals(text))
             throw new IllegalArgumentException("Text of small addition cannot be NULL or empty.");
         this.text = text;

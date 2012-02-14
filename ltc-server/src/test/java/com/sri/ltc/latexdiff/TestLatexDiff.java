@@ -12,6 +12,7 @@ import org.junit.Ignore;
 import org.junit.Test;
 
 import java.io.IOException;
+import java.util.EnumSet;
 import java.util.List;
 
 import static junit.framework.Assert.assertEquals;
@@ -38,30 +39,22 @@ public class TestLatexDiff {
         System.out.println();
     }
 
-    protected void assertAddition(int index, int start_position, int end_position) {
+    protected void assertAddition(int index, int start_position, int end_position, EnumSet<Change.Flag> flags) {
         assertTrue("at least "+(index+1)+" changes", changes.size() >= index+1);
         Change change = changes.get(index);
         assertTrue("change is addition", change instanceof Addition);
         assertTrue("start is at "+start_position, change.start_position == start_position);
-        assertTrue("end is at " + end_position, ((Addition) change).end_position == end_position);
+        assertTrue("end is at "+end_position, ((Addition) change).end_position == end_position);
+        assertEquals("flags are "+flags, flags, change.flags);
     }
 
-    protected void assertDeletion(int index, int start_position, int length) {
+    protected void assertDeletion(int index, int start_position, int length, EnumSet<Change.Flag> flags) {
         assertTrue("at least "+(index+1)+" changes", changes.size() >= index+1);
         Change change = changes.get(index);
         assertTrue("change is deletion", change instanceof Deletion);
         assertTrue("start is at "+start_position, change.start_position == start_position);
         assertTrue("length is "+length, ((Deletion) change).text.length() == length);
-    }
-
-    @Ignore
-    public void smallAdditions() throws IOException {
-        changes = getChanges(
-                "Lorem ipsum dolr sit amet. ",
-                "Lorem ipsum dolor sit amet.");
-        assertTrue("Change is small addition", changes.get(0) instanceof SmallAddition);
-        assertTrue("Start position is 15", changes.get(0).start_position == 15);
-        assertTrue("Small addition contains no lexemes", ((SmallAddition) changes.get(0)).lexemes.size() == 0);
+        assertEquals("flags are "+flags, flags, change.flags);
     }
 
     @Test(expected = NullPointerException.class)
@@ -82,11 +75,11 @@ public class TestLatexDiff {
         changes = getChanges(
                 "   Lorem ipsum \n \ndolor sit amet. ",
                 "Lorem ipsum dolor sit amet.");
-        assertDeletion(0, 12, 3);
+        assertDeletion(0, 11, 4, EnumSet.of(Change.Flag.DELETION));
         changes = getChanges(
                 "Lorem ipsum dolor sit amet.",
                 "   Lorem ipsum \n \ndolor sit amet. ");
-        assertAddition(0, 15, 18);
+        assertAddition(0, 14, 18, EnumSet.noneOf(Change.Flag.class));
     }
 
     @Ignore
@@ -99,12 +92,16 @@ public class TestLatexDiff {
         Change change = changes.get(0);
         assertTrue("1st change is small deletion", change instanceof SmallDeletion);
         assertTrue("1st change is in comment but not in preamble nor a command",
-                !change.inPreamble && !change.isCommand && change.inComment);
+                !change.flags.contains(Change.Flag.PREAMBLE)
+                        && !change.flags.contains(Change.Flag.COMMAND)
+                        && change.flags.contains(Change.Flag.COMMENT));
         change = changes.get(1);
         assertTrue("2nd change is addition", change instanceof Addition);
         assertTrue("2nd change has 4 lexemes", ((Addition) change).lexemes.size() == 4);
         assertTrue("2nd change is in comment but not in preamble nor a command",
-                !change.inPreamble && !change.isCommand && change.inComment);
+                !change.flags.contains(Change.Flag.PREAMBLE)
+                        && !change.flags.contains(Change.Flag.COMMAND)
+                        && change.flags.contains(Change.Flag.COMMENT));
     }
 
     @Ignore
@@ -116,10 +113,14 @@ public class TestLatexDiff {
         assertTrue("2 changes", changes.size() == 2);
         Change change = changes.get(0);
         assertTrue("1st change is in preamble and a command",
-                change.inPreamble && change.isCommand && !change.inComment);
+                change.flags.contains(Change.Flag.PREAMBLE)
+                        && change.flags.contains(Change.Flag.COMMAND)
+                        && !change.flags.contains(Change.Flag.COMMENT));
         change = changes.get(1);
         assertTrue("2nd change is in preamble but not command nor a comment",
-                change.inPreamble && !change.isCommand && !change.inComment);
+                change.flags.contains(Change.Flag.PREAMBLE)
+                        && !change.flags.contains(Change.Flag.COMMAND)
+                        && !change.flags.contains(Change.Flag.COMMENT));
         // TODO: Test cases before PREAMBLE, such as ignoring changes there or PARAGRAPHs
     }
 

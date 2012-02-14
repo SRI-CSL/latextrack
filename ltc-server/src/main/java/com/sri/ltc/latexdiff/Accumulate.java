@@ -103,189 +103,152 @@ public final class Accumulate {
         return builder.toString();
     }
 
-    /**
-     * Perform accumulation of changes over the given array of texts.  If given array of texts is empty or <code>null</code>
-     * then does nothing and returns a map with empty text and styles.  If given a array of texts has at least one entry,
-     * the array of author indices must match up in length or be empty or <code>null</code>.  If there is at least 2 texts
-     * to compare but the author indices is empty, this function assigns author indices [1..(n-1)] for n = length of text
-     * array.
-     * <p>
-     * A number of boolean flags indicates whether to show or hide deletions, small changes, changes in preamble, 
-     * comments, and commands.
-     * <p>
-     * The returned map contains 2 entries for keys {@link LTCserverInterface.KEY_TEXT} and {@link LTCserverInterface.KEY_STYLES}.
-     * The value for the first key is the text obtained from accumulating all changes.  The value for the second key
-     * is a list of 4-tuples denoting the mark up for the text.  Each 4-tuple has integers
-     * <pre>
-     *     <start position (incl.), end position (excl.), addition/deletion, author index>
-     * </pre>, which contain the start and end position of the change (positions in text start with 0), a 1 for
-     * addition or 2 for deletion, and the index of the author who made this change.  The author index is either taken
-     * from the given array or assigned by index of the text array.
-     *
-     * @param priorText an array of text wrappers denoting the oldest to the newest version
-     * @param authorIndices an array of author indices for each version of priorText;
-     *                      must be of the same length as priorText or empty or <code>null</code>
-     * @param showDeletions whether to show or hide deletions in accumulated changes
-     * @param showSmallChanges whether to show or hide small changes in accumulated changes
-     * @param showPreambleChanges whether to show or hide changes in preamble in accumulated changes
-     * @param showCommentChanges whether to show or hide changes in comments in accumulated changes
-     * @param showCommandChanges whether to show or hide changes in commands in accumulated changes
-     * @return Map with 2 entries pointing to the text and the list of styles to mark-up the changes in the text
-     * @throws IOException if given readers cannot load text
-     * @throws BadLocationException if a location in the underlying document does not exist
-     */
-    @SuppressWarnings("unchecked")
-    public Map perform(ReaderWrapper[] priorText,
-                       Integer[] authorIndices,
-                       boolean showDeletions,
-                       boolean showSmallChanges,
-                       boolean showPreambleChanges,
-                       boolean showCommentChanges,
-                       boolean showCommandChanges) throws IOException, BadLocationException {
-
-        // init return value:
-        Map map = new HashMap();
-        map.put(LTCserverInterface.KEY_TEXT, "");
-        map.put(LTCserverInterface.KEY_STYLES, new ArrayList<Integer[]>());
-
-        if (priorText == null || priorText.length == 0)
-            return map;
-
-        // generate color palette
-        int n = Math.max(priorText.length+1,
-                (authorIndices == null || authorIndices.length == 0)?0:new TreeSet<Integer>(Arrays.asList(authorIndices)).last()+1);
-        Color[] colors = new Color[n];
-        for(int i = 0; i < n; i++)
-            colors[i] = Color.getHSBColor((float) i / (float) n, 0.85f, 1.0f);
-
-        float progress = 0f;
-        List<List<Change>> changes = new ArrayList<List<Change>>();
-        // compare oldest version with next and so on:
-        float step_increment = 0.5f/(float) (priorText.length - 1);
-        for (int i=0; i<(priorText.length-1); i++) {
-            changes.add(latexDiff.getChanges(priorText[i], priorText[i + 1]));
-            pcs.firePropertyChange(PROGRESS_PROPERTY, new Float(progress), new Float(progress+step_increment));
-            progress += step_increment;
-        }
-
-        // merge everything into one styled document: init document with latest text
-        document.remove(0, document.getLength());
-        document.insertString(0, LatexDiff.copyText(priorText[priorText.length - 1].createReader()), null);
-
-        Style style;
-        SortedMap<PositionRange, Integer> translocations = new TreeMap<PositionRange, Integer>();
-
-        // go through each comparison from newest to oldest to markup changes
-        step_increment = 0.5f/(float) changes.size();
-        for (int index=changes.size()-1; index>=0; index--) {
-
-            // prepare styles with color and author index
-            int authorIndex = (authorIndices == null || authorIndices.length != priorText.length)?
-                    index+1:
-                    authorIndices[index+1];
-            style = document.getStyle(DELETION_STYLE);
-            StyleConstants.setForeground(style, colors[authorIndex]);
-            style.addAttribute(AUTHOR_INDEX, authorIndex);
-            style = document.getStyle(ADDITION_STYLE);
-            StyleConstants.setForeground(style, colors[authorIndex]);
-            style.addAttribute(AUTHOR_INDEX, authorIndex);
-
-            int current_offset = 0;
-
-            // go through all changes of this version
-            for (Change change : changes.get(index)) {
-
-                // ignore certain changes:
-                if (!(change instanceof Deletion || change instanceof Addition))
-                    continue;
-                if (!showPreambleChanges && change.inPreamble)
-                    continue;
-                if (!showCommentChanges && change.inComment)
-                    continue;
-                if (!showCommandChanges && change.isCommand)
-                    continue;
-
-                // translocate start position and apply current offset
-                int start_position = applyTranslocation(change.start_position, translocations);
-                start_position += current_offset;
-
-                if (change instanceof Deletion && showDeletions &&
-                        (showSmallChanges || !(change instanceof SmallDeletion))) {
-                    document.insertString(start_position,
-                            ((Deletion) change).text,
-                            document.getStyle(DELETION_STYLE));
-                    current_offset += ((Deletion) change).text.length();
-                }
-
-                if (change instanceof Addition && !(change instanceof SmallAddition))
-                    markupAddition(start_position, ((Addition) change).lexemes);
-
-                if (change instanceof SmallAddition && showSmallChanges)
-                    // show small additions only if set to do so
-                    markupSmallAddition(start_position, ((SmallAddition) change).text);
-            }
-
-            // compare prior text (index) to current text for translocations of the next loop
-//            if (index > 0)
-//                translocations = buildTranslocationMap(latexDiff.getTranslocations(
-//                        priorText[index],
-//                        new StringReaderWrapper(document.getText(0, document.getLength()))));
-
-            // update progress counter
-            pcs.firePropertyChange(PROGRESS_PROPERTY, new Float(progress), new Float(progress+step_increment));
-            progress += step_increment;
-        }
-
-        // create return value:
-        map.put(LTCserverInterface.KEY_TEXT, document.getText(0, document.getLength()));
-        List<Integer[]> list = new ArrayList<Integer[]>();
-        Chunk c = traverse(document.getDefaultRootElement(), null, list);
-        // handle last chunk and add it if not default style:
-        c.end = document.getLength()+1;
-        if (!"default".equals(c.style))
-            list.add(c.asList());
-        map.put(LTCserverInterface.KEY_STYLES, list);
-
-        pcs.firePropertyChange(PROGRESS_PROPERTY, new Float(progress), new Float(1f));
-        return map;
-    }
-
-    private SortedMap<PositionRange,Integer> buildTranslocationMap(List<? extends Change> changes) {
-        // go through all changes of this version and collect translocations in map
-        // if 2 translocations with same start position, take the latter (and remove former)
-        SortedMap<PositionRange,Integer> translocationMap = new TreeMap<PositionRange,Integer>();
-        Translocation last_translocation = new Translocation(); // identity function at beginning
-        for (Change c : changes) {
-            if (c instanceof Translocation) {
-                Translocation current_translocation = (Translocation) c;
-                if (last_translocation.start_position != current_translocation.start_position) {
-                    // simply add new entry
-                    translocationMap.put(
-                            new PositionRange(
-                                    last_translocation.start_position,
-                                    current_translocation.start_position),
-                            last_translocation.position_offset);
-                }
-                last_translocation = (Translocation) c;
-            }
-        }
-        // finish with last element of map
-        translocationMap.put(
-                new PositionRange(last_translocation.start_position, null),
-                last_translocation.position_offset);
-        return translocationMap;
-    }
-
-    private int applyTranslocation(int position, SortedMap<PositionRange,Integer> translocations) {
-        // find applicable translocation of current position in that generation
-        for (Map.Entry<PositionRange,Integer> entry : translocations.entrySet()) {
-            if (entry.getKey().inRange(position)) {
-                position += entry.getValue();
-                break;
-            }
-        }
-        return position;
-    }
+//    /**
+//     * Perform accumulation of changes over the given array of texts.  If given array of texts is empty or <code>null</code>
+//     * then does nothing and returns a map with empty text and styles.  If given a array of texts has at least one entry,
+//     * the array of author indices must match up in length or be empty or <code>null</code>.  If there is at least 2 texts
+//     * to compare but the author indices is empty, this function assigns author indices [1..(n-1)] for n = length of text
+//     * array.
+//     * <p>
+//     * A number of boolean flags indicates whether to show or hide deletions, small changes, changes in preamble,
+//     * comments, and commands.
+//     * <p>
+//     * The returned map contains 2 entries for keys {@link LTCserverInterface.KEY_TEXT} and {@link LTCserverInterface.KEY_STYLES}.
+//     * The value for the first key is the text obtained from accumulating all changes.  The value for the second key
+//     * is a list of 4-tuples denoting the mark up for the text.  Each 4-tuple has integers
+//     * <pre>
+//     *     <start position (incl.), end position (excl.), addition/deletion, author index>
+//     * </pre>, which contain the start and end position of the change (positions in text start with 0), a 1 for
+//     * addition or 2 for deletion, and the index of the author who made this change.  The author index is either taken
+//     * from the given array or assigned by index of the text array.
+//     *
+//     * @param priorText an array of text wrappers denoting the oldest to the newest version
+//     * @param authorIndices an array of author indices for each version of priorText;
+//     *                      must be of the same length as priorText or empty or <code>null</code>
+//     * @param showDeletions whether to show or hide deletions in accumulated changes
+//     * @param showSmallChanges whether to show or hide small changes in accumulated changes
+//     * @param showPreambleChanges whether to show or hide changes in preamble in accumulated changes
+//     * @param showCommentChanges whether to show or hide changes in comments in accumulated changes
+//     * @param showCommandChanges whether to show or hide changes in commands in accumulated changes
+//     * @return Map with 2 entries pointing to the text and the list of styles to mark-up the changes in the text
+//     * @throws IOException if given readers cannot load text
+//     * @throws BadLocationException if a location in the underlying document does not exist
+//     */
+//    @SuppressWarnings("unchecked")
+//    public Map perform(ReaderWrapper[] priorText,
+//                       Integer[] authorIndices,
+//                       boolean showDeletions,
+//                       boolean showSmallChanges,
+//                       boolean showPreambleChanges,
+//                       boolean showCommentChanges,
+//                       boolean showCommandChanges) throws IOException, BadLocationException {
+//
+//        // init return value:
+//        Map map = new HashMap();
+//        map.put(LTCserverInterface.KEY_TEXT, "");
+//        map.put(LTCserverInterface.KEY_STYLES, new ArrayList<Integer[]>());
+//
+//        if (priorText == null || priorText.length == 0)
+//            return map;
+//
+//        // generate color palette
+//        int n = Math.max(priorText.length+1,
+//                (authorIndices == null || authorIndices.length == 0)?0:new TreeSet<Integer>(Arrays.asList(authorIndices)).last()+1);
+//        Color[] colors = new Color[n];
+//        for(int i = 0; i < n; i++)
+//            colors[i] = Color.getHSBColor((float) i / (float) n, 0.85f, 1.0f);
+//
+//        float progress = 0f;
+//        List<List<Change>> changes = new ArrayList<List<Change>>();
+//        // compare oldest version with next and so on:
+//        float step_increment = 0.5f/(float) (priorText.length - 1);
+//        for (int i=0; i<(priorText.length-1); i++) {
+//            changes.add(latexDiff.getChanges(priorText[i], priorText[i + 1]));
+//            pcs.firePropertyChange(PROGRESS_PROPERTY, new Float(progress), new Float(progress+step_increment));
+//            progress += step_increment;
+//        }
+//
+//        // merge everything into one styled document: init document with latest text
+//        document.remove(0, document.getLength());
+//        document.insertString(0, LatexDiff.copyText(priorText[priorText.length - 1].createReader()), null);
+//
+//        Style style;
+//        SortedMap<PositionRange, Integer> translocations = new TreeMap<PositionRange, Integer>();
+//
+//        // go through each comparison from newest to oldest to markup changes
+//        step_increment = 0.5f/(float) changes.size();
+//        for (int index=changes.size()-1; index>=0; index--) {
+//
+//            // prepare styles with color and author index
+//            int authorIndex = (authorIndices == null || authorIndices.length != priorText.length)?
+//                    index+1:
+//                    authorIndices[index+1];
+//            style = document.getStyle(DELETION_STYLE);
+//            StyleConstants.setForeground(style, colors[authorIndex]);
+//            style.addAttribute(AUTHOR_INDEX, authorIndex);
+//            style = document.getStyle(ADDITION_STYLE);
+//            StyleConstants.setForeground(style, colors[authorIndex]);
+//            style.addAttribute(AUTHOR_INDEX, authorIndex);
+//
+//            int current_offset = 0;
+//
+//            // go through all changes of this version
+//            for (Change change : changes.get(index)) {
+//
+//                // ignore certain changes:
+//                if (!(change instanceof Deletion || change instanceof Addition))
+//                    continue;
+//                if (!showPreambleChanges && change.inPreamble)
+//                    continue;
+//                if (!showCommentChanges && change.inComment)
+//                    continue;
+//                if (!showCommandChanges && change.isCommand)
+//                    continue;
+//
+//                // translocate start position and apply current offset
+//                int start_position = applyTranslocation(change.start_position, translocations);
+//                start_position += current_offset;
+//
+//                if (change instanceof Deletion && showDeletions &&
+//                        (showSmallChanges || !(change instanceof SmallDeletion))) {
+//                    document.insertString(start_position,
+//                            ((Deletion) change).text,
+//                            document.getStyle(DELETION_STYLE));
+//                    current_offset += ((Deletion) change).text.length();
+//                }
+//
+//                if (change instanceof Addition && !(change instanceof SmallAddition))
+//                    markupAddition(start_position, ((Addition) change).lexemes);
+//
+//                if (change instanceof SmallAddition && showSmallChanges)
+//                    // show small additions only if set to do so
+//                    markupSmallAddition(start_position, ((SmallAddition) change).text);
+//            }
+//
+//            // compare prior text (index) to current text for translocations of the next loop
+////            if (index > 0)
+////                translocations = buildTranslocationMap(latexDiff.getTranslocations(
+////                        priorText[index],
+////                        new StringReaderWrapper(document.getText(0, document.getLength()))));
+//
+//            // update progress counter
+//            pcs.firePropertyChange(PROGRESS_PROPERTY, new Float(progress), new Float(progress+step_increment));
+//            progress += step_increment;
+//        }
+//
+//        // create return value:
+//        map.put(LTCserverInterface.KEY_TEXT, document.getText(0, document.getLength()));
+//        List<Integer[]> list = new ArrayList<Integer[]>();
+//        Chunk c = traverse(document.getDefaultRootElement(), null, list);
+//        // handle last chunk and add it if not default style:
+//        c.end = document.getLength()+1;
+//        if (!"default".equals(c.style))
+//            list.add(c.asList());
+//        map.put(LTCserverInterface.KEY_STYLES, list);
+//
+//        pcs.firePropertyChange(PROGRESS_PROPERTY, new Float(progress), new Float(1f));
+//        return map;
+//    }
 
     private void markupAddition(int start_position, List<Lexeme> lexemes)
             throws BadLocationException, IOException {
@@ -313,7 +276,7 @@ public final class Accumulate {
                     // remember that each addition carries one extra lexeme (that was matching) at end
                     end_position = start_position + current_lexemes.get(index1).pos;
             }
-            markUp(start_position, end_position, 0);
+            markUp(start_position, end_position, null);
         }
     }
 
@@ -327,11 +290,11 @@ public final class Accumulate {
             String current = current_text.substring(0, Math.min(current_text.length(),text.length()));
             if (current.equals(text))
                 end_position = start_position + current.length();
-            markUp(start_position, end_position, 0);
+            markUp(start_position, end_position, null);
         }
     }
 
-    private void markUp(int start_position, int end_position, int flags) {
+    private void markUp(int start_position, int end_position, EnumSet<Change.Flag> flags) {
         // markup everything between start_position and end_position except
         // currently marked ADDITIONS and DELETIONS:
         for (int i = start_position; i < end_position; i++) {
@@ -434,7 +397,7 @@ public final class Accumulate {
 
                 if (change instanceof Deletion) {
                     style = document.getStyle(DELETION_STYLE);
-                    style.addAttribute(FLAGS_ATTR, change.getFlags());
+                    style.addAttribute(FLAGS_ATTR, change.flags);
                     document.insertString(start_position,
                             ((Deletion) change).text,
                             style);
@@ -447,7 +410,7 @@ public final class Accumulate {
                         end_position = start_position + ((SmallAddition) change).text.length();
                     else
                         end_position = ((Addition) change).lexemes.get(((Addition) change).lexemes.size()-1).pos + current_offset;
-                    markUp(start_position, end_position, change.getFlags());
+                    markUp(start_position, end_position, change.flags);
                 }
             }
 
