@@ -95,7 +95,6 @@ public final class LatexDiff {
     
     private SortedSet<Change> mergeSmallDiffResult(Diff.change changes, String text0, int pos0, Lexeme lexeme1, boolean inPreamble) {
         SortedSet<Change> result = new TreeSet<Change>();
-        int index0 = 0, index1 = 0;
 
         // go through linked list of changes
         for (Diff.change hunk = changes; hunk != null; hunk = hunk.link) {
@@ -104,7 +103,7 @@ public final class LatexDiff {
                 continue;
 
             // Additions
-            if (hunk.inserted != 0) {
+            if (hunk.inserted > 0) {
                 result.add(new SmallAddition(
                         lexeme1.pos+hunk.line1,
                         contents[1].substring(lexeme1.pos+hunk.line1, lexeme1.pos+hunk.line1+hunk.inserted),
@@ -112,7 +111,7 @@ public final class LatexDiff {
             }
 
             // Deletions
-            if (hunk.deleted != 0) {
+            if (hunk.deleted > 0) {
                 result.add(new SmallDeletion(
                         lexeme1.pos+hunk.line1,
                         text0.substring(hunk.line0, hunk.line0+hunk.deleted),
@@ -167,8 +166,7 @@ public final class LatexDiff {
         return result;
     }
 
-    private synchronized List<Change> mergeDiffResult(Diff.change changes,
-                                                      List<Lexeme> list0, List<Lexeme> list1) {
+    private synchronized List<Change> mergeDiffResult(Diff.change changes, List<Lexeme> list0, List<Lexeme> list1) {
         SortedSet<Change> result = new TreeSet<Change>();
 
         int preamble1 = findPreamble(list1); // find preamble index in newer text
@@ -183,8 +181,7 @@ public final class LatexDiff {
 
             // determine, if this could be a replacement containing small changes:
             // compare each lexeme from list0 to each in list1
-            // TODO: revisit this!
-            if (false && hunk.line0 >= last_i0 && hunk.line1 >= last_i1 && hunk.deleted > 0 && hunk.inserted > 0) {
+            if (hunk.line0 >= last_i0 && hunk.line1 >= last_i1 && hunk.deleted > 0 && hunk.inserted > 0) {
                 // collect hunks that are not small here to insert for further processing:
                 List<IndexLengthPair> newHunks = new ArrayList<IndexLengthPair>();
                 int i0 = hunk.line0, i1 = hunk.line1;
@@ -251,8 +248,7 @@ public final class LatexDiff {
                 }
             }
 
-            int last1 = hunk.line1+hunk.inserted-1;
-            boolean inPreamble = last1 < preamble1;
+            boolean inPreamble = hunk.line1+hunk.inserted-1 < preamble1;
 
             // extracting some indices to compare (for determining white space existence):
             int ex0 = calcPosition(list0, hunk.line0+hunk.deleted-1, true);
@@ -270,10 +266,10 @@ public final class LatexDiff {
                     result.add(new Addition(
                             indexPair.left == hunk.line1?
                                     start_position:  // if first pair, use calculated start position
-                                    calcPosition(list1, indexPair.left, false), // if not first pair, use beginning of lexeme
+                                    calcPosition(list1, indexPair.left-1, true), // if not first pair, use end of prior lexeme
                             indexPair.right == hunk.line1+hunk.inserted?
                                     calcPosition(list1, hunk.line1+hunk.inserted, false): // if last pair, use next lexeme
-                                    calcPosition(list1, indexPair.right, false), // if not last pair, use next lexeme for position
+                                    calcPosition(list1, indexPair.right-1, true), // if not last pair, use end of right lexeme
                             Collections.<Lexeme>emptyList(), // TODO: decide whether still needed in accumulate()
                             buildFlags(inPreamble, list1.get(indexPair.left).type)
                     ));
@@ -286,12 +282,12 @@ public final class LatexDiff {
                     // calc text :
                     int text_start = indexPair.left == hunk.line0?
                             calcPosition(list0, hunk.line0-1, true): // if first pair, start with prior lexeme
-                            calcPosition(list0, indexPair.left-1, true); // not first pair, use position of prior lexeme
+                            calcPosition(list0, indexPair.left-1, true); // not first pair, use end of prior lexeme
                     int text_end =  indexPair.right == hunk.line0+hunk.deleted?
                             (ex0 != ey0 && sx1 != sy1)?ex0:ey0: // if last pair, then depends on whether
                             // white space at end of deletion in old text AND
                             // white space in front of position in new text
-                            calcPosition(list0, indexPair.right-1, true); // if not last pair, use end of right lexeme for end position
+                            calcPosition(list0, indexPair.right-1, true); // if not last pair, use end of right lexeme
                     String text = contents[0].substring(text_start, text_end);
                     result.add(new Deletion(
                             start_position,

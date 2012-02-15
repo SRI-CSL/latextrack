@@ -31,22 +31,22 @@ public final class TestLatexDiffMixed extends TestLatexDiff {
                 "Lorem ipsum dolor sit amet, "+
                         "%consectetur adipiscing elit. \n\n"+
                         "  Suspendisse sed sollicitudin orci.  ");
-        assertAddition(0, 27, 58, EnumSet.of(Change.Flag.COMMENT));
-        assertAddition(1, 58, 98, EnumSet.noneOf(Change.Flag.class));
+        assertAddition(0, 27, 57, EnumSet.of(Change.Flag.COMMENT));
+        assertAddition(1, 57, 98, EnumSet.noneOf(Change.Flag.class));
         changes = getChanges(
                 "Lorem ipsum dolor sit amet  ",
                 "Lorem ipsum dolor sit amet, "+
                         "%consectetur adipiscing elit. \n");
-        assertAddition(0, 26, 28, EnumSet.noneOf(Change.Flag.class));
-        assertAddition(1, 28, 59, EnumSet.of(Change.Flag.COMMENT));
+        assertAddition(0, 26, 27, EnumSet.noneOf(Change.Flag.class));
+        assertAddition(1, 27, 59, EnumSet.of(Change.Flag.COMMENT));
         changes = getChanges(
                 "Lorem ipsum dolor sit amet \n",
                 "Lorem ipsum dolor sit amet, \n\n"+
                         "%consectetur adipiscing elit. \n"+
                         "  Suspendisse sed sollicitudin orci.  ");
         assertAddition(0, 26, 30, EnumSet.noneOf(Change.Flag.class));
-        assertAddition(1, 30, 63, EnumSet.of(Change.Flag.COMMENT));
-        assertAddition(2, 63, 99, EnumSet.noneOf(Change.Flag.class));
+        assertAddition(1, 30, 59, EnumSet.of(Change.Flag.COMMENT));
+        assertAddition(2, 59, 99, EnumSet.noneOf(Change.Flag.class));
     }
 
     @Test

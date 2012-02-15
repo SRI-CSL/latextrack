@@ -6,13 +6,10 @@ short-term:
 ===========
 
 - refactoring LatexDiff:
-  - positioning without WHITESPACE
-  - removing Translocations
-  - remove yycolumn and yyline etc.
+  - document LatexDiff truth tables etc.
 - refactoring Accumulate:
   - test (2, 3, 4, and more versions!) and test and implement filtering!!!
   - remove lexemes in Addition?
-  - use int flags instead of booleans in Change??
   - remove unused code blocks: perform(), translocations...
 - bug: marking up comment when hiding comments in wrong color
 - Peter's and Grit's bugs

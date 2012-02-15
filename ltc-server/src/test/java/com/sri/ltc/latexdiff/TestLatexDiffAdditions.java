@@ -47,19 +47,19 @@ public final class TestLatexDiffAdditions extends TestLatexDiff {
         changes = getChanges(
                 "  \\ipsum  ",
                 " Lorem\\ipsum");
-        assertAddition(0, 1, 6, EnumSet.noneOf(Change.Flag.class)); // case F
+        assertAddition(0, 0, 6, EnumSet.noneOf(Change.Flag.class)); // case F
         changes = getChanges(
                 "  ipsum  ",
                 "Lorem ipsum ");
-        assertAddition(0, 0, 5, EnumSet.noneOf(Change.Flag.class)); // case G
+        assertAddition(0, 0, 6, EnumSet.noneOf(Change.Flag.class)); // case G
         changes = getChanges(
                 "  ipsum  ",
                 "   Lorem ipsum ");
-        assertAddition(0, 3, 9, EnumSet.noneOf(Change.Flag.class)); // case Ha
+        assertAddition(0, 0, 9, EnumSet.noneOf(Change.Flag.class)); // case Ha
         changes = getChanges(
                 "  \\ipsum  ",
                 " Lorem \\ipsum");
-        assertAddition(0, 1, 7, EnumSet.noneOf(Change.Flag.class)); // case Hb
+        assertAddition(0, 0, 7, EnumSet.noneOf(Change.Flag.class)); // case Hb
     }
 
     @Test
@@ -67,7 +67,7 @@ public final class TestLatexDiffAdditions extends TestLatexDiff {
         changes = getChanges(
                 "Lorem  sit amet. ",
                 "Lorem ipsum dolor sit amet. ");
-        assertAddition(0, 6, 18, EnumSet.noneOf(Change.Flag.class));
+        assertAddition(0, 5, 18, EnumSet.noneOf(Change.Flag.class));
         changes = getChanges(
                 "Lorem ipsum dolor sit amet",
                 "  Lorem ipsum dolor sit amet. ");
@@ -83,11 +83,11 @@ public final class TestLatexDiffAdditions extends TestLatexDiff {
         changes = getChanges(
                 "Lorem  ",
                 "Lorem ipsum ");
-        assertAddition(0, 6, 12, EnumSet.noneOf(Change.Flag.class));
+        assertAddition(0, 5, 12, EnumSet.noneOf(Change.Flag.class));
         changes = getChanges(
                 " Lorem  ",
                 "Lorem ipsum ");
-        assertAddition(0, 6, 12, EnumSet.noneOf(Change.Flag.class));
+        assertAddition(0, 5, 12, EnumSet.noneOf(Change.Flag.class));
         changes = getChanges(
                 " Lorem",
                 "Lorem ipsum ");
@@ -95,10 +95,10 @@ public final class TestLatexDiffAdditions extends TestLatexDiff {
         changes = getChanges(
                 "Lorem  ",
                 "Lorem\\ipsum");
-        assertAddition(0, 5, 11, EnumSet.noneOf(Change.Flag.class));
+        assertAddition(0, 5, 11, EnumSet.of(Change.Flag.COMMAND));
         changes = getChanges(
                 " Lorem  ",
                 "Lorem\\ipsum ");
-        assertAddition(0, 5, 11, EnumSet.noneOf(Change.Flag.class));
+        assertAddition(0, 5, 12, EnumSet.of(Change.Flag.COMMAND));
     }
 }

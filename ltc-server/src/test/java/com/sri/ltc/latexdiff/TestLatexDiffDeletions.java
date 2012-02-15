@@ -39,7 +39,7 @@ public final class TestLatexDiffDeletions extends TestLatexDiff {
                 " Lorem ipsum",
                 "  ipsum"
         );
-        assertDeletion(0, 2, 6, EnumSet.of(Change.Flag.DELETION));
+        assertDeletion(0, 0, 6, EnumSet.of(Change.Flag.DELETION));
         changes = getChanges(
                 " Lorem ipsum",
                 "ipsum"
@@ -58,7 +58,7 @@ public final class TestLatexDiffDeletions extends TestLatexDiff {
                 "Lorem ipsum dolor",
                 "Lorem  dolor"
         );
-        assertDeletion(0, 7, 6, EnumSet.of(Change.Flag.DELETION));
+        assertDeletion(0, 5, 6, EnumSet.of(Change.Flag.DELETION));
         changes = getChanges(
                 "Lorem; ipsum",
                 "Lorem  ipsum"
@@ -73,7 +73,7 @@ public final class TestLatexDiffDeletions extends TestLatexDiff {
                 "Lorem :ipsum",
                 "Lorem  ipsum"
         );
-        assertDeletion(0, 7, 1, EnumSet.of(Change.Flag.DELETION));
+        assertDeletion(0, 5, 2, EnumSet.of(Change.Flag.DELETION));
         changes = getChanges(
                 "Lorem:\\ipsum",
                 "Lorem\\ipsum"
@@ -83,7 +83,7 @@ public final class TestLatexDiffDeletions extends TestLatexDiff {
                 "Lorem ipsum dolor",
                 "Lorem  dolor"
         );
-        assertDeletion(0, 7, 6, EnumSet.of(Change.Flag.DELETION));
+        assertDeletion(0, 5, 6, EnumSet.of(Change.Flag.DELETION));
         changes = getChanges(
                 "Lorem; ipsum",
                 "Lorem  ipsum"
@@ -112,7 +112,7 @@ public final class TestLatexDiffDeletions extends TestLatexDiff {
                 "Lorem ipsum",
                 "Lorem  "
         );
-        assertDeletion(0, 7, 5, EnumSet.of(Change.Flag.DELETION));
+        assertDeletion(0, 5, 6, EnumSet.of(Change.Flag.DELETION));
         changes = getChanges(
                 "Lorem:",
                 "Lorem "
@@ -127,7 +127,7 @@ public final class TestLatexDiffDeletions extends TestLatexDiff {
                 "Lorem ipsum ",
                 "Lorem  "
         );
-        assertDeletion(0, 7, 6, EnumSet.of(Change.Flag.DELETION));
+        assertDeletion(0, 5, 6, EnumSet.of(Change.Flag.DELETION));
         changes = getChanges(
                 "Lorem ipsum ",
                 "Lorem"

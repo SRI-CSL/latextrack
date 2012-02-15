@@ -8,10 +8,10 @@
  */
 package com.sri.ltc.latexdiff;
 
-import java.util.Collections;
-import java.util.EnumSet;
-import java.util.HashMap;
-import java.util.Map;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Sets;
+
+import java.util.*;
 
 /**
  * Super class for all kind of changes when comparing two LaTeX texts.
@@ -26,7 +26,7 @@ import java.util.Map;
 public abstract class Change implements Comparable<Change> {
 
     public final int start_position;
-    public final EnumSet<Flag> flags;
+    public final ImmutableSet<Flag> flags;
     private final Integer sequenceNumber;
 
     public enum Flag {
@@ -63,7 +63,7 @@ public abstract class Change implements Comparable<Change> {
         // compute immutable set of flags:
         if (this instanceof SmallAddition || this instanceof SmallDeletion) flags.add(Flag.SMALL);
         if (this instanceof Deletion) flags.add(Flag.DELETION);
-        this.flags = (EnumSet<Flag>) Collections.unmodifiableSet(flags);
+        this.flags = Sets.immutableEnumSet(flags);
         // set and update sequence number:
         synchronized (sequence) {
             sequenceNumber = sequence++;
@@ -115,70 +115,4 @@ public abstract class Change implements Comparable<Change> {
         text = text.replaceAll("\"","&quot;");
         return text;
     }
-
-//    /**
-//     * Encapsulate possible flags in changes and to annotate characters in a Document.
-//     */
-//    public final class Flags {
-//
-//        private final int flags;
-//
-//        private Flags(FlagsBuilder builder) {
-//            int flag_helper = 0;
-//            if (builder.isSmall) flag_helper |= SMALL;
-//            if (builder.isPreamble) flag_helper |= PREAMBLE;
-//            if (builder.isComment) flag_helper |= COMMENT;
-//            if (builder.isCommand) flag_helper |= COMMAND;
-//            this.flags = flag_helper;
-//        }
-//
-//        public int getFlags() {
-//            return flags;
-//        }
-//
-//        //        public final int getFlags() {
-////            int flags = 0;
-////            if (inPreamble) flags = flags | PREAMBLE;
-////            if (inComment) flags = flags | COMMENT;
-////            if (isCommand) flags = flags | COMMAND;
-////            if (this instanceof SmallAddition || this instanceof SmallDeletion) flags = flags | SMALL;
-////            if (this instanceof Deletion) flags = flags | IS_DELETION;
-////            return flags;
-////        }
-//
-//
-//    }
-//
-//    public final class FlagsBuilder {
-//
-//        boolean isSmall = false;
-//        boolean isPreamble = false;
-//        boolean isComment = false;
-//        boolean isCommand = false;
-//
-//        public FlagsBuilder setSmall() {
-//            this.isSmall = true;
-//            return this;
-//        }
-//
-//        public FlagsBuilder setPreamble() {
-//            this.isPreamble = true;
-//            return this;
-//        }
-//
-//        public FlagsBuilder setComment() {
-//            this.isComment = true;
-//            return this;
-//        }
-//
-//        public FlagsBuilder setCommand() {
-//            this.isCommand = true;
-//            return this;
-//        }
-//
-//        public Flags build() {
-//            return new Flags(this);
-//        }
-//
-//    }
 }

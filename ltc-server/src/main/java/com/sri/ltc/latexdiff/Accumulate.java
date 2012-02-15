@@ -294,7 +294,7 @@ public final class Accumulate {
         }
     }
 
-    private void markUp(int start_position, int end_position, EnumSet<Change.Flag> flags) {
+    private void markUp(int start_position, int end_position, Set<Change.Flag> flags) {
         // markup everything between start_position and end_position except
         // currently marked ADDITIONS and DELETIONS:
         for (int i = start_position; i < end_position; i++) {

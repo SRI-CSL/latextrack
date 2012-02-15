@@ -39,6 +39,11 @@
             <artifactId>xmlrpc-server</artifactId>
             <version>3.1.3</version>
         </dependency>
+        <dependency>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava</artifactId>
+            <version>11.0.1</version>
+        </dependency>
     </dependencies>
 
     <build>
