@@ -20,7 +20,7 @@ import java.util.*;
  * of subclasses that have more fields.  It does use, however, an internal
  * sequence number to order entries of the same (sub-)class starting at the same
  * position.
- * 
+ *
  * @author linda
  */
 public abstract class Change implements Comparable<Change> {
@@ -36,6 +36,20 @@ public abstract class Change implements Comparable<Change> {
         COMMENT,
         COMMAND;
     };
+    public final static Set<Flag> buildFlags(
+            boolean showDeletions,
+            boolean showSmallChanges,
+            boolean showPreambleChanges,
+            boolean showCommentChanges,
+            boolean showCommandChanges) {
+        EnumSet<Flag> result = EnumSet.noneOf(Flag.class);
+        if (!showDeletions) result.add(Flag.DELETION);
+        if (!showSmallChanges) result.add(Flag.SMALL);
+        if (!showPreambleChanges) result.add(Flag.PREAMBLE);
+        if (!showCommentChanges) result.add(Flag.COMMENT);
+        if (!showCommandChanges) result.add(Flag.COMMAND);
+        return result;
+    }
 
     private final static Map<Class,Integer> ORDER = new HashMap<Class,Integer>(6);
     static {
@@ -56,7 +70,7 @@ public abstract class Change implements Comparable<Change> {
             sequence = 0;
         }
     }
-    
+
     protected Change(int start_position, EnumSet<Flag> flags) {
         if (start_position < 0) throw new IllegalArgumentException("Start position of change cannot be negative");
         this.start_position = start_position;

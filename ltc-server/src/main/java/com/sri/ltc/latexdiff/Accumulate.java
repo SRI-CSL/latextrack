@@ -9,6 +9,7 @@
 package com.sri.ltc.latexdiff;
 
 import com.bmsi.gnudiff.Diff;
+import com.google.common.collect.Sets;
 import com.sri.ltc.server.LTCserverInterface;
 
 import javax.swing.text.*;
@@ -36,12 +37,6 @@ public final class Accumulate {
     private final static String DELETION_STYLE = "deletion";
     public final static String AUTHOR_INDEX = "author index";
     private final static String FLAGS_ATTR = "flag attribute";
-
-    private final static byte SHOW_DELETIONS = 1;
-    private final static byte SHOW_SMALL = 2;
-    private final static byte SHOW_PREAMBLE = 4;
-    private final static byte SHOW_COMMENT = 8;
-    private final static byte SHOW_COMMAND = 16;
 
     public Accumulate(String initialText) throws BadLocationException {
         this((StyledDocument) null);
@@ -265,10 +260,10 @@ public final class Accumulate {
                         LexemeType.COMMENT.equals(lexemes.get(0).type));
                 // figure out last matching lexeme to get end position of addition:
                 int index1 = current_lexemes.size() - 1; // if upcoming diff matches for rest of current text,
-                                                         // hunk will be NULL so use last lexeme for end position
+                // hunk will be NULL so use last lexeme for end position
                 for (Diff.change hunk = latexDiff.diff(Arrays.asList(
                         lexemes.subList(0, lexemes.size() - 1), // remove last lexeme for comparison as it was added to
-                                                                // addition to denote end position (but it did not differ)
+                        // addition to denote end position (but it did not differ)
                         current_lexemes));
                      hunk != null; hunk = hunk.link)
                     index1 = hunk.line1;
@@ -340,12 +335,8 @@ public final class Accumulate {
      */
     @SuppressWarnings("unchecked")
     public Map perform2(ReaderWrapper[] priorText,
-                       Integer[] authorIndices,
-                       boolean showDeletions,
-                       boolean showSmallChanges,
-                       boolean showPreambleChanges,
-                       boolean showCommentChanges,
-                       boolean showCommandChanges) throws IOException, BadLocationException {
+                        Integer[] authorIndices,
+                        Set<Change.Flag> flagsToHide) throws IOException, BadLocationException {
 
         // init return value:
         Map map = new HashMap();
@@ -368,9 +359,6 @@ public final class Accumulate {
         document.remove(0, document.getLength());
         document.insertString(0, LatexDiff.copyText(priorText[priorText.length - 1].createReader()), null);
 
-        Style style;
-        int current_offset = 0;
-
         // go from latest to earliest version: start with comparing current document with second latest
         for (int index = priorText.length - 1; index > 0; index--) {
 
@@ -382,6 +370,7 @@ public final class Accumulate {
                 continue; // skip to next version if no changes
 
             // prepare styles with color and author index
+            Style style;
             int authorIndex = (authorIndices == null || authorIndices.length != priorText.length)?
                     index:authorIndices[index];
             style = document.getStyle(DELETION_STYLE);
@@ -390,6 +379,8 @@ public final class Accumulate {
             style = document.getStyle(ADDITION_STYLE);
             StyleConstants.setForeground(style, colors[authorIndex]);
             style.addAttribute(AUTHOR_INDEX, authorIndex);
+
+            int current_offset = 0;
 
             // go through changes and markup document
             for (Change change : changes) {
@@ -404,21 +395,32 @@ public final class Accumulate {
                     current_offset += ((Deletion) change).text.length();
                 }
 
-                if (change instanceof Addition) {
-                    int end_position = -1;
-                    if (change instanceof SmallAddition)
-                        end_position = start_position + ((SmallAddition) change).text.length();
-                    else
-                        end_position = ((Addition) change).lexemes.get(((Addition) change).lexemes.size()-1).pos + current_offset;
-                    markUp(start_position, end_position, change.flags);
-                }
+                if (change instanceof Addition)
+                    markUp(start_position, ((Addition) change).end_position + current_offset, change.flags);
             }
 
         }
 
+        // apply filtering to marked up text
+        if (!flagsToHide.isEmpty()) {
+            for (int i = 0; i < document.getLength(); i++) {
+                Set<Change.Flag> flags = (Set<Change.Flag>) document.getCharacterElement(i).getAttributes().getAttribute(FLAGS_ATTR);
+                if (flags != null) {
+                    Set<Change.Flag> intersection = Sets.intersection(flags, flagsToHide);
+                    if (!intersection.isEmpty()) { // matching flags
+                        if (flags.contains((Change.Flag.DELETION))) { // change was a deletion, so remove character
+                            document.remove(i, 1);
+                            i--;
+                        } else { // change was an addition, so remove all attributes
+                            document.setCharacterAttributes(i, 1, SimpleAttributeSet.EMPTY, true);
+                        }
+                    }
+                }
+            }
+        }
+
         // create return value:
         map.put(LTCserverInterface.KEY_TEXT, document.getText(0, document.getLength()));
-        // TODO: apply filtering to marked up text (look at FLAGS_ATTR!)
         List<Integer[]> list = new ArrayList<Integer[]>();
         Chunk c = traverse(document.getDefaultRootElement(), null, list);
         // handle last chunk and add it if not default style:

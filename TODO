@@ -8,7 +8,6 @@ short-term:
 - refactoring LatexDiff:
   - document LatexDiff truth tables etc.
 - refactoring Accumulate:
-  - test (2, 3, 4, and more versions!) and test and implement filtering!!!
   - remove lexemes in Addition?
   - remove unused code blocks: perform(), translocations...
 - bug: marking up comment when hiding comments in wrong color

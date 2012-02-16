@@ -11,6 +11,7 @@ package com.sri.ltc.editor;
 import articles.showpar.ShowParEditorKit;
 import com.sri.ltc.filter.Filtering;
 import com.sri.ltc.latexdiff.Accumulate;
+import com.sri.ltc.latexdiff.Change;
 import com.sri.ltc.latexdiff.FileReaderWrapper;
 import com.sri.ltc.latexdiff.ReaderWrapper;
 import com.sri.ltc.server.LTCserverInterface;
@@ -170,12 +171,12 @@ public final class LatexPane extends JTextPane {
             // reset current document and accumulate changes in it:
             StyledDocument document = clearAndGetDocument();
             Filtering filter = Filtering.getInstance();
-            new Accumulate(document).perform2(readers, null,
+            new Accumulate(document).perform2(readers, null, Change.buildFlags(
                     filter.getShowingStatus(LTCserverInterface.Show.DELETIONS),
                     filter.getShowingStatus(LTCserverInterface.Show.SMALL),
                     filter.getShowingStatus(LTCserverInterface.Show.PREAMBLE),
                     filter.getShowingStatus(LTCserverInterface.Show.COMMENTS),
-                    filter.getShowingStatus(LTCserverInterface.Show.COMMANDS));
+                    filter.getShowingStatus(LTCserverInterface.Show.COMMANDS)));
         } catch (IOException e) {
             e.printStackTrace();
         } catch (BadLocationException e) {

@@ -316,11 +316,12 @@ public final class LTCserverImpl implements LTCserverInterface {
             map = session.getAccumulate().perform2(
                     readers.toArray(new ReaderWrapper[readers.size()]),
                     indices.toArray(new Integer[indices.size()]),
-                    filter.getShowingStatus(LTCserverInterface.Show.DELETIONS),
-                    filter.getShowingStatus(LTCserverInterface.Show.SMALL),
-                    filter.getShowingStatus(LTCserverInterface.Show.PREAMBLE),
-                    filter.getShowingStatus(LTCserverInterface.Show.COMMENTS),
-                    filter.getShowingStatus(LTCserverInterface.Show.COMMANDS));
+                    Change.buildFlags(
+                            filter.getShowingStatus(LTCserverInterface.Show.DELETIONS),
+                            filter.getShowingStatus(LTCserverInterface.Show.SMALL),
+                            filter.getShowingStatus(LTCserverInterface.Show.PREAMBLE),
+                            filter.getShowingStatus(LTCserverInterface.Show.COMMENTS),
+                            filter.getShowingStatus(LTCserverInterface.Show.COMMANDS)));
             map.put(LTCserverInterface.KEY_AUTHORS, mappedAuthors); // add current author map
             map.put(LTCserverInterface.KEY_SHA1, sha1); // add list of SHA1s used
             session.getAccumulate().removePropertyChangeListener(listener);

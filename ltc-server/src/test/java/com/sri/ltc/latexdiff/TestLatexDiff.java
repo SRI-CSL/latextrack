@@ -14,6 +14,7 @@ import org.junit.Test;
 import java.io.IOException;
 import java.util.EnumSet;
 import java.util.List;
+import java.util.Set;
 
 import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertTrue;
@@ -32,14 +33,7 @@ public class TestLatexDiff {
                 new StringReaderWrapper(text2));
     }
 
-    private void renderXML() {
-        System.out.println();
-        for (Change c : changes)
-            System.out.println(c);
-        System.out.println();
-    }
-
-    protected void assertAddition(int index, int start_position, int end_position, EnumSet<Change.Flag> flags) {
+    protected void assertAddition(int index, int start_position, int end_position, Set<Change.Flag> flags) {
         assertTrue("at least "+(index+1)+" changes", changes.size() >= index+1);
         Change change = changes.get(index);
         assertTrue("change is addition", change instanceof Addition);
@@ -48,7 +42,7 @@ public class TestLatexDiff {
         assertEquals("flags are "+flags, flags, change.flags);
     }
 
-    protected void assertDeletion(int index, int start_position, int length, EnumSet<Change.Flag> flags) {
+    protected void assertDeletion(int index, int start_position, int length, Set<Change.Flag> flags) {
         assertTrue("at least "+(index+1)+" changes", changes.size() >= index+1);
         Change change = changes.get(index);
         assertTrue("change is deletion", change instanceof Deletion);
@@ -104,46 +98,26 @@ public class TestLatexDiff {
                         && change.flags.contains(Change.Flag.COMMENT));
     }
 
-    @Ignore
+    @Test
     public void inPreamble() throws IOException {
         changes = getChanges(
                 " \n\n \\begin{document}  \n \nLorem ipsum \n dolor sit amet. \n ",
                 " \n\\usepackage{lipsum}\n \\begin{document}  \n \nLorem ipsum \n dolor sit amet. \n "
         );
-        assertTrue("2 changes", changes.size() == 2);
-        Change change = changes.get(0);
-        assertTrue("1st change is in preamble and a command",
-                change.flags.contains(Change.Flag.PREAMBLE)
-                        && change.flags.contains(Change.Flag.COMMAND)
-                        && !change.flags.contains(Change.Flag.COMMENT));
-        change = changes.get(1);
-        assertTrue("2nd change is in preamble but not command nor a comment",
-                change.flags.contains(Change.Flag.PREAMBLE)
-                        && !change.flags.contains(Change.Flag.COMMAND)
-                        && !change.flags.contains(Change.Flag.COMMENT));
-        // TODO: Test cases before PREAMBLE, such as ignoring changes there or PARAGRAPHs
-    }
-
-    @Ignore
-    public void additionsWithMixedTypes() throws IOException {
+        assertAddition(0, 0, 13, EnumSet.of(Change.Flag.COMMAND, Change.Flag.PREAMBLE));
+        assertAddition(1, 13, 23, EnumSet.of(Change.Flag.PREAMBLE));
         changes = getChanges(
-                "Lorem \n dlor sit amet.",
-                "Lorem ipsum \n%%%  HERE IS A COMMENT WITH SPACE AND MORE %...\n\n\\textbf{dolor} sit amet."
+                " \n\\usepackage{lipsum}\n \\begin{document}  \n \nLorem ipsum \n dolor sit amet. \n ",
+                " \n\n \\begin{document}  \n \nLorem ipsum \n dolor sit amet. \n "
         );
-        assertTrue("7 changes", changes.size() == 7);
-        // start position of next change equals last lexeme of addition for changes 1-4:
-        for (int i=0; i<4; i++) {
-            Change change = changes.get(i);
-            Change nextChange = changes.get(i+1);
-            assertTrue(change instanceof Addition);
-            List<Lexeme> lexemes = ((Addition) change).lexemes;
-            assertTrue(lexemes.get(lexemes.size()-1).pos == nextChange.start_position);
-        }
-        renderXML();
+        assertDeletion(0, 0, 13, EnumSet.of(Change.Flag.DELETION, Change.Flag.COMMAND, Change.Flag.PREAMBLE));
+        assertDeletion(1, 13, 8, EnumSet.of(Change.Flag.DELETION, Change.Flag.PREAMBLE));
         changes = getChanges(
-                "Lorem \n dolor   amet.",
-                "Lorem ipsum \n%%%  HERE IS A COMMENT\n dlor sit amet.");
-        assertTrue("4 changes", changes.size() == 4);
-        renderXML();
+                " \n\\usepackage{lipsum}\n \\begin{document}  \n \nLorem ipsum \n dolor sit amet. \n ",
+                " \n\n % start doc\n\n\\begin{document}  \n \nLorem ipsum \n dolor sit amet. \n "
+        );
+        assertAddition(0, 0, 17, EnumSet.of(Change.Flag.PREAMBLE, Change.Flag.COMMENT));
+        assertDeletion(1, 0, 13, EnumSet.of(Change.Flag.DELETION, Change.Flag.COMMAND, Change.Flag.PREAMBLE));
+        assertDeletion(2, 13, 8, EnumSet.of(Change.Flag.DELETION, Change.Flag.PREAMBLE));
     }
 }

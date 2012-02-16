@@ -66,16 +66,15 @@ public final class LatexDiff {
             if (!LexemeType.WHITESPACE.equals(lexeme.type)) // ignore whitespace
                 list.add(lexeme);
         scanner.yyclose();
-        // TODO: decide to change PARAGRAPH before PREAMBLE into WHITESPACE lexemes
         // remove paragraphs in the preamble if there is one:
-//        int pos = findPreamble(list);
-//        if (pos != -1) {
-//            List<Lexeme> preamble = list.subList(0, pos);
-//            for (Iterator<Lexeme> i = preamble.iterator(); i.hasNext(); ) {
-//                if (LexemeType.PARAGRAPH.equals(i.next().type))
-//                    i.remove();
-//            }
-//        }
+        int pos = findPreamble(list);
+        if (pos != -1) {
+            List<Lexeme> preamble = list.subList(0, pos);
+            for (Iterator<Lexeme> i = preamble.iterator(); i.hasNext(); ) {
+                if (LexemeType.PARAGRAPH.equals(i.next().type))
+                    i.remove();
+            }
+        }
         return list;
     }
 
@@ -89,7 +88,7 @@ public final class LatexDiff {
         EnumSet<Change.Flag> flags = EnumSet.noneOf(Change.Flag.class);
         if (inPreamble) flags.add(Change.Flag.PREAMBLE);
         if (LexemeType.COMMENT.equals(type)) flags.add(Change.Flag.COMMENT);
-        if (LexemeType.COMMAND.equals(type)) flags.add(Change.Flag.COMMAND);
+        if (LexemeType.COMMAND.equals(type) || LexemeType.PREAMBLE.equals(type)) flags.add(Change.Flag.COMMAND);
         return flags;
     }
     

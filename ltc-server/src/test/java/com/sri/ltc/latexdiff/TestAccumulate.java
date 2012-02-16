@@ -9,15 +9,13 @@
 package com.sri.ltc.latexdiff;
 
 import com.sri.ltc.server.LTCserverInterface;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import javax.swing.text.BadLocationException;
 import java.awt.*;
 import java.io.IOException;
-import java.util.HashMap;
+import java.util.*;
 import java.util.List;
-import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -47,41 +45,39 @@ public final class TestAccumulate {
     }
 
     private static Map perform(String... texts) throws IOException, BadLocationException {
-        return perform(true, true, true, true, true, texts);
+        return perform(EnumSet.noneOf(Change.Flag.class), texts);
     }
 
-    private static Map perform(boolean showDeletions,
-                               boolean showSmallChanges,
-                               boolean showPreambleChanges,
-                               boolean showCommentChanges,
-                               boolean showCommandChanges,
-                               String... texts) throws IOException, BadLocationException {
+    private static Map perform(Set<Change.Flag> flagsToHide, String... texts) throws IOException, BadLocationException {
         ReaderWrapper[] readers = null;
         if (texts != null) {
             readers = new ReaderWrapper[texts.length];
             for (int i=0; i<texts.length; i++)
                 readers[i] = new StringReaderWrapper(texts[i]);
         }
-        return accumulate.perform2(readers, null, showDeletions, showSmallChanges, showPreambleChanges, showCommentChanges, showCommandChanges);
+        return accumulate.perform2(readers, null, flagsToHide);
     }
 
     @SuppressWarnings("unchecked")
     private void assertMap(String text, int styles) {
         assertNotNull(map);
         assertTrue("Map has 2 entries", map.size() == 2);
-        assertEquals("Text is equal to", map.get(LTCserverInterface.KEY_TEXT), text);
-        assertTrue("Number of styles", ((List<Integer[]>) map.get(LTCserverInterface.KEY_STYLES)).size() == styles);
+        assertEquals("Text is equal to", text, map.get(LTCserverInterface.KEY_TEXT));
+        assertEquals("Number of styles", styles, ((List<Integer[]>) map.get(LTCserverInterface.KEY_STYLES)).size());
     }
 
     @SuppressWarnings("unchecked")
-    private void assertStyle(int[][] types, int[][] positions) {
+    private void assertStyle(int[][] types, int[][] positions, int[][] authors) {
         styles = (List<Integer[]>) map.get(LTCserverInterface.KEY_STYLES);
         for (int i = 0; i < types.length; i++)
-            assertTrue("style type", styles.get(i)[2] == types[i][1]);
+            assertEquals("style ("+i+") type", (long) types[i][0], (long) styles.get(i)[2]);
         for (int i = 0; i < positions.length; i++) {
-            assertTrue("style start position", styles.get(i)[0] == positions[i][1]);
-            assertTrue("style end position", styles.get(i)[1] == positions[i][2]);
+            assertEquals("style ("+i+") start position", (long) positions[i][0], (long) styles.get(i)[0]);
+            assertEquals("style ("+i+") end position", (long) positions[i][1], (long) styles.get(i)[1]);
         }
+        if (authors != null)
+            for (int i = 0; i < authors.length; i++)
+                assertEquals("style ("+i+") author", (long) authors[i][0], (long) styles.get(i)[3]);
     }
 
     Map map;
@@ -89,14 +85,14 @@ public final class TestAccumulate {
 
     @Test(expected = NullPointerException.class)
     public void twoNullReaders() throws IOException, BadLocationException {
-        perform(null, null);
+        perform((String) null, (String) null);
     }
 
     @Test
     public void oneOrNoVersions() throws IOException, BadLocationException {
         map = perform((String[]) null);
         assertMap("", 0);
-        map = perform("");
+        map = perform(EnumSet.of(Change.Flag.PREAMBLE, Change.Flag.COMMENT, Change.Flag.DELETION), "");
         assertMap("", 0);
         String text = "Hello World.";
         map = perform(text);
@@ -113,30 +109,30 @@ public final class TestAccumulate {
         );
         assertMap("   Lorem ipsum \n \t\n  dolor sit amet. ", 2);
         assertStyle(
-                new int[][] {{0, 1}, {1, 1}}, // all 2 markups are additions 
-                new int[][] {{0, 15, 21}, {1, 31, 37}} // 1. = [15 21], 2. = [31 37]
-        );
+                new int[][] {{1}, {1}}, // all 2 markups are additions
+                new int[][] {{14, 21}, {30, 37}},
+                null);
 
         // removing paragraph in the middle and more at end
         map = perform(
                 "   Lorem ipsum \n \ndolor sit amet. ",
                 "Lorem ipsum dolor sit    \t"
         );
-        assertMap("Lorem ipsum \n \ndolor sit    \tamet. ", 2);
+        assertMap("Lorem ipsum \n \n dolor sit amet.    \t", 2);
         assertStyle(
-                new int[][]{{0, 2}, {1, 2}}, // all 2 markups are deletions
-                new int[][]{{0, 12, 15}, {1, 29, 35}} // 1. = [12 15], 2. = [29 35]
-        );
+                new int[][]{{2}, {2}}, // all 2 markups are deletions
+                new int[][]{{11, 15}, {25, 31}}, 
+                null);
 
         // removing things but hiding deletions
-        map = perform(false, true, true, true, true,
+        map = perform(EnumSet.of(Change.Flag.DELETION),
                 "   Lorem ipsum \n \ndolor sit amet. ",
                 "Lorem ipsum dolor sit    \t"
         );
 //        assertMap("Lorem ipsum dolor sit    \t", 0);
 
         // adding commands but hiding them
-        map = perform(true, true, true, true, false,
+        map = perform(EnumSet.of(Change.Flag.COMMAND),
                 "Lorem ipsum dolor sit    \t",
                 "   Lorem ipsum \\textbf{dolor} sit amet. "
         );
@@ -154,9 +150,9 @@ public final class TestAccumulate {
         );
         assertMap("Lorem ipsum dolor sit amet; \n, consectetur adipiscing elit. \n ", 2);
         assertStyle(
-                new int[][]{{0, 2}, {1, 1}}, // one deletion and one addition
-                new int[][]{{0, 26, 29}, {1, 29, 31}}
-        );
+                new int[][]{{2}, {1}}, // one deletion and one addition
+                new int[][]{{26, 29}, {29, 31}},
+                null);
 
         // small changes:
         map = perform(
@@ -165,21 +161,18 @@ public final class TestAccumulate {
         );
         assertMap("Lorem ippsum dolor sit amet \n ", 3);
         assertStyle(
-                new int[][]{{0, 2}, {1, 1}, {2, 2}}, // 1 addition and 2 deletions
-                new int[][]{{0, 8, 9}, {1, 11, 12}, {2, 25, 26}}
-        );
+                new int[][]{{2}, {1}, {2}}, // 1 addition and 2 deletions
+                new int[][]{{8, 9}, {11, 12}, {25, 26}},
+                null);
 
-        // TODO: hide small changes...
-        map = perform(true, false, true, true, true,
+        // hide small changes...
+        map = perform(EnumSet.of(Change.Flag.SMALL),
                 "\t  Lorem ippsu dolor sit amet",
                 "Lorem ipsum dolor sit amt \n "
         );
     }
 
-    @Ignore
-    public void filtering() {
         // TODO: exercise various filters with small and large changes (2 and 3 versions)
-    }
 
     @Test
     public void threeVersions() throws IOException, BadLocationException {
@@ -191,16 +184,76 @@ public final class TestAccumulate {
         );
         assertMap("Lorem ipsum; dolor sit amet.\n, \n ", 3);
         assertStyle(
-                new int[][] {{0, 2}, {1, 2}, {2, 1}}, // 2 deletions and 1 addition
-                new int[][] {{0, 11, 13}, {1, 27, 29}, {2, 29, 33}}
+                new int[][] {{2}, {2}, {1}}, // 2 deletions and 1 addition
+                new int[][] {{11, 12}, {27, 29}, {29, 33}},
+                new int[][] {{1}, {1}});
+        // no change from first to second version
+        map = perform(
+                "\t Lorem   ipsum dolor sit amet,  ",
+                " Lorem ipsum dolor sit amet, \n ",
+                "Lorem ipsum; dolor sit amet.\n"
+        );
+        assertMap("Lorem ipsum; dolor sit amet, \n .\n", 3);
+        assertStyle(
+                new int[][] {{1}, {2}, {1}}, // 2 deletions and 1 addition
+                new int[][] {{11, 13}, {27, 31}, {31, 33}},
+                new int[][] {{2}, {2}, {2}}
+        );
+        // back and forth
+        map = perform(
+                "Lorem\t ipsum dolor",
+                "Lorem dolor",
+                "Lorem  ipsum"
+        );
+        assertMap("Lorem\t ipsum dolor  ipsum", 3);
+        assertStyle(
+                new int[][] {{2}, {2}, {1}},
+                new int[][] {{5, 12}, {12, 18}, {18, 25}},
+                new int[][] {{1}, {2}, {2}}
+        );
+        // back and forth but hiding deletions
+        map = perform(EnumSet.of(Change.Flag.DELETION),
+                "Lorem\t ipsum dolor",
+                "Lorem dolor",
+                "Lorem  ipsum"
+        );
+        assertMap("Lorem  ipsum", 1);
+        assertStyle(
+                new int[][] {{1}},
+                new int[][] {{5, 12}},
+                new int[][] {{2}}
+        );
+        // small addition and deletion with command
+        map = perform(
+                "Lorem ipm   \\dolor amet",
+                "Lorem ipsum \\dolor",
+                "Lorem  ipsum"
+        );
+        assertMap("Lorem  ipsum \\dolor amet", 3);
+        assertStyle(
+                new int[][] {{1}, {2}, {2}},
+                new int[][] {{9, 11}, {12, 19}, {19, 24}},
+                new int[][] {{1}, {2}, {1}}
+        );
+        // small addition and deletion with command; filtering COMMANDS and SMALL
+        map = perform(EnumSet.of(Change.Flag.SMALL, Change.Flag.COMMAND),
+                "Lorem ipm   \\dolor amet",
+                "Lorem ipsum \\dolor",
+                "Lorem  ipsum"
+        );
+        assertMap("Lorem  ipsum amet", 1);
+        assertStyle(
+                new int[][] {{2}},
+                new int[][] {{12, 17}},
+                new int[][] {{1}}
         );
 
         // small replacement with trailing white space over 3 versions:
-        map = perform(
-                "\t  Lorem ipsum; dolor sit amet.\n",
-                "Lorem ipsum dolor \nsit amet",
-                "Lorem ipsum dolor sit amet, \n "
-        );
+//        map = perform(
+//                "\t  Lorem ipsum; dolor sit amet.\n",
+//                "Lorem ipsum dolor \nsit amet",
+//                "Lorem ipsum dolor sit amet, \n "
+//        );
 //        assertMap("Lorem ipsum dolor sit amet.\n, \n ", 2);
 //        assertStyle(
 //                new int[][] {{0, 2}, {1, 1}}, // one deletion and one addition
@@ -210,18 +263,32 @@ public final class TestAccumulate {
 
         // TODO: recreate problem with comment:
         // adding text and then adding comment, but showing everything
-        map = perform(true, true, true, false, true,
-                "  Lorem ipsum dolor sit amet\n",
-                "Lorem ipsum \ndolor sit amet, consectetur adipiscing elit. \n ",
-                "Lorem ipsum \ndolor sit amet, consectetur adipiscing elit. \n " +
-                        "% ADDING MORE:\n" +
-                        "Praesent tempor hendrerit eros, non scelerisque est fermentum nec. "
-        );
+//        map = perform(true, true, true, false, true,
+//                "  Lorem ipsum dolor sit amet\n",
+//                "Lorem ipsum \ndolor sit amet, consectetur adipiscing elit. \n ",
+//                "Lorem ipsum \ndolor sit amet, consectetur adipiscing elit. \n " +
+//                        "% ADDING MORE:\n" +
+//                        "Praesent tempor hendrerit eros, non scelerisque est fermentum nec. "
+//        );
 //        renderHTML(map);
     }
 
-    @Ignore
+    @Test
     public void fourVersions() throws IOException, BadLocationException {
+        // back and forth
+        map = perform(
+                "Lorem ipsum",
+                "Lorem ipsum dolor",
+                "Lorem dolor",
+                "Lorem ipsum"
+        );
+        assertMap("Lorem ipsum dolor ipsum", 3);
+        assertStyle(
+                new int[][] {{2}, {2}, {1}},
+                new int[][] {{5, 11}, {11, 17}, {17, 23}},
+                new int[][] {{2}, {3}, {3}}
+        );
+
         // delete in 2nd version, add back in 4th version, add in 3rd and 4th version,...
         map = perform(
                 "  Lorem ipsum dolor sit amet\n \n adipiscing elit. ",
@@ -229,7 +296,65 @@ public final class TestAccumulate {
                 "\tLorem ipsum  sit amet, consectetur  \t  rerum adipiscing elit, aliquam commodo.\n",
                 "Lorem ipsum   dolor sit amet, consectetur adipiscing elit. Aliquam commodo. "
         );
-        renderHTML(map);
+//        renderHTML(map);
+    }
+
+    @Test
+    public void filtering() throws IOException, BadLocationException {
+        // deletion in preamble, small deletion and addition of comment
+        map = perform(EnumSet.of(Change.Flag.PREAMBLE, Change.Flag.COMMENT),
+                "Lorem ipsumm dolor",
+                "pre  \\begin{document}Lorem ipsumm dolor",
+                "  \\begin{document}Lorem ipsumm dolor",
+                "  \\begin{document}Lorem   ipsum dolor",
+                "  \\begin{document}Lorem ipsum  dolor % amet."
+        );
+        assertMap("  \\begin{document}Lorem ipsumm  dolor % amet.", 2);
+        assertStyle(
+                new int[][] {{1}, {2}},
+                new int[][] {{0, 18}, {29, 30}},
+                new int[][] {{1}, {3}}
+        );
+        // deletion in preamble, small deletion and addition of comment
+        map = perform(EnumSet.of(Change.Flag.PREAMBLE, Change.Flag.COMMAND, Change.Flag.DELETION),
+                "pra   Lorem ipsumm dolor",
+                "pre  Lorem ipsumm dolor",
+                "pre  \\begin{document}Lorem ipsumm dolor",
+                "pre  \\begin{document}Lorem   ipsum dolor",
+                "pre  \\begin{document}Lorem ipsum  dolor \\amet."
+        );
+        assertMap("pre  \\begin{document}Lorem ipsum  dolor \\amet.", 1);
+        assertStyle(
+                new int[][] {{1}},
+                new int[][] {{45, 46}},
+                new int[][] {{4}}
+        );
+        // preamble location
+        map = perform(EnumSet.of(Change.Flag.PREAMBLE),
+                " pre2 \\begin{document}Lorem ipsum dolor",
+                " pre2 Lorem   ipsum dolor",
+                "pre1 pre2 Lorem ipsum  dolor"
+        );
+        assertMap("pre1 pre2 \\begin{document} Lorem ipsum  dolor", 2);
+        assertStyle(
+                new int[][] {{1}, {2}},
+                new int[][] {{0, 5}, {9, 26}},
+                new int[][] {{2}, {1}}
+        );
+        // deletion in preamble, small deletion and addition of comment
+        map = perform(EnumSet.of(Change.Flag.DELETION, Change.Flag.COMMAND),
+                "pra   Lorem ipsumm dolor",
+                "pre  Lorem ipsumm dolor",
+                "pre  \\begin{document}Lorem ipsumm dolor",
+                "pre  \\begin{document}Lorem   ipsum dolor",
+                "pre  \\begin{document}Lorem ipsum  dolor \\amet."
+        );
+        assertMap("pre  \\begin{document}Lorem ipsum  dolor \\amet.", 2);
+        assertStyle(
+                new int[][] {{1}, {1}},
+                new int[][] {{2, 3}, {45, 46}},
+                new int[][] {{1}, {4}}
+        );
     }
 
     // render given text as HTML, so as to cut and paste into a browser
