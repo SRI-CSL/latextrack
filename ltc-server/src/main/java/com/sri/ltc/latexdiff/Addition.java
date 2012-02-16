@@ -18,14 +18,10 @@ import java.util.List;
 public class Addition extends Change {
 
     public final int end_position;
-    public final List<Lexeme> lexemes;
 
-    public Addition(int start_position, int end_position, List<Lexeme> lexemes, EnumSet<Flag> flags) {
+    public Addition(int start_position, int end_position, EnumSet<Flag> flags) {
         super(start_position, flags);
         this.end_position = end_position;
-        if (lexemes == null)
-            throw new NullPointerException("List of lexemes in addition cannot be NULL.");
-        this.lexemes = Collections.unmodifiableList(lexemes);
     }
 
     @Override
@@ -36,7 +32,7 @@ public class Addition extends Change {
 
         Addition addition = (Addition) o;
 
-        if (!lexemes.equals(addition.lexemes)) return false;
+        if (end_position != addition.end_position) return false;
 
         return true;
     }
@@ -44,16 +40,8 @@ public class Addition extends Change {
     @Override
     public int hashCode() {
         int result = super.hashCode();
-        result = 31 * result + lexemes.hashCode();
+        result = 31 * result + end_position;
         return result;
-    }
-
-    String toXMLContents() {
-        StringBuilder buffer = new StringBuilder(super.toXMLContents());
-        buffer.append("  <lexemes size=");
-        buffer.append(lexemes.size());
-        buffer.append("/>\n");
-        return buffer.toString();
     }
 
     @Override

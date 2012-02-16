@@ -91,7 +91,6 @@ public class TestLatexDiff {
                         && change.flags.contains(Change.Flag.COMMENT));
         change = changes.get(1);
         assertTrue("2nd change is addition", change instanceof Addition);
-        assertTrue("2nd change has 4 lexemes", ((Addition) change).lexemes.size() == 4);
         assertTrue("2nd change is in comment but not in preamble nor a command",
                 !change.flags.contains(Change.Flag.PREAMBLE)
                         && !change.flags.contains(Change.Flag.COMMAND)

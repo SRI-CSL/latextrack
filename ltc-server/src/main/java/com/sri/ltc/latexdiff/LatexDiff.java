@@ -91,13 +91,12 @@ public final class LatexDiff {
         if (LexemeType.COMMAND.equals(type) || LexemeType.PREAMBLE.equals(type)) flags.add(Change.Flag.COMMAND);
         return flags;
     }
-    
-    private SortedSet<Change> mergeSmallDiffResult(Diff.change changes, String text0, int pos0, Lexeme lexeme1, boolean inPreamble) {
+
+    private SortedSet<Change> mergeSmallDiffResult(Diff.change changes, String text0, Lexeme lexeme1, boolean inPreamble) {
         SortedSet<Change> result = new TreeSet<Change>();
 
         // go through linked list of changes
         for (Diff.change hunk = changes; hunk != null; hunk = hunk.link) {
-
             if (hunk.deleted == 0 && hunk.inserted == 0)
                 continue;
 
@@ -105,7 +104,7 @@ public final class LatexDiff {
             if (hunk.inserted > 0) {
                 result.add(new SmallAddition(
                         lexeme1.pos+hunk.line1,
-                        contents[1].substring(lexeme1.pos+hunk.line1, lexeme1.pos+hunk.line1+hunk.inserted),
+                        lexeme1.pos+hunk.line1+hunk.inserted,
                         buildFlags(inPreamble, lexeme1.type)));
             }
 
@@ -140,7 +139,6 @@ public final class LatexDiff {
         if (list == null || list.isEmpty())
             return result;
 
-//        result.add(new IndexPair(offset, list.size() + offset)); // TODO: remove after testing and uncomment:
         int lastLeft = 0;
         for (int i = 1; i < list.size(); i++) {
             LexemeType currentType = list.get(i).type;
@@ -204,7 +202,6 @@ public final class LatexDiff {
                                     toCharacters(lexeme1.contents.toCharArray()));
                             result.addAll(mergeSmallDiffResult(chardiff.diff_2(false),
                                     lexeme0.contents,
-                                    lexeme0.pos,
                                     lexeme1,
                                     i1 < preamble1));
                             // prepare new hunks (if needed)
@@ -269,7 +266,6 @@ public final class LatexDiff {
                             indexPair.right == hunk.line1+hunk.inserted?
                                     calcPosition(list1, hunk.line1+hunk.inserted, false): // if last pair, use next lexeme
                                     calcPosition(list1, indexPair.right-1, true), // if not last pair, use end of right lexeme
-                            Collections.<Lexeme>emptyList(), // TODO: decide whether still needed in accumulate()
                             buildFlags(inPreamble, list1.get(indexPair.left).type)
                     ));
             }
@@ -340,8 +336,7 @@ public final class LatexDiff {
         return diff(lexemLists);
     }
 
-    // TODO: make private after refactoring Accumulate?
-    public Diff.change diff(List<List<Lexeme>> twoListsOfLexemes) {
+    private Diff.change diff(List<List<Lexeme>> twoListsOfLexemes) {
         // Diff between lexeme (without locations):
         // collect relevant lexemes into arrays
         for (int i=0; i<2; i++) {

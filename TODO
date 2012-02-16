@@ -7,9 +7,6 @@ short-term:
 
 - refactoring LatexDiff:
   - document LatexDiff truth tables etc.
-- refactoring Accumulate:
-  - remove lexemes in Addition?
-  - remove unused code blocks: perform(), translocations...
 - bug: marking up comment when hiding comments in wrong color
 - Peter's and Grit's bugs
 - Emacs bugs when editing:
@@ -24,7 +21,7 @@ mid-term:
   - new application to update Emacs?
 - bug and feature tracker?
 - move away from JavaGit (interact with git via command line) to JGit library
-- write TUG article
+- write TUG article and/or tech report
 
 long-term:
 ==========
