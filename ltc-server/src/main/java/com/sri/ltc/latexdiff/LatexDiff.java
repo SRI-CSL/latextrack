@@ -46,6 +46,7 @@ public final class LatexDiff {
     private String[] contents = new String[2];
     Diff.change script;
 
+    // TODO: make this private (and unit test via reflection?)
     /**
      * Perform lexical analysis on the text given as a wrapper of a reader.
      * Remove whitespace in the whole text and paragraphs in the preamble. 

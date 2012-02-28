@@ -45,6 +45,14 @@ public class Addition extends Change {
     }
 
     @Override
+    String toXMLContents() {
+        StringBuilder buffer = new StringBuilder(super.toXMLContents());
+        buffer.append("  <end position="+end_position);
+        buffer.append(" />\n");
+        return buffer.toString();
+    }
+
+    @Override
     public String toString() {
         return "<addition>\n"+toXMLContents()+"</addition>";
     }

@@ -8,3 +8,10 @@ ltc-server/src/main/java/com/sri/ltc/latexdiff/Lexer.java
 all/src/site/tex/manual/version.txt
 all/src/site/tex/manual/baseurl.txt
 all/src/site/tex/manual/manual.pdf
+
+# in report
+all/src/site/tex/techreport2012/report2012.pdf
+all/src/site/tex/techreport2012/examples/gen_examples.sh
+all/src/site/tex/techreport2012/examples/*.unix
+all/src/site/tex/techreport2012/examples/*.cml
+

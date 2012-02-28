@@ -123,6 +123,25 @@
                         </configuration>
                     </execution>
                     <execution>
+                        <id>jar-for-generating-examples</id>
+                        <phase>pre-integration-test</phase>
+                        <goals>
+                            <goal>copy-resources</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>src/site/tex/techreport2012/examples/</outputDirectory>
+                            <resources>
+                                <resource>
+                                    <directory>src/site/resources</directory>
+                                    <includes>
+                                        <include>gen_examples.sh</include>
+                                    </includes>
+                                    <filtering>true</filtering>
+                                </resource>
+                            </resources>
+                        </configuration>
+                    </execution>
+                    <execution>
                         <id>copy-examples</id>
                         <phase>pre-site</phase>
                         <goals>
@@ -149,8 +168,7 @@
                                 <resource>
                                     <directory>src/site/resources</directory>
                                     <includes>
-                                        <include>version.txt</include>
-                                        <include>baseurl.txt</include>
+                                        <include>gen</include>
                                     </includes>
                                     <filtering>true</filtering>
                                 </resource>
@@ -195,6 +213,28 @@
                         </configuration>
                     </execution>
                 </executions>
+            </plugin>
+
+            <!-- generating examples for tech report 2012 -->
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>exec-maven-plugin</artifactId>
+                <version>1.2.1</version>
+                <executions>
+                    <execution>
+                        <id>examples-for-tech-report</id>
+                        <phase>pre-site</phase>
+                        <goals>
+                            <goal>exec</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <executable>sh</executable>
+                    <arguments>
+                        <argument>src/site/tex/techreport2012/examples/gen_examples.sh</argument>
+                    </arguments>
+                </configuration>
             </plugin>
 
             <!-- running latex and htlatex on manual for site -->

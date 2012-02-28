@@ -44,6 +44,7 @@ public class Deletion extends Change {
         return result;
     }
 
+    @Override
     String toXMLContents() {
         StringBuilder buffer = new StringBuilder(super.toXMLContents());
         buffer.append("  <text>");
