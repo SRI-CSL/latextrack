@@ -34,6 +34,6 @@ public class Lexeme {
 
     @Override
     public String toString() {
-        return type+" "+displayContents()+"  @"+pos+" ("+length+")";
+        return type+" "+displayContents()+"  @ "+pos+" ("+length+")";
     }
 }

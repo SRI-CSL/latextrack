@@ -17,7 +17,7 @@ Lexical analysis is the process of converting a sequence of characters into a se
 
 \begin{figure} 
 \centering
-\includegraphics[width=0.9\textwidth]{./figures/tokenizer-example}
+\includegraphics[width=\textwidth]{./figures/tokenizer-example}
 \caption{Example of tokenizing source text in preparation for diff'ing} \label{fig:tokenizer-example}
 \end{figure}
 
@@ -36,7 +36,13 @@ The class diagram below shows the data type for a lexeme.  A lexeme is of a cert
 %  Pos : int
 %\end{lstlisting}
 
-\begin{tikzpicture}\begin{class}[text width=1.5in]{Lexeme}{0,0}\attribute{type: LexemeType}\attribute{contents: String}\attribute{pos, length: int}\end{class}\end{tikzpicture}
+\begin{tikzpicture}
+\begin{class}[text width=1.5in]{Lexeme}{0,0}
+\attribute{type: LexemeType}
+\attribute{contents: String}
+\attribute{pos, length: int}
+\end{class}
+\end{tikzpicture}
 
 \section{Diff'ing the Lexemes}
 
@@ -60,15 +66,21 @@ to contain the information of changes as seen in the class diagram below.
 %  LexemesList : List of Lexemes (only Addition)
 %\end{lstlisting}
 
-\begin{tikzpicture}\begin{abstractclass}[text width=1.5in]{Change}{0,0}\attribute{start: int}\attribute{flags: EnumSet of Flag}\end{abstractclass}
+\begin{tikzpicture}
+\begin{abstractclass}[text width=1.5in]{Change}{0,0}
+\attribute{start: int}
+\attribute{flags: EnumSet of Flag}
+\end{abstractclass}
 
 \begin{class}{Addition}{-3,-2.5}			
 \inherit{Change}
-\attribute{end: int}\end{class}
+\attribute{end: int}
+\end{class}
 
 \begin{class}{Deletion}{3,-2.5}			
 \inherit{Change}
-\attribute{text: String}\end{class}
+\attribute{text: String}
+\end{class}
 
 \begin{class}{SmallAddition}{-3,-4}
 \inherit{Addition}
@@ -76,7 +88,8 @@ to contain the information of changes as seen in the class diagram below.
 
 \begin{class}{SmallDeletion}{3,-4}
 \inherit{Deletion}
-\end{class}\end{tikzpicture}
+\end{class}
+\end{tikzpicture}
 
 Each change is a concretization as a subclass of an addition or deletion.  When we detect so-called ``small'' changes, we also use subclasses of addition and deletion to denote these.  Every change contains the linear character position where the change is located in the newer file.  A number of boolean flags facilitate filtering for changes, e.g., those that occur inside LaTeX comments.  Depending on the subclass of the change, there are different additional elements of the data type such as a text field holding the contents of the change (only deletions) or the end position (only additions).
 
