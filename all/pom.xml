@@ -129,12 +129,13 @@
                             <goal>copy-resources</goal>
                         </goals>
                         <configuration>
-                            <outputDirectory>src/site/tex/techreport2012/examples/</outputDirectory>
+                            <outputDirectory>src/site/tex/techreport2012</outputDirectory>
                             <resources>
                                 <resource>
                                     <directory>src/site/resources</directory>
                                     <includes>
                                         <include>gen_examples.sh</include>
+                                        <include>version.txt</include>
                                     </includes>
                                     <filtering>true</filtering>
                                 </resource>
@@ -232,7 +233,7 @@
                 <configuration>
                     <executable>sh</executable>
                     <arguments>
-                        <argument>src/site/tex/techreport2012/examples/gen_examples.sh</argument>
+                        <argument>src/site/tex/techreport2012/gen_examples.sh</argument>
                     </arguments>
                 </configuration>
             </plugin>

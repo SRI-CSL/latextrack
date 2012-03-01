@@ -152,7 +152,215 @@ Here, the first two lexemes of the insertion match with the first two lexemes of
 
 \subsection{Positioning of Changes}
 
-% TODO: add tables
+% TODO: add text about tables and overview graphic
+
+\subsubsection{Additions}
+
+\begin{table}
+\centering
+\begin{tabular}{r@{ or }lll*{3}{c}*{2}{l}} \toprule
+\multicolumn{2}{c}{case} & diff & change & $sx_0$ & $sx_1$ & $ex_1$ & start & addition \\
+\multicolumn{2}{c}{} & & & $==$ & $==$ & $==$ & & end \\
+\multicolumn{2}{c}{} & & & $sy_0$ & $sy_1$ & $ey_1$ & & \\
+\midrule
+A & C &  
+  \difflexemes{C/match//}{C/diff//,D/diff//2mm,F/match//} &
+  \changelexemes{C/diff//,D/diff//2mm,F/match//}{C/D/0.08/below} &
+ T & T & T & $sx_1 = sy_1$ & $ex_1 = ey_1$ \\
+B & D &    
+  \difflexemes{B/space/1/,C/match//}{C/diff//,D/diff//2mm,F/match//} &
+  \changelexemes{C/diff//,D/diff//2mm,F/match//}{C/D/0.08/below} &
+ F & T & T & $sx_1 = sy_1$ & $ex_1 = ey_1$ \\
+E & G &  
+  \difflexemes{C/match//}{B/space/3/,C/diff//,D/diff//2mm,F/match//} &
+  \changelexemes{B/space/3/,C/diff//,D/diff//2mm,F/match//}{B/D/0.08/below} &
+ T & F & T & $sx_1$ & $ex_1 = ey_1$ \\
+F & H &   
+  \difflexemes{B/space/1/,C/match//}{B/space/3/,C/diff//,D/diff//2mm,F/match//} &
+  \changelexemes{B/space/3/,C/diff//,D/diff//2mm,F/match//}{B/D/0.08/below} &
+ F & F & T & $sx_1$ & $ex_1 = ey_1$ \\
+I & K &  
+  \difflexemes{C/match//}{C/diff//,D/diff//2mm,E/space/4/,F/match//} &
+  \changelexemes{C/diff//,D/diff//2mm,E/space/4/,F/match//}{C/E/0.08/below} &
+ T & T & F & $sx_1 = sy_1$ & $ey_1$ \\
+J & L &   
+  \difflexemes{B/space/1/,C/match//}{C/diff//,D/diff//2mm,E/space/4/,F/match//} &
+  \changelexemes{C/diff//,D/diff//2mm,E/space/4/,F/match//}{C/E/0.08/below} &
+ F & T & F & $sx_1 = sy_1$ & $ey_1$ \\
+M & O & 
+  \difflexemes{C/match//}{B/space/3/,C/diff//,D/diff//2mm,E/space/4/,F/match//} &
+  \changelexemes{B/space/3/,C/diff//,D/diff//2mm,E/space/4/,F/match//}{B/E/0.08/below} &
+ T & F & F & $sx_1$ & $ey_1$ \\
+N & P & 
+  \difflexemes{B/space/1/,C/match//}{B/space/3/,C/diff//,D/diff//2mm,E/space/4/,F/match//} &
+  \changelexemes{B/space/3/,C/diff//,D/diff//2mm,E/space/4/,F/match//}{B/E/0.08/below} &
+ F & F & F & $sx_1$ & $ey_1$ \\\midrule
+\multicolumn{3}{l}{result} & & & & & $sx_1$ & $ey_1$ \\
+\bottomrule
+\end{tabular}
+\caption{Positioning for additions} \label{tab:pos-additions}
+\end{table}
+
+\subsubsection{Deletions}
+
+\begin{table}
+\centering
+\begin{tabular}{r@{ or }lll*{3}{c}*{3}{l}} \toprule
+\multicolumn{2}{c}{case} & diff & change & $sx_0$ & $ex_0$ & $sx_1$ & start & deletion & deletion \\
+\multicolumn{2}{c}{} & & & $==$ & $==$ & $==$ & & text & text \\
+\multicolumn{2}{c}{} & & & $sy_0$ & $ey_0$ & $sy_1$ & & start & end \\
+\midrule
+A & I &  
+  \difflexemes{C/diff//,D/diff//2mm,F/match//}{C/match//} &  
+  \changelexemes{C/diff//,D/diff//2mm,F/match//}{C/D/0.1/above} &
+ T & T & T & $sx_1 = sy_1$ & $sx_0 = sy_0$ & $ex_0 = ey_0$  \\
+B & J &  
+  \difflexemes{B/space/1/,C/diff//,D/diff//2mm,F/match//}{C/match//} &  
+  \changelexemes{B/space/1/,C/diff//,D/diff//2mm,F/match//}{B/D/0.1/above} &
+ F & T & T & $sx_1 = sy_1$ & $sx_0$ & $ex_0 = ey_0$  \\
+C & K & 
+  \difflexemes{C/diff//,D/diff//2mm,E/space/2/,F/match//}{C/match//} &  
+  \changelexemes{C/diff//,D/diff//2mm,E/space/2/,F/match//}{C/E/0.1/above} &
+ T & F & T & $sx_1 = sy_1$ & $sx_0 = sy_0$ & $ey_0$  \\
+D & L &  
+  \difflexemes{B/space/1/,C/diff//,D/diff//2mm,E/space/2/,F/match//}{C/match//} &  
+  \changelexemes{B/space/1/,C/diff//,D/diff//2mm,E/space/2/,F/match//}{B/E/0.1/above} &
+ F & F & T & $sx_1 = sy_1$ & $sx_0$ & $ey_0$  \\
+E & M & 
+  \difflexemes{C/diff//,D/diff//2mm,F/match//}{B/space/3/,C/match//} &  
+  \changelexemes{C/diff//,D/diff//2mm,E/space/3/,F/match//}{C/D/0.1/above} &
+ T & T & F & $sx_1$ & $sx_0 = sy_0$ & $ex_0 = ey_0$  \\
+F & N &  
+  \difflexemes{B/space/1/,C/diff//,D/diff//2mm,F/match//}{B/space/3/,C/match//} &  
+  \changelexemes{B/space/1/,C/diff//,D/diff//2mm,E/space/3/,F/match//}{B/D/0.1/above} &
+ F & T & F & $sx_1$ & $sx_0$ & $ex_0 = ey_0$  \\
+G & O &  
+  \difflexemes{C/diff//,D/diff//2mm,E/space/2/,F/match//}{B/space/3/,C/match//} &    
+  \changelexemes{C/diff//,D/diff//2mm,E/space/3/,F/match//}{C/D/0.1/above} &
+ T & F & F & $sx_1$ & $sx_0 = sy_0$ & $ex_0$  \\
+H & P & 
+  \difflexemes{B/space/1/,C/diff//,D/diff//2mm,E/space/2/,F/match//}{B/space/3/,C/match//} &  
+  \changelexemes{B/space/1/,C/diff//,D/diff//2mm,E/space/3/,F/match//}{B/D/0.1/above} &
+ F & F & F & $sx_1$ & $sx_0$ & $ex_0$  \\
+\midrule
+\multicolumn{3}{l}{result} & & & & & $sx_1$ & $sx_0$ & $ex_0$ or $ey_0$ \\
+\bottomrule
+\end{tabular}
+\caption{Positioning for deletions} \label{tab:pos-deletions}
+\end{table}
+
+\subsubsection{Replacements}
+
+\begin{table}
+\begin{adjustwidth}{-1in}{-1in}\centering  %  make the table centered into the margins
+\begin{tabular}{cll*{4}{c}*{4}{l}} \toprule
+case & diff & change & $sx_0$ & $ex_0$ & $sx_1$ & $ex_1$ & start & addition & deletion & deletion \\
+ & & & $==$ & $==$ & $==$ & $==$ & & end & text & text \\
+ & & & $sy_0$ & $ey_0$ & $sy_1$ & $ey_1$ & & & start & end \\
+\midrule
+A &  
+ \difflexemes{C/diff//,D/diff//2mm,F/match//}%
+             {C/diff//,D/diff//2mm,F/match//} &
+ \changelexemes{C/diff//,D/diff//2mm,F/diff//,G/diff//2mm,I/match//}%
+               {C/D/0.1/above,F/G/0.08/below} &
+ T & T & T & T & $sx_1 = sy_1$ & $ex_1 = ey_1$ & $sx_0 = sy_0$ & $ex_0 = ey_0$  \\
+B &  
+ \difflexemes{B/space/1/,C/diff//,D/diff//2mm,F/match//}%
+             {C/diff//,D/diff//2mm,F/match//} &
+ \changelexemes{B/space/1/,C/diff//,D/diff//2mm,F/diff//,G/diff//2mm,I/match//}%
+               {B/D/0.1/above,F/G/0.08/below} &
+ F & T & T & T & $sx_1 = sy_1$ & $ex_1 = ey_1$ & $sx_0$ & $ex_0 = ey_0$  \\
+C &  
+ \difflexemes{C/diff//,D/diff//2mm,E/space/2/,F/match//}%
+             {C/diff//,D/diff//2mm,F/match//} &
+ \changelexemes{C/diff//,D/diff//2mm,E/space/2/,F/diff//,G/diff//2mm,I/match//}%
+               {C/E/0.1/above,F/G/0.08/below} &
+ T & F & T & T & $sx_1 = sy_1$ & $ex_1 = ey_1$ & $sx_0 = sy_0$ & $ey_0$  \\
+D &  
+ \difflexemes{B/space/1/,C/diff//,D/diff//2mm,E/space/2/,F/match//}%
+             {C/diff//,D/diff//2mm,F/match//} &
+ \changelexemes{B/space/1/,C/diff//,D/diff//2mm,E/space/2/,F/diff//,G/diff//2mm,I/match//}%
+               {B/E/0.1/above,F/G/0.08/below} &
+ F & F & T & T & $sx_1 = sy_1$ & $ex_1 = ey_1$ & $sx_0$ & $ey_0$  \\
+E &  
+ \difflexemes{C/diff//,D/diff//2mm,F/match//}%
+             {B/space/3/,C/diff//,D/diff//2mm,F/match//} &
+ \changelexemes{C/diff//,D/diff//2mm,E/space/3/,F/diff//,G/diff//2mm,I/match//}%
+               {C/D/0.1/above,E/G/0.08/below} &
+ T & T & F & T & $sx_1$ & $ex_1 = ey_1$ & $sx_0 = sy_0$ & $ex_0 = ey_0$  \\
+F &  
+ \difflexemes{B/space/1/,C/diff//,D/diff//2mm,F/match//}%
+             {B/space/3/,C/diff//,D/diff//2mm,F/match//} &
+ \changelexemes{B/space/1/,C/diff//,D/diff//2mm,E/space/3/,F/diff//,G/diff//2mm,I/match//}%
+               {B/D/0.1/above,E/G/0.08/below} &
+ F & T & F & T & $sx_1$ & $ex_1 = ey_1$ & $sx_0$ & $ex_0 = ey_0$  \\
+G &  
+ \difflexemes{C/diff//,D/diff//2mm,E/space/2/,F/match//}%
+             {B/space/3/,C/diff//,D/diff//2mm,F/match//} &
+ \changelexemes{C/diff//,D/diff//2mm,E/space/3/,F/diff//,G/diff//2mm,I/match//}%
+               {C/D/0.1/above,E/G/0.08/below} &
+ T & F & F & T & $sx_1$ & $ex_1 = ey_1$ & $sx_0 = sy_0$ & $ex_0$  \\
+H &  
+ \difflexemes{B/space/1/,C/diff//,D/diff//2mm,E/space/2/,F/match//}%
+             {B/space/3/,C/diff//,D/diff//2mm,F/match//} &
+ \changelexemes{B/space/1/,C/diff//,D/diff//2mm,E/space/3/,F/diff//,G/diff//2mm,I/match//}%
+               {B/D/0.1/above,E/G/0.08/below} &
+ F & F & F & T & $sx_1$ & $ex_1 = ey_1$ & $sx_0$ & $ex_0$  \\
+I &  
+ \difflexemes{C/diff//,D/diff//2mm,F/match//}%
+             {C/diff//,D/diff//2mm,E/space/4/,F/match//} &
+ \changelexemes{C/diff//,D/diff//2mm,F/diff//,G/diff//2mm,H/space/4/,I/match//}%
+               {C/D/0.1/above,F/H/0.08/below} &
+ T & T & T & F & $sx_1 = sy_1$ & $ey_1$ & $sx_0 = sy_0$ & $ex_0 = ey_0$  \\
+J &  
+ \difflexemes{B/space/1/,C/diff//,D/diff//2mm,F/match//}%
+             {C/diff//,D/diff//2mm,E/space/4/,F/match//} &
+ \changelexemes{B/space/1/,C/diff//,D/diff//2mm,F/diff//,G/diff//2mm,H/space/4/,I/match//}%
+               {B/D/0.1/above,F/H/0.08/below} &
+ F & T & T & F & $sx_1 = sy_1$ & $ey_1$ & $sx_0$ & $ex_0 = ey_0$  \\
+K &  
+ \difflexemes{C/diff//,D/diff//2mm,E/space/2/,F/match//}%
+             {C/diff//,D/diff//2mm,E/space/4/,F/match//} &
+ \changelexemes{C/diff//,D/diff//2mm,E/space/2/,F/diff//,G/diff//2mm,H/space/4/,I/match//}%
+               {C/E/0.1/above,F/H/0.08/below} &
+ T & F & T & F & $sx_1 = sy_1$ & $ey_1$ & $sx_0 = sy_0$ & $ey_0$  \\
+L &  
+ \difflexemes{B/space/1/,C/diff//,D/diff//2mm,E/space/2/,F/match//}%
+             {C/diff//,D/diff//2mm,E/space/4/,F/match//} &
+ \changelexemes{B/space/1/,C/diff//,D/diff//2mm,E/space/2/,F/diff//,G/diff//2mm,H/space/4/,I/match//}%
+               {B/E/0.1/above,F/H/0.08/below} &
+ F & F & T & F & $sx_1 = sy_1$ & $ey_1$ & $sx_0$ & $ey_0$  \\
+M &  
+ \difflexemes{C/diff//,D/diff//2mm,F/match//}%
+             {B/space/3/,C/diff//,D/diff//2mm,E/space/4/,F/match//} &
+ \changelexemes{C/diff//,D/diff//2mm,E/space/3/,F/diff//,G/diff//2mm,H/space/4/,I/match//}%
+               {C/D/0.1/above,E/H/0.08/below} &
+ T & T & F & F & $sx_1$ & $ey_1$ & $sx_0 = sy_0$ & $ex_0 = ey_0$  \\
+N &  
+ \difflexemes{B/space/1/,C/diff//,D/diff//2mm,F/match//}%
+             {B/space/3/,C/diff//,D/diff//2mm,E/space/4/,F/match//} &
+ \changelexemes{B/space/1/,C/diff//,D/diff//2mm,E/space/3/,F/diff//,G/diff//2mm,H/space/4/,I/match//}%
+               {B/D/0.1/above,E/H/0.08/below} &
+ F & T & F & F & $sx_1$ & $ey_1$ & $sx_0$ & $ex_0 = ey_0$  \\
+O &  
+ \difflexemes{C/diff//,D/diff//2mm,E/space/2/,F/match//}%
+             {B/space/3/,C/diff//,D/diff//2mm,E/space/4/,F/match//} &
+ \changelexemes{C/diff//,D/diff//2mm,E/space/3/,F/diff//,G/diff//2mm,H/space/4/,I/match//}%
+               {C/D/0.1/above,E/H/0.08/below} &
+ T & F & F & F & $sx_1$ & $ey_1$ & $sx_0 = sy_0$ & $ex_0$  \\
+P &  
+ \difflexemes{B/space/1/,C/diff//,D/diff//2mm,E/space/2/,F/match//}%
+             {B/space/3/,C/diff//,D/diff//2mm,E/space/4/,F/match//} &
+ \changelexemes{B/space/1/,C/diff//,D/diff//2mm,E/space/3/,F/diff//,G/diff//2mm,H/space/4/,I/match//}%
+               {B/D/0.1/above,E/H/0.08/below} &
+ F & F & F & F & $sx_1$ & $ey_1$ & $sx_0$ & $ex_0$  \\
+\midrule
+\multicolumn{3}{l}{result} & & & & & $sx_1$ & $ey_1$ & $sx_0$ & $ex_0$ or $ey_0$ \\
+\bottomrule
+\end{tabular}
+\caption{Positioning for replacements} \label{tab:pos-replacements}
+\end{adjustwidth}
+\end{table}
 
 \subsection{Implementation in Java}
 

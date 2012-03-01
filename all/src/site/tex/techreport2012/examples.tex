@@ -1,0 +1,57 @@
+\chapter{Examples for \texttt{latexdiff}}
+
+In this chapter, we print the contents of example files and the associated \texttt{latexdiff} output.
+
+\section{Source \texttt{.tex} files} \label{sec:src-files}
+
+Thomas Jefferson commits the first version of the document.
+\lstinputlisting[language={[LaTeX]TeX},caption={Version 1}]{./examples/independence-version1.tex}
+
+John Adams edits and commits the second version.  He adds himself as an author and adds and deletes two text fragments in the main paragraph.
+\lstinputlisting[language={[LaTeX]TeX},caption={Version 2}]{./examples/independence-version2.tex}
+
+Benjamin Franklin edits and commits the third version.  He also adds himself as an author.  His changes include a word replacement, correction of three small typographical errors, as well as adding a new sentence at the end.
+\lstinputlisting[language={[LaTeX]TeX},caption={Version 3}]{./examples/independence-version3.tex}
+
+Thomas Jefferson resumes editing in the fourth version.  He reverts a prior change, which results in an addition of a fragment.  He also invokes automatic re-formatting in his text editor, which wraps all lines in 70 characters or less, so that line numbers change.
+\lstinputlisting[language={[LaTeX]TeX},caption={Version 4}]{./examples/independence-version4.tex}
+
+\lstinputlisting[language={[LaTeX]TeX},caption={Version 5}]{./examples/independence-version5.tex}
+
+\lstinputlisting[language={[LaTeX]TeX},caption={Version 6}]{./examples/independence-version6.tex}
+
+\section{Tokenizing and Diff'ing} \label{sec:diff-files}
+
+The following diff outputs are obtained using the JFlex analyzer from Listing~\ref{lst:lexer.jflex}.  To run just the lexical analysis on one file:
+\begin{Verbatim}[commandchars=+\{\}]
+$> java -cp $LTC/LTC-+version.jar com.sri.latexdiff.Lexer <FILE>
+\end{Verbatim}
+
+To perform \texttt{latexdiff} between two files, run with:
+\begin{Verbatim}[commandchars=+\{\}]
+$> java -cp $LTC/LTC-+version.jar com.sri.latexdiff.LatexDiff <FILE1> <FILE2>
+\end{Verbatim}
+
+\VerbatimInput[frame=lines,label={Differences between lexical analyses of version 1 and 2}]{./examples/diff.1.2.unix}
+
+\VerbatimInput[frame=lines,label={Differences between lexical analyses of version 2 and 3}]{./examples/diff.2.3.unix}
+
+\VerbatimInput[frame=lines,label={Differences between lexical analyses of version 3 and 4}]{./examples/diff.3.4.unix}
+
+\VerbatimInput[frame=lines,label={Differences between lexical analyses of version 4 and 5}]{./examples/diff.4.5.unix}
+
+\VerbatimInput[frame=lines,label={Differences between lexical analyses of version 5 and 6}]{./examples/diff.5.6.unix}
+
+\section{XML Output} \label{sec:examples-cml}
+
+The following outputs are generated using XML output of the diff'ing algorithm.
+
+\VerbatimInput[frame=lines,label={XML of diff'ing version 1 and 2}]{./examples/diff.1.2.cml}
+
+\VerbatimInput[frame=lines,label={XML of diff'ing version 2 and 3}]{./examples/diff.2.3.cml}
+
+\VerbatimInput[frame=lines,label={XML of diff'ing version 3 and 4}]{./examples/diff.3.4.cml}
+
+\VerbatimInput[frame=lines,label={XML of diff'ing version 4 and 5}]{./examples/diff.4.5.cml}
+
+\VerbatimInput[frame=lines,label={XML of diff'ing version 5 and 6}]{./examples/diff.5.6.cml}
