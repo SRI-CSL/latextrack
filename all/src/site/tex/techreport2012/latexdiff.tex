@@ -165,17 +165,49 @@ Here, the first two lexemes of the insertion match with the first two lexemes of
 
 \subsection{Positioning of Changes}
 
-% TODO: add text about tables and overview graphic
+% TODO: add text about tables
+\begin{figure}
+\centering
+\begin{tikzpicture}[font=\small]
+%\draw[help lines] (-2,0) grid (3,3);
+\foreach \levelA/\levelB/\idx/\sgn/\txt in {1/0.3/1/+/new,1.7/2.4/0/-/old} {
+  \node [draw=none,inner sep=0pt,anchor=east,align=right] at (-1,\levelA) {\txt};
+  \foreach \n/\x/\shp/\nme/\pos in {A/0/match/sx/1,B/0.3/diff/sy/2,C/2/diff/ex/3,D/2.3/match/ey/4} {
+	\ifodd\pos
+	  \xdef\dir{east}
+	  \xdef\aln{right}
+	\else
+	  \xdef\dir{west}
+	  \xdef\aln{left}
+	\fi
+    \ifnum\idx=1
+      \xdef\from{north \dir}
+      \xdef\to{south \dir}
+    \else
+      \xdef\from{south \dir}
+      \xdef\to{north \dir}
+    \fi
+%    \node [draw] at (\x*6,3+\idx) {\from};
+    \node (N\n\idx) [\shp=5mm,minimum height=5mm,anchor=\dir] at (\x,\levelA) {};
+    \node (T\n\idx) [draw=none,inner sep=0pt,anchor=\dir,align=\aln] at (\x,\levelB) {$\nme_\idx$};
+    \draw [->] ($ (T\n\idx.\from) + (0,\sgn0.05) $) -- ($ (N\n\idx.\to) - (0,\sgn0.05) $);
+  }
+}
+\end{tikzpicture}
+\caption{Overview of positions for change hunks} \label{fig:pos-overview}
+\end{figure}
+
 
 \subsubsection{Additions}
 
 \begin{table}
 \centering
-\begin{tabular}{r@{ or }lll*{3}{c}*{2}{l}} \toprule
+\begin{tabular}{r@{ or }l*{2}{c}*{3}{c}*{2}{l}} \toprule
 \multicolumn{2}{c}{case} & diff & change & $sx_0$ & $sx_1$ & $ex_1$ & start & addition \\
 \multicolumn{2}{c}{} & & & $==$ & $==$ & $==$ & & end \\
 \multicolumn{2}{c}{} & & & $sy_0$ & $sy_1$ & $ey_1$ & & \\
 \midrule
+\ifdraft{\multicolumn{9}{c}{DRAFT} \\}{%
 A & C &  
   \difflexemes{C/match//}{C/diff//,D/diff//2mm,F/match//} &
   \changelexemes{C/diff//,D/diff//2mm,F/match//}{C/D/0.08/below} &
@@ -207,7 +239,9 @@ M & O &
 N & P & 
   \difflexemes{B/space/1/,C/match//}{B/space/3/,C/diff//,D/diff//2mm,E/space/4/,F/match//} &
   \changelexemes{B/space/3/,C/diff//,D/diff//2mm,E/space/4/,F/match//}{B/E/0.08/below} &
- F & F & F & $sx_1$ & $ey_1$ \\\midrule
+ F & F & F & $sx_1$ & $ey_1$ \\
+}
+\midrule
 \multicolumn{3}{l}{result} & & & & & $sx_1$ & $ey_1$ \\
 \bottomrule
 \end{tabular}
@@ -218,11 +252,12 @@ N & P &
 
 \begin{table}
 \centering
-\begin{tabular}{r@{ or }lll*{3}{c}*{3}{l}} \toprule
+\begin{tabular}{r@{ or }l*{2}{c}*{3}{c}*{3}{l}} \toprule
 \multicolumn{2}{c}{case} & diff & change & $sx_0$ & $ex_0$ & $sx_1$ & start & deletion & deletion \\
 \multicolumn{2}{c}{} & & & $==$ & $==$ & $==$ & & text & text \\
 \multicolumn{2}{c}{} & & & $sy_0$ & $ey_0$ & $sy_1$ & & start & end \\
 \midrule
+\ifdraft{\multicolumn{10}{c}{DRAFT} \\}{%
 A & I &  
   \difflexemes{C/diff//,D/diff//2mm,F/match//}{C/match//} &  
   \changelexemes{C/diff//,D/diff//2mm,F/match//}{C/D/0.1/above} &
@@ -255,6 +290,7 @@ H & P &
   \difflexemes{B/space/1/,C/diff//,D/diff//2mm,E/space/2/,F/match//}{B/space/3/,C/match//} &  
   \changelexemes{B/space/1/,C/diff//,D/diff//2mm,E/space/3/,F/match//}{B/D/0.1/above} &
  F & F & F & $sx_1$ & $sx_0$ & $ex_0$  \\
+}
 \midrule
 \multicolumn{3}{l}{result} & & & & & $sx_1$ & $sx_0$ & $ex_0$ or $ey_0$ \\
 \bottomrule
@@ -266,11 +302,12 @@ H & P &
 
 \begin{table}
 \begin{adjustwidth}{-1in}{-1in}\centering  %  make the table centered into the margins
-\begin{tabular}{cll*{4}{c}*{4}{l}} \toprule
+\begin{tabular}{c*{2}{c}*{4}{c}*{4}{l}} \toprule
 case & diff & change & $sx_0$ & $ex_0$ & $sx_1$ & $ex_1$ & start & addition & deletion & deletion \\
  & & & $==$ & $==$ & $==$ & $==$ & & end & text & text \\
  & & & $sy_0$ & $ey_0$ & $sy_1$ & $ey_1$ & & & start & end \\
 \midrule
+\ifdraft{\multicolumn{11}{c}{DRAFT} \\}{%
 A &  
  \difflexemes{C/diff//,D/diff//2mm,F/match//}%
              {C/diff//,D/diff//2mm,F/match//} &
@@ -367,6 +404,7 @@ P &
  \changelexemes{B/space/1/,C/diff//,D/diff//2mm,E/space/3/,F/diff//,G/diff//2mm,H/space/4/,I/match//}%
                {B/D/0.1/above,E/H/0.08/below} &
  F & F & F & F & $sx_1$ & $ey_1$ & $sx_0$ & $ex_0$  \\
+}
 \midrule
 \multicolumn{3}{l}{result} & & & & & $sx_1$ & $ey_1$ & $sx_0$ & $ex_0$ or $ey_0$ \\
 \bottomrule

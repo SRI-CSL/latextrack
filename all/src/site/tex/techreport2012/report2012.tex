@@ -1,4 +1,4 @@
-\documentclass{report}
+\documentclass[draft,final]{report}
 
 % ----- useful packages
 \usepackage[letterpaper,verbose,pdftex]{geometry}
@@ -32,6 +32,7 @@
 ]{hyperref} % more hyperlinks in PDF
 %\usepackage{pdfpages} % to include coverpage generated from Word
 \usepackage{minitoc}
+\usepackage{ifdraft} % to avoid recompiling some heavy TiKZ pictures
 
 
 %% header and footer on every page
@@ -77,7 +78,7 @@ language=Java,numbers=none}
 \input{version.txt}
 
 %% TiKZ settings:
-\usetikzlibrary{shapes,positioning}
+\usetikzlibrary{shapes,positioning,calc}
 % custom space shape:
 \makeatletter
 \pgfdeclareshape{myspace}{
@@ -103,28 +104,34 @@ language=Java,numbers=none}
 }
 \makeatother
 % lexemes
+\newcommand{\lexemesize}{2.5mm}  % default lexeme size
 \tikzset{%
-  font=\scriptsize,
-  baseline=(current bounding box.center),
-  every node/.style={minimum height=2mm},
-  match/.style={rectangle,minimum width=2mm,draw=black!70,fill=black!40},
-  diff/.style={rectangle,minimum width=2mm,draw=black!70},
-  space/.style={myspace,draw=black!70}}
+  font=\scriptsize,every label/.style = {inner sep=0pt},
+  baseline=(current bounding box.center)}
+\tikzset{match/.style = {rectangle,minimum size=#1,draw=black!70,fill=black!40}}
+\tikzset{match/.default = \lexemesize}
+\tikzset{diff/.style = {rectangle,minimum size=#1,draw=black!70}}
+\tikzset{diff/.default = \lexemesize}
+\tikzstyle{space} = [myspace,minimum size=\lexemesize,draw=black!70]
 % macro for drawing multiple lexemes:
 \newcommand{\lexemes}[1]{%
-    \node (A) [match] {};
-    \xdef\lastx{A}
-    \foreach \x/\shp/\lbl/\d  in {#1} {
-      \node (\x) [\shp,label=center:\lbl,right=\d of \lastx] {};
-      \xdef\lastx{\x}  
-    }
+  \node (A) [match] {};
+  \xdef\lastx{A}
+  \foreach \x/\shp/\lbl/\d in {#1} {
+    \node (\x) [\shp,label=center:\lbl,right=\d of \lastx] {};
+    \xdef\lastx{\x}  
+  }
 }
 % macro for drawing the diff lexemes:  TODO: fix vertical alignment to center!
 \newcommand{\difflexemes}[2]{%
-  \begin{tikzpicture}[node distance=0.08 and 0.05]
+  \begin{tikzpicture}[node distance=0.08 and 0.05,row sep=1mm]
     \matrix {%
-      \lexemes{#1} \\
-      \lexemes{#2} \\
+      \node[anchor=center,inner sep=0pt]{
+        \tikz{%
+          \lexemes{#1}}}; \\
+      \node[anchor=center,inner sep=0pt]{
+        \tikz{%
+          \lexemes{#2}}}; \\
     };
   \end{tikzpicture}
 }
