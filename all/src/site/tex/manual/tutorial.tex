@@ -27,12 +27,12 @@ Now we impersonate John Adams to work on this writing project for the Declaratio
 \begin{CodeVerbatim}
 $> git config --add user.name "John Adams"
 $> git config --add user.email "adams@usa.gov"
-$> $ git config --list | grep dams
+$> git config --list | grep dams
 user.name=John Adams
 user.email=adams@usa.gov
 \end{CodeVerbatim}
 
-Another way to investigate the current git repository are graphical tools such as gitx under Mac OS X.  Figure~\ref{fig:gitx-screen} for using gitx on the just created repository.
+Another way to investigate the current git repository are graphical tools such as gitx under Mac OS X.  Note that gitx is not rquired to run LTC.  Figure~\ref{fig:gitx-screen} for using gitx on the just created repository.
 \begin{figure}[t]
 \centering
 \mygraphics{width=\textwidth,height=.5\textheight,keepaspectratio}{figures/gitx-screen}
@@ -75,7 +75,13 @@ First, notice the list of known authors (as they are stored in the git repositor
 Next, focus on the typographical error in the command ``\textbackslash maketitle'' in line 11 and the beginning of the first paragraph in line thirteen.  If you uncheck the box for ``small'' changes and then the box for deletions, notice how the text in the editor panel is rendered.
 \begin{figure}[t]
 \centering
-\mygraphics{keepaspectratio}{figures/editor-filter-small}
+\mygraphics{width=.2\textwidth}{figures/editor-filter-small1}
+\hspace{2ex}
+\begin{tikzpicture}  \node [single arrow,draw] {hiding};
+\end{tikzpicture}
+\hspace{2ex}
+\mygraphics{width=.2\textwidth}{figures/editor-filter-small2}
+%\mygraphics{keepaspectratio}{figures/editor-filter-small}
 \caption{Effect of hiding ``small'' changes and deletions} \label{fig:editor-filter-small}
 \end{figure}
 Figure~\ref{fig:editor-filter-small} shows that ``\textbackslash maketitle'' is no longer marked up, and the deletion of ``If'' at the beginning of the paragraph is now omitted.

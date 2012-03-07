@@ -129,7 +129,7 @@
                             <goal>copy-resources</goal>
                         </goals>
                         <configuration>
-                            <outputDirectory>src/site/tex/techreport2012</outputDirectory>
+                            <outputDirectory>src/tex/techreport2012</outputDirectory>
                             <resources>
                                 <resource>
                                     <directory>src/site/resources</directory>
@@ -233,12 +233,12 @@
                 <configuration>
                     <executable>sh</executable>
                     <arguments>
-                        <argument>src/site/tex/techreport2012/gen_examples.sh</argument>
+                        <argument>src/tex/techreport2012/gen_examples.sh</argument>
                     </arguments>
                 </configuration>
             </plugin>
 
-            <!-- running latex and htlatex on manual for site -->
+            <!-- running latex and htlatex on manual for site; create tech report -->
             <plugin>
                 <groupId>de.akquinet.maven</groupId>
                 <artifactId>maven-latex-plugin</artifactId>
@@ -291,6 +291,22 @@
                             <goal>tex4ht</goal>
                         </goals>
                     </execution>
+                    <!--<execution>-->
+                        <!--<id>compile-techreport</id>-->
+                        <!--<configuration>-->
+                            <!--<settings>-->
+                                <!--<cleanUp>false</cleanUp>-->
+                                <!--<tempDirectory>tex_tmp</tempDirectory>-->
+                                <!--<texDirectory>src/tex</texDirectory>-->
+                                <!--<outputDirectory>tex/techreport2012</outputDirectory>-->
+                                <!--<texCommand>pdflatex</texCommand>-->
+                            <!--</settings>-->
+                        <!--</configuration>-->
+                        <!--<phase>post-site</phase>-->
+                        <!--<goals>-->
+                            <!--<goal>latex</goal>-->
+                        <!--</goals>-->
+                    <!--</execution>-->
                 </executions>
             </plugin>
 

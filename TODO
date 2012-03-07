@@ -5,8 +5,7 @@ Planning
 short-term:
 ===========
 
-- refactoring LatexDiff:
-  - document LatexDiff truth tables etc.
+- document accumulate2()
 - bug: marking up comment when hiding comments in wrong color
 - Peter's and Grit's bugs
 - Emacs bugs when editing:

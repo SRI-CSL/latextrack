@@ -10,9 +10,9 @@ all/src/site/tex/manual/baseurl.txt
 all/src/site/tex/manual/manual.pdf
 
 # in report
-all/src/site/tex/techreport2012/report2012.pdf
-all/src/site/tex/techreport2012/gen_examples.sh
-all/src/site/tex/techreport2012/version.txt
-all/src/site/tex/techreport2012/examples/*.unix
-all/src/site/tex/techreport2012/examples/*.cml
+all/src/tex/techreport2012/report2012.pdf
+all/src/tex/techreport2012/gen_examples.sh
+all/src/tex/techreport2012/version.txt
+all/src/tex/techreport2012/examples/*.unix
+all/src/tex/techreport2012/examples/*.cml
 

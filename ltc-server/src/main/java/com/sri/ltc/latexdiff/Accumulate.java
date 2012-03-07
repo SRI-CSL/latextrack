@@ -237,7 +237,7 @@ public final class Accumulate {
             list.add(c.asList());
         map.put(LTCserverInterface.KEY_STYLES, list);
 
-        updateProgress(0.95f, 1f);
+        updateProgress(0.95f, 0.05f);
         return map;
     }
 

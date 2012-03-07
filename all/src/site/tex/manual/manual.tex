@@ -3,7 +3,7 @@
 % ----- useful packages
 \usepackage[letterpaper,verbose,pdftex]{geometry}
 \usepackage{graphicx} % for including figures
-%\usepackage{pgf,pgfarrows} % for portable graphics
+\usepackage{tikz} % for portable graphics
 %\usepackage{amsmath} % align and other math constructs
 %\usepackage{amssymb} % math symbols
 %\usepackage{booktabs} % tables in publication quality
@@ -21,6 +21,8 @@
 %\usepackage{lipsum} % for test text
 \usepackage{ifpdf} % to detect whether pdflatex or htlatex is runnning
 
+%% pgf/tikz customization
+\usepgflibrary{shapes.arrows}
 
 %% version string
 \newcommand{\version}{}
@@ -57,7 +59,6 @@
 \ifpdf
   \newcommand{\mygraphics}[2]{\includegraphics[#1]{#2}}
 \else
-%  \DeclareGraphicsExtensions{.eps}
   \newcommand{\mygraphics}[2]{\includegraphics{#2}}
 \fi
 

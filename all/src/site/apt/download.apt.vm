@@ -8,9 +8,11 @@
 Download LTC
 
   The whole system is packaged in {{{./downloads/LTC-${project.version}.jar}LTC-${project.version}.jar}}.
+
   The system can be used via the included LTC Editor or with Emacs. The JAR file contains the necessary
   Emacs Lisp files for <<<ltc-mode>>>.  You can extract those files
-  with the <<<jar>>> tool (as explained in the manual) or you may download the files individually here:
+  with the <<<jar>>> tool (as explained in the {{{./html_multipage/manual/manualch1.html}installation chapter of the manual}})
+  or you may download the files individually here:
 
   * {{{./downloads/emacs/xml-rpc.el}xml-rpc.el}}
 
