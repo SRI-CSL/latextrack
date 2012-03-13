@@ -23,6 +23,25 @@
 
 %% pgf/tikz customization
 \usepgflibrary{shapes.arrows}
+\usetikzlibrary{external} % to create tikz pictures in .pdf/.png for tex4ht
+\tikzsetexternalprefix{figures/} % all generated figures go into this subdirectory
+%% using tikz pictures with tex4ht:
+% (see: http://tex.stackexchange.com/questions/40135/htlatex-and-tikz-creates-sometimes-incorrect-svgs)
+\makeatletter
+\@ifpackageloaded{tex4ht}{
+  \tikzexternalize[mode=only graphics]
+  \tikzset{png export/.style={/pgf/images/external info,/pgf/images/include external/.code={%
+    \includegraphics[width=\pgfexternalwidth,height=\pgfexternalheight]{##1.png}%
+  }}}
+  \tikzset{png export}% 
+  }{% else
+  \tikzexternalize%
+  \tikzset{pdf export/.style={/pgf/images/external info,/pgf/images/include external/.code={%
+    \includegraphics[width=\pgfexternalwidth,height=\pgfexternalheight]{##1.pdf}%
+  }}}
+  \tikzset{pdf export}% 
+}
+\makeatother
 
 %% version string
 \newcommand{\version}{}

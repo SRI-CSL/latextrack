@@ -77,11 +77,10 @@ Next, focus on the typographical error in the command ``\textbackslash maketitle
 \centering
 \mygraphics{width=.2\textwidth}{figures/editor-filter-small1}
 \hspace{2ex}
-\begin{tikzpicture}  \node [single arrow,draw] {hiding};
+\begin{tikzpicture}  \node [single arrow,draw] {};
 \end{tikzpicture}
 \hspace{2ex}
 \mygraphics{width=.2\textwidth}{figures/editor-filter-small2}
-%\mygraphics{keepaspectratio}{figures/editor-filter-small}
 \caption{Effect of hiding ``small'' changes and deletions} \label{fig:editor-filter-small}
 \end{figure}
 Figure~\ref{fig:editor-filter-small} shows that ``\textbackslash maketitle'' is no longer marked up, and the deletion of ``If'' at the beginning of the paragraph is now omitted.
@@ -106,7 +105,7 @@ We allow the user to filter and customize how the potentially rich history of a 
 
 \subsection{Limiting by Authors}
 
-Select both authors Roger Sherman and Thomas Jefferson through clicking while holding down the CTRL or CMD key.  Then, click the button ``Limit,'' which will gray out the unselected authors.  For a limiting action to take effect, you need to click ``Update'' in contrast to showing and hiding changes, which is applied instantly.
+In the list of authors, select both authors Roger Sherman and Thomas Jefferson through clicking while holding down the CTRL or CMD key.  Then, click the button ``Limit'' below the list, which will gray out the unselected authors.  For a limiting action to take effect, you need to click ``Update.''  This is different from showing and hiding changes, which is applied instantly.
 \begin{figure}[t]
 \centering
 \mygraphics{width=\textwidth,height=.5\textheight,keepaspectratio}{figures/limit-authors}
@@ -144,7 +143,11 @@ Now delete other characters that are either rendered black or a different color 
 
 Finally, you will want to click ``Save'' to save the current file to disk.  This will cause the label ``modified'' to change to ``on disk.''  If you would then again edit, the label would switch back to ``modified'' of course.
 
-Saving the file, however, does not tell git to create a new version under its management.  In order to commit the current file to git, you have to give it a commit message such as \Code{added comment about list of charges} in the text field next to the ``Commit'' button.  Once the text field is not empty, the ``Commit'' button becomes enabled.  After you commit, the commit graph will list the new entry and the editor panel will be updated.  
+Saving the file, however, does not tell git to create a new version under its management.  In order to commit the current file to git, you have to give it a commit message such as 
+\begin{CodeVerbatim}
+added comment about list of charges
+\end{CodeVerbatim}
+in the text field next to the ``Commit'' button.  Once the text field is not empty, the ``Commit'' button becomes enabled.  After you commit, the commit graph will list the new entry and the editor panel will be updated.  
 
 But why is the newly added comment no longer marked up in red with underlining?  Check your settings for what to show and hide when tracking changes.  After updating the editor from the commit history, we actually perform some simple lexical analysis on the .tex file to distinguish preamble, commands, and comments in LaTeX.  Now the newly entered comment is recognized as such, and if we hide changes in comments, the markup will not show.  Check the box for ``changes in comments'' to see your latest text marked up as an addition.  Your editor should now look similar to the part shown in Figure~\ref{fig:commit-comment}.
 \begin{figure}[t]

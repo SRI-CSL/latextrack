@@ -72,3 +72,20 @@ a) bundling git repositories for download as examples.  See:
   $> git bundle create ../independence.bundle --all
   $> cd $Tutorial
   $> git clone ../LTCmanual/independence.bundle independence
+
+
+Building manual by hand
+-----------------------
+
+$> cd all/src/site/tex/manual
+$> pdflatex manual -shell-escape
+$> convert -density 300 manual-figure0.pdf manual-figure0.png
+or
+$> for i in manual-figure*.pdf; do convert -density 300 $i `echo $i | sed -e 's/\.pdf/\.png/g'`; done
+or use Preview.app?
+$> htlatex manual "manual,0,png" "" "" "-interaction=nonstopmode --src-specials"
+
+
+Incrementing version number
+---------------------------
+
