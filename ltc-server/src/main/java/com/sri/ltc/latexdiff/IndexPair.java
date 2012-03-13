@@ -11,10 +11,13 @@ package com.sri.ltc.latexdiff;
 /**
  * Pair of indices.
  * Both indices must be non-negative.  The left one must be equal or smaller than the right one.
+ * <p>
+ * The natural ordering of a pair is first determined by the left index.  If the left indices are equal,
+ * the right index determines the order.  Thus, the ordering is consistent with <code>equals</code>.
  *
  * @author linda
  */
-public class IndexPair {
+public final class IndexPair implements Comparable<IndexPair> {
 
     public final Integer left, right;
 
@@ -25,6 +28,12 @@ public class IndexPair {
             throw new IllegalArgumentException("Cannot create an index pair with right side < left side");
         this.left = left;
         this.right = right;
+    }
+
+    @Override
+    public int compareTo(IndexPair o) {
+        int leftOrder = left.compareTo(o.left);
+        return (leftOrder == 0 ? right.compareTo(o.right) : leftOrder);
     }
 
     @Override

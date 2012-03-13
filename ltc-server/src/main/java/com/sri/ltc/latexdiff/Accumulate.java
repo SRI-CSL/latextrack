@@ -97,19 +97,6 @@ public final class Accumulate {
         return builder.toString();
     }
 
-    private void markUp(int start_position, int end_position, Set<Change.Flag> flags) {
-        // markup everything between start_position and end_position except
-        // currently marked ADDITIONS and DELETIONS:
-        for (int i = start_position; i < end_position; i++) {
-            Object styleName = document.getCharacterElement(i).getAttributes().getAttribute(StyleConstants.NameAttribute);
-            if (!DELETION_STYLE.equals(styleName) && !ADDITION_STYLE.equals(styleName)) {
-                Style style = document.getStyle(ADDITION_STYLE);
-                style.addAttribute(FLAGS_ATTR, flags);
-                document.setCharacterAttributes(i, 1, style, true);
-            }
-        }
-    }
-
     /**
      * Perform accumulation of changes over the given array of texts.  If given array of texts is empty or <code>null</code>
      * then does nothing and returns a map with empty text and styles.  If given a array of texts has at least one entry,
@@ -117,7 +104,7 @@ public final class Accumulate {
      * to compare but the author indices is empty, this function assigns author indices [1..(n-1)] for n = length of text
      * array.
      * <p>
-     * A number of boolean flags indicates whether to show or hide deletions, small changes, changes in preamble,
+     * A number of boolean OLDflags indicates whether to show or hide deletions, small changes, changes in preamble,
      * comments, and commands.
      * <p>
      * The returned map contains 2 entries for keys {@link LTCserverInterface.KEY_TEXT} and {@link LTCserverInterface.KEY_STYLES}.
@@ -128,7 +115,9 @@ public final class Accumulate {
      * </pre>, which contain the start and end position of the change (positions in text start with 0), a 1 for
      * addition or 2 for deletion, and the index of the author who made this change.  The author index is either taken
      * from the given array or assigned by index of the text array.
-     *
+     * <p>
+     * This is the second version of the algorithm.
+     * </p>
      * @param priorText an array of text wrappers denoting the oldest to the newest version
      * @param authorIndices an array of author indices for each version of priorText;
      *                      must be of the same length as priorText or empty or <code>null</code>
@@ -194,15 +183,25 @@ public final class Accumulate {
 
                 if (change instanceof Deletion) {
                     style = document.getStyle(DELETION_STYLE);
-                    style.addAttribute(FLAGS_ATTR, change.flags);
+                    style.addAttribute(FLAGS_ATTR, null); // TODO: change.OLDflags);
                     document.insertString(start_position,
                             ((Deletion) change).text,
                             style);
                     current_offset += ((Deletion) change).text.length();
                 }
 
-                if (change instanceof Addition)
-                    markUp(start_position, ((Addition) change).end_position + current_offset, change.flags);
+                if (change instanceof Addition) {
+                    // markup everything between start_position and end_position except
+                    // currently marked ADDITIONS and DELETIONS:
+                    for (int i = start_position; i < ((Addition) change).end_position + current_offset; i++) {
+                        Object styleName = document.getCharacterElement(i).getAttributes().getAttribute(StyleConstants.NameAttribute);
+                        if (!DELETION_STYLE.equals(styleName) && !ADDITION_STYLE.equals(styleName)) {
+                            style = document.getStyle(ADDITION_STYLE);
+                            style.addAttribute(FLAGS_ATTR, null); // TODO:  change.OLDflags);
+                            document.setCharacterAttributes(i, 1, style, true);
+                        }
+                    }
+                }
 
                 progress = updateProgress(progress, inner_step_increment);
             }
@@ -214,7 +213,7 @@ public final class Accumulate {
                 Set<Change.Flag> flags = (Set<Change.Flag>) document.getCharacterElement(i).getAttributes().getAttribute(FLAGS_ATTR);
                 if (flags != null) {
                     Set<Change.Flag> intersection = Sets.intersection(flags, flagsToHide);
-                    if (!intersection.isEmpty()) { // matching flags
+                    if (!intersection.isEmpty()) { // matching OLDflags
                         if (flags.contains((Change.Flag.DELETION))) { // change was a deletion, so remove character
                             document.remove(i, 1);
                             i--;

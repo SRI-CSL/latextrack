@@ -468,7 +468,7 @@ public class Diff {
      implementations provide for forward and reverse edit scripts.
      Alternate implementations could, for instance, list common elements 
      instead of differences.
-     @param bld	an object to build the script from change flags
+     @param bld	an object to build the script from change OLDflags
      @return the head of a list of changes
    */
   public change diff(final ScriptBuilder bld) {
@@ -753,7 +753,7 @@ public class Diff {
       }
 
     /** Actually discard the lines.
-      @param discards flags lines to be discarded
+      @param discards OLDflags lines to be discarded
      */
     private void discard(final byte[] discards) {
       final int end = buffered_lines;

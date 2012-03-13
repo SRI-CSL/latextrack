@@ -8,49 +8,20 @@
  */
 package com.sri.ltc.latexdiff;
 
-import java.util.EnumSet;
+import java.util.List;
 
 /**
  * @author linda
  */
-public class Deletion extends Change {
+public class Deletion extends Change<String> {
 
     public final String text;
 
-    public Deletion(int start_position, String text, EnumSet<Flag> flags) {
+    public Deletion(int start_position, String text, List<IndexFlagsPair<String>> flags) {
         super(start_position, flags);
         if (text == null || "".equals(text))
             throw new IllegalArgumentException("Text of deletion cannot be NULL or empty.");
         this.text = text;
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        if (!super.equals(o)) return false;
-
-        Deletion deletion = (Deletion) o;
-
-        if (!text.equals(deletion.text)) return false;
-
-        return true;
-    }
-
-    @Override
-    public int hashCode() {
-        int result = super.hashCode();
-        result = 31 * result + text.hashCode();
-        return result;
-    }
-
-    @Override
-    String toXMLContents() {
-        StringBuilder buffer = new StringBuilder(super.toXMLContents());
-        buffer.append("  <text>");
-        buffer.append(escapeText(text));
-        buffer.append("</text>\n");
-        return buffer.toString();
     }
 
     @Override

@@ -8,13 +8,13 @@
  */
 package com.sri.ltc.latexdiff;
 
+import com.google.common.collect.Lists;
 import org.junit.Ignore;
 import org.junit.Test;
 
 import java.io.IOException;
 import java.util.EnumSet;
 import java.util.List;
-import java.util.Set;
 
 import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertTrue;
@@ -33,22 +33,20 @@ public class TestLatexDiff {
                 new StringReaderWrapper(text2));
     }
 
-    protected void assertAddition(int index, int start_position, int end_position, Set<Change.Flag> flags) {
+    protected void assertAddition(int index, int start_position, int end_position, List<IndexFlagsPair<Integer>> flags) {
         assertTrue("at least "+(index+1)+" changes", changes.size() >= index+1);
         Change change = changes.get(index);
         assertTrue("change is addition", change instanceof Addition);
         assertTrue("start is at "+start_position, change.start_position == start_position);
-        assertTrue("end is at "+end_position, ((Addition) change).end_position == end_position);
-        assertEquals("flags are "+flags, flags, change.flags);
+        assertEquals("addition flags", flags, change.flags);
     }
 
-    protected void assertDeletion(int index, int start_position, int length, Set<Change.Flag> flags) {
+    protected void assertDeletion(int index, int start_position, int length, List<IndexFlagsPair<String>> flags) {
         assertTrue("at least "+(index+1)+" changes", changes.size() >= index+1);
         Change change = changes.get(index);
         assertTrue("change is deletion", change instanceof Deletion);
         assertTrue("start is at "+start_position, change.start_position == start_position);
-        assertTrue("length is "+length, ((Deletion) change).text.length() == length);
-        assertEquals("flags are "+flags, flags, change.flags);
+        assertEquals("deletion flags", flags, change.flags);
     }
 
     @Test(expected = NullPointerException.class)
@@ -69,11 +67,17 @@ public class TestLatexDiff {
         changes = getChanges(
                 "   Lorem ipsum \n \ndolor sit amet. ",
                 "Lorem ipsum dolor sit amet.");
-        assertDeletion(0, 11, 4, EnumSet.of(Change.Flag.DELETION));
+        assertDeletion(0, 11, 4,
+                Lists.newArrayList(new IndexFlagsPair<String>(
+                        " \n \n",
+                        EnumSet.of(Change.Flag.DELETION))));
         changes = getChanges(
                 "Lorem ipsum dolor sit amet.",
                 "   Lorem ipsum \n \ndolor sit amet. ");
-        assertAddition(0, 14, 18, EnumSet.noneOf(Change.Flag.class));
+        assertAddition(0, 14, 18,
+                Lists.newArrayList(new IndexFlagsPair<Integer>(
+                        18,
+                        EnumSet.noneOf(Change.Flag.class))));
     }
 
     @Ignore
@@ -84,17 +88,16 @@ public class TestLatexDiff {
         );
         assertTrue("2 changes", changes.size() == 2);
         Change change = changes.get(0);
-        assertTrue("1st change is small deletion", change instanceof SmallDeletion);
-        assertTrue("1st change is in comment but not in preamble nor a command",
-                !change.flags.contains(Change.Flag.PREAMBLE)
-                        && !change.flags.contains(Change.Flag.COMMAND)
-                        && change.flags.contains(Change.Flag.COMMENT));
+//        assertTrue("1st change is small and in comment but not in preamble nor a command",
+//                !change.OLDflags.contains(Change.Flag.PREAMBLE)
+//                        && !change.OLDflags.contains(Change.Flag.COMMAND)
+//                        && change.OLDflags.contains(Change.Flag.COMMENT));
         change = changes.get(1);
         assertTrue("2nd change is addition", change instanceof Addition);
-        assertTrue("2nd change is in comment but not in preamble nor a command",
-                !change.flags.contains(Change.Flag.PREAMBLE)
-                        && !change.flags.contains(Change.Flag.COMMAND)
-                        && change.flags.contains(Change.Flag.COMMENT));
+//        assertTrue("2nd change is in comment but not in preamble nor a command",
+//                !change.OLDflags.contains(Change.Flag.PREAMBLE)
+//                        && !change.OLDflags.contains(Change.Flag.COMMAND)
+//                        && change.OLDflags.contains(Change.Flag.COMMENT));
     }
 
     @Test
@@ -103,20 +106,27 @@ public class TestLatexDiff {
                 " \n\n \\begin{document}  \n \nLorem ipsum \n dolor sit amet. \n ",
                 " \n\\usepackage{lipsum}\n \\begin{document}  \n \nLorem ipsum \n dolor sit amet. \n "
         );
-        assertAddition(0, 0, 13, EnumSet.of(Change.Flag.COMMAND, Change.Flag.PREAMBLE));
-        assertAddition(1, 13, 23, EnumSet.of(Change.Flag.PREAMBLE));
+        assertAddition(0, 0, 13,
+                Lists.newArrayList(
+                        new IndexFlagsPair<Integer>(13, EnumSet.of(Change.Flag.COMMAND, Change.Flag.PREAMBLE)),
+                        new IndexFlagsPair<Integer>(23, EnumSet.of(Change.Flag.PREAMBLE))));
         changes = getChanges(
                 " \n\\usepackage{lipsum}\n \\begin{document}  \n \nLorem ipsum \n dolor sit amet. \n ",
                 " \n\n \\begin{document}  \n \nLorem ipsum \n dolor sit amet. \n "
         );
-        assertDeletion(0, 0, 13, EnumSet.of(Change.Flag.DELETION, Change.Flag.COMMAND, Change.Flag.PREAMBLE));
-        assertDeletion(1, 13, 8, EnumSet.of(Change.Flag.DELETION, Change.Flag.PREAMBLE));
+        assertDeletion(0, 0, 13, Lists.newArrayList(
+                new IndexFlagsPair<String>(" \n\\usepackage", EnumSet.of(Change.Flag.DELETION, Change.Flag.COMMAND, Change.Flag.PREAMBLE)),
+                new IndexFlagsPair<String>("{lipsum}", EnumSet.of(Change.Flag.DELETION, Change.Flag.PREAMBLE))));
         changes = getChanges(
                 " \n\\usepackage{lipsum}\n \\begin{document}  \n \nLorem ipsum \n dolor sit amet. \n ",
                 " \n\n % start doc\n\n\\begin{document}  \n \nLorem ipsum \n dolor sit amet. \n "
         );
-        assertAddition(0, 0, 17, EnumSet.of(Change.Flag.PREAMBLE, Change.Flag.COMMENT));
-        assertDeletion(1, 0, 13, EnumSet.of(Change.Flag.DELETION, Change.Flag.COMMAND, Change.Flag.PREAMBLE));
-        assertDeletion(2, 13, 8, EnumSet.of(Change.Flag.DELETION, Change.Flag.PREAMBLE));
+        assertAddition(0, 0, 17,
+                Lists.newArrayList(new IndexFlagsPair<Integer>(
+                        17,
+                        EnumSet.of(Change.Flag.PREAMBLE, Change.Flag.COMMENT))));
+        assertDeletion(1, 0, 13, Lists.newArrayList(
+                new IndexFlagsPair<String>(" \n\\usepackage", EnumSet.of(Change.Flag.DELETION, Change.Flag.COMMAND, Change.Flag.PREAMBLE)),
+                new IndexFlagsPair<String>("{lipsum}", EnumSet.of(Change.Flag.DELETION, Change.Flag.PREAMBLE))));
     }
 }

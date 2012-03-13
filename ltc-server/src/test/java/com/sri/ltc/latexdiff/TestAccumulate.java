@@ -129,7 +129,7 @@ public final class TestAccumulate {
                 "   Lorem ipsum \n \ndolor sit amet. ",
                 "Lorem ipsum dolor sit    \t"
         );
-//        assertMap("Lorem ipsum dolor sit    \t", 0);
+        assertMap("Lorem ipsum dolor sit    \t", 0);
 
         // adding commands but hiding them
         map = perform(EnumSet.of(Change.Flag.COMMAND),
@@ -164,12 +164,17 @@ public final class TestAccumulate {
                 new int[][]{{2}, {1}, {2}}, // 1 addition and 2 deletions
                 new int[][]{{8, 9}, {11, 12}, {25, 26}},
                 null);
-
         // hide small changes...
         map = perform(EnumSet.of(Change.Flag.SMALL),
                 "\t  Lorem ippsu dolor sit amet",
                 "Lorem ipsum dolor sit amt \n "
         );
+        assertMap("Lorem ipsum dolor sit amt \n ", 0);
+        // reproduce tutorial bug
+        map = perform(
+                "\n\nIf % or should this be ``When''?\nin the Course",
+                "\n\nWhen in the Course");
+        assertMap("\n\nIf % or should this be ``When''?\nWhen in the Course", 2);
     }
 
         // TODO: exercise various filters with small and large changes (2 and 3 versions)

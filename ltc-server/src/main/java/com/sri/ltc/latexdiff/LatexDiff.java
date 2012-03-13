@@ -85,8 +85,10 @@ public final class LatexDiff {
         return characters;
     }
 
-    private EnumSet<Change.Flag> buildFlags(boolean inPreamble, LexemeType type) {
+    private EnumSet<Change.Flag> buildFlags(boolean inPreamble, boolean isDeletion, boolean isSmall, LexemeType type) {
         EnumSet<Change.Flag> flags = EnumSet.noneOf(Change.Flag.class);
+        if (isDeletion) flags.add(Change.Flag.DELETION);
+        if (isSmall) flags.add(Change.Flag.SMALL);
         if (inPreamble) flags.add(Change.Flag.PREAMBLE);
         if (LexemeType.COMMENT.equals(type)) flags.add(Change.Flag.COMMENT);
         if (LexemeType.COMMAND.equals(type) || LexemeType.PREAMBLE.equals(type)) flags.add(Change.Flag.COMMAND);
@@ -103,18 +105,22 @@ public final class LatexDiff {
 
             // Additions
             if (hunk.inserted > 0) {
-                result.add(new SmallAddition(
+                result.add(new Addition(
                         lexeme1.pos+hunk.line1,
                         lexeme1.pos+hunk.line1+hunk.inserted,
-                        buildFlags(inPreamble, lexeme1.type)));
+                        Arrays.asList(new IndexFlagsPair<Integer>(
+                                lexeme1.pos + hunk.line1 + hunk.inserted,
+                                buildFlags(inPreamble, false, true, lexeme1.type)))));
             }
 
             // Deletions
             if (hunk.deleted > 0) {
-                result.add(new SmallDeletion(
+                result.add(new Deletion(
                         lexeme1.pos+hunk.line1,
                         text0.substring(hunk.line0, hunk.line0+hunk.deleted),
-                        buildFlags(inPreamble, lexeme1.type)));
+                        Arrays.asList(new IndexFlagsPair<String>(
+                                text0.substring(hunk.line0, hunk.line0+hunk.deleted),
+                                buildFlags(inPreamble, true, true, lexeme1.type)))));
             }
         }
 
@@ -258,39 +264,46 @@ public final class LatexDiff {
 
             // Additions
             if (hunk.inserted > 0) {
+                int ey1 = calcPosition(list1, hunk.line1 + hunk.inserted, false);
+                // build list of flags:
+                List<IndexFlagsPair<Integer>> flags = new ArrayList<IndexFlagsPair<Integer>>();
                 List<IndexPair> indices = getIndices(list1.subList(hunk.line1, hunk.line1+hunk.inserted), hunk.line1);
                 for (IndexPair indexPair : indices)
-                    result.add(new Addition(
-                            indexPair.left == hunk.line1?
-                                    start_position:  // if first pair, use calculated start position
-                                    calcPosition(list1, indexPair.left-1, true), // if not first pair, use end of prior lexeme
-                            indexPair.right == hunk.line1+hunk.inserted?
-                                    calcPosition(list1, hunk.line1+hunk.inserted, false): // if last pair, use next lexeme
-                                    calcPosition(list1, indexPair.right-1, true), // if not last pair, use end of right lexeme
-                            buildFlags(inPreamble, list1.get(indexPair.left).type)
-                    ));
+                    flags.add(new IndexFlagsPair<Integer>(
+//                            indexPair.left == hunk.line1 ?
+//                                    start_position :  // if first pair, use calculated start position
+//                                    calcPosition(list1, indexPair.left - 1, true), // if not first pair, use end of prior lexeme
+                            indexPair.right == hunk.line1 + hunk.inserted ?
+                                    ey1 : // if last pair, use next lexeme
+                                    calcPosition(list1, indexPair.right - 1, true), // if not last pair, use end of right lexeme
+                            buildFlags(inPreamble, false, false, list1.get(indexPair.left).type)));
+                result.add(new Addition(start_position, ey1, flags));
             }
 
             // Deletions
             if (hunk.deleted > 0) {
+                int text_end_position = (ex0 != ey0 && sx1 != sy1)?ex0:ey0; // if last pair, then depends on whether
+                // white space at end of deletion in old text AND
+                // white space in front of position in new text
+                // build list of flags:
+                List<IndexFlagsPair<String>> flags = new ArrayList<IndexFlagsPair<String>>();
                 List<IndexPair> indices = getIndices(list0.subList(hunk.line0, hunk.line0+hunk.deleted), hunk.line0);
                 for (IndexPair indexPair : indices) {
-                    // calc text :
+                    // calc text borders:
                     int text_start = indexPair.left == hunk.line0?
                             calcPosition(list0, hunk.line0-1, true): // if first pair, start with prior lexeme
                             calcPosition(list0, indexPair.left-1, true); // not first pair, use end of prior lexeme
                     int text_end =  indexPair.right == hunk.line0+hunk.deleted?
-                            (ex0 != ey0 && sx1 != sy1)?ex0:ey0: // if last pair, then depends on whether
-                            // white space at end of deletion in old text AND
-                            // white space in front of position in new text
+                            text_end_position :
                             calcPosition(list0, indexPair.right-1, true); // if not last pair, use end of right lexeme
-                    String text = contents[0].substring(text_start, text_end);
-                    result.add(new Deletion(
-                            start_position,
-                            text,
-                            buildFlags(inPreamble, list0.get(indexPair.left).type)));
-                    start_position += text.length();
+                    flags.add(new IndexFlagsPair<String>(
+                            contents[0].substring(text_start, text_end),
+                            buildFlags(inPreamble, true, false, list0.get(indexPair.left).type)));
                 }
+                result.add(new Deletion(
+                        start_position,
+                        "HALLO",
+                        flags));
             }
         }
 
