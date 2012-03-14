@@ -8,6 +8,8 @@
  */
 package com.sri.ltc.latexdiff;
 
+import com.google.common.collect.ImmutableList;
+
 import java.util.*;
 
 /**
@@ -20,6 +22,11 @@ public class Addition extends Change<Integer> {
     public Addition(int start_position, int end_position, List<IndexFlagsPair<Integer>> flags) {
         super(start_position, flags);
         this.end_position = end_position;
+    }
+
+    @Override
+    public ImmutableList<IndexFlagsPair<Integer>> getFlags() {
+        return super.getFlags();
     }
 
     @Override

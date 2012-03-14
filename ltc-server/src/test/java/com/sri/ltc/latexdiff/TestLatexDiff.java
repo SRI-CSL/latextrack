@@ -38,7 +38,7 @@ public class TestLatexDiff {
         Change change = changes.get(index);
         assertTrue("change is addition", change instanceof Addition);
         assertTrue("start is at "+start_position, change.start_position == start_position);
-        assertEquals("addition flags", flags, change.flags);
+        assertEquals("addition flags", flags, change.getFlags());
     }
 
     protected void assertDeletion(int index, int start_position, int length, List<IndexFlagsPair<String>> flags) {
@@ -46,7 +46,7 @@ public class TestLatexDiff {
         Change change = changes.get(index);
         assertTrue("change is deletion", change instanceof Deletion);
         assertTrue("start is at "+start_position, change.start_position == start_position);
-        assertEquals("deletion flags", flags, change.flags);
+        assertEquals("deletion flags", flags, change.getFlags());
     }
 
     @Test(expected = NullPointerException.class)

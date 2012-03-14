@@ -21,7 +21,6 @@ public abstract class Change<T> implements Comparable<Change> {
 
     public final int start_position;
     public final ImmutableList<IndexFlagsPair<T>> flags; // a list of flags by position/string fragments
-    private final Integer sequenceNumber;
 
     public enum Flag {
         DELETION,
@@ -45,14 +44,6 @@ public abstract class Change<T> implements Comparable<Change> {
         return result;
     }
 
-    // sequence numbering for any Change object created
-    private static Integer sequence = 0;
-    public static void resetSequenceNumbering() {
-        synchronized (sequence) {
-            sequence = 0;
-        }
-    }
-
     protected Change(int start_position, List<IndexFlagsPair<T>> flags) {
         if (start_position < 0) throw new IllegalArgumentException("Start position of change cannot be negative");
         this.start_position = start_position;
@@ -61,18 +52,16 @@ public abstract class Change<T> implements Comparable<Change> {
         this.flags = new ImmutableList.Builder<IndexFlagsPair<T>>()
                 .addAll(flags)
                 .build();
-        // set and update sequence number:
-        synchronized (sequence) {
-            sequenceNumber = sequence++;
-        }
+    }
+
+    public ImmutableList<IndexFlagsPair<T>> getFlags() {
+        return flags;
     }
 
     public int compareTo(Change o) {
         int result = start_position - o.start_position;
         if (result == 0) // if start position is the same, use class information: Addition smaller than Deletion
             result = this.getClass().getName().compareTo(o.getClass().getName());
-        if (result == 0) // if class information is the same, compare using creation time
-            result = sequenceNumber.compareTo(o.sequenceNumber);
         return result;
     }
 
@@ -85,7 +74,6 @@ public abstract class Change<T> implements Comparable<Change> {
 
         if (start_position != change.start_position) return false;
         if (!flags.equals(change.flags)) return false;
-        if (!sequenceNumber.equals(change.sequenceNumber)) return false;
 
         return true;
     }
@@ -94,7 +82,6 @@ public abstract class Change<T> implements Comparable<Change> {
     public int hashCode() {
         int result = start_position;
         result = 31 * result + flags.hashCode();
-        result = 31 * result + sequenceNumber.hashCode();
         return result;
     }
 
@@ -106,15 +93,5 @@ public abstract class Change<T> implements Comparable<Change> {
         buffer.append("  "+flags.toString());
         buffer.append("\n  </flags>\n");
         return buffer.toString();
-    }
-
-    static String escapeText(String text) {
-        // escape "<", ">", "&", ', and "
-        text = text.replaceAll("<","&lt;");
-        text = text.replaceAll(">","&gt;");
-        text = text.replaceAll("&","&amp;");
-        text = text.replaceAll("'","&apos;");
-        text = text.replaceAll("\"","&quot;");
-        return text;
     }
 }

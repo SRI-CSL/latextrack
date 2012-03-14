@@ -48,8 +48,25 @@ public class IndexFlagsPair<T> {
         return result;
     }
 
+    private String escapeIndex() {
+        if (index.getClass().equals(String.class)) {
+            return "\""+escapeText((String) index)+"\"";
+        } else
+            return index.toString();
+    }
+
+    static String escapeText(String text) {
+        // escape "<", ">", "&", ', and "
+        text = text.replaceAll("<","&lt;");
+        text = text.replaceAll(">","&gt;");
+        text = text.replaceAll("&","&amp;");
+        text = text.replaceAll("'","&apos;");
+        text = text.replaceAll("\"","&quot;");
+        return text;
+    }
+
     @Override
     public String toString() {
-        return "("+ index +","+flags+")";
+        return "("+ escapeIndex() +","+flags+")";
     }
 }

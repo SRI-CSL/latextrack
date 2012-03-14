@@ -8,6 +8,8 @@
  */
 package com.sri.ltc.latexdiff;
 
+import com.google.common.collect.ImmutableList;
+
 import java.util.List;
 
 /**
@@ -22,6 +24,11 @@ public class Deletion extends Change<String> {
         if (text == null || "".equals(text))
             throw new IllegalArgumentException("Text of deletion cannot be NULL or empty.");
         this.text = text;
+    }
+
+    @Override
+    public ImmutableList<IndexFlagsPair<String>> getFlags() {
+        return super.getFlags();
     }
 
     @Override

@@ -53,8 +53,6 @@ public final class Accumulate {
         StyleConstants.setUnderline(style, true);
         style = this.document.addStyle(DELETION_STYLE, null);
         StyleConstants.setStrikeThrough(style, true);
-        // reset sequence numbering for changes
-        Change.resetSequenceNumbering();
     }
 
     public void addPropertyChangeListener(PropertyChangeListener listener) {
@@ -179,27 +177,33 @@ public final class Accumulate {
             // go through changes and markup document
             float inner_step_increment = outer_step_increment/(float) changes.size(); // increment of progress for each inner loop
             for (Change change : changes) {
-                int start_position = change.start_position + current_offset;
 
                 if (change instanceof Deletion) {
-                    style = document.getStyle(DELETION_STYLE);
-                    style.addAttribute(FLAGS_ATTR, null); // TODO: change.OLDflags);
-                    document.insertString(start_position,
-                            ((Deletion) change).text,
-                            style);
-                    current_offset += ((Deletion) change).text.length();
+                    for (IndexFlagsPair<String> pair : ((Deletion) change).getFlags()) {
+                        style = document.getStyle(DELETION_STYLE);
+                        style.addAttribute(FLAGS_ATTR, pair.flags);
+                        document.insertString(
+                                change.start_position + current_offset,
+                                pair.index,
+                                style);
+                        current_offset += pair.index.length();
+                    }
                 }
 
                 if (change instanceof Addition) {
-                    // markup everything between start_position and end_position except
-                    // currently marked ADDITIONS and DELETIONS:
-                    for (int i = start_position; i < ((Addition) change).end_position + current_offset; i++) {
-                        Object styleName = document.getCharacterElement(i).getAttributes().getAttribute(StyleConstants.NameAttribute);
-                        if (!DELETION_STYLE.equals(styleName) && !ADDITION_STYLE.equals(styleName)) {
-                            style = document.getStyle(ADDITION_STYLE);
-                            style.addAttribute(FLAGS_ATTR, null); // TODO:  change.OLDflags);
-                            document.setCharacterAttributes(i, 1, style, true);
+                    int start_position = change.start_position + current_offset;
+                    for (IndexFlagsPair<Integer> pair : ((Addition) change).getFlags()) {
+                        // markup everything between start_position and end_position except
+                        // currently marked ADDITIONS and DELETIONS:
+                        for (int i = start_position; i < pair.index + current_offset; i++) {
+                            Object styleName = document.getCharacterElement(i).getAttributes().getAttribute(StyleConstants.NameAttribute);
+                            if (!DELETION_STYLE.equals(styleName) && !ADDITION_STYLE.equals(styleName)) {
+                                style = document.getStyle(ADDITION_STYLE);
+                                style.addAttribute(FLAGS_ATTR, pair.flags);
+                                document.setCharacterAttributes(i, 1, style, true);
+                            }
                         }
+                        start_position = pair.index + current_offset; // next fragment starts at current end position
                     }
                 }
 
