@@ -252,29 +252,35 @@ public final class TestAccumulate {
                 new int[][] {{12, 17}},
                 new int[][] {{1}}
         );
-
-        // small replacement with trailing white space over 3 versions:
-//        map = perform(
-//                "\t  Lorem ipsum; dolor sit amet.\n",
-//                "Lorem ipsum dolor \nsit amet",
-//                "Lorem ipsum dolor sit amet, \n "
-//        );
-//        assertMap("Lorem ipsum dolor sit amet.\n, \n ", 2);
-//        assertStyle(
-//                new int[][] {{0, 2}, {1, 1}}, // one deletion and one addition
-//                new int[][] {{0, 26, 28}, {1, 28, 32}}
-//        );
-//        renderHTML(map);
-
+        // replacement with trailing white space over 3 versions:
+        map = perform(
+                "\t  Lorem ipsum; dolor sit amet.\n",
+                "Lorem ipsum dolor \nsit amet",
+                "Lorem ipsum dolor sit amet, \n "
+        );
+        assertMap("Lorem ipsum; dolor sit amet.\n, \n ", 3);
+        assertStyle(
+                new int[][] {{2}, {2}, {1}},
+                new int[][] {{11, 12}, {27, 29}, {29, 33}},
+                new int[][] {{1}, {1}, {2}}
+        );
         // TODO: recreate problem with comment:
         // adding text and then adding comment, but showing everything
-//        map = perform(true, true, true, false, true,
-//                "  Lorem ipsum dolor sit amet\n",
-//                "Lorem ipsum \ndolor sit amet, consectetur adipiscing elit. \n ",
-//                "Lorem ipsum \ndolor sit amet, consectetur adipiscing elit. \n " +
-//                        "% ADDING MORE:\n" +
-//                        "Praesent tempor hendrerit eros, non scelerisque est fermentum nec. "
-//        );
+        map = perform(EnumSet.of(Change.Flag.COMMENT),
+                "  Lorem ipsum dolor sit amet\n",
+                "Lorem ipsum \ndolor sit amet, consectetur adipiscing elit. \n ",
+                "Lorem ipsum \ndolor sit amet, consectetur adipiscing elit. \n " +
+                        "% ADDING MORE:\n" +
+                        "Praesent tempor hendrerit eros, non scelerisque est fermentum nec. "
+        );
+        assertMap("Lorem ipsum \ndolor sit amet, consectetur adipiscing elit. \n " +
+                "% ADDING MORE:\n" +
+                "Praesent tempor hendrerit eros, non scelerisque est fermentum nec. ", 2);
+        assertStyle(
+                new int[][] {{1}, {1}},
+                new int[][] {{27, 57}, {74, 142}},
+                new int[][] {{1}, {2}}
+        );
 //        renderHTML(map);
     }
 

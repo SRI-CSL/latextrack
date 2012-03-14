@@ -45,7 +45,7 @@ public class TestLatexDiff {
         assertTrue("at least "+(index+1)+" changes", changes.size() >= index+1);
         Change change = changes.get(index);
         assertTrue("change is deletion", change instanceof Deletion);
-        assertTrue("start is at "+start_position, change.start_position == start_position);
+        assertEquals("start position", start_position, change.start_position);
         assertEquals("deletion flags", flags, change.getFlags());
     }
 
@@ -80,24 +80,18 @@ public class TestLatexDiff {
                         EnumSet.noneOf(Change.Flag.class))));
     }
 
-    @Ignore
+    @Test
     public void inComment() throws IOException {
         changes = getChanges(
                 " \nLorem ipsum %%%  HERE IS A COMMMENT WITH SPACE...\n dolor sit amet. \n ",
                 "Lorem ipsum \n%%%  HERE IS A COMMENT WITH SPACE AND MORE %...\n dolor sit amet."
         );
-        assertTrue("2 changes", changes.size() == 2);
-        Change change = changes.get(0);
-//        assertTrue("1st change is small and in comment but not in preamble nor a command",
-//                !change.OLDflags.contains(Change.Flag.PREAMBLE)
-//                        && !change.OLDflags.contains(Change.Flag.COMMAND)
-//                        && change.OLDflags.contains(Change.Flag.COMMENT));
-        change = changes.get(1);
-        assertTrue("2nd change is addition", change instanceof Addition);
-//        assertTrue("2nd change is in comment but not in preamble nor a command",
-//                !change.OLDflags.contains(Change.Flag.PREAMBLE)
-//                        && !change.OLDflags.contains(Change.Flag.COMMAND)
-//                        && change.OLDflags.contains(Change.Flag.COMMENT));
+        assertDeletion(0, 32, 1, Lists.newArrayList(new IndexFlagsPair<String>(
+                "M",
+                EnumSet.of(Change.Flag.DELETION, Change.Flag.COMMENT, Change.Flag.SMALL))));
+        assertAddition(1, 46, 57, Lists.newArrayList(new IndexFlagsPair<Integer>(
+                57,
+                EnumSet.of(Change.Flag.COMMENT))));
     }
 
     @Test
