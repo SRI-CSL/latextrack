@@ -17,11 +17,8 @@ import java.util.*;
  */
 public class Addition extends Change<Integer> {
 
-    public final int end_position;
-
-    public Addition(int start_position, int end_position, List<IndexFlagsPair<Integer>> flags) {
+    public Addition(int start_position, List<IndexFlagsPair<Integer>> flags) {
         super(start_position, flags);
-        this.end_position = end_position;
     }
 
     @Override

@@ -17,13 +17,8 @@ import java.util.List;
  */
 public class Deletion extends Change<String> {
 
-    public final String text;
-
-    public Deletion(int start_position, String text, List<IndexFlagsPair<String>> flags) {
+    public Deletion(int start_position, List<IndexFlagsPair<String>> flags) {
         super(start_position, flags);
-        if (text == null || "".equals(text))
-            throw new IllegalArgumentException("Text of deletion cannot be NULL or empty.");
-        this.text = text;
     }
 
     @Override

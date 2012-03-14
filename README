@@ -89,3 +89,4 @@ $> htlatex manual "manual,0,png" "" "" "-interaction=nonstopmode --src-specials"
 Incrementing version number
 ---------------------------
 
+First, in parent pom.xml and then in all children.

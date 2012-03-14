@@ -55,7 +55,7 @@ public final class TestAccumulate {
             for (int i=0; i<texts.length; i++)
                 readers[i] = new StringReaderWrapper(texts[i]);
         }
-        return accumulate.perform2(readers, null, flagsToHide);
+        return accumulate.perform(readers, null, flagsToHide);
     }
 
     @SuppressWarnings("unchecked")

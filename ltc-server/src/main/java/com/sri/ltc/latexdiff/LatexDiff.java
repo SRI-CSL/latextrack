@@ -107,7 +107,6 @@ public final class LatexDiff {
             if (hunk.inserted > 0) {
                 result.add(new Addition(
                         lexeme1.pos+hunk.line1,
-                        lexeme1.pos+hunk.line1+hunk.inserted,
                         Arrays.asList(new IndexFlagsPair<Integer>(
                                 lexeme1.pos + hunk.line1 + hunk.inserted,
                                 buildFlags(inPreamble, false, true, lexeme1.type)))));
@@ -117,7 +116,6 @@ public final class LatexDiff {
             if (hunk.deleted > 0) {
                 result.add(new Deletion(
                         lexeme1.pos+hunk.line1,
-                        text0.substring(hunk.line0, hunk.line0+hunk.deleted),
                         Arrays.asList(new IndexFlagsPair<String>(
                                 text0.substring(hunk.line0, hunk.line0+hunk.deleted),
                                 buildFlags(inPreamble, true, true, lexeme1.type)))));
@@ -277,7 +275,7 @@ public final class LatexDiff {
                                     ey1 : // if last pair, use next lexeme
                                     calcPosition(list1, indexPair.right - 1, true), // if not last pair, use end of right lexeme
                             buildFlags(inPreamble, false, false, list1.get(indexPair.left).type)));
-                result.add(new Addition(start_position, ey1, flags));
+                result.add(new Addition(start_position, flags));
             }
 
             // Deletions
@@ -302,7 +300,6 @@ public final class LatexDiff {
                 }
                 result.add(new Deletion(
                         start_position,
-                        "HALLO",
                         flags));
             }
         }

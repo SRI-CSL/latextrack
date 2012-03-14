@@ -313,7 +313,7 @@ public final class LTCserverImpl implements LTCserverInterface {
                 };
                 session.getAccumulate().addPropertyChangeListener(listener);
             }
-            map = session.getAccumulate().perform2(
+            map = session.getAccumulate().perform(
                     readers.toArray(new ReaderWrapper[readers.size()]),
                     indices.toArray(new Integer[indices.size()]),
                     Change.buildFlags(

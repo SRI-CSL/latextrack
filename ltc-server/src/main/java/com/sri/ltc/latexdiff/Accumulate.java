@@ -109,13 +109,11 @@ public final class Accumulate {
      * The value for the first key is the text obtained from accumulating all changes.  The value for the second key
      * is a list of 4-tuples denoting the mark up for the text.  Each 4-tuple has integers
      * <pre>
-     *     <start position (incl.), end position (excl.), addition/deletion, author index>
+     *     [start position (incl.), end position (excl.), addition/deletion, author index]
      * </pre>, which contain the start and end position of the change (positions in text start with 0), a 1 for
      * addition or 2 for deletion, and the index of the author who made this change.  The author index is either taken
      * from the given array or assigned by index of the text array.
-     * <p>
-     * This is the second version of the algorithm.
-     * </p>
+     *
      * @param priorText an array of text wrappers denoting the oldest to the newest version
      * @param authorIndices an array of author indices for each version of priorText;
      *                      must be of the same length as priorText or empty or <code>null</code>
@@ -125,9 +123,9 @@ public final class Accumulate {
      * @throws BadLocationException if a location in the underlying document does not exist
      */
     @SuppressWarnings("unchecked")
-    public Map perform2(ReaderWrapper[] priorText,
-                        Integer[] authorIndices,
-                        Set<Change.Flag> flagsToHide) throws IOException, BadLocationException {
+    public Map perform(ReaderWrapper[] priorText,
+                       Integer[] authorIndices,
+                       Set<Change.Flag> flagsToHide) throws IOException, BadLocationException {
 
         // init return value:
         Map map = new HashMap();
