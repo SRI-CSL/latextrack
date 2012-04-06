@@ -1,13 +1,86 @@
 \section{Using Emacs} \label{sec:emacs}
 
-%Before you can use LTC, you must start the base system first.  See {{{./usage.html}Usage}} for more details.
-%Now you should be able to invoke LTC from Emacs using <<<M-x ltc-mode>>>.
-%
-%If you need to customize LTC, for example to change the port number, start the base system with option <<<-p <PORT>>>:
-%
-%$ java -jar LTC-${project.version}.jar -p 5555
-%Tue Dec 06 12:00:38 CST 2011 | CONFIG: 	Default logging configuration complete
-%Tue Dec 06 12:00:38 CST 2011 | CONFIG: 	Logging configured to level CONFIG
-%Tue Dec 06 12:00:38 CST 2011 | INFO: 	Git version: X.Y.Z
-%--log4j: 06 Dec 2011 12:00:38,617 [main] INFO  org.apache.xmlrpc.webserver.XmlRpcServlet - init
-%Tue Dec 06 12:00:38 CST 2011 | INFO: 	Started RPC server on port 5555.
+In this section, we explain how to use Emacs as the editor of the .tex-file with LTC.
+
+\parbox{\textwidth}{\color{red} CAVEAT: due to current bugs, it is best to use \Code{ltc-mode} defensively without editing the file in Emacs while LTC is turned on.  It is safe to view changes in the file and use different filtering settings.  If the text becomes scrambled, try to exit \Code{ltc-mode} or Emacs altogether before saving the file.  As long as you do not save while in \Code{ltc-mode} nothing bad should happen.}
+
+\subsection{Starting the LTC Server}
+
+Before you can use \Code{ltc-mode} in Emacs, you must start the LTC server first.  To do so, you call Java with the JAR-file that you downloaded. 
+
+\begin{CodeVerbatim}
+$> java -jar $LTC/LTC-${project.version}.jar
+ | CONFIG: 	Default logging configuration complete
+ | CONFIG: 	Logging configured to level CONFIG
+ | CONFIG: 	git version: X.Y.Z
+--log4j: [main] INFO  org.apache.xmlrpc.webserver.XmlRpcServlet - init
+ | INFO: 	Started RPC server on port 7777.
+\end{CodeVerbatim}
+
+If you need to customize LTC, for example to change the port number, start the base system with option \Code{-p <PORT>}:
+
+\begin{CodeVerbatim}
+$> java -jar $LTC/LTC-${project.version}.jar -p 5555
+[...]
+ | INFO: 	Started RPC server on port 5555.
+\end{CodeVerbatim}
+
+The log messages from the LTC server are also saved in file \Code{~/.LTC.log}.  This log file is created every time that the server starts, so if you need the contents, please make a copy before starting the server anew.
+
+\subsection{Entering and Exiting \texttt{ltc-mode}}
+
+\begin{figure}[t]
+\centering
+\mygraphics{height=.37\textheight}{figures/emacs-latex-mode}
+\hspace{2ex}
+\begin{tikzpicture}
+  \node [single arrow,draw] {};
+\end{tikzpicture}
+\hspace{2ex}
+\mygraphics{height=.37\textheight}{figures/emacs-ltc-started}
+\caption{Starting \texttt{ltc-mode} in Emacs} \label{fig:emacs-ltc-started}
+\end{figure}
+
+Once your Emacs has a .tex-file loaded in plain \Code{latex-mode} as seen on the left in Figure~\ref{fig:emacs-ltc-started}, you can invoke the minor-mode \Code{ltc-mode} in different ways.  Usually, the mode launching command \Code{M-x ltc-mode} is available.  If Emacs has its own window and supports context menus, you may be able to right-click on the word ``LaTeX'' in the mode line at the bottom of Emacs. Then, a list of minor modes appears from which you can select ``LTC Mode.''  Once the mode starts successfully, a number of status messages, a smaller window at the bottom of the text that contains LTC information, and changes in the text marked up by color and style appear.  Emacs then looks similar to the right in Figure~\ref{fig:emacs-ltc-started}.
+
+The mode can be toggled, i.e., the same command starts and stops \Code{ltc-mode}.
+
+Once the mode is started, a new menu ``LTC'' should appear in Emacs.  This can be part of Emacs' main menu or included in the mode line.  From there, you can interact with the LTC system as shown in the following examples.
+
+\subsubsection{The ``LTC info'' Buffer}
+
+The new, smaller window at the bottom of the frame is called ``LTC info'' and contains a table resembling the commit graph of the current file.  Newer versions of the file are at the top of the list.  An asterisk at the beginning  indicated that this version is taken into account when the history of changes is calculated.  Conversely, if the asterisk is missing and the whole row is shown in gray color, then this version is currently skipped when calculating changes.  The next column contains the SHA-1 key (abbreviated) and the third column the date  of the corresponding git revision.  The author colored in his or her key and finally the commit message follow.  The first row of the commit table contains the current author.
+
+\subsubsection{Updating the Buffer}
+
+An important command is \Code{M-x ltc-update} (currently bound to Ctrl-L U but this will change once we adhere better to Emacs conventions) or the menu item LTC $>$ Update buffer.  This will update the  view of the file based on current filtering and other settings.  Use this command when the ``LTC info'' buffer ended up in a different frame or tab, or when you make changes such as a git commit from the command line.
+
+\subsection{Filtering Changes}
+
+\begin{figure}[t]
+\centering
+\mygraphics{height=.37\textheight}{figures/emacs-hide-preamble}
+\caption{Hiding changes in the preamble using the ``LTC'' menu} \label{fig:emacs-hide-preamble}
+\end{figure}
+
+To show and hide certain changes, simply choose from the menu LTC $>$ Show/Hide $>$ ... the appropriate entry.  Figure~\ref{fig:emacs-hide-preamble} shows for example hiding changes in the preamble via the context menu.  %If the menu is not available, the Emacs commands \Code{M-x } have the same effect.
+After selecting any of the menu items to show or hide certain changes, the contents in the main Emacs window is immediately updated to reflect the filtering settings.
+
+To change the default limitation of the file's history that is taken into account for viewing changes, you can do so by specifying a set of authors to limit to, and a revision number or date to indicate how far back in time you want to go.  These functions are available via the menu LTC $>$ Limit by $>$ ...  Each of these actions require additional input, therefore the menu item ends with ellipsis. 
+
+To define a set of authors to limit the history to, select the menu item or use command \Code{M-x ltc-limit-authors}. This will prompt you to input the names of authors in the mini-buffer.  You may use auto-completion with the TAB key.  End the input of names by providing an empty name.  If the first name is empty, this will reset to taking all known authors into account (i.e., not limiting by authors anymore).
+
+Similarly, you can define how far back the file history is taken into account.  Use commands \Code{M-x ltc-limit-rev} 
+and \Code{M-x ltc-limit-date} respectively.  Again, user input is needed via the mini-buffer.  Use auto completion with the TAB key in order to automatically extend to known SHA-1 keys or revision dates.  To reset the limit to the default, simply enter an empty value when prompted.
+
+\subsection{Author Color Keys}
+
+To customize the color used to designate changes in the marked up text, click on the author name in the ``LTC info'' buffer. [TODO: MORE NEEDED]
+
+\subsection{Emacs Help}
+
+[TODO]
+
+\subsection{Table of Commands}
+
+[TODO]

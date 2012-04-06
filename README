@@ -30,6 +30,9 @@ To create the site (with a link to download the JAR):
 
 $> mvn verify site
 
+If manual has new, externalized TikZ pictures, manually confert .pdf into .png (using Preview) under
+  all/src/site/tex/manual/figures/manual-figure*.pdf
+
 Before deploying, need to log into CSL Unix cluster to manually delete the directory ~linda/public_html/LTC/all!
 
 $> mvn clean verify site site:deploy
@@ -84,6 +87,9 @@ or
 $> for i in manual-figure*.pdf; do convert -density 300 $i `echo $i | sed -e 's/\.pdf/\.png/g'`; done
 or use Preview.app?
 $> htlatex manual "manual,0,png" "" "" "-interaction=nonstopmode --src-specials"
+
+converting other .tiff files in bulk (use wildcard appropriately)
+$> for file in *.tiff; do convert $file `basename $file .tiff`.png; done
 
 
 Incrementing version number

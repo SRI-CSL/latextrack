@@ -106,6 +106,11 @@ The answer to the question of life is: 42
                 We hope that future releases of Emacs on Mac OS X have fixed this bug.</p>
             </answer>
         </faq>
+
+        <faq id="bw">
+            <question>Can ltc-mode run in black-and-white Emacs?</question>
+            <answer>No. (TODO: elaborate on failure message etc.)</answer>
+        </faq>
     </part>
 
 </faqs>
