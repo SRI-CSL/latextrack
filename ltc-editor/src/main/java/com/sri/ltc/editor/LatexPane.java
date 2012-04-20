@@ -10,10 +10,7 @@ package com.sri.ltc.editor;
 
 import articles.showpar.ShowParEditorKit;
 import com.sri.ltc.filter.Filtering;
-import com.sri.ltc.latexdiff.Accumulate;
-import com.sri.ltc.latexdiff.Change;
-import com.sri.ltc.latexdiff.FileReaderWrapper;
-import com.sri.ltc.latexdiff.ReaderWrapper;
+import com.sri.ltc.latexdiff.*;
 import com.sri.ltc.server.LTCserverInterface;
 
 import javax.swing.*;
@@ -41,6 +38,7 @@ public final class LatexPane extends JTextPane {
     protected int last_key_pressed = -1;
 
     public LatexPane() {
+        super(new MarkedUpDocument());
         // to make white-space displayable
         setEditorKit(new ShowParEditorKit());
         getDocument().putProperty("show paragraphs",
@@ -146,10 +144,10 @@ public final class LatexPane extends JTextPane {
         return documentFilter.getRecentEdits();
     }
 
-    public StyledDocument clearAndGetDocument() throws BadLocationException {
+    public MarkedUpDocument clearAndGetDocument() throws BadLocationException {
         if (isEditable())
             stopFiltering();
-        StyledDocument document = getStyledDocument();
+        MarkedUpDocument document = (MarkedUpDocument) getStyledDocument();
         document.remove(0, document.getLength());
         return document;
     }
@@ -169,7 +167,7 @@ public final class LatexPane extends JTextPane {
             }
 
             // reset current document and accumulate changes in it:
-            StyledDocument document = clearAndGetDocument();
+            MarkedUpDocument document = clearAndGetDocument();
             Filtering filter = Filtering.getInstance();
             new Accumulate(document).perform(readers, null, Change.buildFlags(
                     filter.getShowingStatus(LTCserverInterface.Show.DELETIONS),
@@ -222,7 +220,7 @@ public final class LatexPane extends JTextPane {
         if (element.isLeaf()) {
             AbstractDocument.LeafElement leaf = (AbstractDocument.LeafElement) element;
             Color color = (Color) leaf.getAttribute(StyleConstants.Foreground);
-            Integer index = (Integer) leaf.getAttribute(Accumulate.AUTHOR_INDEX);
+            Integer index = (Integer) leaf.getAttribute(MarkedUpDocument.AUTHOR_INDEX);
             if (color != null && index != null && !map.containsKey(index))
                 map.put(index, color);
         } else {

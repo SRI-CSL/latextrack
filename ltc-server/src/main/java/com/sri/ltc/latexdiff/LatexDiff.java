@@ -15,6 +15,7 @@ import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
 
+import javax.swing.text.StyledDocument;
 import java.io.*;
 import java.util.*;
 import java.util.logging.Level;
@@ -311,6 +312,11 @@ public final class LatexDiff {
         else
             return list.get(index).pos;
     }
+
+    // TODO: write method that takes a MarkedUpDocument as second parameter (ignoring ADDITIONS)
+//    public List<Change> getChanges(ReaderWrapper readerWrapper1, StyledDocument document) {
+//
+//    }
 
     /**
      * Obtain changes from two texts given as wrapped readers.  The return value is a list of changes ordered 
