@@ -45,6 +45,7 @@ $> mvn clean package
 Running
 -------
 
+after "mvn package verify"
 
 a) Server
 
@@ -52,10 +53,19 @@ a) Server
 
   $> java -jar LTC-all-<version>.jar
 
-
 b) Java Editor
 
   $> java -cp all/target/LTC-<version>.jar com.sri.ltc.editor.LTCEditor -h
+
+c) Utilities
+
+  $> java -cp all/target/LTC-<version>.jar com.sri.ltc.latexdiff.Lexer <FILE>
+  or
+  $> cat <FILE> | java -cp all/target/LTC-<version>.jar com.sri.ltc.latexdiff.Lexer
+
+  $> java -cp all/target/LTC-<version>.jar com.sri.ltc.latexdiff.LatexDiff -h
+
+  $> java -cp all/target/LTC-<version>.jar com.sri.ltc.server.HelloLTC -h
 
 
 Testing

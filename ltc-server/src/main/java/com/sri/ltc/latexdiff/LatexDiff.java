@@ -43,7 +43,6 @@ public final class LatexDiff {
     // variables to contain parts for diff'ing
     private List<List<Lexeme>> lexemLists = new ArrayList<List<Lexeme>>();
     private String[][] diffInputs = new String[2][];
-    private String[] contents = new String[2];
     Diff.change script;
 
     // TODO: make this private (and unit test via reflection?)
@@ -95,6 +94,7 @@ public final class LatexDiff {
         return flags;
     }
 
+    @SuppressWarnings("unchecked")
     private SortedSet<Change> mergeSmallDiffResult(Diff.change changes, String text0, Lexeme lexeme1, boolean inPreamble) {
         SortedSet<Change> result = new TreeSet<Change>();
 
@@ -168,7 +168,7 @@ public final class LatexDiff {
         return result;
     }
 
-    private synchronized List<Change> mergeDiffResult(Diff.change changes, List<Lexeme> list0, List<Lexeme> list1) {
+    private List<Change> mergeDiffResult(Diff.change changes, List<Lexeme> list0, List<Lexeme> list1, String contents0) {
         SortedSet<Change> result = new TreeSet<Change>();
 
         int preamble1 = findPreamble(list1); // find preamble index in newer text
@@ -268,9 +268,6 @@ public final class LatexDiff {
                 List<IndexPair> indices = getIndices(list1.subList(hunk.line1, hunk.line1+hunk.inserted), hunk.line1);
                 for (IndexPair indexPair : indices)
                     flags.add(new IndexFlagsPair<Integer>(
-//                            indexPair.left == hunk.line1 ?
-//                                    start_position :  // if first pair, use calculated start position
-//                                    calcPosition(list1, indexPair.left - 1, true), // if not first pair, use end of prior lexeme
                             indexPair.right == hunk.line1 + hunk.inserted ?
                                     ey1 : // if last pair, use next lexeme
                                     calcPosition(list1, indexPair.right - 1, true), // if not last pair, use end of right lexeme
@@ -295,7 +292,7 @@ public final class LatexDiff {
                             text_end_position :
                             calcPosition(list0, indexPair.right-1, true); // if not last pair, use end of right lexeme
                     flags.add(new IndexFlagsPair<String>(
-                            contents[0].substring(text_start, text_end),
+                            contents0.substring(text_start, text_end),
                             buildFlags(inPreamble, true, false, list0.get(indexPair.left).type)));
                 }
                 result.add(new Deletion(
@@ -326,33 +323,19 @@ public final class LatexDiff {
      * @return an ordered list of changes from old to new version
      * @throws IOException if the text cannot be extracted from the wrapped reader
      */
-    public List<Change> getChanges(ReaderWrapper readerWrapper1, ReaderWrapper readerWrapper2)
+    public synchronized List<Change> getChanges(ReaderWrapper readerWrapper1, ReaderWrapper readerWrapper2)
             throws IOException {
 
-        Diff.change changes = createScript(readerWrapper1, readerWrapper2);
-        // merge diff result with location information and convert into list of changes
-        return mergeDiffResult(changes, lexemLists.get(0), lexemLists.get(1));
-    }
-
-    private Diff.change createScript(ReaderWrapper readerWrapper1, ReaderWrapper readerWrapper2) throws IOException {
         // Run lexical analyzer over both files to get lexeme and locations
         lexemLists.clear(); // start with empty lists
         lexemLists.add(analyze(readerWrapper1, false));
         lexemLists.add(analyze(readerWrapper2, false));
 
-        // copy contents
-        contents[0] = copyText(readerWrapper1.createReader());
-        contents[1] = copyText(readerWrapper2.createReader());
-
-        return diff(lexemLists);
-    }
-
-    private Diff.change diff(List<List<Lexeme>> twoListsOfLexemes) {
         // Diff between lexeme (without locations):
         // collect relevant lexemes into arrays
         for (int i=0; i<2; i++) {
             // go through each lexem list and build up string arrays:
-            List<Lexeme> lexemes = twoListsOfLexemes.get(i);
+            List<Lexeme> lexemes = lexemLists.get(i);
             diffInputs[i] = new String[lexemes.size()];
             int j=0;
             for (Lexeme lexeme : lexemes) {
@@ -360,8 +343,11 @@ public final class LatexDiff {
                 j++;
             }
         }
-        // create and return change script
-        return (script = new Diff(diffInputs[0],diffInputs[1]).diff_2(false));
+        // create and save change script
+        script = new Diff(diffInputs[0],diffInputs[1]).diff_2(false);
+
+        // merge diff result with location information and convert into list of changes
+        return mergeDiffResult(script, lexemLists.get(0), lexemLists.get(1), copyText(readerWrapper1.createReader()));
     }
 
     public static String copyText(Reader reader) throws IOException {

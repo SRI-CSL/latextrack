@@ -87,7 +87,7 @@ public class CliGitLog implements IGitLog {
              */
             StringBuilder optSinceUntil = new StringBuilder(); // collect <since> and <until> in one string
             if (options.isOptSince())
-                optSinceUntil.append(options.getOptSince() + "src/main");
+                optSinceUntil.append(options.getOptSince() + "..");
             if (options.isOptUntil())
                 optSinceUntil.append(options.getOptUntil());
             if (optSinceUntil.length() > 0)
