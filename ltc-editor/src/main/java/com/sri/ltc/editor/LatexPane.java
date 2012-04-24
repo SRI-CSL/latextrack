@@ -38,7 +38,6 @@ public final class LatexPane extends JTextPane {
     protected int last_key_pressed = -1;
 
     public LatexPane() {
-        super(new MarkedUpDocument());
         // to make white-space displayable
         setEditorKit(new ShowParEditorKit());
         getDocument().putProperty("show paragraphs",
@@ -144,10 +143,10 @@ public final class LatexPane extends JTextPane {
         return documentFilter.getRecentEdits();
     }
 
-    public MarkedUpDocument clearAndGetDocument() throws BadLocationException {
+    public StyledDocument clearAndGetDocument() throws BadLocationException {
         if (isEditable())
             stopFiltering();
-        MarkedUpDocument document = (MarkedUpDocument) getStyledDocument();
+        StyledDocument document = getStyledDocument();
         document.remove(0, document.getLength());
         return document;
     }
@@ -167,9 +166,9 @@ public final class LatexPane extends JTextPane {
             }
 
             // reset current document and accumulate changes in it:
-            MarkedUpDocument document = clearAndGetDocument();
+            StyledDocument document = clearAndGetDocument();
             Filtering filter = Filtering.getInstance();
-            new Accumulate(document).perform(readers, null, Change.buildFlags(
+            new Accumulate(document.getText(0, document.getLength())).perform(readers, null, Change.buildFlags(
                     filter.getShowingStatus(LTCserverInterface.Show.DELETIONS),
                     filter.getShowingStatus(LTCserverInterface.Show.SMALL),
                     filter.getShowingStatus(LTCserverInterface.Show.PREAMBLE),
@@ -183,6 +182,12 @@ public final class LatexPane extends JTextPane {
         startFiltering();
     }
 
+    /**
+     * NOTE: this doesn't work anymore...
+     * @param text
+     * @param styles
+     * @param colors
+     */
     public void updateFromMaps(String text, List<Integer[]> styles, Map<Integer,Color> colors) {
         try {
             StyledDocument document = clearAndGetDocument();

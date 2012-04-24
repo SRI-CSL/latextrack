@@ -32,15 +32,8 @@ public final class Accumulate {
     private final MarkedUpDocument document;
 
     public Accumulate(String initialText) throws BadLocationException {
-        this((MarkedUpDocument) null);
+        document = new MarkedUpDocument();
         document.insertString(0, initialText, null);
-    }
-
-    public Accumulate(MarkedUpDocument document) {
-        if (document == null)
-            this.document = new MarkedUpDocument();
-        else
-            this.document = document;
     }
 
     public void addPropertyChangeListener(PropertyChangeListener listener) {
