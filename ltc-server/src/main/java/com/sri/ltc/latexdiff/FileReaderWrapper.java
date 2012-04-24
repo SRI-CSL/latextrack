@@ -15,15 +15,16 @@ import java.io.Reader;
 /**
  * @author linda
  */
-public class FileReaderWrapper extends AbstractReaderWrapper implements ReaderWrapper {
+public final class FileReaderWrapper extends AbstractReaderWrapper<String> implements ReaderWrapper {
 
-    public FileReaderWrapper(String location) {
-        super(location);
+    public FileReaderWrapper(String file) {
+        super(file);
     }
 
+    @Override
     public Reader createReader() {
         try {
-            return new FileReader(getLocation());
+            return new FileReader(getWrapped());
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         }

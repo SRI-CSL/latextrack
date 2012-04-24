@@ -21,7 +21,7 @@ public final class TestLatexDiffReplacements extends TestLatexDiff {
 
     @Test
     public void replacements() throws IOException {
-        changes = getChanges(  // case A
+        changes = getChanges(  // case Aa
                 "Lorem\\amet.",
                 " Lorem, dolor. ");
         assertAddition(0, 6, 13, Lists.newArrayList(new IndexFlagsPair<Integer>(
@@ -30,7 +30,16 @@ public final class TestLatexDiffReplacements extends TestLatexDiff {
         assertDeletion(1, 6, 5, Lists.newArrayList(new IndexFlagsPair<String>(
                 "\\amet",
                 EnumSet.of(Change.Flag.DELETION, Change.Flag.COMMAND))));
-        changes = getChanges(  // case B
+        changes = getChanges(  // case Ab
+                "\\amet.",
+                "dolor. ");
+        assertAddition(0, 0, 5, Lists.newArrayList(new IndexFlagsPair<Integer>(
+                5,
+                EnumSet.noneOf(Change.Flag.class))));
+        assertDeletion(1, 0, 6, Lists.newArrayList(new IndexFlagsPair<String>(
+                "\\amet ",
+                EnumSet.of(Change.Flag.DELETION, Change.Flag.COMMAND))));
+        changes = getChanges(  // case Ba
                 "Lorem   amet.",
                 " Lorem, dolor. ");
         assertAddition(0, 6, 13, Lists.newArrayList(new IndexFlagsPair<Integer>(
@@ -38,6 +47,15 @@ public final class TestLatexDiffReplacements extends TestLatexDiff {
                 EnumSet.noneOf(Change.Flag.class))));
         assertDeletion(1, 6, 7, Lists.newArrayList(new IndexFlagsPair<String>(
                 "   amet",
+                EnumSet.of(Change.Flag.DELETION))));
+        changes = getChanges(  // case Bb
+                "   amet.",
+                "dolor. ");
+        assertAddition(0, 0, 5, Lists.newArrayList(new IndexFlagsPair<Integer>(
+                5,
+                EnumSet.noneOf(Change.Flag.class))));
+        assertDeletion(1, 0, 8, Lists.newArrayList(new IndexFlagsPair<String>(
+                "   amet ",
                 EnumSet.of(Change.Flag.DELETION))));
         changes = getChanges(  // case C
                 "Lorem\\amet .",
@@ -93,7 +111,7 @@ public final class TestLatexDiffReplacements extends TestLatexDiff {
         assertDeletion(1, 6, 7, Lists.newArrayList(new IndexFlagsPair<String>(
                 "   amet",
                 EnumSet.of(Change.Flag.DELETION))));
-        changes = getChanges(  // case I
+        changes = getChanges(  // case Ia
                 "Lorem\\amet.",
                 " Lorem, dolor . ");
         assertAddition(0, 6, 14, Lists.newArrayList(new IndexFlagsPair<Integer>(
@@ -102,7 +120,16 @@ public final class TestLatexDiffReplacements extends TestLatexDiff {
         assertDeletion(1, 6, 5, Lists.newArrayList(new IndexFlagsPair<String>(
                 "\\amet",
                 EnumSet.of(Change.Flag.DELETION, Change.Flag.COMMAND))));
-        changes = getChanges(  // case J
+        changes = getChanges(  // case Ib
+                "\\amet.",
+                "dolor . ");
+        assertAddition(0, 0, 6, Lists.newArrayList(new IndexFlagsPair<Integer>(
+                6,
+                EnumSet.noneOf(Change.Flag.class))));
+        assertDeletion(1, 0, 6, Lists.newArrayList(new IndexFlagsPair<String>(
+                "\\amet ",
+                EnumSet.of(Change.Flag.DELETION, Change.Flag.COMMAND))));
+        changes = getChanges(  // case Ja
                 "Lorem   amet.",
                 " Lorem, dolor . ");
         assertAddition(0, 6, 14, Lists.newArrayList(new IndexFlagsPair<Integer>(
@@ -110,6 +137,15 @@ public final class TestLatexDiffReplacements extends TestLatexDiff {
                 EnumSet.noneOf(Change.Flag.class))));
         assertDeletion(1, 6, 7, Lists.newArrayList(new IndexFlagsPair<String>(
                 "   amet",
+                EnumSet.of(Change.Flag.DELETION))));
+        changes = getChanges(  // case Jb
+                "   amet.",
+                "dolor . ");
+        assertAddition(0, 0, 6, Lists.newArrayList(new IndexFlagsPair<Integer>(
+                6,
+                EnumSet.noneOf(Change.Flag.class))));
+        assertDeletion(1, 0, 8, Lists.newArrayList(new IndexFlagsPair<String>(
+                "   amet ",
                 EnumSet.of(Change.Flag.DELETION))));
         changes = getChanges(  // case K
                 "Lorem\\amet  sit.",

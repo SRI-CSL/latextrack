@@ -11,15 +11,19 @@ package com.sri.ltc.latexdiff;
 /**
  * @author linda
  */
-public class AbstractReaderWrapper {
+public abstract class AbstractReaderWrapper<T> {
 
-    private final String location;
+    private final T wrapped;
 
-    public AbstractReaderWrapper(String location) {
-        this.location = location;
+    public AbstractReaderWrapper(T location) {
+        this.wrapped = location;
     }
 
-    public String getLocation() {
-        return location;
+    public T getWrapped() {
+        return wrapped;
+    }
+
+    public Lexeme removeAdditions(Lexeme lexeme) {
+        return lexeme;
     }
 }

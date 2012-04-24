@@ -14,9 +14,11 @@ import com.google.common.collect.Sets;
 import java.util.Set;
 
 /**
+ * Pair of an index (with generic type) and an immutable set of change flags.
+ *
  * @author linda
  */
-public class IndexFlagsPair<T> {
+public final class IndexFlagsPair<T> {
 
     public final T index;
     public final ImmutableSet<Change.Flag> flags;

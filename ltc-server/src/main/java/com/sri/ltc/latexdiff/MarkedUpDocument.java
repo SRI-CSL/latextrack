@@ -13,6 +13,8 @@ import com.sri.ltc.server.LTCserverInterface;
 
 import javax.swing.text.*;
 import java.awt.*;
+import java.io.Reader;
+import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -106,6 +108,13 @@ public final class MarkedUpDocument extends DefaultStyledDocument {
         }
     }
 
+    public boolean isAddition(int pos) throws BadLocationException {
+        if (pos < 0 || pos >= getLength())
+            throw new BadLocationException("Cannot determine whether character is addition", pos);
+        Object styleName = getCharacterElement(pos).getAttributes().getAttribute(StyleConstants.NameAttribute);
+        return ADDITION_STYLE.equals(styleName);
+    }
+
     @SuppressWarnings("unchecked")
     public void applyFiltering(Set<Change.Flag> flagsToHide) throws BadLocationException {
         if (!flagsToHide.isEmpty())
@@ -123,6 +132,15 @@ public final class MarkedUpDocument extends DefaultStyledDocument {
                     }
                 }
             }
+    }
+
+    public Reader getReader() {
+        try {
+            return new StringReader(getText(0, getLength()));
+        } catch (BadLocationException e) {
+            e.printStackTrace();
+        }
+        return null;
     }
 
     public List<Integer[]> getStyles() {
@@ -217,4 +235,67 @@ public final class MarkedUpDocument extends DefaultStyledDocument {
                     " color=\""+color+"\" />";
         }
     }
+
+//    public final class DocumentReader extends Reader {
+//
+//        private final MarkedUpDocument document;
+//        private int next = 0; // position in document
+//        private boolean open = true; // flag when reader has been closed
+//
+//        public DocumentReader(MarkedUpDocument document) {
+//            this.document = document;
+//        }
+//
+//        /**
+//         * Closes the stream and releases any system resources associated with
+//         * it.  Once the stream has been closed, further read(), ready(),
+//         * mark(), reset(), or skip() invocations will throw an IOException.
+//         * Closing a previously closed stream has no effect.
+//         *
+//         * @throws java.io.IOException If an I/O error occurs
+//         */
+//        @Override
+//        public void close() throws IOException {
+//            open = false;
+//        }
+//
+//        /**
+//         * Reads characters into a portion of an array.  This method will block
+//         * until some input is available, an I/O error occurs, or the end of the
+//         * stream is reached.
+//         *
+//         * @param cbuf Destination buffer
+//         * @param off  Offset at which to start storing characters
+//         * @param len  Maximum number of characters to read
+//         * @return The number of characters read, or -1 if the end of the
+//         *         stream has been reached
+//         * @throws java.io.IOException If an I/O error occurs
+//         */
+//        @Override
+//        public int read(char[] cbuf, int off, int len) throws IOException {
+//            synchronized (lock) {
+//                if (!open)
+//                    throw new IOException("Document reader stream is closed");
+//                if ((off < 0) || (off > cbuf.length) ||
+//                        (len < 0) || ((off + len) > cbuf.length) || ((off + len) < 0)) {
+//                    throw new IndexOutOfBoundsException();
+//                } else if (len == 0) {
+//                    return 0;
+//                }
+//                return ;
+//            }
+//        }
+//
+//        /**
+//         * Tells whether this stream supports the mark() operation. The default
+//         * implementation always returns false. Subclasses should override this
+//         * method.
+//         *
+//         * @return true if and only if this stream supports the mark operation.
+//         */
+//        @Override
+//        public boolean markSupported() {
+//            return false;
+//        }
+//    }
 }

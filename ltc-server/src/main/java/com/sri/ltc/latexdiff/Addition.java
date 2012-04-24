@@ -15,7 +15,7 @@ import java.util.*;
 /**
  * @author linda
  */
-public class Addition extends Change<Integer> {
+public final class Addition extends Change<Integer> {
 
     public Addition(int start_position, List<IndexFlagsPair<Integer>> flags) {
         super(start_position, flags);

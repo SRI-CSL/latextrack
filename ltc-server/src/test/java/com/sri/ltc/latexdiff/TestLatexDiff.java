@@ -9,9 +9,9 @@
 package com.sri.ltc.latexdiff;
 
 import com.google.common.collect.Lists;
-import org.junit.Ignore;
 import org.junit.Test;
 
+import javax.swing.text.BadLocationException;
 import java.io.IOException;
 import java.util.EnumSet;
 import java.util.List;
@@ -122,5 +122,17 @@ public class TestLatexDiff {
         assertDeletion(1, 0, 13, Lists.newArrayList(
                 new IndexFlagsPair<String>(" \n\\usepackage", EnumSet.of(Change.Flag.DELETION, Change.Flag.COMMAND, Change.Flag.PREAMBLE)),
                 new IndexFlagsPair<String>("{lipsum}", EnumSet.of(Change.Flag.DELETION, Change.Flag.PREAMBLE))));
+    }
+
+    @Test
+    public void test3Diff() throws IOException, BadLocationException {
+        MarkedUpDocument document = new MarkedUpDocument();
+        document.insertString(0, "  Lorem ipsum   dolor sit. ", null);
+        document.markupAddition(7, 16, EnumSet.noneOf(Change.Flag.class));
+        document.insertDeletion(25, "   amet", EnumSet.of(Change.Flag.DELETION));
+        changes = latexDiff.getChanges(
+                new StringReaderWrapper(" Lorem    amet,  consectetur."),
+                new DocumentReaderWrapper(document));
+        assertEquals("Number of changes", 2, changes.size());
     }
 }

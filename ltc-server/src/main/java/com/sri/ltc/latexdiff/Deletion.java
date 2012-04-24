@@ -15,7 +15,7 @@ import java.util.List;
 /**
  * @author linda
  */
-public class Deletion extends Change<String> {
+public final class Deletion extends Change<String> {
 
     public Deletion(int start_position, List<IndexFlagsPair<String>> flags) {
         super(start_position, flags);

@@ -24,6 +24,8 @@ public final class IndexPair implements Comparable<IndexPair> {
     public IndexPair(Integer left, Integer right) {
         if (left == null || right == null)
             throw new IllegalArgumentException("Cannot create an index pair using NULL.");
+        if (left < 0 || right < 0)
+            throw new IllegalArgumentException("Cannot create an index pair with negative numbers.");
         if (right < left)
             throw new IllegalArgumentException("Cannot create an index pair with right side < left side");
         this.left = left;

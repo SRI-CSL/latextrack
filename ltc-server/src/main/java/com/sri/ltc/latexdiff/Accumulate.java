@@ -113,12 +113,9 @@ public final class Accumulate {
         for (int index = priorText.length - 1; index > 0; index--) {
 
             // compare current document with next version
-            // TODO: remove all additions from current text but maintain positions?
             List<Change> changes = latexDiff.getChanges(
                     priorText[index - 1],
-                    new StringReaderWrapper(document.getText(0, document.getLength())));
-            if (changes.isEmpty())
-                continue; // skip to next version if no changes
+                    new DocumentReaderWrapper(document)); // removes additions from current text but maintain positions
 
             // prepare styles with color and author index
             int authorIndex = (authorIndices == null || authorIndices.length != priorText.length)?
@@ -128,6 +125,10 @@ public final class Accumulate {
             int current_offset = 0;
 
             // go through changes and markup document
+            if (changes.isEmpty()) {
+                progress = updateProgress(progress, outer_step_increment);
+                continue; // skip to next version if no changes
+            }
             float inner_step_increment = outer_step_increment/(float) changes.size(); // increment of progress for each inner loop
             for (Change change : changes) {
 

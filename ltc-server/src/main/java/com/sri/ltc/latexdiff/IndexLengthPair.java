@@ -9,12 +9,12 @@
 package com.sri.ltc.latexdiff;
 
 /**
- * Pair of indices with length.
+ * Pair of indices each with length.
  * Both indices and both lengths must be non-negative.
  *
  * @author linda
  */
-public class IndexLengthPair {
+public final class IndexLengthPair {
 
     public final Integer index0, index1;
     public final Integer length0, length1;

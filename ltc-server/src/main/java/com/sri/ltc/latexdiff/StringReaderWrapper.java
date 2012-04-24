@@ -14,13 +14,14 @@ import java.io.StringReader;
 /**
  * @author linda
  */
-public class StringReaderWrapper extends AbstractReaderWrapper implements ReaderWrapper {
+public final class StringReaderWrapper extends AbstractReaderWrapper<String> implements ReaderWrapper {
     
-    public StringReaderWrapper(String location) {
-        super(location);
+    public StringReaderWrapper(String text) {
+        super(text);
     }
 
+    @Override
     public Reader createReader() {
-        return new StringReader(getLocation());
+        return new StringReader(getWrapped());
     }
 }

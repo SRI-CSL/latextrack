@@ -11,13 +11,13 @@ package com.sri.ltc.latexdiff;
 /**
  * @author linda
  */
-public class Lexeme {
+public final class Lexeme {
 
     final LexemeType type;
     final String contents;
     final int pos, length;
 
-    public Lexeme(LexemeType type, String contents, int pos, int length) {
+    public Lexeme(LexemeType type, String contents, int pos) {
         if (type == null)
             throw new IllegalArgumentException("Cannot create Lexeme of type NULL");
         if (contents == null)
@@ -25,7 +25,7 @@ public class Lexeme {
         this.type = type;
         this.contents = contents;
         this.pos = pos;
-        this.length = length;
+        this.length = contents.length();
     }
 
     public String displayContents() {

@@ -67,17 +67,17 @@ public final class TestAccumulate {
     }
 
     @SuppressWarnings("unchecked")
-    private void assertStyle(int[][] types, int[][] positions, int[][] authors) {
+    private void assertStyle(int[] types, int[][] positions, int[] authors) {
         styles = (List<Integer[]>) map.get(LTCserverInterface.KEY_STYLES);
         for (int i = 0; i < types.length; i++)
-            assertEquals("style ("+i+") type", (long) types[i][0], (long) styles.get(i)[2]);
+            assertEquals("style ("+i+") type", (long) types[i], (long) styles.get(i)[2]);
         for (int i = 0; i < positions.length; i++) {
             assertEquals("style ("+i+") start position", (long) positions[i][0], (long) styles.get(i)[0]);
             assertEquals("style ("+i+") end position", (long) positions[i][1], (long) styles.get(i)[1]);
         }
         if (authors != null)
             for (int i = 0; i < authors.length; i++)
-                assertEquals("style ("+i+") author", (long) authors[i][0], (long) styles.get(i)[3]);
+                assertEquals("style ("+i+") author", (long) authors[i], (long) styles.get(i)[3]);
     }
 
     Map map;
@@ -109,7 +109,7 @@ public final class TestAccumulate {
         );
         assertMap("   Lorem ipsum \n \t\n  dolor sit amet. ", 2);
         assertStyle(
-                new int[][] {{1}, {1}}, // all 2 markups are additions
+                new int[] {1, 1}, // all 2 markups are additions
                 new int[][] {{14, 21}, {30, 37}},
                 null);
 
@@ -120,7 +120,7 @@ public final class TestAccumulate {
         );
         assertMap("Lorem ipsum \n \n dolor sit amet.    \t", 2);
         assertStyle(
-                new int[][]{{2}, {2}}, // all 2 markups are deletions
+                new int[] {2, 2}, // all 2 markups are deletions
                 new int[][]{{11, 15}, {25, 31}}, 
                 null);
 
@@ -150,7 +150,7 @@ public final class TestAccumulate {
         );
         assertMap("Lorem ipsum dolor sit amet; \n, consectetur adipiscing elit. \n ", 2);
         assertStyle(
-                new int[][]{{2}, {1}}, // one deletion and one addition
+                new int[] {2, 1}, // one deletion and one addition
                 new int[][]{{26, 29}, {29, 31}},
                 null);
 
@@ -161,7 +161,7 @@ public final class TestAccumulate {
         );
         assertMap("Lorem ippsum dolor sit amet \n ", 3);
         assertStyle(
-                new int[][]{{2}, {1}, {2}}, // 1 addition and 2 deletions
+                new int[] {2, 1, 2}, // 1 addition and 2 deletions
                 new int[][]{{8, 9}, {11, 12}, {25, 26}},
                 null);
         // hide small changes...
@@ -189,9 +189,9 @@ public final class TestAccumulate {
         );
         assertMap("Lorem ipsum; dolor sit amet.\n, \n ", 3);
         assertStyle(
-                new int[][] {{2}, {2}, {1}}, // 2 deletions and 1 addition
+                new int[] {2, 2, 1}, // 2 deletions and 1 addition
                 new int[][] {{11, 12}, {27, 29}, {29, 33}},
-                new int[][] {{1}, {1}});
+                new int[] {1, 1});
         // no change from first to second version
         map = perform(
                 "\t Lorem   ipsum dolor sit amet,  ",
@@ -200,9 +200,9 @@ public final class TestAccumulate {
         );
         assertMap("Lorem ipsum; dolor sit amet, \n .\n", 3);
         assertStyle(
-                new int[][] {{1}, {2}, {1}}, // 2 deletions and 1 addition
+                new int[] {1, 2, 1}, // 2 deletions and 1 addition
                 new int[][] {{11, 13}, {27, 31}, {31, 33}},
-                new int[][] {{2}, {2}, {2}}
+                new int[] {2, 2, 2}
         );
         // back and forth
         map = perform(
@@ -212,9 +212,9 @@ public final class TestAccumulate {
         );
         assertMap("Lorem\t ipsum dolor  ipsum", 3);
         assertStyle(
-                new int[][] {{2}, {2}, {1}},
+                new int[] {2, 2, 1},
                 new int[][] {{5, 12}, {12, 18}, {18, 25}},
-                new int[][] {{1}, {2}, {2}}
+                new int[] {1, 2, 2}
         );
         // back and forth but hiding deletions
         map = perform(EnumSet.of(Change.Flag.DELETION),
@@ -224,9 +224,9 @@ public final class TestAccumulate {
         );
         assertMap("Lorem  ipsum", 1);
         assertStyle(
-                new int[][] {{1}},
+                new int[] {1},
                 new int[][] {{5, 12}},
-                new int[][] {{2}}
+                new int[] {2}
         );
         // small addition and deletion with command
         map = perform(
@@ -236,9 +236,9 @@ public final class TestAccumulate {
         );
         assertMap("Lorem  ipsum \\dolor amet", 3);
         assertStyle(
-                new int[][] {{1}, {2}, {2}},
+                new int[] {1, 2, 2},
                 new int[][] {{9, 11}, {12, 19}, {19, 24}},
-                new int[][] {{1}, {2}, {1}}
+                new int[] {1, 2, 1}
         );
         // small addition and deletion with command; filtering COMMANDS and SMALL
         map = perform(EnumSet.of(Change.Flag.SMALL, Change.Flag.COMMAND),
@@ -248,9 +248,9 @@ public final class TestAccumulate {
         );
         assertMap("Lorem  ipsum amet", 1);
         assertStyle(
-                new int[][] {{2}},
+                new int[] {2},
                 new int[][] {{12, 17}},
-                new int[][] {{1}}
+                new int[] {1}
         );
         // replacement with trailing white space over 3 versions:
         map = perform(
@@ -258,11 +258,11 @@ public final class TestAccumulate {
                 "Lorem ipsum dolor \nsit amet",
                 "Lorem ipsum dolor sit amet, \n "
         );
-        assertMap("Lorem ipsum; dolor sit amet.\n, \n ", 3);
+        assertMap("Lorem ipsum; dolor sit amet., \n ", 3);
         assertStyle(
-                new int[][] {{2}, {2}, {1}},
-                new int[][] {{11, 12}, {27, 29}, {29, 33}},
-                new int[][] {{1}, {1}, {2}}
+                new int[] {2, 2, 1},
+                new int[][] {{11, 12}, {27, 28}, {28, 32}},
+                new int[] {1, 1, 2}
         );
         // TODO: recreate problem with comment:
         // adding text and then adding comment, but showing everything
@@ -277,9 +277,9 @@ public final class TestAccumulate {
                 "% ADDING MORE:\n" +
                 "Praesent tempor hendrerit eros, non scelerisque est fermentum nec. ", 2);
         assertStyle(
-                new int[][] {{1}, {1}},
+                new int[] {1, 1},
                 new int[][] {{27, 57}, {74, 142}},
-                new int[][] {{1}, {2}}
+                new int[] {1, 2}
         );
 //        renderHTML(map);
     }
@@ -295,9 +295,9 @@ public final class TestAccumulate {
         );
         assertMap("Lorem ipsum dolor ipsum", 3);
         assertStyle(
-                new int[][] {{2}, {2}, {1}},
+                new int[] {2, 2, 1},
                 new int[][] {{5, 11}, {11, 17}, {17, 23}},
-                new int[][] {{2}, {3}, {3}}
+                new int[] {2, 3, 3}
         );
 
         // delete in 2nd version, add back in 4th version, add in 3rd and 4th version,...
@@ -322,9 +322,9 @@ public final class TestAccumulate {
         );
         assertMap("  \\begin{document}Lorem ipsumm  dolor % amet.", 2);
         assertStyle(
-                new int[][] {{1}, {2}},
+                new int[] {1, 2},
                 new int[][] {{0, 18}, {29, 30}},
-                new int[][] {{1}, {3}}
+                new int[] {1, 3}
         );
         // deletion in preamble, small deletion and addition of comment
         map = perform(EnumSet.of(Change.Flag.PREAMBLE, Change.Flag.COMMAND, Change.Flag.DELETION),
@@ -336,9 +336,9 @@ public final class TestAccumulate {
         );
         assertMap("pre  \\begin{document}Lorem ipsum  dolor \\amet.", 1);
         assertStyle(
-                new int[][] {{1}},
+                new int[] {1},
                 new int[][] {{45, 46}},
-                new int[][] {{4}}
+                new int[] {4}
         );
         // preamble location
         map = perform(EnumSet.of(Change.Flag.PREAMBLE),
@@ -348,9 +348,9 @@ public final class TestAccumulate {
         );
         assertMap("pre1 pre2 \\begin{document} Lorem ipsum  dolor", 2);
         assertStyle(
-                new int[][] {{1}, {2}},
+                new int[] {1, 2},
                 new int[][] {{0, 5}, {9, 26}},
-                new int[][] {{2}, {1}}
+                new int[] {2, 1}
         );
         // deletion in preamble, small deletion and addition of comment
         map = perform(EnumSet.of(Change.Flag.DELETION, Change.Flag.COMMAND),
@@ -362,9 +362,9 @@ public final class TestAccumulate {
         );
         assertMap("pre  \\begin{document}Lorem ipsum  dolor \\amet.", 2);
         assertStyle(
-                new int[][] {{1}, {1}},
+                new int[] {1, 1},
                 new int[][] {{2, 3}, {45, 46}},
-                new int[][] {{1}, {4}}
+                new int[] {1, 4}
         );
     }
 
