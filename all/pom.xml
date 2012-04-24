@@ -7,7 +7,7 @@
     <parent>
         <groupId>com.sri.ltc</groupId>
         <artifactId>LTC</artifactId>
-        <version>0.9.2-SNAPSHOT</version>
+        <version>0.9.3-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
@@ -169,7 +169,8 @@
                                 <resource>
                                     <directory>src/site/resources</directory>
                                     <includes>
-                                        <include>gen</include>
+                                        <include>version.txt</include>
+                                        <include>baseurl.txt</include>
                                     </includes>
                                     <filtering>true</filtering>
                                 </resource>
