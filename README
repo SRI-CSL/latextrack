@@ -106,3 +106,15 @@ Incrementing version number
 ---------------------------
 
 First, in parent pom.xml and then in all children.
+
+
+Building Tech Report 2012
+-------------------------
+
+$> mvn verify site   => generate examples for appendices
+$> cd all/src/tex/techreport2012
+$> pdflatex techreport2012
+$> pdflatex techreport2012
+$> bibtex techreport2012
+$> pdflatex techreport2012
+$> pdflatex techreport2012

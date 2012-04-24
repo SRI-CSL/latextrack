@@ -1,7 +1,7 @@
 \documentclass[draft,final]{report}
 
 % ----- useful packages
-\usepackage[letterpaper,verbose,pdftex]{geometry}
+\usepackage[letterpaper,verbose,pdftex,margin=1in]{geometry}
 \usepackage{graphicx} % for including figures
 \usepackage{rotating} % for landscape figure
 \usepackage{tikz} % for portable graphics
@@ -9,6 +9,7 @@
 \usepackage{amsmath} % align and other math constructs
 \usepackage{amssymb} % math symbols
 \usepackage{amsthm}
+\usepackage[T1]{fontenc} % for \textquotedbl
 \usepackage{appendix}
 \usepackage{listings} % for line-wrapping source code
 \usepackage{ulem} % for strike-out font
@@ -38,8 +39,8 @@
 %% header and footer on every page
 \fancypagestyle{plain}{% 
  \fancyhf{} % clear all header and footer fields
-% \fancyhead[L]{\small SRI International Proposal \\ ECU 09-445}
  \fancyhead[R]{\leftmark} 
+ \fancyfoot[C]{\small \thepage}
  \fancyfoot[R]{\small \textcopyright\ 2012 SRI International}
  \addtolength{\headheight}{\baselineskip} 
  \renewcommand{\headrulewidth}{0.4pt} 
@@ -112,6 +113,8 @@ language=Java,numbers=none}
 \tikzset{match/.default = \lexemesize}
 \tikzset{diff/.style = {rectangle,minimum size=#1,draw=black!70}}
 \tikzset{diff/.default = \lexemesize}
+\tikzset{diffstar/.style = {rectangle,minimum size=#1,draw=black!70,fill=black!20}}
+\tikzset{diffstar/.default = \lexemesize}
 \tikzstyle{space} = [myspace,minimum size=\lexemesize,draw=black!70]
 % macro for drawing multiple lexemes:
 \newcommand{\lexemes}[1]{%

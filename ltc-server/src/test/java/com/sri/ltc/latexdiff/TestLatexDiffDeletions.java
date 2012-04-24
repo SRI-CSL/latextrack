@@ -181,4 +181,13 @@ public final class TestLatexDiffDeletions extends TestLatexDiff {
                 "; ", EnumSet.of(Change.Flag.DELETION))));
     }
 
+    @Test
+    public void examples() throws IOException {
+        changes = getChanges(
+                " hello\\cite{ABC} world!",
+                "hello  world!");
+        assertDeletion(0, 5, 10, Lists.newArrayList(
+                new IndexFlagsPair<String>("\\cite", EnumSet.of(Change.Flag.DELETION, Change.Flag.COMMAND)),
+                new IndexFlagsPair<String>("{ABC}", EnumSet.of(Change.Flag.DELETION))));
+    }
 }

@@ -67,31 +67,36 @@ to contain the information of changes as seen in the class diagram below.
 %\end{lstlisting}
 
 \begin{tikzpicture}
-\begin{abstractclass}[text width=1.5in]{Change}{0,0}
+\begin{abstractclass}[text width=2.5in]{Change}{0,0}
+\attribute{T: generic type}
 \attribute{start: int}
-\attribute{flags: EnumSet of Flag}
+\attribute{flags: List of \textless T, EnumSet of Flag\textgreater pairs}
 \end{abstractclass}
 
 \begin{class}{Addition}{-3,-2.5}			
 \inherit{Change}
-\attribute{end: int}
+\attribute{T = Integer}
 \end{class}
 
 \begin{class}{Deletion}{3,-2.5}			
 \inherit{Change}
-\attribute{text: String}
+\attribute{T = String}
 \end{class}
 
-\begin{class}{SmallAddition}{-3,-4}
-\inherit{Addition}
-\end{class}
-
-\begin{class}{SmallDeletion}{3,-4}
-\inherit{Deletion}
-\end{class}
+%\begin{class}{SmallAddition}{-3,-4}
+%\inherit{Addition}
+%\end{class}
+%
+%\begin{class}{SmallDeletion}{3,-4}
+%\inherit{Deletion}
+%\end{class}
 \end{tikzpicture}
 
-Each change is a concretization as a subclass of an addition or deletion.  When we detect so-called ``small'' changes, we also use subclasses of addition and deletion to denote these.  Every change contains the linear character position where the change is located in the newer file.  A number of boolean flags facilitate filtering for changes, e.g., those that occur inside LaTeX comments.  Depending on the subclass of the change, there are different additional elements of the data type such as a text field holding the contents of the change (only deletions) or the end position (only additions).
+Each change is a concretization as a subclass of an addition or deletion.  Every change contains the linear character position where the change is located in the newer file.  A number of boolean flags facilitate filtering for changes, e.g., those that occur inside LaTeX comments.  Depending on the subclass of the change, the flags are indicated by character end position (Addition) or text fragments.  A list or index type T and the associated flags is used to build the change information by concatenation of the list elements in their order.
+
+Let us consider two examples to illustrate this for each change type.  An addition in the newer text may be the addition of the letter `o' in the word ``political'' at position $n$---the start position then would be $n+1$ and the list of flags $[<n+2, \{\text{SMALL}\}>]$ meaning that in the interval $[n+1, n+2]$ the flag for small changes is to be applied.
+
+Now let's assume that the text ``\textbackslash cite\{ABC\}'' at position $m$ in the newer text was deleted.  This results in a deletion object with start position $m$ and a list of String and set of Flags pairs as follows: $[<\text{\textquotedbl\\cite\textquotedbl},\{\text{DELETION},\text{COMMAND}\}>,<\text{\textquotedbl\{ABC\}\textquotedbl},\{\text{DELETION}\}>]$ meaning that the deletion to be inserted at position $m$ in the newer text consists of the String fragment ``\textbackslash cite'' that is a deletion and a command followed by the text fragment ``\{ABC\}'' that is just a deletion.
 
 \subsection{Additions and Deletions}
 
@@ -314,12 +319,24 @@ A &
  \changelexemes{C/diff//,D/diff//2mm,F/diff//,G/diff//2mm,I/match//}%
                {C/D/0.1/above,F/G/0.08/below} &
  T & T & T & T & $sx_1 = sy_1$ & $ex_1 = ey_1$ & $sx_0 = sy_0$ & $ex_0 = ey_0$  \\
+A$^{*}$ &  
+ \difflexemes{C/diff//,D/diff//2mm,F/match//}%
+             {C/diffstar//,D/diff//2mm,F/match//} &
+ \changelexemes{C/diff//,D/diff//2mm,E/space/*/,F/diffstar//,G/diff//2mm,I/match//}%
+               {C/E/0.1/above,F/G/0.08/below} &
+ T & T & T & T & $sx_1 = sy_1$ & $ex_1 = ey_1$ & $sx_0 = sy_0$ & $ex_0 + 1 = ey_0 + 1$  \\
 B &  
  \difflexemes{B/space/1/,C/diff//,D/diff//2mm,F/match//}%
              {C/diff//,D/diff//2mm,F/match//} &
  \changelexemes{B/space/1/,C/diff//,D/diff//2mm,F/diff//,G/diff//2mm,I/match//}%
                {B/D/0.1/above,F/G/0.08/below} &
  F & T & T & T & $sx_1 = sy_1$ & $ex_1 = ey_1$ & $sx_0$ & $ex_0 = ey_0$  \\
+B$^{*}$ &  
+ \difflexemes{B/space/1/,C/diff//,D/diff//2mm,F/match//}%
+             {C/diffstar//,D/diff//2mm,F/match//} &
+ \changelexemes{B/space/1/,C/diff//,D/diff//2mm,E/space/*/,F/diffstar//,G/diff//2mm,I/match//}%
+               {B/E/0.1/above,F/G/0.08/below} &
+ F & T & T & T & $sx_1 = sy_1$ & $ex_1 = ey_1$ & $sx_0$ & $ex_0 + 1 = ey_0 + 1$  \\
 C &  
  \difflexemes{C/diff//,D/diff//2mm,E/space/2/,F/match//}%
              {C/diff//,D/diff//2mm,F/match//} &
@@ -362,12 +379,24 @@ I &
  \changelexemes{C/diff//,D/diff//2mm,F/diff//,G/diff//2mm,H/space/4/,I/match//}%
                {C/D/0.1/above,F/H/0.08/below} &
  T & T & T & F & $sx_1 = sy_1$ & $ey_1$ & $sx_0 = sy_0$ & $ex_0 = ey_0$  \\
+I$^{*}$ &  
+ \difflexemes{C/diff//,D/diff//2mm,F/match//}%
+             {C/diffstar//,D/diff//2mm,E/space/4/,F/match//} &
+ \changelexemes{C/diff//,D/diff//2mm,E/space/*/,F/diffstar//,G/diff//2mm,H/space/4/,I/match//}%
+               {C/E/0.1/above,F/H/0.08/below} &
+ T & T & T & F & $sx_1 = sy_1$ & $ey_1$ & $sx_0 = sy_0$ & $ex_0 + 1 = ey_0 + 1$  \\
 J &  
  \difflexemes{B/space/1/,C/diff//,D/diff//2mm,F/match//}%
              {C/diff//,D/diff//2mm,E/space/4/,F/match//} &
  \changelexemes{B/space/1/,C/diff//,D/diff//2mm,F/diff//,G/diff//2mm,H/space/4/,I/match//}%
                {B/D/0.1/above,F/H/0.08/below} &
  F & T & T & F & $sx_1 = sy_1$ & $ey_1$ & $sx_0$ & $ex_0 = ey_0$  \\
+J$^{*}$ &  
+ \difflexemes{B/space/1/,C/diff//,D/diff//2mm,F/match//}%
+             {C/diffstar//,D/diff//2mm,E/space/4/,F/match//} &
+ \changelexemes{B/space/1/,C/diff//,D/diff//2mm,E/space/*/,F/diffstar//,G/diff//2mm,H/space/4/,I/match//}%
+               {B/E/0.1/above,F/H/0.08/below} &
+ F & T & T & F & $sx_1 = sy_1$ & $ey_1$ & $sx_0$ & $ex_0 + 1 = ey_0 + 1$  \\
 K &  
  \difflexemes{C/diff//,D/diff//2mm,E/space/2/,F/match//}%
              {C/diff//,D/diff//2mm,E/space/4/,F/match//} &
@@ -406,7 +435,7 @@ P &
  F & F & F & F & $sx_1$ & $ey_1$ & $sx_0$ & $ex_0$  \\
 }
 \midrule
-\multicolumn{3}{l}{result} & & & & & $sx_1$ & $ey_1$ & $sx_0$ & $ex_0$ or $ey_0$ \\
+\multicolumn{3}{l}{result} & & & & & $sx_1$ & $ey_1$ & $sx_0$ & $ex_0$ or $ey_0$ $(+1^{*})$ \\
 \bottomrule
 \end{tabular}
 \caption{Positioning for replacements} \label{tab:pos-replacements}
@@ -425,4 +454,4 @@ In line 182, we examine hunks that are replacements for containing small changes
 
 Starting with line 260 and 275, we handle normal additions and deletions, respectively.  Calling the function \texttt{getIndices} provides a list of index pairs that may break up the consecutive insertion or deletion of lexemes into chunks that contain only comments, commands, or neither of those.
 
-\lstinputlisting[style=Java,firstnumber=168,caption={Java reference implementation of merge function},label=lst:merge,linerange={167-298}]{../../../../ltc-server/src/main/java/com/sri/ltc/latexdiff/LatexDiff.java}
+\lstinputlisting[style=Java,firstnumber=182,caption={Java reference implementation of merge function},label=lst:merge,linerange={182-325}]{../../../../ltc-server/src/main/java/com/sri/ltc/latexdiff/LatexDiff.java}

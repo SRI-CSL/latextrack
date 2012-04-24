@@ -81,6 +81,8 @@ public final class TestAnalyzer {
         assertEquals(2, lexemes.get(1).pos);
         assertEquals(LexemeType.COMMENT, lexemes.get(13).type);
         assertEquals(LexemeType.WORD, lexemes.get(14).type);
+        lexemes = analyze(new StringReaderWrapper("\\cite{ABC}"));
+        assertLexemes(6);
     }
 
     @Test
