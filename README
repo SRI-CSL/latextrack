@@ -41,6 +41,10 @@ To create the distributable:
 
 $> mvn clean package
 
+To skip tests (when running repeatedly):
+
+$> mvn verify site -Dmaven.test.skip=true
+
 
 Running
 -------

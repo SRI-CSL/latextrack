@@ -20,6 +20,15 @@ Download LTC
 
   * {{{./downloads/emacs/ltc-mode.el}ltc-mode.el}}
 
+  []
+
+  Or, use the {{{./downloads/ltc-install.sh}ltc-install.sh}} Bash script to copy the downloaded JAR file to a location
+  of your choice and optionally extract the Emacs Lisp files to your Emacs directory. You can obtain usage information
+  by invoking the script this way:
+
++----
+$> sh ltc-install.sh -h
++----
 
 * System Requirements
 

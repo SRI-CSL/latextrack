@@ -103,6 +103,25 @@
                         </configuration>
                     </execution>
                     <execution>
+                        <id>copy-install-sh</id>
+                        <phase>pre-integration-test</phase>
+                        <goals>
+                            <goal>copy-resources</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>${project.reporting.outputDirectory}/downloads</outputDirectory>
+                            <resources>
+                                <resource>
+                                    <directory>src/site/resources</directory>
+                                    <includes>
+                                        <include>ltc-install.sh</include>
+                                    </includes>
+                                    <filtering>true</filtering>
+                                </resource>
+                            </resources>
+                        </configuration>
+                    </execution>
+                    <execution>
                         <id>copy-emacs-files</id>
                         <phase>pre-integration-test</phase>
                         <goals>

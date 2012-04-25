@@ -2,7 +2,12 @@
 
 In this section, we explain how to use Emacs as the editor of the .tex-file with LTC.
 
-\parbox{\textwidth}{\color{red} CAVEAT: due to current bugs, it is best to use \Code{ltc-mode} defensively without editing the file in Emacs while LTC is turned on.  It is safe to view changes in the file and use different filtering settings.  If the text becomes scrambled, try to exit \Code{ltc-mode} or Emacs altogether before saving the file.  As long as you do not save while in \Code{ltc-mode} nothing bad should happen.}
+\begin{center}
+\fcolorbox{red}{yellow}{
+\begin{minipage}[t]{.9\textwidth}
+  \textbf{CAVEAT:} due to current bugs, it is best to use \Code{ltc-mode} defensively without editing the file in Emacs while LTC is turned on.  It is safe to view changes in the file and use different filtering settings.  If the text becomes scrambled, try to exit \Code{ltc-mode} by toggling it (e.g., using command \Code{M-x ltc-mode}) or quitting Emacs altogether before saving the file.  As long as you do not save while in \Code{ltc-mode} nothing bad should happen.
+\end{minipage}}
+\end{center}
 
 \subsection{Starting the LTC Server}
 
