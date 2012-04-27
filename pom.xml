@@ -12,6 +12,7 @@
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <!--<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>-->
+        <temp.url>http://www.csl.sri.com/users/linda/LTC/all/</temp.url> <!-- TODO: change to <url> when we have a proper location -->
     </properties>
 
     <modules>

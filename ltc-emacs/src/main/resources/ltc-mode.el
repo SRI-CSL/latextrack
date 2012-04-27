@@ -27,6 +27,8 @@
 
 (defgroup ltc nil
   "Latex Track Changes mode."
+  :version "${project.version}"   ; automatically replaced during 'mvn package'
+  :link '(url-link "${temp.url}") ; automatically replaced during 'mvn package'
   :tag "LTC"
   :prefix "ltc-"
   :group 'tex)
@@ -35,6 +37,11 @@
   "Port on localhost used for communication with an LTC server."
   :type '(integer)
   :tag "Port"
+  :group 'ltc)
+
+(defcustom ltc-command-prefix (kbd "C-c '")
+  "Prefix key to use for commands in LTC mode."
+  :type 'string
   :group 'ltc)
 
 ;;; keeping track of filtering settings
@@ -71,19 +78,31 @@
 (defvar self nil "3-tuple of current author when session is initialized.")
 (make-variable-buffer-local 'self)
 
-(defvar recent-edits nil "collect recent edits between LTC calls.")
+(defvar recent-edits nil "Collect recent edits between LTC calls.")
 (make-variable-buffer-local 'recent-edits)
 
-(defvar ltc-minor-mode-map
-  (let ((map (make-sparse-keymap)))
-    (define-key map "\C-lu" 'ltc-update)
-    (define-key map "\C-lq" 'ltc-mode)
-    (define-key map "\C-lla" 'ltc-limit-authors)
-    (define-key map "\C-lld" 'ltc-limit-date)
-    (define-key map "\C-llr" 'ltc-limit-rev)
-    (define-key map "\C-lc" 'ltc-commit)
-    map)
-  "LTC minor-mode keymap.")
+;; Defining key maps with prefix
+(defvar ltc-prefix-map nil "LTC mode prefix keymap.")
+(define-prefix-command 'ltc-prefix-map)
+(define-key ltc-prefix-map (kbd "u") 'ltc-update)
+(define-key ltc-prefix-map (kbd "q") 'ltc-mode)
+(define-key ltc-prefix-map (kbd "la") 'ltc-limit-authors)
+(define-key ltc-prefix-map (kbd "ld") 'ltc-limit-date)
+(define-key ltc-prefix-map (kbd "lr") 'ltc-limit-rev)
+;; Bind command `ltc-prefix-map' to `ltc-command-prefix' in `ltc-mode-map':
+(defvar ltc-mode-map (make-sparse-keymap) "LTC mode keymap.")
+(define-key ltc-mode-map ltc-command-prefix 'ltc-prefix-map)
+
+;; (defvar ltc-minor-mode-map
+;;   (let ((map (make-sparse-keymap)))
+;;     (define-key map "\C-c\C-lu" 'ltc-update)
+;;     (define-key map "\C-c\C-lq" 'ltc-mode)
+;;     (define-key map "\C-c\C-lla" 'ltc-limit-authors)
+;;     (define-key map "\C-c\C-lld" 'ltc-limit-date)
+;;     (define-key map "\C-c\C-llr" 'ltc-limit-rev)
+;;     (define-key map "\C-c\C-lc" 'ltc-commit)
+;;     map)
+;;   "LTC minor-mode keymap.")
 
 (define-minor-mode ltc-mode
   "Toggle LTC mode.
@@ -94,19 +113,22 @@
      
      When LTC (Latex Track Changes) mode is enabled, 
      it shows all changes in the history of the current
-     buffer file as obtained from the underlying git repository."
+     buffer file as obtained from the underlying git repository.
+     
+     The following keys are bound in this minor mode:
+
+\\{ltc-mode-map}"
   :init-value nil
   :lighter " LTC"
-  :keymap ltc-minor-mode-map
+  :keymap ltc-mode-map
   :group 'ltc
   (if ltc-mode
       (progn
 	;; Mode was turned on
-	(easy-menu-add ltc-minor-mode-menu ltc-minor-mode-map)
 	(ltc-mode-start))
     ;; Mode was turned off
     (ltc-mode-stop)
-    (easy-menu-remove ltc-minor-mode-menu))
+    )
   )
 
 ;; adding LTC to context menu of latex mode
@@ -116,16 +138,16 @@
       (put 'ltc-mode :menu-tag "LTC Mode")
       (add-minor-mode 'ltc-mode
 		      " LTC" 
-		      ltc-minor-mode-map
+		      ltc-mode-map
 		      nil
 		      'ltc-mode))
   (unless (assoc 'ltc-mode minor-mode-alist)
     (push '(ltc-mode " LTC") minor-mode-alist))
   (unless (assoc 'ltc-mode minor-mode-map-alist)
-    (push (cons 'ltc-mode ltc-minor-mode-map) minor-mode-map-alist)))
+    (push (cons 'ltc-mode ltc-mode-map) minor-mode-map-alist)))
 
 (easy-menu-define
-  ltc-minor-mode-menu ltc-minor-mode-map "Menu keymap for LTC."
+  ltc-minor-mode-menu ltc-mode-map "Menu for LTC"
  '("LTC"
    ["Update buffer" ltc-update]
    "--"

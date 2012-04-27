@@ -23,7 +23,6 @@
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <ueber.jar>LTC-${project.version}</ueber.jar>
-        <temp.url>http://www.csl.sri.com/users/linda/LTC/all/</temp.url> <!-- TODO: change to <url> when we have a proper location -->
     </properties>
 
     <dependencies>
@@ -51,7 +50,7 @@
             <!-- assemble ueber-jar with all dependencies during package phase -->
             <plugin>
                 <artifactId>maven-shade-plugin</artifactId>
-                <version>1.5</version>
+                <version>1.6</version>
                 <executions>
                     <execution>
                         <id>assemble-ltc-all-with-dependencies</id>
@@ -131,7 +130,7 @@
                             <outputDirectory>${project.reporting.outputDirectory}/downloads/emacs</outputDirectory>
                             <resources>
                                 <resource>
-                                    <directory>../ltc-emacs/src/main/resources</directory>
+                                    <directory>../ltc-emacs/target/classes</directory>
                                     <includes>
                                         <include>xml-rpc.el</include>
                                         <include>versions.el</include>

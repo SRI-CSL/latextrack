@@ -122,3 +122,12 @@ $> pdflatex techreport2012
 $> bibtex techreport2012
 $> pdflatex techreport2012
 $> pdflatex techreport2012
+
+
+Programming Emacs mode
+----------------------
+
+Cursor position: C-x =
+
+Interactive Emacs Lisp: M-x ielm
+
