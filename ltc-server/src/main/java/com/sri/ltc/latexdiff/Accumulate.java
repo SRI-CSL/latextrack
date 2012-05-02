@@ -108,7 +108,7 @@ public final class Accumulate {
             // compare current document with next version
             List<Change> changes = latexDiff.getChanges(
                     priorText[index - 1],
-                    new DocumentReaderWrapper(document)); // removes additions from current text but maintain positions
+                    new DocumentReaderWrapper(document)); // removes additions from current text but maintains positions
 
             // prepare styles with color and author index
             int authorIndex = (authorIndices == null || authorIndices.length != priorText.length)?

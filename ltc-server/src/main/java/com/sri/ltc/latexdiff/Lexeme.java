@@ -16,16 +16,18 @@ public final class Lexeme {
     final LexemeType type;
     final String contents;
     final int pos, length;
+    final Integer[] removed;
 
-    public Lexeme(LexemeType type, String contents, int pos) {
+    public Lexeme(LexemeType type, String contents, int pos, Integer... removed ) {
         if (type == null)
             throw new IllegalArgumentException("Cannot create Lexeme of type NULL");
+        this.type = type;
         if (contents == null)
             throw new IllegalArgumentException("Cannot create Lexeme with contents NULL");
-        this.type = type;
         this.contents = contents;
-        this.pos = pos;
         this.length = contents.length();
+        this.pos = pos;
+        this.removed = removed;
     }
 
     public String displayContents() {
@@ -34,6 +36,14 @@ public final class Lexeme {
 
     @Override
     public String toString() {
-        return type+" "+displayContents()+"  @ "+pos+" ("+length+")";
+        StringBuilder result = new StringBuilder(type+" "+displayContents()+"  @ "+pos+" ("+length+")");
+        if (removed != null && removed.length > 0) {
+            result.append(" [");
+            for (int i = 0; i < removed.length; i++)
+                result.append(removed[i]+",");
+            result.deleteCharAt(result.length()-1); // remove last ","
+            result.append("]");
+        }
+        return result.toString();
     }
 }

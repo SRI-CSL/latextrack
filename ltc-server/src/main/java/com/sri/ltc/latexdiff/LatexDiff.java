@@ -9,6 +9,7 @@
 package com.sri.ltc.latexdiff;
 
 import com.bmsi.gnudiff.Diff;
+import com.google.common.collect.Lists;
 import com.sri.ltc.logging.LevelOptionHandler;
 import org.kohsuke.args4j.Argument;
 import org.kohsuke.args4j.CmdLineException;
@@ -34,11 +35,6 @@ public final class LatexDiff {
         INDICES_TYPES.add(LexemeType.COMMAND);
         INDICES_TYPES.add(LexemeType.COMMENT);
     }
-    private static final Comparator<Lexeme> LEXEME_TYPE_COMPARATOR = new Comparator<Lexeme>() {
-        public int compare(Lexeme o1, Lexeme o2) {
-            return o1.type.compareTo(o2.type);
-        }
-    };
 
     // variables to contain parts for diff'ing
     private List<List<Lexeme>> lexemLists = new ArrayList<List<Lexeme>>();
@@ -109,24 +105,40 @@ public final class LatexDiff {
     private SortedSet<Change> mergeSmallDiffResult(Diff.change changes, String text0, Lexeme lexeme1, boolean inPreamble) {
         SortedSet<Change> result = new TreeSet<Change>();
 
+        Queue<Integer> removed = Lists.newLinkedList(Lists.newArrayList(lexeme1.removed));
+        int offset = 0; // keep track of current offset to be applied to transforming positions
+
         // go through linked list of changes
         for (Diff.change hunk = changes; hunk != null; hunk = hunk.link) {
             if (hunk.deleted == 0 && hunk.inserted == 0)
                 continue;
 
+            // transform hunk.line1 into position taking 'removed' into account
+            while (removed.peek() != null && hunk.line1 + offset >= removed.peek()) {
+                Integer head;
+                int n_removed = 0;
+                do {
+                    n_removed++;
+                    head = removed.poll();
+                } while (head != null && removed.peek() != null && (head + 1) == removed.peek());
+                offset += n_removed;
+            }
+
+            int start_position = lexeme1.pos + hunk.line1 + offset;
+
             // Additions
             if (hunk.inserted > 0) {
                 result.add(new Addition(
-                        lexeme1.pos+hunk.line1,
+                        start_position,
                         Arrays.asList(new IndexFlagsPair<Integer>(
-                                lexeme1.pos + hunk.line1 + hunk.inserted,
+                                start_position + hunk.inserted,
                                 buildFlags(inPreamble, false, true, lexeme1.type)))));
             }
 
             // Deletions
             if (hunk.deleted > 0) {
                 result.add(new Deletion(
-                        lexeme1.pos+hunk.line1,
+                        start_position,
                         Arrays.asList(new IndexFlagsPair<String>(
                                 text0.substring(hunk.line0, hunk.line0+hunk.deleted),
                                 buildFlags(inPreamble, true, true, lexeme1.type)))));
@@ -134,19 +146,6 @@ public final class LatexDiff {
         }
 
         return result;
-    }
-
-    // find location of preamble in given list of lexemes
-    // returns -1 if no preamble exists and otherwise position of first preamble
-    private int findPreamble(List<Lexeme> list) {
-        List<Lexeme> sortedList = new ArrayList<Lexeme>(list);
-        Collections.sort(sortedList, LEXEME_TYPE_COMPARATOR);
-        int pos = Collections.binarySearch(sortedList,
-                new Lexeme(LexemeType.PREAMBLE, "", 0),
-                LEXEME_TYPE_COMPARATOR);
-        if (pos < 0)
-            return -1;
-        return list.indexOf(sortedList.get(pos));
     }
 
     // calculate pairs of indices that indicate successive COMMENT or COMMAND lexemes in given input list.
@@ -193,6 +192,7 @@ public final class LatexDiff {
 
             // determine, if this could be a replacement containing small changes:
             // compare each lexeme from list0 to each in list1
+            // TODO: re-enable once bug about SMALL additions is fixed
             if (hunk.line0 >= last_i0 && hunk.line1 >= last_i1 && hunk.deleted > 0 && hunk.inserted > 0) {
                 // collect hunks that are not small here to insert for further processing:
                 List<IndexLengthPair> newHunks = new ArrayList<IndexLengthPair>();
