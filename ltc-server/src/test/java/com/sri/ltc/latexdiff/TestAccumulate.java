@@ -183,6 +183,17 @@ public final class TestAccumulate {
     public void threeVersions() throws IOException, BadLocationException {
         // small changes accumulate: positioning!
         map = perform(
+                " Lorem isut",
+                "Lorem   isum",
+                "  Lorem  ipsum"
+        );
+        assertMap("  Lorem  ipsutm", 3);
+        assertStyle(
+                new int[] {1, 2, 1},
+                new int[][] {{10, 11}, {13, 14}, {14, 15}},
+                new int[] {2, 1, 1}
+        );
+        map = perform(
                 " Lorem iut",
                 "Lorem   isu",
                 "  Lorem  ipsum"
