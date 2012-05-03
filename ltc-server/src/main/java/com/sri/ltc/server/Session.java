@@ -31,7 +31,7 @@ public final class Session {
     private static int nextID = 1;
 
     final int ID;
-    String text = ""; // contains last known, raw editor text, if text was modified
+    String text = ""; // contains last known, raw editor text
     final GitFile gitFile;
     private final CompleteHistory completeHistory;
     private final FileRemotes remotes;
@@ -41,7 +41,7 @@ public final class Session {
     private String limit_rev = "";
     private final Accumulate accumulate;
 
-    public Session(GitFile gitFile, String currentText) throws ParseException, IOException, JavaGitException, BadLocationException {
+    protected Session(GitFile gitFile, String currentText) throws ParseException, IOException, JavaGitException, BadLocationException {
         if (gitFile == null)
             throw new IllegalArgumentException("cannot create session with NULL as git file");
         ID = generateID();

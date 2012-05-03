@@ -253,7 +253,7 @@
   "updating changes for current session"
   (interactive)
   (if ltc-mode
-      (let* ((map (ltc-method-call "get_changes" session-id (compile-recent-edits)))
+      (let* ((map (ltc-method-call "get_changes" session-id (compile-recent-edits) (1- (point))))
 	     (old-buffer-modified-p (buffer-modified-p)) ; maintain modified flag
 	     ;; build color table for this update: int -> color name
 	     (color-table (mapcar (lambda (four-tuple)
@@ -261,7 +261,7 @@
 				  (cdr (assoc-string "authors" map))))
 	     (styles (cdr (assoc-string "styles" map)))
 	     )
-	(message "LTC updates received")
+	(message "LTC updates received with new caret position at %d" (1+ (cdr (assoc-string "caret" map))))
 	(ltc-remove-edit-hooks) ; remove (local) hooks to capture user's edits temporarily
 	;; obtain and replace text in buffer
 	(erase-buffer)
@@ -274,6 +274,8 @@
 					(if (= '1 (nth 2 style)) :underline :strike-through) t 
 					:foreground (cdr (assoc (nth 3 style) color-table))))
 		    ) styles))
+	(goto-char (1+ (cdr (assoc-string "caret" map)))) ;; update caret position: Emacs starts counting from 1!
+	;; TODO: scroll to it??
 	(ltc-add-edit-hooks) ; add (local) hooks to capture user's edits
 	;; update commit graph in temp info buffer
 	(init-commit-graph (cdr (assoc-string "sha1" map)))
@@ -292,7 +294,6 @@
 	(with-selected-window (get-buffer-window ltc-info-buffer)
 	  (shrink-window (- (window-height) 7)))
 	(set-buffer-modified-p old-buffer-modified-p) ; restore modification flag
-	;; TODO: set caret position (and scroll back?)
 	))
   )
 

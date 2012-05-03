@@ -25,6 +25,7 @@ public interface LTCserverInterface {
     public final static String KEY_TEXT = "text";
     public final static String KEY_STYLES = "styles";
     public final static String KEY_AUTHORS = "authors";
+    public final static String KEY_CARET = "caret";
     public final static String KEY_SHA1 = "sha1";
     public static enum Show {SMALL, DELETIONS, PREAMBLE, COMMANDS, COMMENTS};
     public static enum EditType {INSERT, REMOVE, DELETE};
@@ -107,19 +108,22 @@ public interface LTCserverInterface {
      * Start denotes the first character affected by this style, whereas the end position
      * is the first position of the next chunk (to be excluded).  Furthermore, the return
      * value under {@link #KEY_AUTHORS} also contains a map of numbers to authors and their
-     * color, which
-     * are given as an array of 3 Strings containing name, email address, and color name.
+     * color, which are given as an array of 3 Strings containing name, email address, and
+     * color name.  The value under {@link #KEY_CARET} contains the transformed cursor
+     * position into the new text of the one given as an argument to the method.
      * Another entry under {@link #KEY_SHA1} in the returned map is a list of SHA1 keys
      * that have been used to obtain the changes.  These could be matched to the list
      * of all commits from {@link #get_commits(int)}.
+     *
      *
      * @param sessionID identifies the session
      * @param recentEdits list of string 3-tuples that denote recent edits since the last
      * call in the format type as a constant from {@link com.sri.ltc.server.LTCserverInterface.EditType},
      * the (numeric) offset in text, and either the text itself (for INSERT or DELETE) or
      * the length (for REMOVE)
+     * @param caretPosition current cursor position to be transformed into new one
      * @return Map that contains the text with changes, list of styles to be applied to
-     * this text, map of indices to authors, and list of SHA1 keys
+     * this text, map of indices to authors, updated caret position and list of SHA1 keys
      * @throws XmlRpcException <ul>
      *   <li>with error code = 1 if the given identifier does not denote a known session.
      *   <li>with error code = 2 if an IOException occurred during change accumulation:.
@@ -130,7 +134,7 @@ public interface LTCserverInterface {
      *   <li>with error code = 7 if the given recent edits cannot be applied to last known text.
      * </ul>
      */
-    public Map get_changes(int sessionID, List recentEdits) throws XmlRpcException;
+    public Map get_changes(int sessionID, List recentEdits, int caretPosition) throws XmlRpcException;
 
     /**
      * Commit the current file on disk to git.  The file is indicated by the session ID.

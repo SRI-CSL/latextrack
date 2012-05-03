@@ -48,7 +48,7 @@ public class LTCSession {
     }
 
     public void startInitAndUpdate(final File file,
-                                   final String date, final String rev, final List<String[]> recentEdits)
+                                   final String date, final String rev, final List<String[]> recentEdits, final int caretPosition)
             throws IOException {
         canonicalPath = file.getCanonicalPath();
 
@@ -88,7 +88,7 @@ public class LTCSession {
                     try {
                         ID = get();
                         LTCEditor.finishInit(authors, commits, self);
-                        startUpdate(date, rev, recentEdits);
+                        startUpdate(date, rev, recentEdits, caretPosition);
                     } catch (InterruptedException e) {
                         LOGGER.log(Level.SEVERE, e.getMessage(), e);
                     } catch (ExecutionException e) {
@@ -117,7 +117,7 @@ public class LTCSession {
         });
     }
 
-    public void startUpdate(final String date, final String rev, final List<String[]> recentEdits) {
+    public void startUpdate(final String date, final String rev, final List<String[]> recentEdits, final int caretPosition) {
         if (!isValid()) return;
 
         // create new worker to update session
@@ -136,7 +136,7 @@ public class LTCSession {
                 setProgress(1);
                 if (isCancelled()) return null;
                 // get changes
-                Map map = LTC.get_changes(sessionID, recentEdits);
+                Map map = LTC.get_changes(sessionID, recentEdits, caretPosition);
                 setProgress(90);
                 if (isCancelled()) return null;
                 // update commit graph
@@ -161,6 +161,7 @@ public class LTCSession {
                                 (Map<Integer,Object[]>) map.get(LTCserverInterface.KEY_AUTHORS),
                                 (String) map.get(LTCserverInterface.KEY_TEXT),
                                 (java.util.List<Integer[]>) map.get(LTCserverInterface.KEY_STYLES),
+                                (Integer) map.get(LTCserverInterface.KEY_CARET),
                                 new HashSet<String>((List<String>) map.get(LTCserverInterface.KEY_SHA1)),
                                 commits, remotes);
                     } catch (InterruptedException e) {
@@ -322,7 +323,7 @@ public class LTCSession {
     }
 
     public void pullOrPush(final String repository, final boolean usePull,
-                           final String date, final String rev, final List<String[]> recentEdits) {
+                           final String date, final String rev, final List<String[]> recentEdits, final int caretPosition) {
         if (!isValid()) return;
 
         // create new worker to add remote in session
@@ -344,7 +345,7 @@ public class LTCSession {
                 try {
                     String error = get();
                     if ("".equals(error))
-                        startUpdate(date, rev, recentEdits);
+                        startUpdate(date, rev, recentEdits, caretPosition);
                     else
                         JOptionPane.showMessageDialog(LTCEditor, error, verb+" Error", JOptionPane.ERROR_MESSAGE);
                 } catch (InterruptedException e) {

@@ -48,7 +48,7 @@ import static java.awt.datatransfer.DataFlavor.stringFlavor;
  * @author linda
  */
 @SuppressWarnings("serial")
-public class LTCEditor extends JFrame {
+public final class LTCEditor extends JFrame {
 
     // static initializations
     private final Preferences preferences = Preferences.userNodeForPackage(this.getClass());
@@ -98,12 +98,12 @@ public class LTCEditor extends JFrame {
                 if (session.isValid()) {
                     if (!session.getCanonicalPath().equals(file.getCanonicalPath())) {
                         close();
-                        session.startInitAndUpdate(file, dateField.getText(), revField.getText(), textPane.stopFiltering());
+                        session.startInitAndUpdate(file, dateField.getText(), revField.getText(), textPane.stopFiltering(), textPane.getCaretPosition());
                     } else {
-                        session.startUpdate(dateField.getText(), revField.getText(), textPane.stopFiltering());
+                        session.startUpdate(dateField.getText(), revField.getText(), textPane.stopFiltering(), textPane.getCaretPosition());
                     }
                 } else {
-                    session.startInitAndUpdate(file, dateField.getText(), revField.getText(), textPane.stopFiltering());
+                    session.startInitAndUpdate(file, dateField.getText(), revField.getText(), textPane.stopFiltering(), textPane.getCaretPosition());
                 }
                 // update file chooser and preference for next time:
                 fileChooser.setCurrentDirectory(file.getParentFile());
@@ -147,9 +147,10 @@ public class LTCEditor extends JFrame {
         saveButton.setEnabled(false); // start with modified = false
     }
 
-    protected void finishUpdate(Map<Integer,Object[]> authors,
+    protected void finishUpdate(Map<Integer, Object[]> authors,
                                 String text,
                                 List<Integer[]> styles,
+                                int caretPosition,
                                 Set<String> sha1s,
                                 List<Object[]> commits,
                                 List<Object[]> remotes) {
@@ -159,7 +160,7 @@ public class LTCEditor extends JFrame {
         Map<Integer,Color> colors = new HashMap<Integer,Color>();
         for (Map.Entry<Integer,Object[]> entry : authors.entrySet())
             colors.put(entry.getKey(), Color.decode((String) entry.getValue()[2]));
-        textPane.updateFromMaps(text, styles, colors);
+        textPane.updateFromMaps(text, styles, colors, caretPosition);
         // update list of commits
         commitModel.init(commits, false);
         commitModel.update(sha1s);
@@ -611,11 +612,11 @@ public class LTCEditor extends JFrame {
      * this method should be invoked from the
      * event dispatch thread.
      *
-     * @param frame Viewer instance to be displayed
+     * @param frame Editor instance to be displayed
      */
     private static void createAndShowGUI(JFrame frame) {
         //Create and set up the window.
-        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
 
         //Display the window.
         frame.pack();
@@ -711,7 +712,7 @@ public class LTCEditor extends JFrame {
             if (o instanceof Remote) {
                 Remote r = (Remote) o;
                 String repository = r.isAlias()?r.name:r.url;
-                session.pullOrPush(repository, isPull, dateField.getText(), revField.getText(), textPane.stopFiltering());
+                session.pullOrPush(repository, isPull, dateField.getText(), revField.getText(), textPane.stopFiltering(), textPane.getCaretPosition());
             }
         }
     }

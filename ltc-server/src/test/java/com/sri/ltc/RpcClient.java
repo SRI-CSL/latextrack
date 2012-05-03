@@ -13,9 +13,6 @@ import com.sri.ltc.git.Commit;
 import com.sri.ltc.server.HelloLTC;
 import com.sri.ltc.server.LTCserverInterface;
 import org.apache.xmlrpc.XmlRpcException;
-import org.apache.xmlrpc.client.XmlRpcClient;
-import org.apache.xmlrpc.client.XmlRpcClientConfigImpl;
-import org.apache.xmlrpc.client.util.ClientFactory;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -107,7 +104,7 @@ public class RpcClient {
                             System.out.println("Session text = "+text);
                             break;
                         case 'G':
-                            map = server.get_changes(Integer.parseInt(tokens[1]), Collections.emptyList());
+                            map = server.get_changes(Integer.parseInt(tokens[1]), Collections.emptyList(), 0);
                             System.out.println("text = "+map.get(LTCserverInterface.KEY_TEXT));
                             System.out.println("styles = ");
                             Object[] list = (Object[]) map.get(LTCserverInterface.KEY_STYLES);

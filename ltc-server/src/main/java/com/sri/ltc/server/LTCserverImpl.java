@@ -200,16 +200,16 @@ public final class LTCserverImpl implements LTCserverInterface {
     }
 
     @SuppressWarnings (value={"unchecked","fallthrough"})
-    public Map get_changes(int sessionID, List recentEdits) throws XmlRpcException {
+    public Map get_changes(int sessionID, List recentEdits, int caretPosition) throws XmlRpcException {
         Session session = getSession(sessionID);
 
         LOGGER.info("Server: get_changes for file \""+session.gitFile.getFile().getAbsolutePath()+"\" "+
                 (recentEdits != null?
                         "with "+recentEdits.size()+" recent edits ":
                         "")+
-                "called.");
+                "and caret at "+caretPosition+" called.");
 
-        // apply recent edits only if not empty
+        // apply recent edits only if not empty TODO: update caret position!
         try {
             if (!recentEdits.isEmpty())
                 session.text = session.getAccumulate().applyRecentEdits(recentEdits);
@@ -321,7 +321,8 @@ public final class LTCserverImpl implements LTCserverInterface {
                             filter.getShowingStatus(LTCserverInterface.Show.SMALL),
                             filter.getShowingStatus(LTCserverInterface.Show.PREAMBLE),
                             filter.getShowingStatus(LTCserverInterface.Show.COMMENTS),
-                            filter.getShowingStatus(LTCserverInterface.Show.COMMANDS)));
+                            filter.getShowingStatus(LTCserverInterface.Show.COMMANDS)),
+                    caretPosition);
             map.put(LTCserverInterface.KEY_AUTHORS, mappedAuthors); // add current author map
             map.put(LTCserverInterface.KEY_SHA1, sha1); // add list of SHA1s used
             session.getAccumulate().removePropertyChangeListener(listener);

@@ -9,9 +9,6 @@
 package com.sri.ltc.editor;
 
 import articles.showpar.ShowParEditorKit;
-import com.sri.ltc.filter.Filtering;
-import com.sri.ltc.latexdiff.*;
-import com.sri.ltc.server.LTCserverInterface;
 
 import javax.swing.*;
 import javax.swing.text.*;
@@ -19,8 +16,6 @@ import java.awt.*;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseEvent;
-import java.io.IOException;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.prefs.Preferences;
@@ -31,7 +26,6 @@ import java.util.prefs.Preferences;
 @SuppressWarnings("serial")
 public final class LatexPane extends JTextPane {
 
-    protected static String KEY_COLORS = "colors";
     private static String KEY_SHOW_PARAGRAPHS = "showParagraphs";
     protected final static String STYLE_PREFIX = "style no. ";
     private final LatexDocumentFilter documentFilter = new LatexDocumentFilter(this);
@@ -151,44 +145,7 @@ public final class LatexPane extends JTextPane {
         return document;
     }
 
-    public void updateFromPaths(Object[] paths) {
-        // need at least 2 paths that are not null or empty
-        if (paths.length < 2 ||
-                paths[0] == null || "".equals(paths[0].toString()) ||
-                paths[1] == null || "".equals(paths[1].toString()))
-            return; // do nothing
-
-        try {
-            // prepare wrappers for readers:
-            ReaderWrapper[] readers = new FileReaderWrapper[paths.length];
-            for (int i=0; i < paths.length; i++) {
-                readers[i] = new FileReaderWrapper(paths[i].toString());
-            }
-
-            // reset current document and accumulate changes in it:
-            StyledDocument document = clearAndGetDocument();
-            Filtering filter = Filtering.getInstance();
-            new Accumulate(document.getText(0, document.getLength())).perform(readers, null, Change.buildFlags(
-                    filter.getShowingStatus(LTCserverInterface.Show.DELETIONS),
-                    filter.getShowingStatus(LTCserverInterface.Show.SMALL),
-                    filter.getShowingStatus(LTCserverInterface.Show.PREAMBLE),
-                    filter.getShowingStatus(LTCserverInterface.Show.COMMENTS),
-                    filter.getShowingStatus(LTCserverInterface.Show.COMMANDS)));
-        } catch (IOException e) {
-            e.printStackTrace();
-        } catch (BadLocationException e) {
-            e.printStackTrace();
-        }
-        startFiltering();
-    }
-
-    /**
-     * NOTE: this doesn't work anymore...
-     * @param text
-     * @param styles
-     * @param colors
-     */
-    public void updateFromMaps(String text, List<Integer[]> styles, Map<Integer,Color> colors) {
+    public void updateFromMaps(String text, List<Integer[]> styles, Map<Integer, Color> colors, int caretPosition) {
         try {
             StyledDocument document = clearAndGetDocument();
             if (text != null)
@@ -205,33 +162,13 @@ public final class LatexPane extends JTextPane {
                     }
                 }
             }
-            setCaretPosition(0); // scroll to beginning?
-            scrollRectToVisible(new Rectangle());
+            // set proper caret position and scroll to it
+            setCaretPosition(caretPosition);
+            scrollRectToVisible(modelToView(getCaret().getDot()));
+            requestFocusInWindow();
         } catch (BadLocationException e) {
             e.printStackTrace();
         }
         startFiltering();
-    }
-
-    public Map<Integer,Color> getChangeColors() {
-        Map<Integer,Color> colors = new HashMap<Integer,Color>();
-        // go through document and fill map
-        StyledDocument document = getStyledDocument();
-        traverse(document.getDefaultRootElement(), colors);
-        return colors;
-    }
-
-    private void traverse(Element element, Map<Integer,Color> map) {
-        if (element.isLeaf()) {
-            AbstractDocument.LeafElement leaf = (AbstractDocument.LeafElement) element;
-            Color color = (Color) leaf.getAttribute(StyleConstants.Foreground);
-            Integer index = (Integer) leaf.getAttribute(MarkedUpDocument.AUTHOR_INDEX);
-            if (color != null && index != null && !map.containsKey(index))
-                map.put(index, color);
-        } else {
-            for (int i=0; i < element.getElementCount(); i++) {
-                traverse(element.getElement(i), map);
-            }
-        }
     }
 }

@@ -116,7 +116,7 @@ public final class MarkedUpDocument extends DefaultStyledDocument {
     }
 
     @SuppressWarnings("unchecked")
-    public void applyFiltering(Set<Change.Flag> flagsToHide) throws BadLocationException {
+    public int applyFiltering(Set<Change.Flag> flagsToHide, int caretPosition) throws BadLocationException {
         if (!flagsToHide.isEmpty())
             for (int i = 0; i < getLength(); i++) {
                 Set<Change.Flag> flags = (Set<Change.Flag>) getCharacterElement(i).getAttributes().getAttribute(FLAGS_ATTR);
@@ -125,13 +125,16 @@ public final class MarkedUpDocument extends DefaultStyledDocument {
                     if (!intersection.isEmpty()) { // matching flags
                         if (flags.contains((Change.Flag.DELETION))) { // change was a deletion, so remove character
                             remove(i, 1);
+                            if (i < caretPosition)
+                                caretPosition--;
                             i--;
-                        } else { // change was an addition, so remove all attributes
+                        } else { // change was an addition, so remove all attributes to hide it
                             setCharacterAttributes(i, 1, SimpleAttributeSet.EMPTY, true);
                         }
                     }
                 }
             }
+        return caretPosition;
     }
 
     public Reader getReader() {

@@ -55,7 +55,11 @@ a) Server
 
   After packaging or wherever you downloaded the JAR:
 
-  $> java -jar LTC-all-<version>.jar
+  $> java -jar all/target/LTC-<version>.jar
+
+  To debug remotely on <PORT> (i.e., when using with Emacs ltc-mode):
+
+  $> java -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=<PORT> -jar all/target/LTC-<version>.jar
 
 b) Java Editor
 

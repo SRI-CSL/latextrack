@@ -58,31 +58,38 @@ public final class Accumulate {
      * A number of boolean OLDflags indicates whether to show or hide deletions, small changes, changes in preamble,
      * comments, and commands.
      * <p>
-     * The returned map contains 2 entries for keys {@link LTCserverInterface.KEY_TEXT} and {@link LTCserverInterface.KEY_STYLES}.
+     * The returned map contains 3 entries for keys {@link LTCserverInterface.KEY_TEXT},
+     * {@link LTCserverInterface.KEY_CARET} and {@link LTCserverInterface.KEY_STYLES}.
      * The value for the first key is the text obtained from accumulating all changes.  The value for the second key
-     * is a list of 4-tuples denoting the mark up for the text.  Each 4-tuple has integers
+     * is the transformed caret position.  The value for the last key is a list of 4-tuples denoting the mark up for
+     * the text.  Each 4-tuple has integers
      * <pre>
      *     [start position (incl.), end position (excl.), addition/deletion, author index]
      * </pre>, which contain the start and end position of the change (positions in text start with 0), a 1 for
      * addition or 2 for deletion, and the index of the author who made this change.  The author index is either taken
      * from the given array or assigned by index of the text array.
      *
+     *
      * @param priorText an array of text wrappers denoting the oldest to the newest version
      * @param authorIndices an array of author indices for each version of priorText;
      *                      must be of the same length as priorText or empty or <code>null</code>
-     * @param flagsToHide a set of {@link Change.Flag}, which are to be hidden in accumulated markup
-     * @return Map with 2 entries pointing to the text and the list of styles to mark-up the changes in the text
+     * @param flagsToHide a set of {@link com.sri.ltc.latexdiff.Change.Flag}, which are to be hidden in accumulated markup
+     * @param caretPosition the caret position to be transformed by the accumulation
+     * @return Map with 3 entries pointing to the text, the updated caret position, and the list of styles to mark-up
+     * the changes in the text
      * @throws IOException if given readers cannot load text
      * @throws BadLocationException if a location in the underlying document does not exist
      */
     @SuppressWarnings("unchecked")
     public Map perform(ReaderWrapper[] priorText,
                        Integer[] authorIndices,
-                       Set<Change.Flag> flagsToHide) throws IOException, BadLocationException {
+                       Set<Change.Flag> flagsToHide,
+                       int caretPosition) throws IOException, BadLocationException {
 
         // init return value:
         Map map = new HashMap();
         map.put(LTCserverInterface.KEY_TEXT, "");
+        map.put(LTCserverInterface.KEY_CARET, caretPosition);
         map.put(LTCserverInterface.KEY_STYLES, new ArrayList<Integer[]>());
 
         if (priorText == null || priorText.length == 0)
@@ -132,6 +139,9 @@ public final class Accumulate {
                                 pair.index,
                                 pair.flags
                         );
+                        // update caret position:
+                        if (change.start_position + current_offset < caretPosition)
+                            caretPosition += pair.index.length();
                         current_offset += pair.index.length();
                     }
                 }
@@ -152,12 +162,13 @@ public final class Accumulate {
             }
         }
 
-        document.applyFiltering(flagsToHide);
+        caretPosition = document.applyFiltering(flagsToHide, caretPosition);
         progress = updateProgress(0.9f, 0.05f);
 
         // create return value:
         map.put(LTCserverInterface.KEY_TEXT, document.getText(0, document.getLength()));
         map.put(LTCserverInterface.KEY_STYLES, document.getStyles());
+        map.put(LTCserverInterface.KEY_CARET, caretPosition);
 
         updateProgress(0.95f, 0.05f);
         return map;
