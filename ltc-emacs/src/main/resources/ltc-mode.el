@@ -93,17 +93,6 @@
 (defvar ltc-mode-map (make-sparse-keymap) "LTC mode keymap.")
 (define-key ltc-mode-map ltc-command-prefix 'ltc-prefix-map)
 
-;; (defvar ltc-minor-mode-map
-;;   (let ((map (make-sparse-keymap)))
-;;     (define-key map "\C-c\C-lu" 'ltc-update)
-;;     (define-key map "\C-c\C-lq" 'ltc-mode)
-;;     (define-key map "\C-c\C-lla" 'ltc-limit-authors)
-;;     (define-key map "\C-c\C-lld" 'ltc-limit-date)
-;;     (define-key map "\C-c\C-llr" 'ltc-limit-rev)
-;;     (define-key map "\C-c\C-lc" 'ltc-commit)
-;;     map)
-;;   "LTC minor-mode keymap.")
-
 (define-minor-mode ltc-mode
   "Toggle LTC mode.
 
@@ -187,10 +176,6 @@
 			"..."
 		      (concat " [" (shorten 7 ltc-limiting-rev) "]...")))]
     )
-   ;; "--"
-   ;; ["Commit..." ltc-commit]
-   ;; ["Pull from remote..." nil :active nil]
-   ;; ["Push to remote..." nil :active nil]
    "--"
    ["Turn LTC off" ltc-mode]
    ))
@@ -307,6 +292,7 @@
 	(with-selected-window (get-buffer-window ltc-info-buffer)
 	  (shrink-window (- (window-height) 7)))
 	(set-buffer-modified-p old-buffer-modified-p) ; restore modification flag
+	;; TODO: set caret position (and scroll back?)
 	))
   )
 
