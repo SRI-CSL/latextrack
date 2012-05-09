@@ -17,8 +17,9 @@ import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
 
 import javax.servlet.ServletException;
-import java.io.IOException;
-import java.io.PrintStream;
+import java.io.*;
+import java.util.Properties;
+import java.util.jar.Manifest;
 import java.util.logging.Level;
 import java.util.logging.LogManager;
 import java.util.logging.Logger;
@@ -71,6 +72,20 @@ public final class LTC {
 
     private void init() {
         new LTCserverImpl(); // to initialize from LTCserverImpl.static { }
+
+        // obtain version information from Maven meta-information
+        try {
+
+            InputStream inputStream = this.getClass().getClassLoader().getResourceAsStream("META-INF/maven/com.sri.ltc/ltc-server/pom.properties");
+            if (inputStream != null) {
+                Properties pomProperties = new Properties();
+                pomProperties.load(inputStream);
+                logger.config("LTC version: "+pomProperties.getProperty("version", "<UNKNOWN>"));
+            }
+        } catch (IOException e) {
+            logger.log(Level.SEVERE, "Cannot obtain version information", e);
+        }
+
         try {
             // set up RPC server - this will enable us to receive XML-RPC calls
             Server rpcserver = new Server(

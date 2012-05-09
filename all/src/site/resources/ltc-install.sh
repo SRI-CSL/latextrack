@@ -84,6 +84,13 @@ fi
 # test java directory
 JAVA_DIR=$1
 testdir "$JAVA_DIR" "Java" "w"
+# make JAVA_DIR absolute if it doesn't start with '/' or '~'
+case ${JAVA_DIR:0:1} in
+    /|~) ;; # keep
+    *) 
+	JAVA_DIR=`pwd`/$JAVA_DIR
+	;;
+esac
 
 # test Emacs directory (if given)
 if [ $# -gt 1 ]; then
@@ -167,7 +174,7 @@ fi
 # removing and creating new softlink
 
 rm -f $JAVA_DIR/LTC.jar
-ln -v -s $JAVA_DIR/$JAR_FILE $JAVA_DIR/LTC.jar
+ln -v -s $JAR_FILE $JAVA_DIR/LTC.jar
 
 ################################################################################
 # message

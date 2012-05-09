@@ -27,8 +27,8 @@
 
 (defgroup ltc nil
   "Latex Track Changes mode."
-  :version "${project.version}"   ; automatically replaced during 'mvn package'
-  :link '(url-link "${temp.url}") ; automatically replaced during 'mvn package'
+  :version "${project.version}"
+  :link '(url-link "${temp.url}")
   :tag "LTC"
   :prefix "ltc-"
   :group 'tex)

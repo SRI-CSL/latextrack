@@ -18,7 +18,7 @@ import java.io.IOException;
 /**
  * @author linda
  */
-public class RpcServlet extends XmlRpcServlet {
+public final class RpcServlet extends XmlRpcServlet {
 
     private static final long serialVersionUID = 8467025898193162324L;
     protected Class iface;

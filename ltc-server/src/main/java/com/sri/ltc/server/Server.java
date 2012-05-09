@@ -15,7 +15,7 @@ import javax.servlet.ServletException;
 /**
  * @author linda
  */
-public class Server extends ServletWebServer {
+public final class Server extends ServletWebServer {
 
     public Server(Class iface, Class impl, int port) throws ServletException {
         super(new RpcServlet(iface, impl), port);

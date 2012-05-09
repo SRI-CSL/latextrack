@@ -40,13 +40,14 @@ public final class TestLTCserver {
 
     @Test
     public void mainHelp() {
+        System.out.format("\nGetting server help:\n");
         LTC.main(new String[] {"-h"});
     }
 
     @Test
     public void mainLevel() {
         for (String level : new String[]{"FINE", "INFO"}) {
-            System.out.println("Setting log level to "+level+":");
+            System.out.format("\nSetting log level to %s:\n",level);
             LTC.main(new String[] {"-l",level});
             // TODO: assert that no log output if level == INFO
         }
