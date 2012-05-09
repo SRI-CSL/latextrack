@@ -95,16 +95,17 @@ public class RpcClient {
                 if (line.length() > 0)
                     switch (line.toUpperCase().charAt(0)) {
                         case 'I':
-                            System.out.println("Session ID = "+server.init_session(tokens[1], ""));
+                            System.out.println("Session ID = "+server.init_session(tokens[1]));
                             break;
                         case 'C':
-                            String text = server.close_session(Integer.parseInt(tokens[1]), Collections.emptyList());
+                            map = server.close_session(Integer.parseInt(tokens[1]), "", Collections.emptyList(), 0);
+                            String text = (String) map.get(LTCserverInterface.KEY_TEXT);
                             if (text != null)
                                 text = text.substring(0,text.length()>20?20:text.length());
                             System.out.println("Session text = "+text);
                             break;
                         case 'G':
-                            map = server.get_changes(Integer.parseInt(tokens[1]), Collections.emptyList(), 0);
+                            map = server.get_changes(Integer.parseInt(tokens[1]), false, "", Collections.emptyList(), 0);
                             System.out.println("text = "+map.get(LTCserverInterface.KEY_TEXT));
                             System.out.println("styles = ");
                             Object[] list = (Object[]) map.get(LTCserverInterface.KEY_STYLES);

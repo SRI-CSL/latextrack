@@ -15,6 +15,7 @@ import org.apache.xmlrpc.XmlRpcException;
 import javax.swing.*;
 import java.io.File;
 import java.io.IOException;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -48,7 +49,7 @@ public class LTCSession {
     }
 
     public void startInitAndUpdate(final File file,
-                                   final String date, final String rev, final List<String[]> recentEdits, final int caretPosition)
+                                   final String date, final String rev, final int caretPosition)
             throws IOException {
         canonicalPath = file.getCanonicalPath();
 
@@ -64,7 +65,7 @@ public class LTCSession {
             @Override
             protected Integer callLTCinBackground() throws XmlRpcException {
                 setProgress(1);
-                sessionID = LTC.init_session(file.getAbsolutePath(), "");
+                sessionID = LTC.init_session(file.getAbsolutePath());
                 if (isCancelled()) return -1;
                 setProgress(25);
                 authors = LTC.get_authors(sessionID);
@@ -88,7 +89,7 @@ public class LTCSession {
                     try {
                         ID = get();
                         LTCEditor.finishInit(authors, commits, self);
-                        startUpdate(date, rev, recentEdits, caretPosition);
+                        startUpdate(date, rev, false, "", Collections.<int[]>emptyList(), caretPosition);
                     } catch (InterruptedException e) {
                         LOGGER.log(Level.SEVERE, e.getMessage(), e);
                     } catch (ExecutionException e) {
@@ -98,15 +99,15 @@ public class LTCSession {
         }).execute();
     }
 
-    public void close(final List<String[]> recentEdits) {
+    public void close() {
         if (!isValid()) return;
 
         // create new worker to close session
-        executeWorkerAndWait(new LTCWorker<String,Void>(LTCEditor, ID,
+        executeWorkerAndWait(new LTCWorker<Map,Void>(LTCEditor, ID,
                 "Closing...", "<html>Closing track changes of file<br>"+getCanonicalPath()+"</html>", false) {
             @Override
-            protected String callLTCinBackground() throws XmlRpcException {
-                return LTC.close_session(ID, recentEdits);
+            protected Map callLTCinBackground() throws XmlRpcException {
+                return LTC.close_session(ID, "", Collections.emptyList(), 0); // forget about any modifications
             }
 
             @Override
@@ -117,7 +118,8 @@ public class LTCSession {
         });
     }
 
-    public void startUpdate(final String date, final String rev, final List<String[]> recentEdits, final int caretPosition) {
+    public void startUpdate(final String date, final String rev,
+                            final boolean isModified, final String currentText, final List<int[]> deletions, final int caretPosition) {
         if (!isValid()) return;
 
         // create new worker to update session
@@ -136,7 +138,7 @@ public class LTCSession {
                 setProgress(1);
                 if (isCancelled()) return null;
                 // get changes
-                Map map = LTC.get_changes(sessionID, recentEdits, caretPosition);
+                Map map = LTC.get_changes(sessionID, isModified, currentText, deletions, caretPosition);
                 setProgress(90);
                 if (isCancelled()) return null;
                 // update commit graph
@@ -173,7 +175,7 @@ public class LTCSession {
         }).execute();
     }
 
-    public void save(final List<String[]> recentEdits) {
+    public void save(final String currentText, final List<int[]> deletions) {
         if (ID == -1) return;
 
         // create new worker to save file in session
@@ -181,7 +183,7 @@ public class LTCSession {
                 "Saving...", "<html>Saving file<br>"+getCanonicalPath()+"</html>", false) {
             @Override
             protected Void callLTCinBackground() throws XmlRpcException {
-                LTC.save_file(ID, recentEdits);
+                LTC.save_file(ID, currentText, deletions);
                 return null;
             }
         });
@@ -269,7 +271,6 @@ public class LTCSession {
         // create new worker to set limited authors in session
         (new LTCWorker<Void,Void>(LTCEditor, ID,
                 "Setting...", "Setting limited authors", false) {
-            Map<Integer,Object[]> authors = null;
             @Override
             protected Void callLTCinBackground() throws XmlRpcException {
                 if (allLimited)
@@ -323,7 +324,8 @@ public class LTCSession {
     }
 
     public void pullOrPush(final String repository, final boolean usePull,
-                           final String date, final String rev, final List<String[]> recentEdits, final int caretPosition) {
+                           final String date, final String rev,
+                           final boolean isModified, final String currentText, final List<int[]> deletions, final int caretPosition) {
         if (!isValid()) return;
 
         // create new worker to add remote in session
@@ -345,7 +347,7 @@ public class LTCSession {
                 try {
                     String error = get();
                     if ("".equals(error))
-                        startUpdate(date, rev, recentEdits, caretPosition);
+                        startUpdate(date, rev, isModified, currentText, deletions, caretPosition);
                     else
                         JOptionPane.showMessageDialog(LTCEditor, error, verb+" Error", JOptionPane.ERROR_MESSAGE);
                 } catch (InterruptedException e) {

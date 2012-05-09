@@ -35,14 +35,7 @@ public final class TestAccumulate {
         colors.put(4, Color.pink);
     }
 
-    private static Accumulate accumulate;
-    static {
-        try {
-            accumulate = new Accumulate("");
-        } catch (BadLocationException e) {
-            e.printStackTrace();
-        }
-    }
+    private static Accumulate accumulate = new Accumulate();
 
     private static Map perform(int caretPosition, String... texts) throws IOException, BadLocationException {
         return perform(caretPosition, EnumSet.noneOf(Change.Flag.class), texts);

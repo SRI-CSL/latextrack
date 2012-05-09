@@ -9,6 +9,7 @@
 package com.sri.ltc.editor;
 
 import articles.showpar.ShowParEditorKit;
+import com.google.common.collect.Lists;
 
 import javax.swing.*;
 import javax.swing.text.*;
@@ -28,7 +29,7 @@ public final class LatexPane extends JTextPane {
 
     private static String KEY_SHOW_PARAGRAPHS = "showParagraphs";
     protected final static String STYLE_PREFIX = "style no. ";
-    private final LatexDocumentFilter documentFilter = new LatexDocumentFilter(this);
+    private final LatexDocumentFilter documentFilter = new LatexDocumentFilter(this); // TODO: remove this class???
     protected int last_key_pressed = -1;
 
     public LatexPane() {
@@ -131,10 +132,28 @@ public final class LatexPane extends JTextPane {
         setEditable(true);
     }
 
-    public List<String[]> stopFiltering() {
+    public List<int[]> stopFiltering() {
         setEditable(false);
-        ((AbstractDocument) getStyledDocument()).setDocumentFilter(null);
-        return documentFilter.getRecentEdits();
+        StyledDocument document = getStyledDocument();
+        ((AbstractDocument) document).setDocumentFilter(null);
+        // collect any deletions
+        List<int[]> deletions = Lists.newArrayList();
+        int start = -1;
+        for (int i = 0; i < document.getLength(); i++) {
+            Object strikethrough = document.getCharacterElement(i).getAttributes().getAttribute(StyleConstants.StrikeThrough);
+            if (strikethrough instanceof Boolean && (Boolean) strikethrough) {
+                if (start == -1) // first deletion character
+                    start = i;
+            } else {
+                if (start > -1) {
+                    deletions.add(new int[] {start, i});
+                    start = -1;
+                }
+            }
+        }
+        if (start > -1) // we ended with a deletion
+            deletions.add(new int[] {start, document.getLength()});
+        return deletions;
     }
 
     public StyledDocument clearAndGetDocument() throws BadLocationException {

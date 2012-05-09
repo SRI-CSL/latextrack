@@ -29,12 +29,7 @@ public final class Accumulate {
 
     private final static LatexDiff latexDiff = new LatexDiff();
 
-    private final MarkedUpDocument document;
-
-    public Accumulate(String initialText) throws BadLocationException {
-        document = new MarkedUpDocument();
-        document.insertString(0, initialText, null);
-    }
+    private final MarkedUpDocument document = new MarkedUpDocument();
 
     public void addPropertyChangeListener(PropertyChangeListener listener) {
         pcs.addPropertyChangeListener(listener);
@@ -42,10 +37,6 @@ public final class Accumulate {
 
     public void removePropertyChangeListener(PropertyChangeListener listener) {
         pcs.removePropertyChangeListener(listener);
-    }
-
-    public String applyRecentEdits(List<Object[]> recentEdits) throws BadLocationException {
-        return document.applyRecentEdits(recentEdits);
     }
 
     /**
@@ -140,7 +131,7 @@ public final class Accumulate {
                                 pair.flags
                         );
                         // update caret position:
-                        if (change.start_position + current_offset < caretPosition)
+                        if (change.start_position + current_offset <= caretPosition)
                             caretPosition += pair.index.length();
                         current_offset += pair.index.length();
                     }

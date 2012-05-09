@@ -78,9 +78,6 @@
 (defvar self nil "3-tuple of current author when session is initialized.")
 (make-variable-buffer-local 'self)
 
-(defvar recent-edits nil "Collect recent edits between LTC calls.")
-(make-variable-buffer-local 'recent-edits)
-
 ;; Defining key maps with prefix
 (defvar ltc-prefix-map nil "LTC mode prefix keymap.")
 (define-prefix-command 'ltc-prefix-map)
@@ -197,12 +194,7 @@
 		 (and (version< xml-rpc-version min-xml-rpc-version)
 		      (error "`ltc-mode' requires `xml-rpc' package v%s or later" min-xml-rpc-version))
 		 ;; init session with file name and buffer contents if modified (or "" if not)
-		 (setq session-id 
-		       (ltc-method-call "init_session" 
-					(buffer-file-name) 
-					(if (buffer-modified-p) 
-					    (buffer-string) 
-					  ""))))
+		 (setq session-id (ltc-method-call "init_session" (buffer-file-name))))
 	     ;; handling any initialization errors
 	     ('error 
 	      (message "Error while initializing session: %s" (error-message-string err))
@@ -223,6 +215,7 @@
     ;; initialize known authors, commit graph and self
     (init-commit-graph)
     (setq self (ltc-method-call "get_self" session-id)) ; get current author and color
+    ;; run first update
     (ltc-update)))
 
 (defun ltc-mode-stop ()
@@ -233,12 +226,16 @@
   (remove-hook 'kill-buffer-hook 'ltc-hook-before-kill t) ; remove hook to intercept closing buffer
   ;; close session and obtain text for buffer without track changes
   (if session-id
-      (let ((text (ltc-method-call "close_session" session-id (compile-recent-edits)))
+      (let ((map (ltc-method-call "close_session" session-id 
+				  (buffer-string) 
+				  (compile-deletions)
+				  (1- (point))))
 	    (old-buffer-modified-p (buffer-modified-p))) ; maintain modified flag
 	(message "Stopping LTC mode for file \"%s\"..." (buffer-file-name))
 	;; replace text in buffer with return value from closing session
 	(erase-buffer)
-	(insert text)
+	(insert (cdr (assoc-string "text" map)))
+	(goto-char (1+ (cdr (assoc-string "caret" map)))) ; Emacs starts counting from 1!
 	(set-buffer-modified-p old-buffer-modified-p)
 	(setq session-id nil)))
   ;; close any open temp info buffer 
@@ -252,8 +249,13 @@
 (defun ltc-update ()
   "updating changes for current session"
   (interactive)
+  (message "Starting LTC update...") ; TODO: make cursor turn into wait symbol
   (if ltc-mode
-      (let* ((map (ltc-method-call "get_changes" session-id (compile-recent-edits) (1- (point))))
+      (let* ((map (ltc-method-call "get_changes" session-id 
+				   (buffer-modified-p) 
+				   (buffer-string) 
+				   (compile-deletions)
+				   (1- (point))))
 	     (old-buffer-modified-p (buffer-modified-p)) ; maintain modified flag
 	     ;; build color table for this update: int -> color name
 	     (color-table (mapcar (lambda (four-tuple)
@@ -261,11 +263,12 @@
 				  (cdr (assoc-string "authors" map))))
 	     (styles (cdr (assoc-string "styles" map)))
 	     )
-	(message "LTC updates received with new caret position at %d" (1+ (cdr (assoc-string "caret" map))))
+	(message "LTC updates received") ; TODO: change cursor back (or later?)
 	(ltc-remove-edit-hooks) ; remove (local) hooks to capture user's edits temporarily
-	;; obtain and replace text in buffer
+	;; replace text in buffer and update cursor position
 	(erase-buffer)
 	(insert (cdr (assoc-string "text" map)))
+	(goto-char (1+ (cdr (assoc-string "caret" map)))) ; Emacs starts counting from 1!
 	;; apply styles to new buffer
 	(if (and styles (car styles))  ; sometimes STYLES = '(nil)
 	    (mapc (lambda (style) 
@@ -274,8 +277,6 @@
 					(if (= '1 (nth 2 style)) :underline :strike-through) t 
 					:foreground (cdr (assoc (nth 3 style) color-table))))
 		    ) styles))
-	(goto-char (1+ (cdr (assoc-string "caret" map)))) ;; update caret position: Emacs starts counting from 1!
-	;; TODO: scroll to it??
 	(ltc-add-edit-hooks) ; add (local) hooks to capture user's edits
 	;; update commit graph in temp info buffer
 	(init-commit-graph (cdr (assoc-string "sha1" map)))
@@ -304,9 +305,12 @@
   (if (not ltc-mode)
       nil
     (message "Before saving file %s for session %d" (buffer-file-name) session-id)
-    (ltc-method-call "save_file" session-id (compile-recent-edits))
+    (ltc-method-call "save_file" session-id
+		     (buffer-string) 
+		     (compile-deletions))
     (clear-visited-file-modtime) ; prevent Emacs from complaining about modtime diff's as we are writing file from Java
-    (set-buffer-modified-p nil)
+    (set-buffer-modified-p nil) ; reset modification flag
+    ;; TODO: update commit graph with "on disk"?
     t)) ; prevents actual saving in Emacs as we have already written the file
 
 (defun ltc-hook-before-kill ()
@@ -329,7 +333,8 @@
 	 (setq completion-ignore-case t)
 	 ;; allow space in input, so modify minibuffer-local-completion-map temporarily
 	 (define-key minibuffer-local-completion-map " " nil)
-	 (while (let ((author (completing-read (format "Enter author [%d] or empty to stop: " n) completion-list nil nil)))
+	 (while 
+	     (let ((author (completing-read (format "Enter author [%d] or empty to stop: " n) completion-list nil nil)))
 		  (setq n (+ 1 n))
 		  (if (string< "" author)
 		      (setq author-list (cons author author-list)))))
@@ -502,45 +507,29 @@
 
 ;;; --- functions to handle online editing
 
-(defun compile-recent-edits ()
-  "Turn local variable with list of recent edits into an empty vector, if list is empty, 
-or into a list with the keyword :array after reversing and compressing the underlying list."
-  (if recent-edits
-      (let ((result (reverse recent-edits)))
-	(setq result
-	      (let ((compressed) ; collects compressed result
-		    (zero-type (caar result)) (zero-pos (string-to-number (cadar result))) (zero-contents (caddar result)) 
-		    (index 1)) ; start with second list item (if it exists)
-		(while (< index (length result)) 
-		  (let* ((curr-elem (nth index result)) 
-			 (curr-type (car curr-elem)) (curr-pos (string-to-number (cadr curr-elem))) (curr-contents (caddr curr-elem)))
-		    (if (string= zero-type curr-type)
-			(cond ((and (string= "DELETE" zero-type) (= zero-pos curr-pos)) 
-			       (setq zero-contents (concat zero-contents curr-contents)))
-			      ((and (string= "REMOVE" zero-type) (= (+ zero-pos (string-to-number zero-contents)) curr-pos)) 
-			       (setq zero-contents (number-to-string (+ (string-to-number zero-contents) (string-to-number curr-contents)))))
-			      ((and (string= "INSERT" zero-type) (= (+ zero-pos (length zero-contents)) curr-pos)) 
-			       (setq zero-contents (concat zero-contents curr-contents)))
-			      (t
-			       ;; same type but non-matching position: write out
-			       (setq compressed (append compressed (list (list zero-type (number-to-string (1- zero-pos)) zero-contents))))
-			       ;; reset reference variables:
-			       (setq zero-pos curr-pos) 
-			       (setq zero-contents curr-contents)))
-		      ;; new type: write out
-		      (setq compressed (append compressed (list (list zero-type (number-to-string (1- zero-pos)) zero-contents))))
-		      ;; reset reference variables:
-		      (setq zero-type curr-type)
-		      (setq zero-pos curr-pos)
-		      (setq zero-contents curr-contents)))
-		  (setq index (1+ index)))
-		;; write out last reference variables and return as result: 
-		(append compressed (list (list zero-type (number-to-string (1- zero-pos)) zero-contents)))))
-	(setq recent-edits nil) ; reset recent edits
-	(message "Compiled recent edits are: %S" result)
-	(list :array result)) ; return result as a labeled :array
-    [] ; return empty vector
-    ))
+(defun compile-deletions ()
+  "Collect start and end position pairs of all deletion regions in current text."
+  (setq deletions nil)
+  (setq start 0)
+  (setq index 1)
+  (while (< index (point-max))
+    (let ((delface (get-text-property index 'face))) ; face properties (if any)
+      (if (plist-get delface :strike-through)
+	  ;; character is deleted
+	  (if (= start 0) ; first deletion character?
+	      (setq start index))
+	;; else form: character is not deleted
+	(if (> start 0) ; ending a deletion region?
+	    (progn
+	      (setq deletions (append deletions (list (list (1- start) (1- index))))) ; Emacs positions are +1
+	      (setq start 0)))) ; reset start marker
+      (setq index (1+ index)))) ; advance index
+  (if (> start 0) ; we ended with a deletion region
+      (setq deletions (append deletions (list (list (1- start) (1- index)))))) ; Emacs positions are +1
+  ;(message "Compiled deletions are: %S" deletions)
+  (if deletions
+      (list :array deletions) ; return deletions as a labeled :array
+    [])) ; return empty list
 
 (defun ltc-add-edit-hooks ()
   "Add hooks to capture user's edits."
@@ -556,22 +545,17 @@ or into a list with the keyword :array after reversing and compressing the under
 
 (defun ltc-hook-after-change (beg end len)
   "Hook to capture user's insertions while LTC mode is running."
-  (message " --- LTC: after change with beg=%d and end=%d and len=%d" beg end len)
+  ;(message " --- LTC: after change with beg=%d and end=%d and len=%d" beg end len)
   (when (and self (= 0 len))
     ;; color text and underline
     (add-text-properties beg end (list 'face 
 				       (list :underline t :foreground (car (last self)))))
-    ;; add INSERT entry in front of recent edits
-    (setq recent-edits (cons 
-			(list edit-insert 
-			      (number-to-string beg) 
-			      (buffer-substring-no-properties beg end)) 
-			recent-edits))
+    ;; TODO: if first change (buffer-modified) then update commit graph
     ))
 
 (defun ltc-hook-before-change (beg end)
   "Hook to capture user's deletions while LTC mode is running."
-  (message " --- LTC: before change with beg=%d and end=%d" beg end)
+  ;(message " --- LTC: before change with beg=%d and end=%d" beg end)
   (when (and self (not (= beg end)))
     (setq self-color (caddr self))
     ;; use idiom to manipulate deletion string in temp buffer before returning to current buffer
@@ -589,54 +573,24 @@ or into a list with the keyword :array after reversing and compressing the under
 	    ;; go through upcoming deletion's characters one-by-one
 	    (setq index 1)
 	    (while (< index (point-max))
-	      (let ((delface (get-text-property index 'face)) ; face properties (if any)
-		    )
+	      (let ((delface (get-text-property index 'face))) ; face properties (if any)
 		(if (plist-get delface :strike-through)
 		    ;; character already deleted: keep with same properties
-		    (setq index (1+ index))
+		    (setq index (1+ index)) ; advance index
 		  (if (and (plist-get delface :underline)
 			   (equal (color-values (plist-get delface :foreground))
 				  (color-values self-color))) ; text underlined with color for self
-		      ;; text inserted by self: add DELETE element to recent edits and remove character
-		      (progn
-			;; add DELETE entry in front of recent edits
-			(setq recent-edits (cons 
-					    (list edit-delete 
-						  (number-to-string (1- (+ beg index))) 
-						  (buffer-substring-no-properties index (1+ index))) 
-					    recent-edits))
-			(delete-region index (1+ index)) ; delete character and don't advance index in this branch!
-			)
-		    ;; text inserted by other or not marked up: 
-		    (setq newindices (cons index newindices)) ; collect removal indices for processing later
-		    ;; add REMOVE entry in front of recent edits
-		    (setq recent-edits (cons 
-					(list edit-remove (number-to-string (1- (+ beg index))) "1") 
-					recent-edits))
-		    (setq index (1+ index))
+		      ;; text inserted by self: remove character
+		      (delete-region index (1+ index)) ; delete character and don't advance index in this branch!
+		    ;; text inserted by other or not marked up:
+		    (put-text-property index (1+ index) 'face newface) ; replace with new mark-up 
+		    (setq index (1+ index)) ; advance index
 		    ))))
-	    ;; change text properties for collected indices:
-	    ;;   keep text but as strike-through and change foreground to self
-	    (setq newindices (reverse newindices))
-	    ;; blow-up list to contain consecutive duplicates for indices to be deleted
-	    (setq newindices (mapcan (lambda (x) (list x (1+ x))) newindices))
-	    ;; reduce list by removing duplicate indices
-	    (let ((index 0)) 
-	      (while (< index (1- (length newindices))) 
-		(let ((curr (nth index newindices)) 
-		      (next (nth (1+ index) newindices))) 
-		  (if (= curr next) 
-		      (setq newindices (delq curr newindices)) ; if current and next match, delete both from list
-		    (setq index (1+ index)))))) ; otherwise advanve index
-	    ;; interpret list of indices as pairs to set new text property on
-	    (let ((index 0)) 
-	      (while (< index (1- (length newindices)))
-		(put-text-property (nth index newindices) (nth (1+ index) newindices) 'face newface)
-		(setq index (+ 2 index))))
-	    (cons (buffer-string) recent-edits)))
-    (insert (car insstring)) ; this moves point to end of insertion
+	    (buffer-string) ; return the contents of the temp buffer
+	    ))
+    (insert insstring) ; this moves point to end of insertion ; TODO: DOES THIS NOT TRIGGER INSERTION HOOKS??
     (if (eq 'backspace last-input-char) (goto-char beg)) ; if last key was BACKSPACE, move point to beginning
-    (setq recent-edits (append (cdr insstring) recent-edits))
+    ;; TODO: if first change (buffer-modified) then update commit graph
     ))
 
 ;;; --- accessing API of base system

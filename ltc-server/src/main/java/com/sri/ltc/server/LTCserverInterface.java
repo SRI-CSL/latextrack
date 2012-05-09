@@ -28,8 +28,7 @@ public interface LTCserverInterface {
     public final static String KEY_CARET = "caret";
     public final static String KEY_SHA1 = "sha1";
     public static enum Show {SMALL, DELETIONS, PREAMBLE, COMMANDS, COMMENTS};
-    public static enum EditType {INSERT, REMOVE, DELETE};
-    public final static String ON_DISK = "on disk"; // special SHA1 for version on disk (if file modified and not committed)    
+    public final static String ON_DISK = "on disk"; // special SHA1 for version on disk (if file modified and not committed)
     public final static String MODIFIED = "modified"; // special SHA1 for text modified in editor
 
     /**
@@ -38,9 +37,6 @@ public interface LTCserverInterface {
      * file names are allowed.
      *
      * @param path String containing the path to the file to be tracked
-     * @param currentText String containing the current text to be compared to the last
-     * version of file on disk.  Use empty if only versions under git and on file
-     * are relevant for comparison
      * @return a session ID to be used in subsequent calls regarding this track session
      * @throws XmlRpcException <ul>
      *   <li>with error code = 2 if the given file is not readable.
@@ -52,54 +48,61 @@ public interface LTCserverInterface {
      *   <li>with error code = 8 if a ParseException occurred during git file creation.
      * </ul>
      */
-    public int init_session(String path, String currentText) throws XmlRpcException;
+    public int init_session(String path) throws XmlRpcException;
 
     /**
      * Closes the session indicated by the given session identifier.
-     * The call returns the raw, unmarked up text after applying the most recent edits
-     * (as given) to the current text in this session.
+     * <p>
+     * The call has to contain the current, raw text from the editor along with a list
+     * of start and end positions, which indicate the occurrence of deletions in the
+     * current text.  These are needed to properly convert the given caret position to
+     * one in the newly computed text.
+     * <p>
+     * The return value contains the text without any changes under the key {@link #KEY_TEXT}.
+     * The value under {@link #KEY_CARET} contains the cursor position transformed from
+     * the one given as an argument to the method to the new text.
+     *
      *
      * @param sessionID identifies the session
-     * @param recentEdits list of string 3-tuples that denote recent edits since the last
-     * call in the format type as a constant from {@link com.sri.ltc.server.LTCserverInterface.EditType},
-     * the (numeric) offset in text, and either the text itself (for INSERT or DELETE) or
-     * the length (for REMOVE)
-     * @return String with unmarked up text of this session after possibly applying given edits 
+     * @param currentText current text in editor
+     * @param deletions list of pairs with start and end position of deletions in <code>currentText</code> if any
+     * @param caretPosition current cursor position to be transformed into new one
+     * @return Map that contains the text without changes and the updated caret position
      * @throws XmlRpcException <ul>
      *   <li>with error code = 1 if the given identifier does not denote a known session.
-     *   <li>with error code = 2 if the given recent edits cannot be applied to last known text.
-     *   <li>with error code = 3 if a FileNotFoundException occurred.
-     *   <li>with error code = 4 if an IOException occurred.
+     *   <li>with error code = 2 if a BadLocationException occurs while removing deletions from current text.
      * </ul>
      */
-    public String close_session(int sessionID, List recentEdits) throws XmlRpcException;
+    public Map close_session(int sessionID, String currentText, List deletions, int caretPosition)
+            throws XmlRpcException;
 
     /**
-     * Save the current, raw text (after applying any recent changes given) to the file indicated
+     * Save the current text (after removing any deletions given) to the file indicated
      * by the given session ID.
      *
      * @param sessionID identifies the session
-     * @param recentEdits list of string 3-tuples that denote recent edits since the last
-     * call in the format type as a constant from {@link com.sri.ltc.server.LTCserverInterface.EditType},
-     * the (numeric) offset in text, and either the text itself (for INSERT or DELETE) or
-     * the length (for REMOVE)
+     * @param currentText current text in editor
+     * @param deletions list of pairs with start and end position of deletions in <code>currentText</code> if any
      * @return 0
      * @throws XmlRpcException <ul>
      *   <li>with error code = 1 if the given identifier does not denote a known session.
      *   <li>with error code = 2 if the given recent edits cannot be applied to last known text.
      *   <li>with error code = 3 if an IOException occurred during saving the file.
-     *   <li>with error code = 3 if a FileNotFoundException occurred during saving the file.
+     *   <li>with error code = 4 if a FileNotFoundException occurred during saving the file.
      * </ul>
      */
-    public int save_file(int sessionID, List recentEdits) throws XmlRpcException;
+    public int save_file(int sessionID, String currentText, List deletions) throws XmlRpcException;
     
     /**
      * Obtains the changes of the file indicated by the session ID.
      * The changes are limited to the currently set filter for this session and any
      * global preferences.
      * <p>
-     * In addition, if the list of recent edits is not empty, these are applied to the
-     * last known text from this session.
+     * The call has to indicate whether the user has made any changes since the last save
+     * operation.  It also needs the current, raw text from the editor along with a list
+     * of start and end positions, which indicate the occurrence of deletions in the
+     * current text.  These are needed to properly convert the given caret position to
+     * one in the newly computed text.
      * <p>
      * The return value contains the text including the changes (for example, deletions)
      * under the key {@link #KEY_TEXT} and the list of styles to be used under the key
@@ -115,12 +118,10 @@ public interface LTCserverInterface {
      * that have been used to obtain the changes.  These could be matched to the list
      * of all commits from {@link #get_commits(int)}.
      *
-     *
      * @param sessionID identifies the session
-     * @param recentEdits list of string 3-tuples that denote recent edits since the last
-     * call in the format type as a constant from {@link com.sri.ltc.server.LTCserverInterface.EditType},
-     * the (numeric) offset in text, and either the text itself (for INSERT or DELETE) or
-     * the length (for REMOVE)
+     * @param isModified whether the text has been modified since the last save operation
+     * @param currentText current text in editor
+     * @param deletions list of pairs with start and end position of deletions in <code>currentText</code> if any
      * @param caretPosition current cursor position to be transformed into new one
      * @return Map that contains the text with changes, list of styles to be applied to
      * this text, map of indices to authors, updated caret position and list of SHA1 keys
@@ -131,10 +132,11 @@ public interface LTCserverInterface {
      *   <li>with error code = 4 if a JavaGitException occurred during log retrieval.
      *   <li>with error code = 5 if an IOException occurred during log retrieval.
      *   <li>with error code = 6 if a ParseException occurred during log retrieval.
-     *   <li>with error code = 7 if the given recent edits cannot be applied to last known text.
+     *   <li>with error code = 7 if a BadLocationException occurs while removing deletions from current text.
      * </ul>
      */
-    public Map get_changes(int sessionID, List recentEdits, int caretPosition) throws XmlRpcException;
+    public Map get_changes(int sessionID, boolean isModified, String currentText, List deletions, int caretPosition)
+            throws XmlRpcException;
 
     /**
      * Commit the current file on disk to git.  The file is indicated by the session ID.

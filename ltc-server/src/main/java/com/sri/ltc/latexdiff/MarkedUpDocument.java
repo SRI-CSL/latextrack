@@ -32,6 +32,8 @@ public final class MarkedUpDocument extends DefaultStyledDocument {
     private final static String FLAGS_ATTR = "flag attribute";
     private static final long serialVersionUID = -6945312419206148753L;
 
+    private Position caret = getStartPosition();
+
     public MarkedUpDocument() {
         // define styles for additions and deletions
         Style style;
@@ -41,36 +43,38 @@ public final class MarkedUpDocument extends DefaultStyledDocument {
         StyleConstants.setStrikeThrough(style, true);
     }
 
-    public String applyRecentEdits(List<Object[]> recentEdits) throws BadLocationException {
-        Style deletionStyle = getStyle(DELETION_STYLE);
-        StyleConstants.setForeground(deletionStyle, Color.black); // color doesn't matter as it will be removed anyway
-
-        // apply recent edits to current document
-        for (Object[] edit : recentEdits) {
-            if (edit.length != 3)
-                throw new RuntimeException("recent edit is not of length 3");
-            int offset = Integer.parseInt(edit[1].toString());
-            switch (LTCserverInterface.EditType.valueOf(edit[0].toString())) {
-                case REMOVE:
-                    setCharacterAttributes(offset, Integer.parseInt(edit[2].toString()), deletionStyle, true);
-                    break;
-                case INSERT:
-                    insertString(offset, edit[2].toString(), null);
-                    break;
-                case DELETE:
-                    remove(offset, edit[2].toString().length());
-                    break;
+    public MarkedUpDocument(String initialText, List<Object[]> deletions, int caretPosition) throws BadLocationException {
+        this();
+        insertString(0, initialText, null);
+        // markup deletions:
+        if (deletions != null) {
+            Style deletionStyle = getStyle(DELETION_STYLE);
+            StyleConstants.setForeground(deletionStyle, Color.black); // color doesn't matter at initialization
+            for (Object[] pair : deletions) {
+                if (pair == null || pair.length != 2)
+                    throw new RuntimeException("Cannot create markup document with deletion that is not a pair");
+                setCharacterAttributes((Integer) pair[0], ((Integer) pair[1]) - ((Integer) pair[0]), deletionStyle, true);
             }
         }
+        caret = createPosition(caretPosition);
+    }
 
-        // remove everything that is strike-through (deletion style) before returning text
-        StringBuilder builder = new StringBuilder();
+    public int getCaretPosition() {
+        return caret.getOffset();
+    }
+
+    /**
+     * Remove any characters in the document that are marked as deletions.
+     * This updates the caret position accordingly.
+     */
+    public void removeDeletions() throws BadLocationException {
         for (int i = 0; i < getLength(); i++) {
             Object strikethrough = getCharacterElement(i).getAttributes().getAttribute(StyleConstants.StrikeThrough);
-            if (!(strikethrough instanceof Boolean && (Boolean) strikethrough))
-                builder.append(getText(i, 1));
+            if (strikethrough instanceof Boolean && (Boolean) strikethrough) {
+                remove(i, 1);
+                i--;
+            }
         }
-        return builder.toString();
     }
 
     public void updateAuthor(int authorIndex, Color authorColor) {
@@ -117,6 +121,7 @@ public final class MarkedUpDocument extends DefaultStyledDocument {
 
     @SuppressWarnings("unchecked")
     public int applyFiltering(Set<Change.Flag> flagsToHide, int caretPosition) throws BadLocationException {
+        caret = createPosition(caretPosition);
         if (!flagsToHide.isEmpty())
             for (int i = 0; i < getLength(); i++) {
                 Set<Change.Flag> flags = (Set<Change.Flag>) getCharacterElement(i).getAttributes().getAttribute(FLAGS_ATTR);
@@ -125,8 +130,6 @@ public final class MarkedUpDocument extends DefaultStyledDocument {
                     if (!intersection.isEmpty()) { // matching flags
                         if (flags.contains((Change.Flag.DELETION))) { // change was a deletion, so remove character
                             remove(i, 1);
-                            if (i < caretPosition)
-                                caretPosition--;
                             i--;
                         } else { // change was an addition, so remove all attributes to hide it
                             setCharacterAttributes(i, 1, SimpleAttributeSet.EMPTY, true);
@@ -134,7 +137,7 @@ public final class MarkedUpDocument extends DefaultStyledDocument {
                     }
                 }
             }
-        return caretPosition;
+        return getCaretPosition();
     }
 
     public Reader getReader() {

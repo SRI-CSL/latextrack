@@ -97,13 +97,16 @@ public final class LTCEditor extends JFrame {
                 // if current session is not valid, simply start a new one
                 if (session.isValid()) {
                     if (!session.getCanonicalPath().equals(file.getCanonicalPath())) {
-                        close();
-                        session.startInitAndUpdate(file, dateField.getText(), revField.getText(), textPane.stopFiltering(), textPane.getCaretPosition());
+                        if (!close()) {
+                            fileField.setText(session.getCanonicalPath());
+                            return;
+                        }
+                        session.startInitAndUpdate(file, dateField.getText(), revField.getText(), textPane.getCaretPosition());
                     } else {
-                        session.startUpdate(dateField.getText(), revField.getText(), textPane.stopFiltering(), textPane.getCaretPosition());
+                        session.startUpdate(dateField.getText(), revField.getText(), false, textPane.getText(), textPane.stopFiltering(), textPane.getCaretPosition());
                     }
                 } else {
-                    session.startInitAndUpdate(file, dateField.getText(), revField.getText(), textPane.stopFiltering(), textPane.getCaretPosition());
+                    session.startInitAndUpdate(file, dateField.getText(), revField.getText(), textPane.getCaretPosition());
                 }
                 // update file chooser and preference for next time:
                 fileChooser.setCurrentDirectory(file.getParentFile());
@@ -122,7 +125,8 @@ public final class LTCEditor extends JFrame {
         private static final long serialVersionUID = -6467093865092379559L;
         public void actionPerformed(ActionEvent event) {
             // disable editing and obtain current text/recent edits
-            session.save(textPane.stopFiltering());
+            session.save(textPane.getText(), textPane.stopFiltering());
+            textPane.getDocumentFilter().resetChanges(); // allow document listener to fire changes again
             // update commit list:
             commitModel.addOnDisk();
             textPane.startFiltering();
@@ -130,10 +134,25 @@ public final class LTCEditor extends JFrame {
         }
     });
 
-    private void close() throws XmlRpcException {
+    // return false if close was canceled by user
+    private boolean close() throws XmlRpcException {
+        if (saveButton.isEnabled()) {
+            // dialog if unsaved edits
+            switch (JOptionPane.showConfirmDialog(this,
+                    "Save file first before closing?",
+                    "Closing while unsaved edits",
+                    JOptionPane.YES_NO_CANCEL_OPTION,
+                    JOptionPane.WARNING_MESSAGE)) {
+                case JOptionPane.CANCEL_OPTION:
+                    return false;
+                case JOptionPane.YES_OPTION:
+                    saveButton.doClick();
+            }
+        }
         clear();
-        // TODO: save unmarked text to file?  only if modified...
-        session.close(textPane.stopFiltering());
+        session.close();
+        textPane.stopFiltering();
+        return true;
     }
 
     protected void finishClose() {
@@ -505,11 +524,9 @@ public final class LTCEditor extends JFrame {
         saveButton.setEnabled(false);
         textPane.getDocumentFilter().addChangeListener(new ChangeListener() {
             public void stateChanged(ChangeEvent e) {
-                if (e.getSource() instanceof java.util.List) {
-                    if (!saveButton.isEnabled() && !((java.util.List) e.getSource()).isEmpty()) {
-                        saveButton.setEnabled(true);
-                        commitModel.updateFirst(LTCserverInterface.MODIFIED); // update commit list to "on disk" if not already
-                    }
+                if (!saveButton.isEnabled()) {
+                    saveButton.setEnabled(true);
+                    commitModel.updateFirst(LTCserverInterface.MODIFIED); // update commit list to "on disk" if not already
                 }
             }
         });
@@ -712,7 +729,8 @@ public final class LTCEditor extends JFrame {
             if (o instanceof Remote) {
                 Remote r = (Remote) o;
                 String repository = r.isAlias()?r.name:r.url;
-                session.pullOrPush(repository, isPull, dateField.getText(), revField.getText(), textPane.stopFiltering(), textPane.getCaretPosition());
+                session.pullOrPush(repository, isPull, dateField.getText(), revField.getText(),
+                        saveButton.isEnabled(), textPane.getText(), textPane.stopFiltering(), textPane.getCaretPosition());
             }
         }
     }

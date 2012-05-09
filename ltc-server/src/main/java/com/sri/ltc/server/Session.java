@@ -8,6 +8,7 @@
  */
 package com.sri.ltc.server;
 
+import com.google.common.collect.Sets;
 import com.sri.ltc.filter.Author;
 import com.sri.ltc.git.CompleteHistory;
 import com.sri.ltc.git.FileRemotes;
@@ -17,9 +18,7 @@ import edu.nyu.cs.javagit.api.GitFile;
 import edu.nyu.cs.javagit.api.JavaGitException;
 
 import javax.swing.text.BadLocationException;
-import java.io.FileReader;
 import java.io.IOException;
-import java.io.Reader;
 import java.text.ParseException;
 import java.util.*;
 
@@ -31,33 +30,21 @@ public final class Session {
     private static int nextID = 1;
 
     final int ID;
-    String text = ""; // contains last known, raw editor text
     final GitFile gitFile;
     private final CompleteHistory completeHistory;
     private final FileRemotes remotes;
-    private final Set<Author> knownAuthors = new HashSet<Author>();
-    private final Set<Author> limitedAuthors = new HashSet<Author>();
+    private final Set<Author> knownAuthors = Sets.newHashSet();
+    private final Set<Author> limitedAuthors = Sets.newHashSet();
     private String limit_date = "";
     private String limit_rev = "";
-    private final Accumulate accumulate;
+    private final Accumulate accumulate = new Accumulate();
 
-    protected Session(GitFile gitFile, String currentText) throws ParseException, IOException, JavaGitException, BadLocationException {
+    protected Session(GitFile gitFile) throws ParseException, IOException, JavaGitException, BadLocationException {
+        ID = generateID();
         if (gitFile == null)
             throw new IllegalArgumentException("cannot create session with NULL as git file");
-        ID = generateID();
         this.gitFile = gitFile;
-        this.text = currentText;
-        if (currentText == null || "".equals(currentText)) {
-            // read file contents into current text
-            StringBuilder buffer = new StringBuilder();
-            int c;
-            Reader r = new FileReader(gitFile.getFile());
-            while ((c = r.read()) != -1)
-                buffer.append((char) c);
-            r.close();
-            currentText = buffer.toString();            
-        }
-        this.accumulate = new Accumulate(currentText);
+        // initializations based on git file:
         completeHistory = new CompleteHistory(gitFile);
         addAuthors(completeHistory.getAuthors());
         addAuthors(Collections.singleton(new Self(gitFile).getSelf()));
@@ -96,9 +83,6 @@ public final class Session {
     }
     public boolean addLimitedAuthor(Author author) {
         return limitedAuthors.add(author);
-    }
-    public boolean removeLimitedAuthor(Author author) {
-        return limitedAuthors.remove(author);
     }
     public void resetLimitedAuthors() {
         limitedAuthors.clear();

@@ -92,7 +92,7 @@ public final class LTCserverImpl implements LTCserverInterface {
         return session;
     }
 
-    public int init_session(String path, String currentText) throws XmlRpcException {
+    public int init_session(String path) throws XmlRpcException {
         if (path == null)
             logAndThrow(1,"Given path is NULL");
 
@@ -123,7 +123,7 @@ public final class LTCserverImpl implements LTCserverInterface {
             }
             updateProgress(10);
 
-            return SessionManager.createSession(gitFile, currentText);
+            return SessionManager.createSession(gitFile);
         } catch (JavaGitException e) {
             logAndThrow(6,"JavaGitException during git file creation: "+e.getMessage());
         } catch (IOException e) {
@@ -137,57 +137,59 @@ public final class LTCserverImpl implements LTCserverInterface {
         return -1;
     }
 
-    private String getCurrentText(Session session, List<Object[]> recentEdits) throws BadLocationException, IOException {
-        // apply recent edits to last known editor text
-        if (!recentEdits.isEmpty())
-            return session.getAccumulate().applyRecentEdits(recentEdits);
-        // no recent edits: decide whether to return text from file or current raw text
-        if ("".equals(session.text))
-            return LatexDiff.copyText(new FileReader(session.gitFile.getFile()));
-        return session.text;
-
-    }
-
     @SuppressWarnings("unchecked")
-    public String close_session(int sessionID, List recentEdits) throws XmlRpcException {
+    public Map close_session(int sessionID, String currentText, List deletions, int caretPosition) throws XmlRpcException {
         Session session = SessionManager.removeSession(sessionID);
         if (session == null)
             logAndThrow(1,"Cannot close session with given ID");
 
-        LOGGER.info("Server: close_session for file \""+session.gitFile.getFile().getAbsolutePath()+"\" called.");
+        LOGGER.info("Server: close_session for file \""+session.gitFile.getFile().getAbsolutePath()+"\", "+
+                "text with "+currentText.length()+" characters, "+
+                (deletions != null?
+                        deletions.size()+" deletions, ":
+                        "")+
+                "and caret at "+caretPosition+" called.");
 
+        // apply deletions to current text and update caret position
         try {
-            return getCurrentText(session, recentEdits);
+            if (deletions != null && !deletions.isEmpty()) {
+                MarkedUpDocument document = new MarkedUpDocument(currentText, deletions, caretPosition);
+                document.removeDeletions();
+                currentText = document.getText(0, document.getLength());
+                caretPosition = document.getCaretPosition();
+            }
         } catch (BadLocationException e) {
-            logAndThrow(2,"Cannot apply recent edits at "+e.offsetRequested()+"while closing session: "+e.getMessage());
-        } catch (FileNotFoundException e) {
-            logAndThrow(3,"FileNotFoundException during closing session: "+e.getMessage());
-        } catch (IOException e) {
-            logAndThrow(4,"IOException during closing session: "+e.getMessage());
+            logAndThrow(2,"Cannot remove deletions at "+e.offsetRequested()+" while closing session: "+e.getMessage());
         }
 
-        return "";
+        // create return value
+        Map map = new HashMap();
+        map.put(LTCserverInterface.KEY_TEXT, currentText);
+        map.put(LTCserverInterface.KEY_CARET, caretPosition);
+        return map;
     }
 
     @SuppressWarnings("unchecked")
-    public int save_file(int sessionID, List recentEdits) throws XmlRpcException {
+    public int save_file(int sessionID, String currentText, List deletions) throws XmlRpcException {
         Session session = getSession(sessionID);
 
         LOGGER.info("Server: save_file to file \""+session.gitFile.getFile().getAbsolutePath()+"\" "+
-                (recentEdits != null?
-                        "with "+recentEdits.size()+" recent edits ":
+                "text with "+currentText.length()+" characters"+
+                (deletions != null?
+                        " and "+deletions.size()+" deletions":
                         "")+
-                "called.");
+                " called.");
 
         try {
-            // apply recent edits to last known editor text
-            String text = getCurrentText(session, recentEdits);
+            if (deletions != null && !deletions.isEmpty()) {
+                MarkedUpDocument document = new MarkedUpDocument(currentText, deletions, 0);
+                document.removeDeletions();
+                currentText = document.getText(0, document.getLength());
+            }
             // write current text to file
             BufferedWriter out = new BufferedWriter(new FileWriter(session.gitFile.getFile(), false));
-            out.write(text);
+            out.write(currentText);
             out.close();
-            // reset current "raw" text
-            session.text = "";
         } catch (BadLocationException e) {
             logAndThrow(2,"Cannot apply recent edits at "+e.offsetRequested()+" while saving file: "+e.getMessage());
         } catch (FileNotFoundException e) {
@@ -200,25 +202,29 @@ public final class LTCserverImpl implements LTCserverInterface {
     }
 
     @SuppressWarnings (value={"unchecked","fallthrough"})
-    public Map get_changes(int sessionID, List recentEdits, int caretPosition) throws XmlRpcException {
+    public Map get_changes(int sessionID, boolean isModified, String currentText, List deletions, int caretPosition) throws XmlRpcException {
         Session session = getSession(sessionID);
 
-        LOGGER.info("Server: get_changes for file \""+session.gitFile.getFile().getAbsolutePath()+"\" "+
-                (recentEdits != null?
-                        "with "+recentEdits.size()+" recent edits ":
+        LOGGER.info("Server: get_changes for file \""+session.gitFile.getFile().getAbsolutePath()+"\", "+
+                (isModified?"":"not ")+"modified, "+
+                "text with "+currentText.length()+" characters, "+
+                (deletions != null?
+                        deletions.size()+" deletions, ":
                         "")+
                 "and caret at "+caretPosition+" called.");
 
-        // apply recent edits only if not empty TODO: update caret position!
+        // apply deletions to current text and update caret position
         try {
-            if (!recentEdits.isEmpty())
-                session.text = session.getAccumulate().applyRecentEdits(recentEdits);
+            if (deletions != null && !deletions.isEmpty()) {
+                MarkedUpDocument document = new MarkedUpDocument(currentText, deletions, caretPosition);
+                document.removeDeletions();
+                currentText = document.getText(0, document.getLength());
+                caretPosition = document.getCaretPosition();
+            }
         } catch (BadLocationException e) {
-            logAndThrow(7,"Cannot apply recent edits at "+e.offsetRequested()+" while getting changes: "+e.getMessage());
+            logAndThrow(7,"Cannot remove deletions at "+e.offsetRequested()+" while getting changes: "+e.getMessage());
         }
-        updateProgress(2);
-
-        Filtering filter = Filtering.getInstance();
+        updateProgress(10);
 
         // obtain file history from GIT, disk, and session (obeying any filters):
         List<ReaderWrapper> readers = null;
@@ -255,9 +261,9 @@ public final class LTCserverImpl implements LTCserverInterface {
                     readers.add(fileReader);
                     sha1.add(LTCserverInterface.ON_DISK);
             }
-            // add current text from editor, if not empty:
-            if (!"".equals(session.text)) {
-                ReaderWrapper currentTextReader = new StringReaderWrapper(session.text);
+            // add current text from editor, if modified since last save:
+            if (isModified) {
+                ReaderWrapper currentTextReader = new StringReaderWrapper(currentText);
                 if (authors.size() > 0 && authors.get(authors.size()-1).equals(self)) {
                     // replace last reader and SHA1
                     readers.remove(readers.size()-1);
@@ -313,6 +319,7 @@ public final class LTCserverImpl implements LTCserverInterface {
                 };
                 session.getAccumulate().addPropertyChangeListener(listener);
             }
+            Filtering filter = Filtering.getInstance();
             map = session.getAccumulate().perform(
                     readers.toArray(new ReaderWrapper[readers.size()]),
                     indices.toArray(new Integer[indices.size()]),
@@ -329,7 +336,7 @@ public final class LTCserverImpl implements LTCserverInterface {
         } catch (IOException e) {
             logAndThrow(2,"IOException during change accumulation: "+e.getMessage());
         } catch (BadLocationException e) {
-            logAndThrow(3,"BadLocationException during change accumulation: "+e.getMessage());
+            logAndThrow(3,"BadLocationException at "+e.offsetRequested()+" during change accumulation: "+e.getMessage());
         }
         updateProgress(90);
 
