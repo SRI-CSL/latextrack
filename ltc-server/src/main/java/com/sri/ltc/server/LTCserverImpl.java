@@ -42,6 +42,11 @@ public final class LTCserverImpl implements LTCserverInterface {
             Color.blue, Color.red, Color.green, Color.magenta, Color.orange, Color.cyan));
     private final static String KEY_COLOR = "author-color:";
     private final ProgressReceiver progressReceiver;
+    private static String version = "<UNKNOWN>";
+
+    public static String getVersion() {
+        return version;
+    }
 
     public LTCserverImpl() {
         this.progressReceiver = null;
@@ -64,7 +69,8 @@ public final class LTCserverImpl implements LTCserverInterface {
     // TODO: apply locks to make block atomic...
 
     private final static Logger LOGGER = Logger.getLogger(LTCserverImpl.class.getName());
-    static { // init git
+    static {
+        // init git
         try {
             if (JavaGitConfiguration.getGitPath() == null) { // only set from env if not explicitly set before
                 String gitDir = System.getenv("GIT_BIN_DIR");
@@ -76,6 +82,17 @@ public final class LTCserverImpl implements LTCserverInterface {
             LOGGER.config("git version: "+ JavaGitConfiguration.getGitVersion());
         } catch (Exception e) {
             LOGGER.log(Level.SEVERE, "Cannot obtain GIT executable", e);
+        }
+        // obtain version information from Maven meta-information
+        try {
+            InputStream inputStream = LTCserverImpl.class.getClassLoader().getResourceAsStream("META-INF/maven/com.sri.ltc/ltc-server/pom.properties");
+            if (inputStream != null) {
+                Properties pomProperties = new Properties();
+                pomProperties.load(inputStream);
+                version = pomProperties.getProperty("version", version);
+            }
+        } catch (IOException e) {
+            LOGGER.log(Level.SEVERE, "Cannot obtain version information", e);
         }
     }
 

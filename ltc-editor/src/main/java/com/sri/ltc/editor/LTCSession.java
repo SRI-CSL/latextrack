@@ -89,7 +89,7 @@ public class LTCSession {
                     try {
                         ID = get();
                         LTCEditor.finishInit(authors, commits, self);
-                        startUpdate(date, rev, false, "", Collections.<int[]>emptyList(), caretPosition);
+                        startUpdate(date, rev, false, "", Collections.<Object[]>emptyList(), caretPosition);
                     } catch (InterruptedException e) {
                         LOGGER.log(Level.SEVERE, e.getMessage(), e);
                     } catch (ExecutionException e) {
@@ -119,7 +119,7 @@ public class LTCSession {
     }
 
     public void startUpdate(final String date, final String rev,
-                            final boolean isModified, final String currentText, final List<int[]> deletions, final int caretPosition) {
+                            final boolean isModified, final String currentText, final List<Object[]> deletions, final int caretPosition) {
         if (!isValid()) return;
 
         // create new worker to update session
@@ -175,7 +175,7 @@ public class LTCSession {
         }).execute();
     }
 
-    public void save(final String currentText, final List<int[]> deletions) {
+    public void save(final String currentText, final List<Object[]> deletions) {
         if (ID == -1) return;
 
         // create new worker to save file in session
@@ -325,7 +325,7 @@ public class LTCSession {
 
     public void pullOrPush(final String repository, final boolean usePull,
                            final String date, final String rev,
-                           final boolean isModified, final String currentText, final List<int[]> deletions, final int caretPosition) {
+                           final boolean isModified, final String currentText, final List<Object[]> deletions, final int caretPosition) {
         if (!isValid()) return;
 
         // create new worker to add remote in session

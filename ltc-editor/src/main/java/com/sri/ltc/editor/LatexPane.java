@@ -132,12 +132,12 @@ public final class LatexPane extends JTextPane {
         setEditable(true);
     }
 
-    public List<int[]> stopFiltering() {
+    public List<Object[]> stopFiltering() {
         setEditable(false);
         StyledDocument document = getStyledDocument();
         ((AbstractDocument) document).setDocumentFilter(null);
         // collect any deletions
-        List<int[]> deletions = Lists.newArrayList();
+        List<Object[]> deletions = Lists.newArrayList();
         int start = -1;
         for (int i = 0; i < document.getLength(); i++) {
             Object strikethrough = document.getCharacterElement(i).getAttributes().getAttribute(StyleConstants.StrikeThrough);
@@ -146,13 +146,13 @@ public final class LatexPane extends JTextPane {
                     start = i;
             } else {
                 if (start > -1) {
-                    deletions.add(new int[] {start, i});
+                    deletions.add(new Integer[] {start, i});
                     start = -1;
                 }
             }
         }
         if (start > -1) // we ended with a deletion
-            deletions.add(new int[] {start, document.getLength()});
+            deletions.add(new Integer[] {start, document.getLength()});
         return deletions;
     }
 

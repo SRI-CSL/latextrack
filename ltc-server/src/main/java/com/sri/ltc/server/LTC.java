@@ -8,7 +8,6 @@
  */
 package com.sri.ltc.server;
 
-
 import com.sri.ltc.logging.LevelOptionHandler;
 import com.sri.ltc.logging.LogConfiguration;
 import edu.nyu.cs.javagit.api.JavaGitConfiguration;
@@ -18,8 +17,6 @@ import org.kohsuke.args4j.Option;
 
 import javax.servlet.ServletException;
 import java.io.*;
-import java.util.Properties;
-import java.util.jar.Manifest;
 import java.util.logging.Level;
 import java.util.logging.LogManager;
 import java.util.logging.Logger;
@@ -41,7 +38,7 @@ public final class LTC {
      * http://c2.com/cgi/wiki?JavaSingleton
      * http://www.javaworld.com/javaworld/jw-05-2003/jw-0530-letters.html
      */
-    private static final class LCHolder {
+    private static final class LTCHolder {
         static final LTC INSTANCE = new LTC();
     }
 
@@ -50,7 +47,7 @@ public final class LTC {
      * @return singleton instance of this class
      */
     public static synchronized LTC getInstance() {
-        return LCHolder.INSTANCE;
+        return LTCHolder.INSTANCE;
     }
 
     // private constructor to prevent multiple instantiations
@@ -71,20 +68,7 @@ public final class LTC {
     private static final Logger logger = Logger.getLogger(LTC.class.getName());
 
     private void init() {
-        new LTCserverImpl(); // to initialize from LTCserverImpl.static { }
-
-        // obtain version information from Maven meta-information
-        try {
-
-            InputStream inputStream = this.getClass().getClassLoader().getResourceAsStream("META-INF/maven/com.sri.ltc/ltc-server/pom.properties");
-            if (inputStream != null) {
-                Properties pomProperties = new Properties();
-                pomProperties.load(inputStream);
-                logger.config("LTC version: "+pomProperties.getProperty("version", "<UNKNOWN>"));
-            }
-        } catch (IOException e) {
-            logger.log(Level.SEVERE, "Cannot obtain version information", e);
-        }
+        logger.config("LTC version: " + LTCserverImpl.getVersion()); // also initializes git etc.
 
         try {
             // set up RPC server - this will enable us to receive XML-RPC calls

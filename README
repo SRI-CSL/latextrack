@@ -45,6 +45,10 @@ To skip tests (when running repeatedly):
 
 $> mvn verify site -Dmaven.test.skip=true
 
+To view the contents of a JAR file without expanding it, use Firefox:
+  jar:file:///Users/linda/tmp/LTC/LTC-0.9.5-SNAPSHOT.jar!/
+and then browse
+
 
 Running
 -------

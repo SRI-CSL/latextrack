@@ -677,6 +677,7 @@ public final class LTCEditor extends JFrame {
         }
 
         final LTCEditor frame = new LTCEditor();
+        LOGGER.info("Using LTC version: "+LTCserverImpl.getVersion());
 
         //Schedule a job for the event dispatch thread:
         //creating and showing this application's GUI.
