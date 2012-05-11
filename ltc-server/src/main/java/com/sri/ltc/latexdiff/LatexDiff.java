@@ -10,6 +10,7 @@ package com.sri.ltc.latexdiff;
 
 import com.bmsi.gnudiff.Diff;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import com.sri.ltc.logging.LevelOptionHandler;
 import org.kohsuke.args4j.Argument;
 import org.kohsuke.args4j.CmdLineException;
@@ -25,16 +26,9 @@ import java.util.logging.Level;
  */
 public final class LatexDiff {
 
-    private static final Set<LexemeType> SPACE = new HashSet<LexemeType>();
-    static {
-        SPACE.add(LexemeType.PARAGRAPH);
-        SPACE.add(LexemeType.WHITESPACE);
-    }
-    private static final Set<LexemeType> INDICES_TYPES = new HashSet<LexemeType>();
-    static {
-        INDICES_TYPES.add(LexemeType.COMMAND);
-        INDICES_TYPES.add(LexemeType.COMMENT);
-    }
+    private static final Set<LexemeType> SPACE = Sets.newHashSet(
+            LexemeType.PARAGRAPH,
+            LexemeType.WHITESPACE);
 
     // variables to contain parts for diff'ing
     private List<List<Lexeme>> lexemLists = new ArrayList<List<Lexeme>>();
@@ -53,36 +47,35 @@ public final class LatexDiff {
      * due to being marked as an addition.  If the preamble index is -1, then
      * no preamble was seen.
      *
+     *
      * @param wrapper Wrapper of reader pointing to text to be analyzed
      * @return List of Lexemes obtained from analysis (never null) and preamble index.
      * @throws IOException if the scanner encounters an IOException
      */
-    public ListIndexPair analyze(ReaderWrapper wrapper) throws IOException {
+    public List<Lexeme> analyze(ReaderWrapper wrapper) throws IOException {
         List<Lexeme> list = new ArrayList<Lexeme>(Arrays.asList(new Lexeme[] {
-                new Lexeme(LexemeType.START_OF_FILE, "", 0)}));
-        int preamble = -1;
+                new Lexeme(LexemeType.START_OF_FILE, "", 0, false, false)}));
         Lexer scanner = new Lexer(wrapper.createReader());
-        Lexeme lexeme;
-        while ((lexeme = scanner.yylex()) != null)
-            if (!LexemeType.WHITESPACE.equals(lexeme.type)) { // ignore whitespace
-                if (LexemeType.PREAMBLE.equals(lexeme.type))
-                    preamble = list.size(); // remember last index of preamble (even if already marked as addition)
-                lexeme = wrapper.removeAdditions(lexeme); // remove any additions
-                if (lexeme != null)
-                    list.add(lexeme);
-            }
+        List<Lexeme> lexemes;
+        while ((lexemes = scanner.yylex()) != null)
+            for (Lexeme lexeme : lexemes)
+                if (!LexemeType.WHITESPACE.equals(lexeme.type)) { // ignore whitespace
+                    lexeme = wrapper.removeAdditions(lexeme); // remove any additions
+                    if (lexeme != null)
+                        list.add(lexeme);
+                }
         scanner.yyclose();
         // remove paragraphs in the preamble if there is one:
-        if (preamble > -1) {
-            List<Lexeme> preambleList = list.subList(0, preamble);
-            for (Iterator<Lexeme> i = preambleList.iterator(); i.hasNext(); ) {
-                if (LexemeType.PARAGRAPH.equals(i.next().type)) {
+        if (list.get(list.size()-1).preambleSeen) { // EOF Lexeme has seen preamble
+            for (Iterator<Lexeme> i = list.iterator(); i.hasNext(); ) {
+                Lexeme lexeme = i.next();
+                if (lexeme.preambleSeen)
+                    break; // done with preamble
+                if (LexemeType.PARAGRAPH.equals(lexeme.type))
                     i.remove();
-                    preamble--;
-                }
             }
         }
-        return new ListIndexPair(list, preamble);
+        return list;
     }
 
     private Character[] toCharacters(char[] chars) {
@@ -91,13 +84,13 @@ public final class LatexDiff {
         return characters;
     }
 
-    private EnumSet<Change.Flag> buildFlags(boolean inPreamble, boolean isDeletion, boolean isSmall, LexemeType type) {
+    private EnumSet<Change.Flag> buildFlags(boolean isDeletion, boolean isSmall, boolean inPreamble, boolean inComment, boolean isCommand) {
         EnumSet<Change.Flag> flags = EnumSet.noneOf(Change.Flag.class);
         if (isDeletion) flags.add(Change.Flag.DELETION);
         if (isSmall) flags.add(Change.Flag.SMALL);
         if (inPreamble) flags.add(Change.Flag.PREAMBLE);
-        if (LexemeType.COMMENT.equals(type)) flags.add(Change.Flag.COMMENT);
-        if (LexemeType.COMMAND.equals(type) || LexemeType.PREAMBLE.equals(type)) flags.add(Change.Flag.COMMAND);
+        if (inComment) flags.add(Change.Flag.COMMENT);
+        if (isCommand) flags.add(Change.Flag.COMMAND);
         return flags;
     }
 
@@ -132,7 +125,7 @@ public final class LatexDiff {
                         start_position,
                         Arrays.asList(new IndexFlagsPair<Integer>(
                                 start_position + hunk.inserted,
-                                buildFlags(inPreamble, false, true, lexeme1.type)))));
+                                buildFlags(false, true, inPreamble, lexeme1.inComment, LexemeType.COMMAND.equals(lexeme1.type))))));
             }
 
             // Deletions
@@ -141,46 +134,46 @@ public final class LatexDiff {
                         start_position,
                         Arrays.asList(new IndexFlagsPair<String>(
                                 text0.substring(hunk.line0, hunk.line0+hunk.deleted),
-                                buildFlags(inPreamble, true, true, lexeme1.type)))));
+                                buildFlags(true, true, inPreamble, lexeme1.inComment, LexemeType.COMMAND.equals(lexeme1.type))))));
             }
         }
 
         return result;
     }
 
-    // calculate pairs of indices that indicate successive COMMENT or COMMAND lexemes in given input list.
-    private List<IndexPair> getIndices(List<Lexeme> list, int offset) {
+    private EnumSet<Change.Flag> buildFlags(Lexeme lexeme, boolean preamblePresent) {
+        return buildFlags(false, false,
+                preamblePresent && !lexeme.preambleSeen,
+                lexeme.inComment,
+                LexemeType.COMMAND.equals(lexeme.type));
+    }
+
+    // calculate pairs of indices that indicate successive lexemes in given input list
+    // with the same settings for PREAMBLE, COMMENT, and COMMAND.
+    private List<IndexPair> getIndices(List<Lexeme> list, boolean preamblePresent, int offset) {
         List<IndexPair> result = new ArrayList<IndexPair>();
         if (list == null || list.isEmpty())
             return result;
-
-        int lastLeft = 0;
+        // go through list and collect pairs of indices for regions with the same flags:
+        int lastIndex = 0;
+        Set<Change.Flag> lastFlags = buildFlags(list.get(0), preamblePresent);
         for (int i = 1; i < list.size(); i++) {
-            LexemeType currentType = list.get(i).type;
-            switch (currentType) {
-                case COMMAND:
-                case COMMENT:
-                    if (!currentType.equals(list.get(lastLeft).type)) {
-                        result.add(new IndexPair(lastLeft + offset, i + offset));
-                        lastLeft = i;
-                    }
-                    break;
-                default:
-                    if (INDICES_TYPES.contains(list.get(lastLeft).type)) {
-                        result.add(new IndexPair(lastLeft + offset, i + offset));
-                        lastLeft = i;
-                    }
+            Set<Change.Flag> currentFlags = buildFlags(list.get(i), preamblePresent);
+            if (!lastFlags.equals(currentFlags)) {
+                result.add(new IndexPair(lastIndex + offset, i + offset));
+                lastIndex = i;
+                lastFlags = currentFlags;
             }
         }
         // add last pair
-        result.add(new IndexPair(lastLeft + offset, list.size() + offset));
-
+        result.add(new IndexPair(lastIndex + offset, list.size() + offset));
         return result;
     }
 
     private List<Change> mergeDiffResult(Diff.change changes, List<Lexeme> list0, List<Lexeme> list1,
-                                         String contents0, int preamble1) {
+                                         String contents0) {
         SortedSet<Change> result = new TreeSet<Change>();
+        boolean preambleSeen = list1.get(list1.size()-1).preambleSeen; // whether list1 has seen preamble
 
         // go through linked list of changes and convert each hunk into Change(s):
         int last_i0 = 0, last_i1 = 0; // remember last position of replacements to avoid checking them again
@@ -192,7 +185,6 @@ public final class LatexDiff {
 
             // determine, if this could be a replacement containing small changes:
             // compare each lexeme from list0 to each in list1
-            // TODO: re-enable once bug about SMALL additions is fixed
             if (hunk.line0 >= last_i0 && hunk.line1 >= last_i1 && hunk.deleted > 0 && hunk.inserted > 0) {
                 // collect hunks that are not small here to insert for further processing:
                 List<IndexLengthPair> newHunks = new ArrayList<IndexLengthPair>();
@@ -218,7 +210,7 @@ public final class LatexDiff {
                             result.addAll(mergeSmallDiffResult(chardiff.diff_2(false),
                                     lexeme0.contents,
                                     lexeme1,
-                                    i1 < preamble1));
+                                    preambleSeen && !lexeme1.preambleSeen));
                             // prepare new hunks (if needed)
                             if (i0 > last_i0 || i1 > last_i1)
                                 newHunks.add(new IndexLengthPair(last_i0, last_i1, i0 - last_i0, i1 - last_i1));
@@ -259,7 +251,7 @@ public final class LatexDiff {
                 }
             }
 
-            boolean inPreamble = hunk.line1+hunk.inserted-1 < preamble1;
+//            boolean inPreamble = hunk.line1+hunk.inserted-1 < preamble1;
 
             // extracting some indices to compare (for determining white space existence):
             int ex0 = calcPosition(list0, hunk.line0+hunk.deleted-1, true);
@@ -275,13 +267,16 @@ public final class LatexDiff {
                 int ey1 = calcPosition(list1, hunk.line1 + hunk.inserted, false);
                 // build list of flags:
                 List<IndexFlagsPair<Integer>> flags = new ArrayList<IndexFlagsPair<Integer>>();
-                List<IndexPair> indices = getIndices(list1.subList(hunk.line1, hunk.line1+hunk.inserted), hunk.line1);
+                List<IndexPair> indices = getIndices(list1.subList(hunk.line1, hunk.line1+hunk.inserted), preambleSeen, hunk.line1);
                 for (IndexPair indexPair : indices)
                     flags.add(new IndexFlagsPair<Integer>(
                             indexPair.right == hunk.line1 + hunk.inserted ?
                                     ey1 : // if last pair, use next lexeme
                                     calcPosition(list1, indexPair.right - 1, true), // if not last pair, use end of right lexeme
-                            buildFlags(inPreamble, false, false, list1.get(indexPair.left).type)));
+                            buildFlags(false, false,
+                                    preambleSeen && !list1.get(indexPair.left).preambleSeen,
+                                    list1.get(indexPair.left).inComment,
+                                    LexemeType.COMMAND.equals(list1.get(indexPair.left).type))));
                 result.add(new Addition(start_position, flags));
             }
 
@@ -293,14 +288,14 @@ public final class LatexDiff {
                 // white space in front of position in new text
                 int text_end_position = (ex0 != ey0 && sx1 != sy1)?ex0:ey0;
                 // add one space between deletion and addition if replacements without bordering space and addition
-                // starts with a WORD or COMMENT lexeme:
+                // starts with a WORD or COMMENT_BEGIN lexeme:
                 boolean addSpace = (hunk.inserted > 0 &&
                         (LexemeType.WORD.equals(list1.get(hunk.line1).type) ||
-                                LexemeType.COMMENT.equals(list1.get(hunk.line1).type)) &&
+                                LexemeType.COMMENT_BEGIN.equals(list1.get(hunk.line1).type)) &&
                         ex0 == ey0 && sx1 == sy1);
                 // build list of flags:
                 List<IndexFlagsPair<String>> flags = new ArrayList<IndexFlagsPair<String>>();
-                List<IndexPair> indices = getIndices(list0.subList(hunk.line0, hunk.line0+hunk.deleted), hunk.line0);
+                List<IndexPair> indices = getIndices(list0.subList(hunk.line0, hunk.line0+hunk.deleted), preambleSeen, hunk.line0);
                 for (IndexPair indexPair : indices) {
                     // calc text borders:
                     int text_start = indexPair.left == hunk.line0?
@@ -315,7 +310,10 @@ public final class LatexDiff {
                                     "");
                     flags.add(new IndexFlagsPair<String>(
                             text,
-                            buildFlags(inPreamble, true, false, list0.get(indexPair.left).type)));
+                            buildFlags(true, false,
+                                    preambleSeen && !list1.get(hunk.line1-1).preambleSeen, // depends on prior lexeme (possibly SOF)
+                                    list0.get(indexPair.left).inComment,
+                                    LexemeType.COMMAND.equals(list0.get(indexPair.left).type))));
                 }
                 result.add(new Deletion(start_position, flags));
             }
@@ -348,9 +346,8 @@ public final class LatexDiff {
 
         // Run lexical analyzer over both files to get lexeme and locations
         lexemLists.clear(); // start with empty lists
-        lexemLists.add(analyze(readerWrapper1).list); // ignore preamble in older text
-        ListIndexPair pair = analyze(readerWrapper2);
-        lexemLists.add(pair.list);
+        lexemLists.add(analyze(readerWrapper1));
+        lexemLists.add(analyze(readerWrapper2));
 
         // Diff between lexeme (without locations):
         // collect relevant lexemes into arrays
@@ -370,7 +367,7 @@ public final class LatexDiff {
         // merge diff result with location information and convert into list of changes
         return mergeDiffResult(script,
                 lexemLists.get(0), lexemLists.get(1),
-                copyText(readerWrapper1.createReader()), pair.index);
+                copyText(readerWrapper1.createReader()));
     }
 
     public static String copyText(Reader reader) throws IOException {

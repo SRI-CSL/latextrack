@@ -3,7 +3,10 @@
 /* -----------------User Code Section---------------------------------------- */
 package com.sri.ltc.latexdiff;
 
+import com.google.common.collect.Lists;
+
 import java.io.*;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
@@ -14,24 +17,20 @@ import java.util.regex.Pattern;
 %class Lexer
 %final
 %public
-%type Lexeme
+%type List<Lexeme>
 %char
 %unicode
-%state EOF
-%xstate IN_COMMENT
+%xstate PREAMBLE_SEEN, IN_COMMENT, EOF
 
 %{
     private final static Pattern pattern = Pattern.compile(".*(\r\n|\r|\n).*"); // newlines
     private int prior_state = 0;
-
-    public void startInComment() {
-        yybegin(IN_COMMENT);
-    }
+    private boolean preambleSeen = false;
 
     /* Main function to run analysis stand-alone. */
     public static void main(String argv[]) {
         Reader reader;
-        Lexeme lexem;
+        List<Lexeme> lexemes;
 
         // Obtain reader from argument or STDIN
         if (argv.length < 1)
@@ -47,9 +46,10 @@ import java.util.regex.Pattern;
         // Run lexical analyzer over given file to get lexeme and locations
         Lexer scanner = new Lexer(reader);
         try {
-            System.out.println(new Lexeme(LexemeType.START_OF_FILE, "", 0));
-            while ((lexem = scanner.yylex()) != null)
-                System.out.println(lexem);
+            System.out.println(new Lexeme(LexemeType.START_OF_FILE, "", 0, false, false));
+            while ((lexemes = scanner.yylex()) != null)
+                for (Lexeme lexeme : lexemes)
+                    System.out.println(lexeme);
             scanner.yyclose();
         } catch (IOException e) {
             e.printStackTrace();
@@ -66,62 +66,74 @@ space       = [ \t\f]
 %%
 /* -----------------Lexical Rules Section------------------------------------ */ 
 
-\\[A-Za-z]+          { return new Lexeme(LexemeType.COMMAND, yytext(), yychar); } 
+<YYINITIAL,PREAMBLE_SEEN,IN_COMMENT>
+  \\[A-Za-z]+        { return Lists.newArrayList(
+                         new Lexeme(LexemeType.COMMAND, yytext(), yychar, preambleSeen, yystate() == IN_COMMENT)); } 
   /* commands that are more than one letter long */
 
-\\[^ \t\r\n\f]       { return new Lexeme(LexemeType.COMMAND, yytext(), yychar); }
+<YYINITIAL,PREAMBLE_SEEN,IN_COMMENT>
+  \\[^ \t\r\n\f]     { return Lists.newArrayList(
+                         new Lexeme(LexemeType.COMMAND, yytext(), yychar, preambleSeen, yystate() == IN_COMMENT)); }
   /* commands that are one non-whitespace character after backslash */
 
-\\begin\{document\}  { return new Lexeme(LexemeType.PREAMBLE, yytext(), yychar); }
-  /* dividing preamble from rest of document */
+\\begin\{document\}  { preambleSeen = true;
+		       yybegin(PREAMBLE_SEEN);
+                       return Lists.newArrayList(
+                         new Lexeme(LexemeType.COMMAND, "\\begin", yychar, true, false),
+                         new Lexeme(LexemeType.SYMBOL, "{", yychar+6, true, false),
+                         new Lexeme(LexemeType.WORD, "document", yychar+7, true, false),
+                         new Lexeme(LexemeType.SYMBOL, "}", yychar+15, true, false)); }
+  /* set flag that first preamble (not in comment!) has been seen */
 
-%                    { prior_state = yystate(); // remember prior state
+<YYINITIAL,PREAMBLE_SEEN >
+  %+                 { prior_state = yystate(); // remember prior state
                        yybegin(IN_COMMENT);
-                       return new Lexeme(LexemeType.COMMENT, yytext(), yychar); }
-  /* if not escaped, % indicates comments until next newline */
+                       return Lists.newArrayList(
+                         new Lexeme(LexemeType.COMMENT_BEGIN, yytext(), yychar, preambleSeen, true)); }
+  /* if not escaped, first (in YYINITIAL) %'s indicates comment begin */
 
-<IN_COMMENT> {
-  {punctuation} |
-  {symbol} |
-  \\[A-Za-z]+ |
-  \\[^ \t\r\n\f] |
-  [A-Za-z0-9\-]+
-                     { return new Lexeme(LexemeType.COMMENT, yytext(), yychar); }
-}
-  /* match COMMENT lexemes until end-of-line */
-
-{punctuation}        { return new Lexeme(LexemeType.PUNCTUATION, yytext(), yychar); }
+<YYINITIAL,PREAMBLE_SEEN,IN_COMMENT>
+  {punctuation}      { return Lists.newArrayList(
+                         new Lexeme(LexemeType.PUNCTUATION, yytext(), yychar, preambleSeen, yystate() == IN_COMMENT)); }
   /* match single punctuation characters */
 
-{symbol}             { return new Lexeme(LexemeType.SYMBOL, yytext(), yychar); }
+<YYINITIAL,PREAMBLE_SEEN,IN_COMMENT>
+  {symbol}           { return Lists.newArrayList(
+                         new Lexeme(LexemeType.SYMBOL, yytext(), yychar, preambleSeen, yystate() == IN_COMMENT)); }
   /* match single symbol characters */
 
-[A-Za-z0-9\-]+       { return new Lexeme(LexemeType.WORD, yytext(), yychar); }
+<YYINITIAL,PREAMBLE_SEEN,IN_COMMENT>
+  [A-Za-z0-9\-]+     { return Lists.newArrayList(
+                         new Lexeme(LexemeType.WORD, yytext(), yychar, preambleSeen, yystate() == IN_COMMENT)); }
   /* words are letters, digits and hyphen */ 
 
-<YYINITIAL,IN_COMMENT> 
-  {space}+           { return new Lexeme(LexemeType.WHITESPACE, yytext(), yychar); }
+<YYINITIAL,PREAMBLE_SEEN,IN_COMMENT> 
+  {space}+           { return Lists.newArrayList(
+                         new Lexeme(LexemeType.WHITESPACE, yytext(), yychar, preambleSeen, yystate() == IN_COMMENT)); }
   /* gobble-up white space before deciding on newlines and paragraphs */
 
-<YYINITIAL,IN_COMMENT> {
+<YYINITIAL,PREAMBLE_SEEN,IN_COMMENT> {
   \n({space}*{EOL})+ |
   \r{space}*\r({space}*{EOL})* |
   \r\n({space}*{EOL})+ 
                      { if (yystate() == IN_COMMENT)
                          yybegin(prior_state);
-                       return new Lexeme(LexemeType.PARAGRAPH, yytext(), yychar); }
+                       return Lists.newArrayList(
+                         new Lexeme(LexemeType.PARAGRAPH, yytext(), yychar, preambleSeen, false)); }
 }
   /* paragraphs are 2 or more end-of-lines and possibly white space without line breaks in between */
 
-<YYINITIAL,IN_COMMENT> 
+<YYINITIAL,PREAMBLE_SEEN,IN_COMMENT> 
   {EOL}{space}*      { if (yystate() == IN_COMMENT) 
 		         yybegin(prior_state);
-                       return new Lexeme(LexemeType.WHITESPACE, yytext(), yychar); } 
-  /* other, non-paragraph whitespace */
+                       return Lists.newArrayList(
+                         new Lexeme(LexemeType.WHITESPACE, yytext(), yychar, preambleSeen, false)); } 
+  /* other, non-paragraph line breaks */
 
-<YYINITIAL,IN_COMMENT> 
+<YYINITIAL,PREAMBLE_SEEN,IN_COMMENT> 
   <<EOF>>            { yybegin(EOF);
-                       return new Lexeme(LexemeType.END_OF_FILE, "", yychar); }
+                       return Lists.newArrayList(
+                         new Lexeme(LexemeType.END_OF_FILE, "", yychar, preambleSeen, false)); }
   /* mark end-of-file so that there is always one matching lexeme to determine end position of deletions */ 
 
 .                    { RuntimeException e = new RuntimeException("Cannot parse at position "+yychar+": "+yytext());

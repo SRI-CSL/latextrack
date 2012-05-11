@@ -84,7 +84,7 @@ public class TestLatexDiff {
     public void inComment() throws IOException {
         changes = getChanges(
                 " \nLorem ipsum %%%  HERE IS A COMMMENT WITH SPACE...\n dolor sit amet. \n ",
-                "Lorem ipsum \n%%%  HERE IS A COMMENT WITH SPACE AND MORE %...\n dolor sit amet."
+                "Lorem ipsum \n%%%  HERE IS A COMMENT_BEGIN WITH SPACE AND MORE %...\n dolor sit amet."
         );
         assertDeletion(0, 32, 1, Lists.newArrayList(new IndexFlagsPair<String>(
                 "M",

@@ -98,6 +98,9 @@ a) bundling git repositories for download as examples.  See:
   $> cd $Tutorial
   $> git clone ../LTCmanual/independence.bundle independence
 
+b) retrieving file versions (using first 6 digits of SHA1):
+  $> git show <SHA1>:<TEX-FILE> [ > <TEX-FILE>.<SHA1>
+
 
 Building manual by hand
 -----------------------
@@ -118,6 +121,8 @@ Incrementing version number
 ---------------------------
 
 First, in parent pom.xml and then in all children.
+(look at Maven versions plugin for the future? e.g.,
+ http://weblogs.java.net/blog/johnsmart/archive/2010/08/18/managing-version-numbers-maven-maven-version-plugin)
 
 
 Building Tech Report 2012

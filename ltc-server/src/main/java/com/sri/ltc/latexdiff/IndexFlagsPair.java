@@ -52,7 +52,7 @@ public final class IndexFlagsPair<T> {
 
     private String escapeIndex() {
         if (index.getClass().equals(String.class)) {
-            return "&quot;"+escapeText((String) index)+"&quot;";
+            return escapeText((String) index);
         } else
             return index.toString();
     }

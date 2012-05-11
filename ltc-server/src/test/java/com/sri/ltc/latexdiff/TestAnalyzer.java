@@ -34,7 +34,7 @@ public final class TestAnalyzer {
     }
 
     private static List<Lexeme> analyze(ReaderWrapper wrapper) throws IOException {
-        return latexDiff.analyze(wrapper).list;
+        return latexDiff.analyze(wrapper);
     }
 
     @Test
@@ -60,7 +60,8 @@ public final class TestAnalyzer {
                 " \n\n \\begin{document}  \n \nLorem ipsum \n dolor sit amet. \n "
         ));
         assertLexemes(10);
-        assertEquals(LexemeType.PREAMBLE, lexemes.get(1).type);
+        assertEquals(false, lexemes.get(1).preambleSeen);
+        assertEquals(true, lexemes.get(lexemes.size()-1).preambleSeen);
         assertEquals("1st lexeme starts at", 4, lexemes.get(1).pos);
     }
 
@@ -71,15 +72,15 @@ public final class TestAnalyzer {
                 " \\begin{document}  \n \nLorem ipsum %%%  HERE IS A COMMENT WITH SPACE AND MORE %...\n dolor sit amet. \n "
         ));
         assertLexemes(25);
-        assertEquals(LexemeType.COMMENT, lexemes.get(5).type);
-        assertEquals(LexemeType.COMMENT, lexemes.get(19).type);
+        assertEquals(LexemeType.COMMENT_BEGIN, lexemes.get(5).type);
+        assertEquals(LexemeType.COMMENT_BEGIN, lexemes.get(19).type);
         lexemes = analyze(new StringReaderWrapper(
                 "  %HERE IS A COMMENT WITH SPACE AND MORE %...\n dolor sit amet. \n "
         ));
         assertLexemes(19);
-        assertEquals(LexemeType.COMMENT, lexemes.get(1).type);
+        assertEquals(LexemeType.COMMENT_BEGIN, lexemes.get(1).type);
         assertEquals(2, lexemes.get(1).pos);
-        assertEquals(LexemeType.COMMENT, lexemes.get(13).type);
+        assertEquals(LexemeType.COMMENT_BEGIN, lexemes.get(13).type);
         assertEquals(LexemeType.WORD, lexemes.get(14).type);
         lexemes = analyze(new StringReaderWrapper("\\cite{ABC}"));
         assertLexemes(6);
