@@ -330,9 +330,14 @@ public final class LTCEditor extends JFrame {
                     }});
         splitPaneH.setBorder(null);
 
-        // 3) split pane for latex panel and horizontal split pane
+        // 4) showing pane and horizontal split pane
+        JPanel lowerPanes = new JPanel(new BorderLayout());
+        lowerPanes.add(createShowingPane(), BorderLayout.LINE_START);
+        lowerPanes.add(splitPaneH, BorderLayout.CENTER);
+
+        // 5) split pane for latex panel and lower panes
         final JSplitPane splitPaneV = new JSplitPane(JSplitPane.VERTICAL_SPLIT,
-                scrollPane, splitPaneH);
+                scrollPane, lowerPanes);
         splitPaneV.setDividerLocation(preferences.getInt(KEY_LAST_DIVIDER_V, 0));
         splitPaneV.addPropertyChangeListener(JSplitPane.DIVIDER_LOCATION_PROPERTY,
                 new PropertyChangeListener() {
@@ -342,7 +347,7 @@ public final class LTCEditor extends JFrame {
                     }});
         splitPaneV.setBorder(null);
 
-        // 4) content pane
+        // 6) content pane
         JPanel contentPane = new JPanel(new BorderLayout(0, 5));
         contentPane.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
         contentPane.add(filePane, BorderLayout.PAGE_START);
@@ -350,12 +355,12 @@ public final class LTCEditor extends JFrame {
         return contentPane;
     }
 
-    private JPanel createFilteringPane() {
-
-        // 1) showing panel
+    private JPanel createShowingPane() {
         JPanel showPane = new JPanel();
+        showPane.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createTitledBorder(" Showing "),
+                BorderFactory.createEmptyBorder(0, 5, 0, 5)));
         showPane.setLayout(new BoxLayout(showPane, BoxLayout.PAGE_AXIS));
-        showPane.add(new JLabel("Showing:"));
         showPane.add(new ShowingCheckBox("deletions", LTCserverInterface.Show.DELETIONS, updateButton));
         showPane.add(new ShowingCheckBox("\"small\" changes", LTCserverInterface.Show.SMALL, updateButton));
         showPane.add(new ShowingCheckBox("changes in preamble", LTCserverInterface.Show.PREAMBLE, updateButton));
@@ -374,6 +379,10 @@ public final class LTCEditor extends JFrame {
             }
         });
         showPane.add(paraCheckBox);
+        return showPane;
+    }
+
+    private JPanel createFilteringPane() {
 
         // 2) authors panel
         JPanel authorPane = new JPanel(new BorderLayout(0,5));
@@ -451,15 +460,9 @@ public final class LTCEditor extends JFrame {
         c.gridwidth = 1;
         c.gridx = 0;
         c.gridy = 0;
-        filteringPane.add(showPane, c);
-
-        c.gridx = 1;
         c.weighty = 1.0;
         filteringPane.add(authorPane, c);
 
-        c.gridwidth = 2;
-        c.gridx = 0;
-        c.gridy = 1;
         c.weightx = 0.8;
         c.weighty = 0.0;
         filteringPane.add(datePane, c);
