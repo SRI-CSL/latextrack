@@ -165,15 +165,14 @@ public final class TestAccumulate {
                 "Lorem ipsum dolor sit amt \n "
         );
         assertMap("Lorem ipsum dolor sit amt \n ", 0, 0);
-
         // reproduce tutorial bug
         map = perform(3,
                 "\n\nIf % or should this be ``When''?\nin the Course",
                 "\n\nWhen in the Course");
-        assertMap("\n\nIf % or should this be ``When''?\nWhen in the Course", 2, 36);
+        assertMap("\n\nIf % or should this be ``When''? in the Course", 2, 28);
         assertStyle(
-                new int[] {2, 1},
-                new int[][] {{2, 35}, {35, 40}},
+                new int[] {2, 2},
+                new int[][] {{2, 27}, {31, 34}},
                 null);
     }
 
@@ -299,7 +298,7 @@ public final class TestAccumulate {
                 new int[][] {{11, 12}, {27, 28}, {28, 32}},
                 new int[] {1, 1, 2}
         );
-        // TODO: recreate problem with comment:
+        // recreate problem with comment:
         // adding text and then adding comment, but showing everything
         map = perform(0, EnumSet.of(Change.Flag.COMMENT),
                 "  Lorem ipsum dolor sit amet\n",
@@ -361,7 +360,7 @@ public final class TestAccumulate {
                 new int[][] {{0, 18}, {29, 30}},
                 new int[] {1, 3}
         );
-        // deletion in preamble, small deletion and addition of comment
+        // deletion in preamble, small deletion and addition of preamble
         map = perform(0, EnumSet.of(Change.Flag.PREAMBLE, Change.Flag.COMMAND, Change.Flag.DELETION),
                 "pra   Lorem ipsumm dolor",
                 "pre  Lorem ipsumm dolor",
@@ -369,11 +368,11 @@ public final class TestAccumulate {
                 "pre  \\begin{document}Lorem   ipsum dolor",
                 "pre  \\begin{document}Lorem ipsum  dolor \\amet."
         );
-        assertMap("pre  \\begin{document}Lorem ipsum  dolor \\amet.", 1, 0);
+        assertMap("pre  \\begin{document}Lorem ipsum  dolor \\amet.", 2, 0);
         assertStyle(
-                new int[] {1},
-                new int[][] {{45, 46}},
-                new int[] {4}
+                new int[] {1, 1},
+                new int[][] {{11, 21}, {45, 46}},
+                new int[] {2, 4}
         );
         // preamble location
         map = perform(0, EnumSet.of(Change.Flag.PREAMBLE),
@@ -395,11 +394,22 @@ public final class TestAccumulate {
                 "pre  \\begin{document}Lorem   ipsum dolor",
                 "pre  \\begin{document}Lorem ipsum  dolor \\amet."
         );
-        assertMap("pre  \\begin{document}Lorem ipsum  dolor \\amet.", 2, 0);
+        assertMap("pre  \\begin{document}Lorem ipsum  dolor \\amet.", 3, 0);
         assertStyle(
-                new int[] {1, 1},
-                new int[][] {{2, 3}, {45, 46}},
-                new int[] {1, 4}
+                new int[] {1, 1, 1},
+                new int[][] {{2, 3}, {11, 21}, {45, 46}},
+                new int[] {1, 2, 4}
+        );
+        // filtering comments
+        map = perform(3, EnumSet.of(Change.Flag.COMMENT),
+                "\n\nIf % or should this be ``When''?\nin the Course",
+                "\n\nWhen in the Course"
+        );
+        assertMap("\n\nIf When in the Course", 1, 6);
+        assertStyle(
+                new int[] {2},
+                new int[][] {{2, 5}},
+                null
         );
     }
 

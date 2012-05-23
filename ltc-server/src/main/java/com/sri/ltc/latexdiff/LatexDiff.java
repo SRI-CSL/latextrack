@@ -94,6 +94,13 @@ public final class LatexDiff {
         return flags;
     }
 
+    private EnumSet<Change.Flag> buildFlags(boolean isDeletion, boolean inComment, Lexeme lexeme, boolean preamblePresent) {
+        return buildFlags(isDeletion, false,
+                preamblePresent && !lexeme.preambleSeen,
+                inComment,
+                LexemeType.COMMAND.equals(lexeme.type));
+    }
+
     @SuppressWarnings("unchecked")
     private SortedSet<Change> mergeSmallDiffResult(Diff.change changes, String text0, Lexeme lexeme1, boolean inPreamble) {
         SortedSet<Change> result = new TreeSet<Change>();
@@ -138,35 +145,6 @@ public final class LatexDiff {
             }
         }
 
-        return result;
-    }
-
-    private EnumSet<Change.Flag> buildFlags(Lexeme lexeme, boolean preamblePresent) {
-        return buildFlags(false, false,
-                preamblePresent && !lexeme.preambleSeen,
-                lexeme.inComment,
-                LexemeType.COMMAND.equals(lexeme.type));
-    }
-
-    // calculate pairs of indices that indicate successive lexemes in given input list
-    // with the same settings for PREAMBLE, COMMENT, and COMMAND.
-    private List<IndexPair> getIndices(List<Lexeme> list, boolean preamblePresent, int offset) {
-        List<IndexPair> result = new ArrayList<IndexPair>();
-        if (list == null || list.isEmpty())
-            return result;
-        // go through list and collect pairs of indices for regions with the same flags:
-        int lastIndex = 0;
-        Set<Change.Flag> lastFlags = buildFlags(list.get(0), preamblePresent);
-        for (int i = 1; i < list.size(); i++) {
-            Set<Change.Flag> currentFlags = buildFlags(list.get(i), preamblePresent);
-            if (!lastFlags.equals(currentFlags)) {
-                result.add(new IndexPair(lastIndex + offset, i + offset));
-                lastIndex = i;
-                lastFlags = currentFlags;
-            }
-        }
-        // add last pair
-        result.add(new IndexPair(lastIndex + offset, list.size() + offset));
         return result;
     }
 
@@ -239,19 +217,13 @@ public final class LatexDiff {
                     if (newHunks.isEmpty())
                         continue;
                     // go through new hunks from last to first and add to old chain:
-                    IndexLengthPair indices;
                     Diff.change newLink = hunk.link;
-                    for (ListIterator<IndexLengthPair> it = newHunks.listIterator(newHunks.size());
-                         it.hasPrevious(); ) {
-                        indices = it.previous();
-                        newLink = new Diff.change(
-                                indices.index0, indices.index1, indices.length0, indices.length1, newLink);
-                    }
+                    ListIterator<IndexLengthPair> it = newHunks.listIterator(newHunks.size());
+                    while (it.hasPrevious())
+                        newLink = it.previous().createHunk(newLink);
                     hunk = newLink;
                 }
             }
-
-//            boolean inPreamble = hunk.line1+hunk.inserted-1 < preamble1;
 
             // extracting some indices to compare (for determining white space existence):
             int ex0 = calcPosition(list0, hunk.line0+hunk.deleted-1, true);
@@ -264,56 +236,69 @@ public final class LatexDiff {
 
             // Additions
             if (hunk.inserted > 0) {
-                int ey1 = calcPosition(list1, hunk.line1 + hunk.inserted, false);
                 // build list of flags:
                 List<IndexFlagsPair<Integer>> flags = new ArrayList<IndexFlagsPair<Integer>>();
-                List<IndexPair> indices = getIndices(list1.subList(hunk.line1, hunk.line1+hunk.inserted), preambleSeen, hunk.line1);
-                for (IndexPair indexPair : indices)
-                    flags.add(new IndexFlagsPair<Integer>(
-                            indexPair.right == hunk.line1 + hunk.inserted ?
-                                    ey1 : // if last pair, use next lexeme
-                                    calcPosition(list1, indexPair.right - 1, true), // if not last pair, use end of right lexeme
-                            buildFlags(false, false,
-                                    preambleSeen && !list1.get(indexPair.left).preambleSeen,
-                                    list1.get(indexPair.left).inComment,
-                                    LexemeType.COMMAND.equals(list1.get(indexPair.left).type))));
+                List<IndexPair> indices = getIndices(list1.subList(hunk.line1, hunk.line1+hunk.inserted), preambleSeen, hunk.line1, false, false);
+                for (IndexPair indexPair : indices) {
+                    if (indexPair.left.equals(indexPair.right)) { // extra pair to indicate change in flags
+                        int ix = calcPosition(list1, indexPair.left-1, true);
+                        int iy = calcPosition(list1, indexPair.right, false);
+                        if (iy > ix) // only if there is actually space in between
+                            flags.add(new IndexFlagsPair<Integer>(iy, indexPair.flags));
+                    } else { // regular index pair with lexemes:
+                        if (indexPair.addRearSpace)
+                            flags.add(new IndexFlagsPair<Integer>(
+                                    calcPosition(list1, indexPair.right, false), // pos of next lexeme
+                                    indexPair.flags));
+                        else
+                            flags.add(new IndexFlagsPair<Integer>(
+                                    calcPosition(list1, indexPair.right-1, true), // end of last lexeme in this region
+                                    indexPair.flags));
+                    }
+                }
                 result.add(new Addition(start_position, flags));
             }
 
             // Deletions
             if (hunk.deleted > 0) {
+                int text_start = calcPosition(list0, hunk.line0-1, true); // start with end of prior lexeme
+                int text_end;
                 // calculating end position:
                 // if last pair, then depends on whether
                 // white space at end of deletion in old text AND
                 // white space in front of position in new text
                 int text_end_position = (ex0 != ey0 && sx1 != sy1)?ex0:ey0;
-                // add one space between deletion and addition if replacements without bordering space and addition
-                // starts with a WORD or COMMENT_BEGIN lexeme:
+                // add one space after deletion if replacement without bordering space and next lexeme is a WORD:
                 boolean addSpace = (hunk.inserted > 0 &&
-                        (LexemeType.WORD.equals(list1.get(hunk.line1).type) ||
-                                LexemeType.COMMENT_BEGIN.equals(list1.get(hunk.line1).type)) &&
+                        LexemeType.WORD.equals(list1.get(hunk.line1).type) &&
                         ex0 == ey0 && sx1 == sy1);
                 // build list of flags:
                 List<IndexFlagsPair<String>> flags = new ArrayList<IndexFlagsPair<String>>();
-                List<IndexPair> indices = getIndices(list0.subList(hunk.line0, hunk.line0+hunk.deleted), preambleSeen, hunk.line0);
+                List<IndexPair> indices = getIndices(list0.subList(hunk.line0, hunk.line0+hunk.deleted), preambleSeen, hunk.line0,
+                        true, list1.get(hunk.line1).inComment); // deletions are in comment if the position in new text is in comment
                 for (IndexPair indexPair : indices) {
-                    // calc text borders:
-                    int text_start = indexPair.left == hunk.line0?
-                            calcPosition(list0, hunk.line0-1, true): // if first pair, start with prior lexeme
-                            calcPosition(list0, indexPair.left-1, true); // not first pair, use end of prior lexeme
-                    int text_end = indexPair.right == hunk.line0+hunk.deleted?
-                            text_end_position:
-                            calcPosition(list0, indexPair.right-1, true); // if not last pair, use end of right lexeme
-                    String text = contents0.substring(text_start, text_end) +
-                            ((addSpace && indexPair.right == hunk.line0+hunk.deleted)?
-                                    " ": // last pair and we need to add 1 space
-                                    "");
-                    flags.add(new IndexFlagsPair<String>(
-                            text,
-                            buildFlags(true, false,
-                                    preambleSeen && !list1.get(hunk.line1-1).preambleSeen, // depends on prior lexeme (possibly SOF)
-                                    list0.get(indexPair.left).inComment,
-                                    LexemeType.COMMAND.equals(list0.get(indexPair.left).type))));
+                    if (indexPair.left.equals(indexPair.right)) { // extra pair to indicate change in flags
+                        int ix = calcPosition(list0, indexPair.left-1, true);
+                        text_end = calcPosition(list0, indexPair.right, false);
+                        if (text_end > ix) // only if there is actually space in between
+                            flags.add(new IndexFlagsPair<String>(
+                                    contents0.substring(ix, text_end),
+                                    indexPair.flags));
+                    } else { // regular index pair with lexemes:
+                        // calc text:
+                        if (indexPair.addRearSpace)
+                            text_end = indexPair.right == hunk.line0+hunk.deleted?
+                                    text_end_position: // last region, so use calculated end position
+                                    calcPosition(list0, indexPair.right, false); // pos of next lexeme
+                        else
+                            text_end = calcPosition(list0, indexPair.right-1, true); // end of last lexeme in this region
+                        String text = contents0.substring(text_start, text_end) +
+                                ((addSpace && indexPair.right == hunk.line0+hunk.deleted)?
+                                        " ": // last pair and we need to add 1 space
+                                        "");
+                        flags.add(new IndexFlagsPair<String>(text, indexPair.flags));
+                    }
+                    text_start = text_end;
                 }
                 result.add(new Deletion(start_position, flags));
             }
@@ -322,12 +307,72 @@ public final class LatexDiff {
         return new ArrayList<Change>(result);
     }
 
+    // calculate pairs of indices that indicate successive lexemes in given input list
+    // with the same settings for PREAMBLE, COMMENT, and COMMAND.
+    // also evaluates the difference between inner regions:
+    // if the intersection is neither the left nor the right set of flags, add additional region of length = 0
+    private List<IndexPair> getIndices(List<Lexeme> list, boolean preamblePresent, int offset, boolean isDeletion, boolean inComment) {
+        if (list == null || list.isEmpty())
+            return Lists.newArrayList();
+        SortedSet<IndexPair> result = new TreeSet<IndexPair>();
+        // go through list and collect pairs of indices for regions with the same flags:
+        int lastIndex = 0;
+        Set<Change.Flag> lastFlags = buildFlags(isDeletion,
+                (isDeletion?inComment:list.get(0).inComment),
+                list.get(0), preamblePresent);
+        for (int i = 1; i < list.size(); i++) {
+            Set<Change.Flag> currentFlags = buildFlags(isDeletion,
+                    (isDeletion?inComment:list.get(i).inComment),
+                    list.get(i), preamblePresent);
+            if (!lastFlags.equals(currentFlags)) {
+                // evaluate difference to next region:
+                Set<Change.Flag> intersection = Sets.intersection(lastFlags, currentFlags);
+                if (intersection.equals(lastFlags)) {
+                    result.add(new IndexPair(lastIndex + offset, i + offset, true, lastFlags));
+                } else {
+                    if (!intersection.equals(currentFlags)) {
+                        // change in flags that cannot be reconciled: add extra index pair
+                        result.add(new IndexPair(i + offset, i + offset, false, intersection));
+                    }
+                    result.add(new IndexPair(lastIndex + offset, i + offset, false, lastFlags));
+                }
+                // the following will be sorted before any extra index pairs:
+                lastIndex = i;
+                lastFlags = currentFlags;
+            }
+        }
+        // add last pair
+        result.add(new IndexPair(lastIndex + offset, list.size() + offset, true, lastFlags)); // last one often extends to next lexeme
+        return new ArrayList<IndexPair>(result);
+    }
+
     // calc position in given lexeme list at index (either beginning or end of lexeme)
     private int calcPosition(List<Lexeme> list, int index, boolean atEnd) {
         if (atEnd)
             return list.get(index).pos+list.get(index).length;
         else
             return list.get(index).pos;
+    }
+
+    private Diff.change removeNewlines(Diff.change hunk, List<Lexeme> list, boolean isInsertion) {
+        boolean adjusted = false;
+        int newIndex = isInsertion?hunk.line1:hunk.line0;
+        int newLength = isInsertion?hunk.inserted:hunk.deleted;
+        int end = newIndex + newLength;
+        for (int i = newIndex; i < end; i++)
+            if (LexemeType.NEWLINE.equals(list.get(i).type)) {
+                adjusted = true;
+                newLength--; // reduce length
+                if (i == newIndex) // if at beginning, increase index as well
+                    newIndex++;
+            }
+        if (adjusted) { // something has changed so create a new hunk in:
+            if (isInsertion)
+                return new Diff.change(hunk.line0, newIndex, hunk.deleted, newLength, hunk.link);
+            else
+                return new Diff.change(newIndex, hunk.line1, newLength, hunk.inserted, hunk.link);
+        } else
+            return hunk;
     }
 
     /**
@@ -363,6 +408,24 @@ public final class LatexDiff {
         }
         // create and save change script
         script = new Diff(diffInputs[0],diffInputs[1]).diff_2(false);
+
+        // remove NEWLINE lexemes from script:
+        if (script != null) {
+            // collect new hunks in list
+            List<IndexLengthPair> newHunks = new ArrayList<IndexLengthPair>();
+            for (Diff.change hunk = script; hunk != null; hunk = hunk.link) {
+                // remove any NEWLINE lexemes from hunk
+                hunk = removeNewlines(hunk, lexemLists.get(0), false); // any deletions?
+                hunk = removeNewlines(hunk, lexemLists.get(1), true); // any additions?
+                newHunks.add(new IndexLengthPair(hunk));
+            }
+            // build new script by going from last to first new hunk:
+            Diff.change newLink = null;
+            ListIterator<IndexLengthPair> it = newHunks.listIterator(newHunks.size());
+            while (it.hasPrevious())
+                newLink = it.previous().createHunk(newLink);
+            script = newLink;
+        }
 
         // merge diff result with location information and convert into list of changes
         return mergeDiffResult(script,

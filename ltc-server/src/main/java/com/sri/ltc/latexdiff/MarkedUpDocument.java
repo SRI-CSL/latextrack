@@ -9,7 +9,6 @@
 package com.sri.ltc.latexdiff;
 
 import com.google.common.collect.Sets;
-import com.sri.ltc.server.LTCserverInterface;
 
 import javax.swing.text.*;
 import java.awt.*;
@@ -28,7 +27,7 @@ public final class MarkedUpDocument extends DefaultStyledDocument {
 
     private final static String ADDITION_STYLE = "addition";
     private final static String DELETION_STYLE = "deletion";
-    public final static String AUTHOR_INDEX = "author index";  // TODO: make private?
+    private final static String AUTHOR_INDEX = "author index";
     private final static String FLAGS_ATTR = "flag attribute";
     private static final long serialVersionUID = -6945312419206148753L;
 

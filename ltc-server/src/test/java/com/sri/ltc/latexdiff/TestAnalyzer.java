@@ -59,8 +59,8 @@ public final class TestAnalyzer {
         lexemes = analyze(new StringReaderWrapper(
                 " \n\n \\begin{document}  \n \nLorem ipsum \n dolor sit amet. \n "
         ));
-        assertLexemes(10);
-        assertEquals(false, lexemes.get(1).preambleSeen);
+        assertLexemes(13);
+        assertEquals(true, lexemes.get(1).preambleSeen); // preamble ended with first lexeme, as paragraphs removed
         assertEquals(true, lexemes.get(lexemes.size()-1).preambleSeen);
         assertEquals("1st lexeme starts at", 4, lexemes.get(1).pos);
     }
@@ -71,16 +71,16 @@ public final class TestAnalyzer {
         lexemes = analyze(new StringReaderWrapper(
                 " \\begin{document}  \n \nLorem ipsum %%%  HERE IS A COMMENT WITH SPACE AND MORE %...\n dolor sit amet. \n "
         ));
-        assertLexemes(25);
-        assertEquals(LexemeType.COMMENT_BEGIN, lexemes.get(5).type);
-        assertEquals(LexemeType.COMMENT_BEGIN, lexemes.get(19).type);
+        assertLexemes(26);
+        assertEquals(LexemeType.COMMENT_BEGIN, lexemes.get(8).type);
+        assertEquals(LexemeType.SYMBOL, lexemes.get(17).type); // second % is not beginning a comment
         lexemes = analyze(new StringReaderWrapper(
                 "  %HERE IS A COMMENT WITH SPACE AND MORE %...\n dolor sit amet. \n "
         ));
         assertLexemes(19);
         assertEquals(LexemeType.COMMENT_BEGIN, lexemes.get(1).type);
         assertEquals(2, lexemes.get(1).pos);
-        assertEquals(LexemeType.COMMENT_BEGIN, lexemes.get(13).type);
+        assertEquals(LexemeType.SYMBOL, lexemes.get(10).type);
         assertEquals(LexemeType.WORD, lexemes.get(14).type);
         lexemes = analyze(new StringReaderWrapper("\\cite{ABC}"));
         assertLexemes(6);

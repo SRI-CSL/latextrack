@@ -29,7 +29,7 @@ public final class LatexPane extends JTextPane {
 
     private static String KEY_SHOW_PARAGRAPHS = "showParagraphs";
     protected final static String STYLE_PREFIX = "style no. ";
-    private final LatexDocumentFilter documentFilter = new LatexDocumentFilter(this); // TODO: remove this class???
+    private final LatexDocumentFilter documentFilter = new LatexDocumentFilter(this);
     protected int last_key_pressed = -1;
 
     public LatexPane() {

@@ -99,7 +99,10 @@ a) bundling git repositories for download as examples.  See:
   $> git clone ../LTCmanual/independence.bundle independence
 
 b) retrieving file versions (using first 6 digits of SHA1):
-  $> git show <SHA1>:<TEX-FILE> [ > <TEX-FILE>.<SHA1>
+  $> git show <SHA1>:<TEX-FILE> [ > <TEX-FILE>.<SHA1> ]
+
+c) obtaining git tree by hand (for specified file):
+  $> git log --topo-order --graph --date=iso8601 --format=format:"commit %H%nAuthor: %an <%ae>%nDate: %ad%nParents: %P%n%s%n" <TEX-FILE>
 
 
 Building manual by hand

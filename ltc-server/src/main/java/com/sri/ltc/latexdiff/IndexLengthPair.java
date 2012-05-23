@@ -8,9 +8,13 @@
  */
 package com.sri.ltc.latexdiff;
 
+import com.bmsi.gnudiff.Diff;
+
 /**
  * Pair of indices each with length.
  * Both indices and both lengths must be non-negative.
+ * Can be created from non-NULL hunk.
+ * Also able to create a hunk from this class.
  *
  * @author linda
  */
@@ -28,6 +32,19 @@ public final class IndexLengthPair {
         this.index1 = index1;
         this.length0 = length0;
         this.length1 = length1;
+    }
+
+    public IndexLengthPair(Diff.change hunk) {
+        if (hunk == null)
+            throw new IllegalArgumentException("Cannot create an index-length pair from NULL hunk.");
+        this.index0 = hunk.line0;
+        this.index1 = hunk.line1;
+        this.length0 = hunk.deleted;
+        this.length1 = hunk.inserted;
+    }
+
+    public Diff.change createHunk(Diff.change link) {
+        return new Diff.change(index0, index1, length0, length1, link);
     }
 
     @Override

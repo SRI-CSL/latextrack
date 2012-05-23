@@ -47,7 +47,7 @@ public final class TestLatexDiffMixed extends TestLatexDiff {
                         "%consectetur adipiscing elit. \n");
         assertAddition(0, 26, 27, Lists.newArrayList(
                 new IndexFlagsPair<Integer>(
-                        27,
+                        28,
                         EnumSet.noneOf(Change.Flag.class)),
                 new IndexFlagsPair<Integer>(
                         59,
@@ -96,20 +96,21 @@ public final class TestLatexDiffMixed extends TestLatexDiff {
                         "  elit. \n\n");
         assertDeletion(0, 27, 14, Lists.newArrayList(
                 new IndexFlagsPair<String>(
-                "  \\consectetur",
-                EnumSet.of(Change.Flag.DELETION, Change.Flag.COMMAND)),
+                        "  \\consectetur",
+                        EnumSet.of(Change.Flag.DELETION, Change.Flag.COMMAND)),
                 new IndexFlagsPair<String>(
-                " adipiscing",
-                EnumSet.of(Change.Flag.DELETION))));
+                        " adipiscing",
+                        EnumSet.of(Change.Flag.DELETION))));
         changes = getChanges(
                 "Lorem ipsum dolor sit amet,  "+
                         "\\consectetur adipiscing   elit. \n\n",
                 "Lorem ipsum dolor sit amet  elit. \n\n");
-        assertDeletion(0, 26, 1, Lists.newArrayList(new IndexFlagsPair<String>(
-                ",",
-                EnumSet.of(Change.Flag.DELETION)),
+        assertDeletion(0, 26, 1, Lists.newArrayList(
                 new IndexFlagsPair<String>(
-                        "  \\consectetur",
+                        ",  ",
+                        EnumSet.of(Change.Flag.DELETION)),
+                new IndexFlagsPair<String>(
+                        "\\consectetur",
                         EnumSet.of(Change.Flag.DELETION, Change.Flag.COMMAND)),
                 new IndexFlagsPair<String>(
                         " adipiscing",
@@ -134,15 +135,16 @@ public final class TestLatexDiffMixed extends TestLatexDiff {
         changes = getChanges(
                 "\n\nIf % or should this be ``When''?\nin the Course",
                 "\n\nWhen in the Course");
-        assertAddition(0, 2, 7, Lists.newArrayList(new IndexFlagsPair<Integer>(
-                7,
-                EnumSet.noneOf(Change.Flag.class))));
-        assertDeletion(1, 2, 31, Lists.newArrayList(
+        assertDeletion(0, 2, 25, Lists.newArrayList(
                 new IndexFlagsPair<String>(
-                        "If",
+                        "If ",
                         EnumSet.of(Change.Flag.DELETION)),
                 new IndexFlagsPair<String>(
-                        " % or should this be ``When''?\n",
+                        "% or should this be ``",
+                        EnumSet.of(Change.Flag.DELETION, Change.Flag.COMMENT))));
+        assertDeletion(1, 6, 3, Lists.newArrayList(
+                new IndexFlagsPair<String>(
+                        "''?",
                         EnumSet.of(Change.Flag.DELETION, Change.Flag.COMMENT))));
     }
 }

@@ -27,6 +27,13 @@ import java.util.regex.Pattern;
     private int prior_state = 0;
     private boolean preambleSeen = false;
 
+    private List<Lexeme> processNewline(Lexeme newlineLexeme) {
+        List<Lexeme> lexemes = Lists.newArrayList(newlineLexeme);
+        if (newlineLexeme.inComment) 
+            yybegin(prior_state);
+        return lexemes;
+    }
+
     /* Main function to run analysis stand-alone. */
     public static void main(String argv[]) {
         Reader reader;
@@ -107,28 +114,24 @@ space       = [ \t\f]
                          new Lexeme(LexemeType.WORD, yytext(), yychar, preambleSeen, yystate() == IN_COMMENT)); }
   /* words are letters, digits and hyphen */ 
 
-<YYINITIAL,PREAMBLE_SEEN,IN_COMMENT> 
-  {space}+           { return Lists.newArrayList(
-                         new Lexeme(LexemeType.WHITESPACE, yytext(), yychar, preambleSeen, yystate() == IN_COMMENT)); }
-  /* gobble-up white space before deciding on newlines and paragraphs */
-
 <YYINITIAL,PREAMBLE_SEEN,IN_COMMENT> {
-  \n({space}*{EOL})+ |
-  \r{space}*\r({space}*{EOL})* |
-  \r\n({space}*{EOL})+ 
-                     { if (yystate() == IN_COMMENT)
-                         yybegin(prior_state);
-                       return Lists.newArrayList(
-                         new Lexeme(LexemeType.PARAGRAPH, yytext(), yychar, preambleSeen, false)); }
+  {space}*\n({space}*{EOL})+ |
+  {space}*\r{space}*\r({space}*{EOL})* |
+  {space}*\r\n({space}*{EOL})+ 
+                     { return processNewline(
+                         new Lexeme(LexemeType.PARAGRAPH, yytext(), yychar, preambleSeen, yystate() == IN_COMMENT)); }
 }
   /* paragraphs are 2 or more end-of-lines and possibly white space without line breaks in between */
 
 <YYINITIAL,PREAMBLE_SEEN,IN_COMMENT> 
-  {EOL}{space}*      { if (yystate() == IN_COMMENT) 
-		         yybegin(prior_state);
-                       return Lists.newArrayList(
-                         new Lexeme(LexemeType.WHITESPACE, yytext(), yychar, preambleSeen, false)); } 
+  {space}*{EOL}      { return processNewline(
+                         new Lexeme(LexemeType.WHITESPACE, yytext(), yychar, preambleSeen, yystate() == IN_COMMENT)); } 
   /* other, non-paragraph line breaks */
+
+<YYINITIAL,PREAMBLE_SEEN,IN_COMMENT> 
+  {space}+           { return Lists.newArrayList(
+                         new Lexeme(LexemeType.WHITESPACE, yytext(), yychar, preambleSeen, yystate() == IN_COMMENT)); }
+  /* gobble-up any white space not in front of newlines */
 
 <YYINITIAL,PREAMBLE_SEEN,IN_COMMENT> 
   <<EOF>>            { yybegin(EOF);

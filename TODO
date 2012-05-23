@@ -6,12 +6,10 @@ short-term:
 ===========
 
 - document accumulate2()
-- add current caret position when receiving updates (get_changes)
 - bug: marking up comment when hiding comments in wrong color
 - Peter's and Grit's bugs
 - Emacs bugs when editing:
   - deleting itemize environment in indie2.bundle leaves 2 characters
-- feature: collapsing removals (recent edits) in LTCEditor for performance
 
 mid-term:
 =========

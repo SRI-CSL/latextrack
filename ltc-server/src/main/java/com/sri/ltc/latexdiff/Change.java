@@ -23,11 +23,18 @@ public abstract class Change<T> implements Comparable<Change> {
     public final ImmutableList<IndexFlagsPair<T>> flags; // a list of flags by position/string fragments
 
     public enum Flag {
-        DELETION,
-        SMALL,
-        PREAMBLE,
-        COMMENT,
-        COMMAND;
+        DELETION('D'),
+        SMALL('S'),
+        PREAMBLE('P'),
+        COMMENT('%'),
+        COMMAND('C');
+        private final char indicator;
+        private Flag(char indicator) {
+            this.indicator = indicator;
+        }
+        public char getIndicator() {
+            return indicator;
+        }
     };
     public final static Set<Flag> buildFlags(
             boolean showDeletions,

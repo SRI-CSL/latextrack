@@ -27,7 +27,7 @@ public final class IndexFlagsPair<T> {
         if (index == null || flags == null)
             throw new IllegalArgumentException("Cannot instantiate pair with NULL arguments");
         this.index = index;
-        this.flags = Sets.immutableEnumSet(flags);;
+        this.flags = Sets.immutableEnumSet(flags);
     }
 
     @Override
