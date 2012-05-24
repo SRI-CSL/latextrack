@@ -37,7 +37,7 @@ public abstract class LTCGui {
 
     // static initializations
     private final static int DEFAULT_HEIGHT = 650;
-    private final Preferences preferences = Preferences.userNodeForPackage(this.getClass());
+    private final Preferences preferences = Preferences.userRoot().node(this.getClass().getCanonicalName().replaceAll("\\.","/"));
     private final static String KEY_LAST_DIVIDER_V = "last V divider location";
     private final static String KEY_LAST_WIDTH = "last width of window";
     private final static String KEY_LAST_HEIGHT = "last height of window";

@@ -50,7 +50,7 @@ import static java.awt.datatransfer.DataFlavor.stringFlavor;
 public final class LTCEditor extends LTCGui {
 
     // static initializations
-    private final Preferences preferences = Preferences.userNodeForPackage(this.getClass());
+    private final Preferences preferences = Preferences.userRoot().node(this.getClass().getCanonicalName().replaceAll("\\.","/"));
     private final static String KEY_LAST_DIR = "last directory";
     private final static String KEY_LAST_DIVIDER_H = "last H divider location";
     static final Logger LOGGER = Logger.getLogger(LTCEditor.class.getName());
@@ -521,7 +521,6 @@ public final class LTCEditor extends LTCGui {
         // add custom panels to content pane
         getContentPane().add(createFilePane(), BorderLayout.PAGE_START);
         createLowerRightPane(getLowerRightPane());
-//        getFrame().validate();
     }
 
     private void setFile(String path) {
