@@ -65,9 +65,15 @@ a) Server
 
   $> java -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=<PORT> -jar all/target/LTC-<version>.jar
 
-b) Java Editor
+b) Java Editor and Viewer
 
   $> java -cp all/target/LTC-<version>.jar com.sri.ltc.editor.LTCEditor -h
+  This editor mimics all functionality of an editor plug-in except it doesn't use XML-RPC to communicate with the
+  LTC base system.  Instead, it simply calls the Java methods in the JVM.
+
+  $> java -cp all/target/LTC-<version>.jar com.sri.ltc.editor.LTCFileViewer -h
+  The file viewer utility by-passes all git specific history and instead allows for a list of files to be
+  compared and changes accumulated.  The text is not editable.
 
 c) Utilities
 

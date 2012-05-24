@@ -44,12 +44,11 @@ public final class LatexPane extends JTextPane {
         // miscellaneous stuff:
         getDocument().putProperty(DefaultEditorKit.EndOfLineStringProperty, "\n");
 
-        if (this.editable)
-            addKeyListener(new KeyAdapter() {
-                public void keyPressed(KeyEvent e) {
-                    last_key_pressed = e.getKeyCode();
-                }
-            });
+        addKeyListener(new KeyAdapter() {
+            public void keyPressed(KeyEvent e) {
+                last_key_pressed = e.getKeyCode();
+            }
+        });
 
         // define styles for additions and deletions
         StyledDocument document = getStyledDocument();
@@ -166,8 +165,7 @@ public final class LatexPane extends JTextPane {
     }
 
     public StyledDocument clearAndGetDocument() throws BadLocationException {
-        if (isEditable())
-            stopFiltering();
+        stopFiltering();
         StyledDocument document = getStyledDocument();
         document.remove(0, document.getLength());
         return document;

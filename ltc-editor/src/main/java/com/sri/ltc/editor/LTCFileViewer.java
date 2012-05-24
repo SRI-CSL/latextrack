@@ -8,6 +8,14 @@
  */
 package com.sri.ltc.editor;
 
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import com.sri.ltc.filter.Filtering;
+import com.sri.ltc.latexdiff.Accumulate;
+import com.sri.ltc.latexdiff.Change;
+import com.sri.ltc.latexdiff.FileReaderWrapper;
+import com.sri.ltc.latexdiff.ReaderWrapper;
+import com.sri.ltc.server.LTCserverInterface;
 import org.kohsuke.args4j.Argument;
 import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
@@ -18,10 +26,16 @@ import javax.swing.event.ListDataEvent;
 import javax.swing.event.ListDataListener;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
+import javax.swing.text.BadLocationException;
 import java.awt.*;
 import java.awt.event.ActionEvent;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.io.File;
+import java.io.IOException;
 import java.io.PrintStream;
+import java.util.Enumeration;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.prefs.BackingStoreException;
 import java.util.prefs.Preferences;
@@ -36,6 +50,8 @@ public final class LTCFileViewer extends LTCGui implements ListSelectionListener
     private final Preferences preferences = Preferences.userRoot().node(this.getClass().getCanonicalName().replaceAll("\\.", "/"));
     private final static String KEY_LAST_DIR = "last directory";
     private final static String KEY_LAST_FILE = "last file";
+
+    private final Accumulate accumulate = new Accumulate();
 
     // UI components
     private final DefaultListModel listModel = new DefaultListModel();
@@ -96,7 +112,6 @@ public final class LTCFileViewer extends LTCGui implements ListSelectionListener
             }
         }
     });
-
     private final JFileChooser fileChooser = new JFileChooser();
     {
         fileChooser.setCurrentDirectory(new File(preferences.get(KEY_LAST_DIR, System.getProperty("user.dir"))));
@@ -115,6 +130,27 @@ public final class LTCFileViewer extends LTCGui implements ListSelectionListener
         list.addListSelectionListener(this);
         list.setVisibleRowCount(5);
         // TODO: if focus lost, clear list selection?
+        list.setCellRenderer(new FileCellRenderer());
+        list.addMouseListener(new MouseAdapter() {
+            public void mouseClicked(MouseEvent e) {
+                if (e.getClickCount() == 2) {
+                    Object o = listModel.getElementAt(list.locationToIndex(e.getPoint()));
+                    if (o instanceof FileCell) {
+                        FileCell fc = (FileCell) o;
+                        Color c = fc.getColor();
+                        if (c == null)
+                            c = Color.WHITE; // default
+                        Color newColor = JColorChooser.showDialog(getFrame(),
+                                "Choose File Color", c);
+                        if (newColor != null) {
+                            boolean changed = fc.setColor(newColor);
+                            if (changed)
+                                getUpdateButton().doClick();
+                        }
+                    }
+                }
+            }
+        });
         JScrollPane listScrollPane = new JScrollPane(list);
         panel.add(listScrollPane, BorderLayout.CENTER);
 
@@ -127,7 +163,7 @@ public final class LTCFileViewer extends LTCGui implements ListSelectionListener
             public void actionPerformed(ActionEvent e) {
                 if (fileChooser.showOpenDialog(getFrame()) == JFileChooser.APPROVE_OPTION) {
                     File file = fileChooser.getSelectedFile();
-                    listModel.addElement(file);
+                    listModel.addElement(new FileCell(preferences, file));
                     list.setSelectedIndex(listModel.getSize()-1); // select newly added file
                     preferences.put(KEY_LAST_DIR, file.getParent());
                     preferences.put(KEY_LAST_FILE, file.getAbsolutePath());
@@ -148,11 +184,48 @@ public final class LTCFileViewer extends LTCGui implements ListSelectionListener
     public LTCFileViewer() {
         super(false, "LTC File Viewer");
 
-        // TODO: define action for update button
+        // define action for update button
         getUpdateButton().setAction(new AbstractAction("U") {
             @Override
-            public void actionPerformed(ActionEvent e) {
-                System.out.println("update!");
+            public void actionPerformed(ActionEvent event) {
+                // build list of readers and map of colors
+                java.util.List<ReaderWrapper> readers = Lists.newArrayList();
+                Map<Integer,Color> colors = Maps.newHashMap();
+                int i = 0;
+                for (Enumeration<?> en = listModel.elements(); en.hasMoreElements(); i++) {
+                    Object o = en.nextElement();
+                    if (o instanceof FileCell) {
+                        readers.add(new FileReaderWrapper(o.toString()));
+                        Color color = ((FileCell) o).getColor();
+                        if (color == null)
+                            color = Color.BLACK; // default
+                        colors.put(i, color);
+                    }
+                }
+
+                // perform accumulation
+                if (!readers.isEmpty())
+                    try {
+                        Filtering filter = Filtering.getInstance();
+                        Map map = accumulate.perform(
+                                readers.toArray(new ReaderWrapper[readers.size()]),
+                                null, // this will cause style indices to use order of readers
+                                Change.buildFlags(
+                                        filter.getShowingStatus(LTCserverInterface.Show.DELETIONS),
+                                        filter.getShowingStatus(LTCserverInterface.Show.SMALL),
+                                        filter.getShowingStatus(LTCserverInterface.Show.PREAMBLE),
+                                        filter.getShowingStatus(LTCserverInterface.Show.COMMENTS),
+                                        filter.getShowingStatus(LTCserverInterface.Show.COMMANDS)),
+                                textPane.getCaretPosition()
+                        );
+                        textPane.updateFromMaps(
+                                (String) map.get(LTCserverInterface.KEY_TEXT),
+                                (java.util.List<Integer[]>) map.get(LTCserverInterface.KEY_STYLES),
+                                colors,
+                                (Integer) map.get(LTCserverInterface.KEY_CARET));
+                    } catch (Exception e) {
+                        LOGGER.log(Level.SEVERE, e.getMessage(), e);
+                    }
 
                 list.clearSelection();
             }
@@ -173,7 +246,8 @@ public final class LTCFileViewer extends LTCGui implements ListSelectionListener
 
     private void setFiles(java.util.List<File> files) {
         for (File f : files)
-            listModel.addElement(f);
+            listModel.addElement(new FileCell(preferences, f));
+        getUpdateButton().doClick();
     }
 
     private static void printUsage(PrintStream out, CmdLineParser parser) {

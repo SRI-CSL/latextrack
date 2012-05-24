@@ -15,9 +15,9 @@ import java.awt.*;
  * @author linda
  */
 @SuppressWarnings("serial")
-public final class AuthorCellRenderer extends JLabel implements ListCellRenderer{
+public final class FileCellRenderer extends JLabel implements ListCellRenderer{
 
-    public AuthorCellRenderer() {
+    public FileCellRenderer() {
         setOpaque(true);
     }
 
@@ -26,15 +26,13 @@ public final class AuthorCellRenderer extends JLabel implements ListCellRenderer
                                                   int index,
                                                   boolean isSelected,
                                                   boolean cellHasFocus) {
-        if (value instanceof AuthorCell) {
-            AuthorCell author = (AuthorCell) value;
-            setText(author.label);
-            Icon icon = new ColorIcon(author.getColor());
-            setIcon(icon);
-            setDisabledIcon(icon);
-            setEnabled(author.limited);
+        setText(value.toString());
+        if (value instanceof FileCell) {
+            Color color = ((FileCell) value).getColor();
+            if (color == null)
+                color = Color.WHITE;
+            setIcon(new ColorIcon(color));
         } else {
-            setText(value.toString());
             setIcon(null);
         }
 
