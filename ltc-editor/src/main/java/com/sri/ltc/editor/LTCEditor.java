@@ -103,7 +103,7 @@ public final class LTCEditor extends LTCGui {
                 }
                 // update file chooser and preference for next time:
                 fileChooser.setCurrentDirectory(file.getParentFile());
-                Preferences.userNodeForPackage(this.getClass()).put(KEY_LAST_DIR, file.getParent());
+                preferences.put(KEY_LAST_DIR, file.getParent());
             } catch (Exception e) {
                 clear();
                 LOGGER.log(Level.SEVERE, e.getMessage(), e);
@@ -212,9 +212,8 @@ public final class LTCEditor extends LTCGui {
         getUpdateButton().setAction(updateAction);
 
         // file chooser
-        String last_dir = Preferences.userNodeForPackage(this.getClass()).get(
-                KEY_LAST_DIR, System.getProperty("user.dir"));
-        fileChooser.setCurrentDirectory(new File(last_dir));
+        fileChooser.setCurrentDirectory(new File(
+                preferences.get(KEY_LAST_DIR, System.getProperty("user.dir"))));
 
         // text fields
         fileField.addActionListener(new ActionListener() {
