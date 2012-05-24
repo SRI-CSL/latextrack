@@ -39,6 +39,7 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.LogManager;
 import java.util.logging.Logger;
+import java.util.prefs.BackingStoreException;
 import java.util.prefs.Preferences;
 
 import static java.awt.datatransfer.DataFlavor.javaJVMLocalObjectMimeType;
@@ -48,9 +49,12 @@ import static java.awt.datatransfer.DataFlavor.stringFlavor;
  * @author linda
  */
 @SuppressWarnings("serial")
-public final class LTCEditor extends JFrame {
+public final class LTCEditor {
+
+    private final JFrame frame;
 
     // static initializations
+    private final static int DEFAULT_HEIGHT = 650;
     private final Preferences preferences = Preferences.userNodeForPackage(this.getClass());
     private final static String KEY_LAST_DIR = "last directory";
     private final static String KEY_LAST_DIVIDER_H = "last H divider location";
@@ -72,7 +76,7 @@ public final class LTCEditor extends JFrame {
     private final LTCSession session = new LTCSession(this);
 
     // initializing GUI components
-    private final LatexPane textPane = new LatexPane();
+    private final LatexPane textPane = new LatexPane(true);
     private final AuthorListModel authorModel = new AuthorListModel(session);
     private final CommitTableModel commitModel = new CommitTableModel();
     private final SelfComboBoxModel selfModel = new SelfComboBoxModel(textPane, authorModel, session);
@@ -134,11 +138,15 @@ public final class LTCEditor extends JFrame {
         }
     });
 
+    public JFrame getFrame() {
+        return frame;
+    }
+
     // return false if close was canceled by user
     private boolean close() throws XmlRpcException {
         if (saveButton.isEnabled()) {
             // dialog if unsaved edits
-            switch (JOptionPane.showConfirmDialog(this,
+            switch (JOptionPane.showConfirmDialog(frame,
                     "Save file first before closing?",
                     "Closing while unsaved edits",
                     JOptionPane.YES_NO_CANCEL_OPTION,
@@ -294,7 +302,7 @@ public final class LTCEditor extends JFrame {
         });
     }
 
-    private JPanel createPanes() {
+    private JPanel createContentPane() {
 
         // 1) file panel
         JPanel filePane = new JPanel(new BorderLayout(5, 0));
@@ -303,7 +311,7 @@ public final class LTCEditor extends JFrame {
         filePane.add(new JButton(new AbstractAction("Choose...") {
             private static final long serialVersionUID = 138311848972917973L;
             public void actionPerformed(ActionEvent e) {
-                if (fileChooser.showOpenDialog(LTCEditor.this) == JFileChooser.APPROVE_OPTION) {
+                if (fileChooser.showOpenDialog(frame) == JFileChooser.APPROVE_OPTION) {
                     File file = fileChooser.getSelectedFile();
                     fileField.setText(file.getAbsolutePath());
                     updateButton.doClick();
@@ -338,7 +346,8 @@ public final class LTCEditor extends JFrame {
         // 5) split pane for latex panel and lower panes
         final JSplitPane splitPaneV = new JSplitPane(JSplitPane.VERTICAL_SPLIT,
                 scrollPane, lowerPanes);
-        splitPaneV.setDividerLocation(preferences.getInt(KEY_LAST_DIVIDER_V, 0));
+        // per default, slide the divider all the way down:
+        splitPaneV.setDividerLocation(preferences.getInt(KEY_LAST_DIVIDER_V, DEFAULT_HEIGHT));
         splitPaneV.addPropertyChangeListener(JSplitPane.DIVIDER_LOCATION_PROPERTY,
                 new PropertyChangeListener() {
                     public void propertyChange(PropertyChangeEvent e) {
@@ -352,6 +361,7 @@ public final class LTCEditor extends JFrame {
         contentPane.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
         contentPane.add(filePane, BorderLayout.PAGE_START);
         contentPane.add(splitPaneV, BorderLayout.CENTER);
+        contentPane.setOpaque(true); //content panes must be opaque
         return contentPane;
     }
 
@@ -397,7 +407,7 @@ public final class LTCEditor extends JFrame {
                     Object o = authorModel.getElementAt(authorList.locationToIndex(e.getPoint()));
                     if (o instanceof AuthorCell) {
                         AuthorCell ac = (AuthorCell) o;
-                        Color newColor = JColorChooser.showDialog(LTCEditor.this,
+                        Color newColor = JColorChooser.showDialog(frame,
                                 "Choose Author Color",
                                 ac.getColor());
                         if (newColor != null) {
@@ -577,47 +587,46 @@ public final class LTCEditor extends JFrame {
     }
 
     public LTCEditor() {
-        super("LTC Editor");
+        frame = new JFrame("LTC Editor");
 
         // create UI components and put everything together
         createUIComponents();
-        JPanel contentPane = createPanes();
-        contentPane.setOpaque(true); //content panes must be opaque
-        setContentPane(contentPane);
 
-        addWindowListener(new WindowAdapter() {
+        frame.addWindowListener(new WindowAdapter() {
             @Override
             public void windowOpened(WindowEvent windowEvent) {
-                LTCEditor.this.setBounds(
+                frame.setBounds(
                         preferences.getInt(KEY_LAST_X, 0),
                         preferences.getInt(KEY_LAST_Y, 0),
                         preferences.getInt(KEY_LAST_WIDTH, 1000),
-                        preferences.getInt(KEY_LAST_HEIGHT, 650));
-                LOGGER.config("Window opened: "+LTCEditor.this.getSize()+" at "+LTCEditor.this.getLocation());
+                        preferences.getInt(KEY_LAST_HEIGHT, DEFAULT_HEIGHT));
+                LOGGER.config("Get window opened: " + frame.getSize() + " at " + frame.getLocation());
                 // after this resizing and moving events can now be recorded:
-                LTCEditor.this.addComponentListener(new ComponentAdapter() {
+                frame.addComponentListener(new ComponentAdapter() {
                     @Override
                     public void componentMoved(ComponentEvent componentEvent) {
-                        preferences.putInt(KEY_LAST_X, LTCEditor.this.getX());
-                        preferences.putInt(KEY_LAST_Y, LTCEditor.this.getY());
-                        LOGGER.config("Window position: "+LTCEditor.this.getLocation());
+                        preferences.putInt(KEY_LAST_X, frame.getX());
+                        preferences.putInt(KEY_LAST_Y, frame.getY());
+                        LOGGER.config("Put window position: " + frame.getLocation());
                     }
+
                     @Override
                     public void componentResized(ComponentEvent componentEvent) {
-                        preferences.putInt(KEY_LAST_WIDTH, LTCEditor.this.getWidth());
-                        preferences.putInt(KEY_LAST_HEIGHT, LTCEditor.this.getHeight());
-                        LOGGER.config("Window size: "+LTCEditor.this.getSize());
+                        preferences.putInt(KEY_LAST_WIDTH, frame.getWidth());
+                        preferences.putInt(KEY_LAST_HEIGHT, frame.getHeight());
+                        LOGGER.config("Put window size: " + frame.getSize());
                     }
                 });
             }
+
             @Override
             public void windowClosing(WindowEvent windowEvent) {
                 // save size and location
-                preferences.putInt(KEY_LAST_WIDTH, LTCEditor.this.getWidth());
-                preferences.putInt(KEY_LAST_HEIGHT, LTCEditor.this.getHeight());
-                preferences.putInt(KEY_LAST_X, LTCEditor.this.getX());
-                preferences.putInt(KEY_LAST_Y, LTCEditor.this.getY());
-                LOGGER.config("Window closing: "+LTCEditor.this.getSize()+" at "+LTCEditor.this.getLocation());
+                preferences.putInt(KEY_LAST_WIDTH, frame.getWidth());
+                preferences.putInt(KEY_LAST_HEIGHT, frame.getHeight());
+                preferences.putInt(KEY_LAST_X, frame.getX());
+                preferences.putInt(KEY_LAST_Y, frame.getY());
+                LOGGER.config("Put window closing: " + frame.getSize() + " at " + frame.getLocation());
             }
         });
     }
@@ -634,13 +643,14 @@ public final class LTCEditor extends JFrame {
      *
      * @param frame Editor instance to be displayed
      */
-    private static void createAndShowGUI(JFrame frame) {
+    private static void createAndShowGUI(LTCEditor editor) {
         //Create and set up the window.
-        frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
+        editor.frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
+        editor.frame.setContentPane(editor.createContentPane());
 
         //Display the window.
-        frame.pack();
-        frame.setVisible(true);
+        editor.frame.pack();
+        editor.frame.setVisible(true);
     }
 
     private static void printUsage(PrintStream out, CmdLineParser parser) {
@@ -679,20 +689,27 @@ public final class LTCEditor extends JFrame {
             LOGGER.log(Level.SEVERE, "Cannot configure logging", e);
         }
 
-        final LTCEditor frame = new LTCEditor();
+        final LTCEditor editor = new LTCEditor();
         LOGGER.info("Using LTC version: "+LTCserverImpl.getVersion());
+
+        if (options.resetDefaults) {
+            try {
+                LOGGER.config("Resetting preferences to defaults");
+                editor.preferences.clear();
+            } catch (BackingStoreException e) {
+                LOGGER.log(Level.SEVERE, e.getMessage(), e);
+            }
+        }
 
         //Schedule a job for the event dispatch thread:
         //creating and showing this application's GUI.
         try {
             SwingUtilities.invokeAndWait(new Runnable() {
                 public void run() {
-                    createAndShowGUI(frame);
+                    createAndShowGUI(editor);
                 }
             });
-        } catch (InterruptedException e) {
-            LOGGER.log(Level.SEVERE, e.getMessage(), e);
-        } catch (InvocationTargetException e) {
+        } catch (Exception e) {
             LOGGER.log(Level.SEVERE, e.getMessage(), e);
         }
 
@@ -700,7 +717,7 @@ public final class LTCEditor extends JFrame {
         if (options.file != null)
             SwingUtilities.invokeLater(new Runnable() {
                 public void run() {
-                    frame.setFile(options.file.getAbsolutePath());
+                    editor.setFile(options.file.getAbsolutePath());
                 }
             });
     }
@@ -711,6 +728,9 @@ public final class LTCEditor extends JFrame {
 
         @Option(name="-h", usage="display usage and exit")
         boolean displayHelp = false;
+
+        @Option(name = "-r", usage = "reset to default settings")
+        boolean resetDefaults = false;
 
         @Argument(required=false, metaVar="FILE", usage="load given file to track changes")
         File file;

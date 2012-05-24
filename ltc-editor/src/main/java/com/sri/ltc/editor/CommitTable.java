@@ -28,7 +28,7 @@ import java.util.prefs.Preferences;
 /**
  * @author linda
  */
-public class CommitTable extends JTable {
+public final class CommitTable extends JTable {
 
     private final Preferences preferences = Preferences.userNodeForPackage(this.getClass());
     private final static String KEY_PREF_WIDTH = "preferred width of column ";

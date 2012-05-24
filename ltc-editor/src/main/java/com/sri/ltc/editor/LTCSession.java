@@ -31,13 +31,13 @@ import java.util.logging.Level;
  */
 public class LTCSession {
 
-    private final LTCEditor LTCEditor;
+    private final LTCEditor editor;
 
     private int ID = -1;
     private String canonicalPath = "";
 
-    public LTCSession(LTCEditor LTCEditor) {
-        this.LTCEditor = LTCEditor;
+    public LTCSession(LTCEditor editor) {
+        this.editor = editor;
     }
 
     public String getCanonicalPath() {
@@ -54,7 +54,7 @@ public class LTCSession {
         canonicalPath = file.getCanonicalPath();
 
         // create new worker to init session
-        (new LTCWorker<Integer,Void>(LTCEditor, ID,
+        (new LTCWorker<Integer,Void>(editor.getFrame(), ID,
                 "Initializing...", "<html>Initializing track changes of file<br>"+canonicalPath+"</html>", true) {
             List<Object[]> authors = null;
             java.util.List<Object[]> commits = null;
@@ -84,11 +84,11 @@ public class LTCSession {
             protected void done() {
                 if (isCancelled()) {
                     ID = -1;
-                    LTCEditor.finishInit(null, null, null);
+                    editor.finishInit(null, null, null);
                 } else
                     try {
                         ID = get();
-                        LTCEditor.finishInit(authors, commits, self);
+                        editor.finishInit(authors, commits, self);
                         startUpdate(date, rev, false, "", Collections.<Object[]>emptyList(), caretPosition);
                     } catch (InterruptedException e) {
                         LOGGER.log(Level.SEVERE, e.getMessage(), e);
@@ -103,7 +103,7 @@ public class LTCSession {
         if (!isValid()) return;
 
         // create new worker to close session
-        executeWorkerAndWait(new LTCWorker<Map,Void>(LTCEditor, ID,
+        executeWorkerAndWait(new LTCWorker<Map,Void>(editor.getFrame(), ID,
                 "Closing...", "<html>Closing track changes of file<br>"+getCanonicalPath()+"</html>", false) {
             @Override
             protected Map callLTCinBackground() throws XmlRpcException {
@@ -113,7 +113,7 @@ public class LTCSession {
             @Override
             protected void done() {
                 ID = -1;
-                LTCEditor.finishClose();
+                editor.finishClose();
             }
         });
     }
@@ -124,7 +124,7 @@ public class LTCSession {
 
         // create new worker to update session
         // TODO: decide if and how to make get_changes interruptible in order to support cancel button
-        (new LTCWorker<Map,Void>(LTCEditor, ID,
+        (new LTCWorker<Map,Void>(editor.getFrame(), ID,
                 "Updating...", "<html>Updating changes of<br>"+getCanonicalPath()+"</html>", false) {
             java.util.List<Object[]> commits = null;
             List<Object[]> remotes = null;
@@ -159,7 +159,7 @@ public class LTCSession {
                 } else
                     try {
                         Map map = get();
-                        LTCEditor.finishUpdate(
+                        editor.finishUpdate(
                                 (Map<Integer,Object[]>) map.get(LTCserverInterface.KEY_AUTHORS),
                                 (String) map.get(LTCserverInterface.KEY_TEXT),
                                 (java.util.List<Integer[]>) map.get(LTCserverInterface.KEY_STYLES),
@@ -179,7 +179,7 @@ public class LTCSession {
         if (ID == -1) return;
 
         // create new worker to save file in session
-        executeWorkerAndWait(new LTCWorker<Void,Void>(LTCEditor, ID,
+        executeWorkerAndWait(new LTCWorker<Void,Void>(editor.getFrame(), ID,
                 "Saving...", "<html>Saving file<br>"+getCanonicalPath()+"</html>", false) {
             @Override
             protected Void callLTCinBackground() throws XmlRpcException {
@@ -193,7 +193,7 @@ public class LTCSession {
         if (!isValid()) return;
 
         // create new worker to set self in session
-        (new LTCWorker<Integer,Void>(LTCEditor, ID,
+        (new LTCWorker<Integer,Void>(editor.getFrame(), ID,
                 "Setting...", "Setting current self", false) {
             Object[] last_commit = null;
 
@@ -223,7 +223,7 @@ public class LTCSession {
                     if (code == 5) {
                         if (saveButton.isEnabled()) {
                             // dialog if nothing to commit && unsaved edits
-                            if (JOptionPane.YES_OPTION == JOptionPane.showConfirmDialog(LTCEditor,
+                            if (JOptionPane.YES_OPTION == JOptionPane.showConfirmDialog(editor.getFrame(),
                                     "Save file first before committing?",
                                     "Nothing to commit but unsaved edits",
                                     JOptionPane.YES_NO_OPTION,
@@ -232,12 +232,12 @@ public class LTCSession {
                                 commit(message, saveButton);
                             }
                         } else
-                            JOptionPane.showMessageDialog(LTCEditor,
+                            JOptionPane.showMessageDialog(editor.getFrame(),
                                     "Nothing to commit.",
                                     "Nothing to commit",
                                     JOptionPane.INFORMATION_MESSAGE);
                     } else if (code == 0)
-                        LTCEditor.finishCommit(last_commit);
+                        editor.finishCommit(last_commit);
                 } catch (InterruptedException e) {
                     LOGGER.log(Level.SEVERE, e.getMessage(), e);
                 } catch (ExecutionException e) {
@@ -251,7 +251,7 @@ public class LTCSession {
         if (!isValid()) return;
 
         // create new worker to set self in session
-        (new LTCWorker<Void,Void>(LTCEditor, ID,
+        (new LTCWorker<Void,Void>(editor.getFrame(), ID,
                 "Setting...", "Setting current self", false) {
             @Override
             protected Void callLTCinBackground() throws XmlRpcException {
@@ -269,7 +269,7 @@ public class LTCSession {
         if (!isValid()) return;
 
         // create new worker to set limited authors in session
-        (new LTCWorker<Void,Void>(LTCEditor, ID,
+        (new LTCWorker<Void,Void>(editor.getFrame(), ID,
                 "Setting...", "Setting limited authors", false) {
             @Override
             protected Void callLTCinBackground() throws XmlRpcException {
@@ -286,7 +286,7 @@ public class LTCSession {
         if (!isValid()) return;
 
         // create new worker to get authors in session
-        (new LTCWorker<List,Void>(LTCEditor, ID,
+        (new LTCWorker<List,Void>(editor.getFrame(), ID,
                 "Retrieving...", "Retrieving currently known authors", false) {
             @Override
             protected List callLTCinBackground() throws XmlRpcException {
@@ -297,7 +297,7 @@ public class LTCSession {
             @Override
             protected void done() {
                 try {
-                    LTCEditor.finishAuthors(get());
+                    editor.finishAuthors(get());
                 } catch (InterruptedException e) {
                     LOGGER.log(Level.SEVERE, e.getMessage(), e);
                 } catch (ExecutionException e) {
@@ -311,7 +311,7 @@ public class LTCSession {
         if (!isValid()) return;
 
         // create new worker to add remote in session
-        (new LTCWorker<Void,Void>(LTCEditor, ID,
+        (new LTCWorker<Void,Void>(editor.getFrame(), ID,
                 "Updating Remote...", "Updating remote alias", false) {
             @Override
             protected Void callLTCinBackground() throws XmlRpcException {
@@ -331,7 +331,7 @@ public class LTCSession {
         // create new worker to add remote in session
         final String verb = (usePull?"Pulling":"Pushing");
         String preposition = (usePull?" from ":" to ");
-        (new LTCWorker<String,Void>(LTCEditor, ID,
+        (new LTCWorker<String,Void>(editor.getFrame(), ID,
                 verb+"...",
                 verb+preposition+"remote repository\n"+repository, false) {
             @Override
@@ -349,7 +349,7 @@ public class LTCSession {
                     if ("".equals(error))
                         startUpdate(date, rev, isModified, currentText, deletions, caretPosition);
                     else
-                        JOptionPane.showMessageDialog(LTCEditor, error, verb+" Error", JOptionPane.ERROR_MESSAGE);
+                        JOptionPane.showMessageDialog(editor.getFrame(), error, verb+" Error", JOptionPane.ERROR_MESSAGE);
                 } catch (InterruptedException e) {
                     LOGGER.log(Level.SEVERE, e.getMessage(), e);
                 } catch (ExecutionException e) {
@@ -363,7 +363,7 @@ public class LTCSession {
         // if color == null then get otherwise set color
 
         // create new worker to set or get
-        executeWorkerAndWait(new LTCWorker<String,Void>(LTCEditor, ID,
+        executeWorkerAndWait(new LTCWorker<String,Void>(editor.getFrame(), ID,
                 "...", "getting or setting color", false) {
             @Override
             protected String callLTCinBackground() throws XmlRpcException {

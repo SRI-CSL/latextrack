@@ -31,19 +31,26 @@ public final class LatexPane extends JTextPane {
     protected final static String STYLE_PREFIX = "style no. ";
     private final LatexDocumentFilter documentFilter = new LatexDocumentFilter(this);
     protected int last_key_pressed = -1;
+    private final boolean editable;
 
-    public LatexPane() {
+    public LatexPane(boolean editable) {
+        this.editable = editable;
+
         // to make white-space displayable
         setEditorKit(new ShowParEditorKit());
         getDocument().putProperty("show paragraphs",
                 Preferences.userNodeForPackage(this.getClass()).getBoolean(KEY_SHOW_PARAGRAPHS, false)?"":null);
+
         // miscellaneous stuff:
         getDocument().putProperty(DefaultEditorKit.EndOfLineStringProperty, "\n");
-        addKeyListener(new KeyAdapter() {
-            public void keyPressed(KeyEvent e) {
-                last_key_pressed = e.getKeyCode();
-            }
-        });
+
+        if (this.editable)
+            addKeyListener(new KeyAdapter() {
+                public void keyPressed(KeyEvent e) {
+                    last_key_pressed = e.getKeyCode();
+                }
+            });
+
         // define styles for additions and deletions
         StyledDocument document = getStyledDocument();
         Style style;
@@ -51,6 +58,7 @@ public final class LatexPane extends JTextPane {
         StyleConstants.setUnderline(style, true);
         style = document.addStyle(STYLE_PREFIX+2, null); // deletion
         StyleConstants.setStrikeThrough(style, true);
+
         // more initialization
         setCaretPosition(0);
         setMargin(new Insets(5,5,5,5));
@@ -58,6 +66,7 @@ public final class LatexPane extends JTextPane {
         Font font = new Font("Monospaced", Font.PLAIN, 12);
         setFont(font);
         setJTextPaneFont(this, font, Color.black);
+
         setToolTipText(""); // turns on tool tips
         // show tool tips almost immediately
         ToolTipManager.sharedInstance().setInitialDelay(100);
@@ -129,7 +138,7 @@ public final class LatexPane extends JTextPane {
 
     public void startFiltering() {
         ((AbstractDocument) getStyledDocument()).setDocumentFilter(documentFilter);
-        setEditable(true);
+        setEditable(editable);
     }
 
     public List<Object[]> stopFiltering() {
