@@ -14,7 +14,6 @@ import com.sri.ltc.logging.LevelOptionHandler;
 import com.sri.ltc.logging.LogConfiguration;
 import com.sri.ltc.server.LTCserverImpl;
 import com.sri.ltc.server.LTCserverInterface;
-import com.wordpress.tips4java.TextLineNumber;
 import org.apache.xmlrpc.XmlRpcException;
 import org.kohsuke.args4j.Argument;
 import org.kohsuke.args4j.CmdLineException;
@@ -33,7 +32,6 @@ import java.beans.PropertyChangeListener;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
-import java.lang.reflect.InvocationTargetException;
 import java.util.*;
 import java.util.List;
 import java.util.logging.Level;
@@ -49,20 +47,12 @@ import static java.awt.datatransfer.DataFlavor.stringFlavor;
  * @author linda
  */
 @SuppressWarnings("serial")
-public final class LTCEditor {
-
-    private final JFrame frame;
+public final class LTCEditor extends LTCGui {
 
     // static initializations
-    private final static int DEFAULT_HEIGHT = 650;
     private final Preferences preferences = Preferences.userNodeForPackage(this.getClass());
     private final static String KEY_LAST_DIR = "last directory";
     private final static String KEY_LAST_DIVIDER_H = "last H divider location";
-    private final static String KEY_LAST_DIVIDER_V = "last V divider location";
-    private final static String KEY_LAST_WIDTH = "last width of window";
-    private final static String KEY_LAST_HEIGHT = "last height of window";
-    private final static String KEY_LAST_X = "last X of window";
-    private final static String KEY_LAST_Y = "last Y of window";
     static final Logger LOGGER = Logger.getLogger(LTCEditor.class.getName());
     private static DataFlavor DATE_FLAVOR;
     static {
@@ -76,7 +66,6 @@ public final class LTCEditor {
     private final LTCSession session = new LTCSession(this);
 
     // initializing GUI components
-    private final LatexPane textPane = new LatexPane(true);
     private final AuthorListModel authorModel = new AuthorListModel(session);
     private final CommitTableModel commitModel = new CommitTableModel();
     private final SelfComboBoxModel selfModel = new SelfComboBoxModel(textPane, authorModel, session);
@@ -121,7 +110,6 @@ public final class LTCEditor {
             }
         }
     };
-    private final JButton updateButton = new JButton(updateAction); // not included but used programmatically
     private final JTextField dateField = new JTextField();
     private final JTextField revField = new JTextField();
     private final JTextField commitMsgField = new JTextField();
@@ -138,15 +126,11 @@ public final class LTCEditor {
         }
     });
 
-    public JFrame getFrame() {
-        return frame;
-    }
-
     // return false if close was canceled by user
     private boolean close() throws XmlRpcException {
         if (saveButton.isEnabled()) {
             // dialog if unsaved edits
-            switch (JOptionPane.showConfirmDialog(frame,
+            switch (JOptionPane.showConfirmDialog(getFrame(),
                     "Save file first before closing?",
                     "Closing while unsaved edits",
                     JOptionPane.YES_NO_CANCEL_OPTION,
@@ -224,6 +208,9 @@ public final class LTCEditor {
     }
 
     private void createUIComponents() {
+        // add action to update button
+        getUpdateButton().setAction(updateAction);
+
         // file chooser
         String last_dir = Preferences.userNodeForPackage(this.getClass()).get(
                 KEY_LAST_DIR, System.getProperty("user.dir"));
@@ -232,12 +219,12 @@ public final class LTCEditor {
         // text fields
         fileField.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-                updateButton.doClick();
+                getUpdateButton().doClick();
             }
         });
         dateField.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-                updateButton.doClick();
+                getUpdateButton().doClick();
             }
         });
         // customize drag'n drop
@@ -270,7 +257,7 @@ public final class LTCEditor {
         });
         revField.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-                updateButton.doClick();
+                getUpdateButton().doClick();
             }
         });
         // customize drag'n drop
@@ -302,94 +289,21 @@ public final class LTCEditor {
         });
     }
 
-    private JPanel createContentPane() {
-
-        // 1) file panel
+    private JPanel createFilePane() {
         JPanel filePane = new JPanel(new BorderLayout(5, 0));
         filePane.add(new JLabel("File:"), BorderLayout.LINE_START);
         filePane.add(fileField, BorderLayout.CENTER);
         filePane.add(new JButton(new AbstractAction("Choose...") {
             private static final long serialVersionUID = 138311848972917973L;
             public void actionPerformed(ActionEvent e) {
-                if (fileChooser.showOpenDialog(frame) == JFileChooser.APPROVE_OPTION) {
+                if (fileChooser.showOpenDialog(getFrame()) == JFileChooser.APPROVE_OPTION) {
                     File file = fileChooser.getSelectedFile();
                     fileField.setText(file.getAbsolutePath());
-                    updateButton.doClick();
+                    getUpdateButton().doClick();
                 }
             }
         }), BorderLayout.LINE_END);
-
-        // 2) latex panel
-        JScrollPane scrollPane = new JScrollPane(textPane);
-        scrollPane.setPreferredSize(new Dimension(800, 300));
-        TextLineNumber tln = new TextLineNumber(textPane);
-        tln.setCurrentLineForeground(Color.black); // no highlighting
-        scrollPane.setRowHeaderView(tln);
-
-        // 3) split pane for filtering and content tracking
-        final JSplitPane splitPaneH = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT,
-                createFilteringPane(), createContentTrackingPane());
-        splitPaneH.setDividerLocation(preferences.getInt(KEY_LAST_DIVIDER_H, 0));
-        splitPaneH.addPropertyChangeListener(JSplitPane.DIVIDER_LOCATION_PROPERTY,
-                new PropertyChangeListener() {
-                    public void propertyChange(PropertyChangeEvent e) {
-                        preferences.putInt(KEY_LAST_DIVIDER_H, splitPaneH.getDividerLocation());
-                        LOGGER.config("Divider location: "+splitPaneH.getDividerLocation());
-                    }});
-        splitPaneH.setBorder(null);
-
-        // 4) showing pane and horizontal split pane
-        JPanel lowerPanes = new JPanel(new BorderLayout());
-        lowerPanes.add(createShowingPane(), BorderLayout.LINE_START);
-        lowerPanes.add(splitPaneH, BorderLayout.CENTER);
-
-        // 5) split pane for latex panel and lower panes
-        final JSplitPane splitPaneV = new JSplitPane(JSplitPane.VERTICAL_SPLIT,
-                scrollPane, lowerPanes);
-        // per default, slide the divider all the way down:
-        splitPaneV.setDividerLocation(preferences.getInt(KEY_LAST_DIVIDER_V, DEFAULT_HEIGHT));
-        splitPaneV.addPropertyChangeListener(JSplitPane.DIVIDER_LOCATION_PROPERTY,
-                new PropertyChangeListener() {
-                    public void propertyChange(PropertyChangeEvent e) {
-                        preferences.putInt(KEY_LAST_DIVIDER_V, splitPaneV.getDividerLocation());
-                        LOGGER.config("Vertical divider location: "+splitPaneV.getDividerLocation());
-                    }});
-        splitPaneV.setBorder(null);
-
-        // 6) content pane
-        JPanel contentPane = new JPanel(new BorderLayout(0, 5));
-        contentPane.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
-        contentPane.add(filePane, BorderLayout.PAGE_START);
-        contentPane.add(splitPaneV, BorderLayout.CENTER);
-        contentPane.setOpaque(true); //content panes must be opaque
-        return contentPane;
-    }
-
-    private JPanel createShowingPane() {
-        JPanel showPane = new JPanel();
-        showPane.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createTitledBorder(" Showing "),
-                BorderFactory.createEmptyBorder(0, 5, 0, 5)));
-        showPane.setLayout(new BoxLayout(showPane, BoxLayout.PAGE_AXIS));
-        showPane.add(new ShowingCheckBox("deletions", LTCserverInterface.Show.DELETIONS, updateButton));
-        showPane.add(new ShowingCheckBox("\"small\" changes", LTCserverInterface.Show.SMALL, updateButton));
-        showPane.add(new ShowingCheckBox("changes in preamble", LTCserverInterface.Show.PREAMBLE, updateButton));
-        showPane.add(new ShowingCheckBox("changes in comments", LTCserverInterface.Show.COMMENTS, updateButton));
-        showPane.add(new ShowingCheckBox("changes in commands", LTCserverInterface.Show.COMMANDS, updateButton));
-        final JCheckBox paraCheckBox = new JCheckBox("white space characters", textPane.getShowParagraphs());
-        paraCheckBox.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                if (paraCheckBox.isSelected()) {
-                    textPane.getDocument().putProperty("show paragraphs","");
-                } else {
-                    textPane.getDocument().putProperty("show paragraphs",null);
-                }
-                textPane.repaint();
-                textPane.setShowParagraphs(paraCheckBox.isSelected());
-            }
-        });
-        showPane.add(paraCheckBox);
-        return showPane;
+        return filePane;
     }
 
     private JPanel createFilteringPane() {
@@ -407,7 +321,7 @@ public final class LTCEditor {
                     Object o = authorModel.getElementAt(authorList.locationToIndex(e.getPoint()));
                     if (o instanceof AuthorCell) {
                         AuthorCell ac = (AuthorCell) o;
-                        Color newColor = JColorChooser.showDialog(frame,
+                        Color newColor = JColorChooser.showDialog(getFrame(),
                                 "Choose Author Color",
                                 ac.getColor());
                         if (newColor != null) {
@@ -415,7 +329,7 @@ public final class LTCEditor {
                             if (changed) {
                                 session.colors(ac.author.name, ac.author.email, LTCserverImpl.convertToHex(newColor));
                                 authorModel.fireChanged(ac); // propagate update to self combo
-                                updateButton.doClick();
+                                getUpdateButton().doClick();
                             }
                         }
                     }
@@ -483,7 +397,7 @@ public final class LTCEditor {
         c.gridy = 3;
         c.weightx = 0.0;
         c.fill = GridBagConstraints.NONE;
-        filteringPane.add(updateButton, c);
+        filteringPane.add(getUpdateButton(), c);
 
         return filteringPane;
     }
@@ -586,71 +500,33 @@ public final class LTCEditor {
         return contentTrackingPane;
     }
 
+    private void createLowerRightPane(JPanel panel) {
+        final JSplitPane splitPaneH = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT,
+                createFilteringPane(), createContentTrackingPane());
+        splitPaneH.setDividerLocation(preferences.getInt(KEY_LAST_DIVIDER_H, 0));
+        splitPaneH.addPropertyChangeListener(JSplitPane.DIVIDER_LOCATION_PROPERTY,
+                new PropertyChangeListener() {
+                    public void propertyChange(PropertyChangeEvent e) {
+                        preferences.putInt(KEY_LAST_DIVIDER_H, splitPaneH.getDividerLocation());
+                        LOGGER.config("Divider location: "+splitPaneH.getDividerLocation());
+                    }});
+        splitPaneH.setBorder(null);
+        panel.add(splitPaneH, BorderLayout.CENTER);
+    }
+
     public LTCEditor() {
-        frame = new JFrame("LTC Editor");
+        super(true, "LTC Editor");
 
-        // create UI components and put everything together
         createUIComponents();
-
-        frame.addWindowListener(new WindowAdapter() {
-            @Override
-            public void windowOpened(WindowEvent windowEvent) {
-                frame.setBounds(
-                        preferences.getInt(KEY_LAST_X, 0),
-                        preferences.getInt(KEY_LAST_Y, 0),
-                        preferences.getInt(KEY_LAST_WIDTH, 1000),
-                        preferences.getInt(KEY_LAST_HEIGHT, DEFAULT_HEIGHT));
-                LOGGER.config("Get window opened: " + frame.getSize() + " at " + frame.getLocation());
-                // after this resizing and moving events can now be recorded:
-                frame.addComponentListener(new ComponentAdapter() {
-                    @Override
-                    public void componentMoved(ComponentEvent componentEvent) {
-                        preferences.putInt(KEY_LAST_X, frame.getX());
-                        preferences.putInt(KEY_LAST_Y, frame.getY());
-                        LOGGER.config("Put window position: " + frame.getLocation());
-                    }
-
-                    @Override
-                    public void componentResized(ComponentEvent componentEvent) {
-                        preferences.putInt(KEY_LAST_WIDTH, frame.getWidth());
-                        preferences.putInt(KEY_LAST_HEIGHT, frame.getHeight());
-                        LOGGER.config("Put window size: " + frame.getSize());
-                    }
-                });
-            }
-
-            @Override
-            public void windowClosing(WindowEvent windowEvent) {
-                // save size and location
-                preferences.putInt(KEY_LAST_WIDTH, frame.getWidth());
-                preferences.putInt(KEY_LAST_HEIGHT, frame.getHeight());
-                preferences.putInt(KEY_LAST_X, frame.getX());
-                preferences.putInt(KEY_LAST_Y, frame.getY());
-                LOGGER.config("Put window closing: " + frame.getSize() + " at " + frame.getLocation());
-            }
-        });
+        // add custom panels to content pane
+        getContentPane().add(createFilePane(), BorderLayout.PAGE_START);
+        createLowerRightPane(getLowerRightPane());
+//        getFrame().validate();
     }
 
     private void setFile(String path) {
         fileField.setText(path);
-        updateButton.doClick(); // crude way to invoke ENTER on JTextField
-    }
-
-    /**
-     * Create the GUI and show it.  For thread safety,
-     * this method should be invoked from the
-     * event dispatch thread.
-     *
-     * @param frame Editor instance to be displayed
-     */
-    private static void createAndShowGUI(LTCEditor editor) {
-        //Create and set up the window.
-        editor.frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
-        editor.frame.setContentPane(editor.createContentPane());
-
-        //Display the window.
-        editor.frame.pack();
-        editor.frame.setVisible(true);
+        getUpdateButton().doClick(); // crude way to invoke ENTER on JTextField
     }
 
     private static void printUsage(PrintStream out, CmdLineParser parser) {
@@ -661,7 +537,7 @@ public final class LTCEditor {
     public static void main(String[] args) {
         // parse arguments
         CmdLineParser.registerHandler(Level.class, LevelOptionHandler.class);
-        final GitViewerOptions options = new GitViewerOptions();
+        final LTCEditorOptions options = new LTCEditorOptions();
         CmdLineParser parser = new CmdLineParser(options);
         try {
             parser.parseArgument(args);
@@ -722,7 +598,7 @@ public final class LTCEditor {
             });
     }
 
-    static class GitViewerOptions {
+    static class LTCEditorOptions {
         @Option(name="-l",usage="set console log level\nSEVERE, WARNING, INFO, CONFIG (default), FINE, FINER, FINEST")
         Level consoleLogLevel = Level.CONFIG;
 
