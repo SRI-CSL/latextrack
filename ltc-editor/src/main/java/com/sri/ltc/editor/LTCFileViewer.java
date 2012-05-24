@@ -26,13 +26,11 @@ import javax.swing.event.ListDataEvent;
 import javax.swing.event.ListDataListener;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
-import javax.swing.text.BadLocationException;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.io.File;
-import java.io.IOException;
 import java.io.PrintStream;
 import java.util.Enumeration;
 import java.util.Map;
@@ -70,6 +68,7 @@ public final class LTCFileViewer extends LTCGui implements ListSelectionListener
     }
     private final JList list = new JList(listModel);
     private final JButton removeButton = new MyButton(new AbstractAction("-") {
+        private static final long serialVersionUID = -174301387070254054L;
         @Override
         public void actionPerformed(ActionEvent e) {
             int index = list.getSelectedIndex();
@@ -87,6 +86,7 @@ public final class LTCFileViewer extends LTCGui implements ListSelectionListener
         }
     });
     private final JButton upButton = new MyButton(new AbstractAction("^") {
+        private static final long serialVersionUID = -5355762567428511758L;
         @Override
         public void actionPerformed(ActionEvent e) {
             int index = list.getSelectedIndex();
@@ -100,6 +100,7 @@ public final class LTCFileViewer extends LTCGui implements ListSelectionListener
         }
     });
     private final JButton downButton = new MyButton(new AbstractAction("v") {
+        private static final long serialVersionUID = -2275191906803714895L;
         @Override
         public void actionPerformed(ActionEvent e) {
             int index = list.getSelectedIndex();
@@ -129,7 +130,6 @@ public final class LTCFileViewer extends LTCGui implements ListSelectionListener
         list.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         list.addListSelectionListener(this);
         list.setVisibleRowCount(5);
-        // TODO: if focus lost, clear list selection?
         list.setCellRenderer(new FileCellRenderer());
         list.addMouseListener(new MouseAdapter() {
             public void mouseClicked(MouseEvent e) {
@@ -186,6 +186,8 @@ public final class LTCFileViewer extends LTCGui implements ListSelectionListener
 
         // define action for update button
         getUpdateButton().setAction(new AbstractAction("U") {
+            private static final long serialVersionUID = 2695697870010131445L;
+            @SuppressWarnings("unchecked")
             @Override
             public void actionPerformed(ActionEvent event) {
                 // build list of readers and map of colors
