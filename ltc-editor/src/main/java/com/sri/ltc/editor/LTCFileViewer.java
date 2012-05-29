@@ -16,10 +16,7 @@ import com.sri.ltc.latexdiff.Change;
 import com.sri.ltc.latexdiff.FileReaderWrapper;
 import com.sri.ltc.latexdiff.ReaderWrapper;
 import com.sri.ltc.server.LTCserverInterface;
-import org.kohsuke.args4j.Argument;
-import org.kohsuke.args4j.CmdLineException;
-import org.kohsuke.args4j.CmdLineParser;
-import org.kohsuke.args4j.Option;
+import org.kohsuke.args4j.*;
 
 import javax.swing.*;
 import javax.swing.event.ListDataEvent;
@@ -123,7 +120,7 @@ public final class LTCFileViewer extends LTCGui implements ListSelectionListener
 
     private void createLowerRightPane(JPanel panel) {
         panel.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createTitledBorder(" File List "),
+                BorderFactory.createTitledBorder(" File List (oldest first) "),
                 BorderFactory.createEmptyBorder(0, 5, 0, 5)));
 
         // 1) list of files
@@ -253,7 +250,7 @@ public final class LTCFileViewer extends LTCGui implements ListSelectionListener
     }
 
     private static void printUsage(PrintStream out, CmdLineParser parser) {
-        out.println("usage: java -cp ... com.sri.ltc.editor.LTCEditor [options...] [FILE] \nwith");
+        out.println("usage: java -cp ... com.sri.ltc.editor.LTCEditor [options...] [FILES] \nwith");
         parser.printUsage(out);
     }
 
@@ -307,13 +304,13 @@ public final class LTCFileViewer extends LTCGui implements ListSelectionListener
     }
 
     static class LTCFileViewerOptions {
-        @Option(name="-h", usage="display usage and exit")
+        @Option(name = "-h", usage = "display usage and exit")
         boolean displayHelp = false;
 
         @Option(name = "-r", usage = "reset to default settings")
         boolean resetDefaults = false;
 
-        @Argument(required=false, metaVar="FILES", usage="initialize list of files")
+        @Argument(required=false, metaVar="FILES", usage="initialize list of files (oldest first)")
         java.util.List<File> files;
     }
 
