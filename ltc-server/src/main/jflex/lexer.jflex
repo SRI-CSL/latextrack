@@ -29,9 +29,8 @@ import java.util.regex.Pattern;
 
     private List<Lexeme> processNewline(Lexeme newlineLexeme, boolean inComment) {
         List<Lexeme> lexemes = Lists.newArrayList(newlineLexeme);
-        if (inComment) { 
+        if (inComment) 
             yybegin(prior_state);
-	}
         return lexemes;
     }
 
@@ -126,7 +125,7 @@ space       = [ \t\f]
 
 <YYINITIAL,PREAMBLE_SEEN,IN_COMMENT> 
   {space}*{EOL}      { return processNewline(
-                         new Lexeme(LexemeType.NEWLINE, yytext(), yychar, preambleSeen, false), yystate() == IN_COMMENT); } 
+                         new Lexeme(LexemeType.WHITESPACE, yytext(), yychar, preambleSeen, false), yystate() == IN_COMMENT); } 
   /* other, non-paragraph line breaks */
 
 <YYINITIAL,PREAMBLE_SEEN,IN_COMMENT> 

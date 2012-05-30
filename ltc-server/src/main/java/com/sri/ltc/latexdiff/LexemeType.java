@@ -19,7 +19,6 @@ public enum LexemeType {
     SYMBOL (true),
     WORD (true),
     PARAGRAPH (false),
-    NEWLINE (false),
     WHITESPACE (false),
     END_OF_FILE (false),
     START_OF_FILE (false);

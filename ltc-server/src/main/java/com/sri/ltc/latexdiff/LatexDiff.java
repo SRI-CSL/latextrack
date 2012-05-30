@@ -354,66 +354,6 @@ public final class LatexDiff {
             return list.get(index).pos;
     }
 
-    private List<IndexLengthPair> removeNewlines(Diff.change hunk) {
-        List<IndexLengthPair> newList = Lists.newArrayList();
-        boolean sawNewline = false;
-        // go first through deletions and then insertions (if not seen NEWLINE):
-        // once NEWLINE was seen, don't go through second "list" as it won't contain NEWLINE lexemes
-        // (because the hunk denotes a diff!)
-
-        // going through deletions:
-        int newIndex = hunk.line0;
-        int newLength = hunk.deleted;
-        int end = newIndex + newLength;
-        for (int i = newIndex; i < end; ) {
-            // gobble-up any initial NEWLINES:
-            for ( ; i < end && LexemeType.NEWLINE.equals(lexemLists.get(0).get(i).type); i++)
-                sawNewline = true;
-            newIndex = i;
-            // now rake up all non-NEWLINES:
-            newLength = 0;
-            for ( ; i < end && !LexemeType.NEWLINE.equals(lexemLists.get(0).get(i).type); i++)
-                newLength++;
-            if (newLength > 0) // add a new hunk
-                newList.add(new IndexLengthPair(newIndex, hunk.line1, newLength, 0));
-        }
-        // adjust last new entry, if any
-        if (!newList.isEmpty()) {
-            IndexLengthPair pair = newList.remove(newList.size()-1);
-            newList.add(new IndexLengthPair(
-                    pair.index0, pair.index1, pair.length0, hunk.inserted)); // at end
-        }
-
-        if (sawNewline || hunk.inserted == 0)
-            return newList; // we are done
-
-        // going through insertions:
-        newList = Lists.newArrayList(); // (re-)initialize list because we haven't seen NEWLINES in deletions
-        newIndex = hunk.line1;
-        newLength = hunk.inserted;
-        end = newIndex + newLength;
-        for (int i = newIndex; i < end; ) {
-            // gobble-up any initial NEWLINES:
-            for ( ; i < end && LexemeType.NEWLINE.equals(lexemLists.get(1).get(i).type); i++);
-            newIndex = i;
-            // now rake up all non-NEWLINES:
-            newLength = 0;
-            for ( ; i < end && !LexemeType.NEWLINE.equals(lexemLists.get(1).get(i).type); i++)
-                newLength++;
-            if (newLength > 0) // add a new hunk
-                newList.add(new IndexLengthPair(hunk.line0, newIndex, 0, newLength));
-        }
-
-        // adjust first new entry, if any
-        if (!newList.isEmpty()) {
-            IndexLengthPair pair = newList.remove(0);
-            newList.add(0, new IndexLengthPair(
-                    pair.index0, pair.index1, hunk.deleted, pair.length1)); // at beginning
-        }
-
-        return newList;
-    }
-
     /**
      * Obtain changes from two texts given as wrapped readers.  The return value is a list of changes ordered 
      * by position in the new text.  If positions are the same, the change is ordered by an order imposed on 
@@ -448,22 +388,6 @@ public final class LatexDiff {
         }
         // create and save change script
         script = new Diff(diffInputs[0],diffInputs[1]).diff_2(false);
-
-        // remove NEWLINE lexemes from script:
-        if (script != null) {
-            // collect new hunks in list
-            List<IndexLengthPair> newHunks = new ArrayList<IndexLengthPair>();
-            for (Diff.change hunk = script; hunk != null; hunk = hunk.link) {
-                // remove any NEWLINE lexemes from hunk and create new hunk(s)
-                newHunks.addAll(removeNewlines(hunk));
-            }
-            // build new script by going from last to first new hunk:
-            Diff.change newLink = null;
-            ListIterator<IndexLengthPair> it = newHunks.listIterator(newHunks.size());
-            while (it.hasPrevious())
-                newLink = it.previous().createHunk(newLink);
-            script = newLink;
-        }
 
         // merge diff result with location information and convert into list of changes
         return mergeDiffResult(script,
