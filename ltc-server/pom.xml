@@ -7,7 +7,7 @@
     <parent>
         <groupId>com.sri.ltc</groupId>
         <artifactId>LTC</artifactId>
-        <version>0.9.5-SNAPSHOT</version>
+        <version>0.9.7-SNAPSHOT</version>
     </parent>
 
     <groupId>com.sri.ltc</groupId>
@@ -50,7 +50,6 @@
         <plugins>
             <plugin>
                 <artifactId>maven-site-plugin</artifactId>
-                <version>3.0</version>
                 <configuration>
                     <skip>true</skip>
                 </configuration>
@@ -59,7 +58,7 @@
             <plugin>
                 <groupId>de.jflex</groupId>
                 <artifactId>maven-jflex-plugin</artifactId>
-                <version>1.4.3</version>
+                <version>1.4.3-r1</version>
                 <executions>
                     <execution>
                         <phase>generate-sources</phase>
@@ -118,7 +117,7 @@
                     <plugin>
                         <groupId>org.codehaus.mojo</groupId>
                         <artifactId>osxappbundle-maven-plugin</artifactId>
-                        <version>1.0-alpha-1</version>
+                        <version>1.0-alpha-2</version>
                         <configuration>
                             <mainClass>com.sri.ltc.server.LTC</mainClass>
                             <bundleName>LTC Server</bundleName>

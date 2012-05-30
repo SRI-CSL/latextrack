@@ -35,7 +35,7 @@ If manual has new, externalized TikZ pictures, manually confert .pdf into .png (
 
 Before deploying, need to log into CSL Unix cluster to manually delete the directory ~linda/public_html/LTC/all!
 
-$> mvn clean verify site site:deploy
+$> mvn clean package site site:deploy
 
 To create the distributable:
 
@@ -129,9 +129,22 @@ $> for file in *.tiff; do convert $file `basename $file .tiff`.png; done
 Incrementing version number
 ---------------------------
 
-First, in parent pom.xml and then in all children.
-(look at Maven versions plugin for the future? e.g.,
- http://weblogs.java.net/blog/johnsmart/archive/2010/08/18/managing-version-numbers-maven-maven-version-plugin)
+Using the Maven versions plugin:
+http://weblogs.java.net/blog/johnsmart/archive/2010/08/18/managing-version-numbers-maven-maven-version-plugin
+
+ $> mvn versions:display-dependency-updates      => to show, which dependencies have updates
+ $> mvn versions:use-latest-versions             => to update all dependencies
+ $> mvn versions:display-plugin-updates          => to show, which plugins have updates (still edit by hand?)
+
+ $> mvn clean package site                       => to test
+ $> mvn versions:commit                          => to remove backup info
+or
+ $> mvn versions:revert                          => to use backup info and roll back
+
+ $> mvn versions:set -DnewVersion=1.0.2-SNAPSHOT => now updating LTC version information
+ $> mvn versions:commit                          => to remove backup info
+or
+ $> mvn versions:revert                          => to use backup info and roll back
 
 
 Building Tech Report 2012
