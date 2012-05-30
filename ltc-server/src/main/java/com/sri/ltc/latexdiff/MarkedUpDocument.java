@@ -8,15 +8,15 @@
  */
 package com.sri.ltc.latexdiff;
 
+import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
 import javax.swing.text.*;
 import java.awt.*;
 import java.io.Reader;
 import java.io.StringReader;
-import java.util.ArrayList;
+import java.util.*;
 import java.util.List;
-import java.util.Set;
 
 /**
  * Document with mark ups concerning additions and deletions, as well as status flags.
@@ -24,6 +24,8 @@ import java.util.Set;
  * @author linda
  */
 public final class MarkedUpDocument extends DefaultStyledDocument {
+
+    public enum KEYS {TEXT, POSITION}
 
     private final static String ADDITION_STYLE = "addition";
     private final static String DELETION_STYLE = "deletion";
@@ -56,6 +58,23 @@ public final class MarkedUpDocument extends DefaultStyledDocument {
             }
         }
         caret = createPosition(caretPosition);
+    }
+
+    public static Map<KEYS,Object> applyDeletions(String currentText, List<Object[]> deletions, int caretPosition)
+            throws BadLocationException {
+        Map<KEYS,Object> map = Maps.newHashMap();
+
+        // remove deletions (if any) and adjust caret position
+        if (deletions != null && !deletions.isEmpty()) {
+            MarkedUpDocument document = new MarkedUpDocument(currentText, deletions, caretPosition);
+            document.removeDeletions();
+            currentText = document.getText(0, document.getLength());
+            caretPosition = document.getCaretPosition();
+        }
+
+        map.put(KEYS.TEXT, currentText);
+        map.put(KEYS.POSITION, caretPosition);
+        return map;
     }
 
     public int getCaretPosition() {

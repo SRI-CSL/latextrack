@@ -275,7 +275,7 @@ public final class LatexDiff {
                 // build list of flags:
                 List<IndexFlagsPair<String>> flags = new ArrayList<IndexFlagsPair<String>>();
                 List<IndexPair> indices = getIndices(list0.subList(hunk.line0, hunk.line0+hunk.deleted), preambleSeen, hunk.line0,
-                        true, list1.get(hunk.line1).inComment); // deletions are in comment if the position in new text is in comment
+                        true, list1.get(hunk.line1-1).inComment); // deletions are in comment if the position in new text is in comment
                 for (IndexPair indexPair : indices) {
                     if (indexPair.left.equals(indexPair.right)) { // extra pair to indicate change in flags
                         int ix = calcPosition(list0, indexPair.left-1, true);

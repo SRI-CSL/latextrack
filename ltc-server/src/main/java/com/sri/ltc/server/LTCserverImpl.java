@@ -232,12 +232,10 @@ public final class LTCserverImpl implements LTCserverInterface {
 
         // apply deletions to current text and update caret position
         try {
-            if (deletions != null && !deletions.isEmpty()) {
-                MarkedUpDocument document = new MarkedUpDocument(currentText, deletions, caretPosition);
-                document.removeDeletions();
-                currentText = document.getText(0, document.getLength());
-                caretPosition = document.getCaretPosition();
-            }
+            Map<MarkedUpDocument.KEYS,Object> map =
+                    MarkedUpDocument.applyDeletions(currentText, deletions, caretPosition);
+            currentText = (String) map.get(MarkedUpDocument.KEYS.TEXT);
+            caretPosition = (Integer) map.get(MarkedUpDocument.KEYS.POSITION);
         } catch (BadLocationException e) {
             logAndThrow(7,"Cannot remove deletions at "+e.offsetRequested()+" while getting changes: "+e.getMessage());
         }
