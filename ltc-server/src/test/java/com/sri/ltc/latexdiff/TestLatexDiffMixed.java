@@ -137,14 +137,11 @@ public final class TestLatexDiffMixed extends TestLatexDiff {
                 "\n\nWhen in the Course");
         assertDeletion(0, 2, 25, Lists.newArrayList(
                 new IndexFlagsPair<String>(
-                        "If ",
-                        EnumSet.of(Change.Flag.DELETION)),
-                new IndexFlagsPair<String>(
-                        "% or should this be ``",
-                        EnumSet.of(Change.Flag.DELETION, Change.Flag.COMMENT))));
+                        "If % or should this be ``",
+                        EnumSet.of(Change.Flag.DELETION))));
         assertDeletion(1, 6, 3, Lists.newArrayList(
                 new IndexFlagsPair<String>(
                         "''?",
-                        EnumSet.of(Change.Flag.DELETION, Change.Flag.COMMENT))));
+                        EnumSet.of(Change.Flag.DELETION))));
     }
 }
