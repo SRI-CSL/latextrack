@@ -27,10 +27,11 @@ import java.util.regex.Pattern;
     private int prior_state = 0;
     private boolean preambleSeen = false;
 
-    private List<Lexeme> processNewline(Lexeme newlineLexeme) {
+    private List<Lexeme> processNewline(Lexeme newlineLexeme, boolean inComment) {
         List<Lexeme> lexemes = Lists.newArrayList(newlineLexeme);
-        if (newlineLexeme.inComment) 
+        if (inComment) { 
             yybegin(prior_state);
+	}
         return lexemes;
     }
 
@@ -119,13 +120,13 @@ space       = [ \t\f]
   {space}*\r{space}*\r({space}*{EOL})* |
   {space}*\r\n({space}*{EOL})+ 
                      { return processNewline(
-                         new Lexeme(LexemeType.PARAGRAPH, yytext(), yychar, preambleSeen, yystate() == IN_COMMENT)); }
+                         new Lexeme(LexemeType.PARAGRAPH, yytext(), yychar, preambleSeen, false), yystate() == IN_COMMENT); }
 }
   /* paragraphs are 2 or more end-of-lines and possibly white space without line breaks in between */
 
 <YYINITIAL,PREAMBLE_SEEN,IN_COMMENT> 
   {space}*{EOL}      { return processNewline(
-                         new Lexeme(LexemeType.WHITESPACE, yytext(), yychar, preambleSeen, yystate() == IN_COMMENT)); } 
+                         new Lexeme(LexemeType.NEWLINE, yytext(), yychar, preambleSeen, false), yystate() == IN_COMMENT); } 
   /* other, non-paragraph line breaks */
 
 <YYINITIAL,PREAMBLE_SEEN,IN_COMMENT> 

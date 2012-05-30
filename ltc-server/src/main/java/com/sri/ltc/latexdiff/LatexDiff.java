@@ -354,25 +354,64 @@ public final class LatexDiff {
             return list.get(index).pos;
     }
 
-    private Diff.change removeNewlines(Diff.change hunk, List<Lexeme> list, boolean isInsertion) {
-        boolean adjusted = false;
-        int newIndex = isInsertion?hunk.line1:hunk.line0;
-        int newLength = isInsertion?hunk.inserted:hunk.deleted;
+    private List<IndexLengthPair> removeNewlines(Diff.change hunk) {
+        List<IndexLengthPair> newList = Lists.newArrayList();
+        boolean sawNewline = false;
+        // go first through deletions and then insertions (if not seen NEWLINE):
+        // once NEWLINE was seen, don't go through second "list" as it won't contain NEWLINE lexemes
+        // (because the hunk denotes a diff!)
+
+        // going through deletions:
+        int newIndex = hunk.line0;
+        int newLength = hunk.deleted;
         int end = newIndex + newLength;
-        for (int i = newIndex; i < end; i++)
-            if (LexemeType.NEWLINE.equals(list.get(i).type)) {
-                adjusted = true;
-                newLength--; // reduce length
-                if (i == newIndex) // if at beginning, increase index as well
-                    newIndex++;
-            }
-        if (adjusted) { // something has changed so create a new hunk in:
-            if (isInsertion)
-                return new Diff.change(hunk.line0, newIndex, hunk.deleted, newLength, hunk.link);
-            else
-                return new Diff.change(newIndex, hunk.line1, newLength, hunk.inserted, hunk.link);
-        } else
-            return hunk;
+        for (int i = newIndex; i < end; ) {
+            // gobble-up any initial NEWLINES:
+            for ( ; i < end && LexemeType.NEWLINE.equals(lexemLists.get(0).get(i).type); i++)
+                sawNewline = true;
+            newIndex = i;
+            // now rake up all non-NEWLINES:
+            newLength = 0;
+            for ( ; i < end && !LexemeType.NEWLINE.equals(lexemLists.get(0).get(i).type); i++)
+                newLength++;
+            if (newLength > 0) // add a new hunk
+                newList.add(new IndexLengthPair(newIndex, hunk.line1, newLength, 0));
+        }
+        // adjust last new entry, if any
+        if (!newList.isEmpty()) {
+            IndexLengthPair pair = newList.remove(newList.size()-1);
+            newList.add(new IndexLengthPair(
+                    pair.index0, pair.index1, pair.length0, hunk.inserted)); // at end
+        }
+
+        if (sawNewline || hunk.inserted == 0)
+            return newList; // we are done
+
+        // going through insertions:
+        newList = Lists.newArrayList(); // (re-)initialize list because we haven't seen NEWLINES in deletions
+        newIndex = hunk.line1;
+        newLength = hunk.inserted;
+        end = newIndex + newLength;
+        for (int i = newIndex; i < end; ) {
+            // gobble-up any initial NEWLINES:
+            for ( ; i < end && LexemeType.NEWLINE.equals(lexemLists.get(1).get(i).type); i++);
+            newIndex = i;
+            // now rake up all non-NEWLINES:
+            newLength = 0;
+            for ( ; i < end && !LexemeType.NEWLINE.equals(lexemLists.get(1).get(i).type); i++)
+                newLength++;
+            if (newLength > 0) // add a new hunk
+                newList.add(new IndexLengthPair(hunk.line0, newIndex, 0, newLength));
+        }
+
+        // adjust first new entry, if any
+        if (!newList.isEmpty()) {
+            IndexLengthPair pair = newList.remove(0);
+            newList.add(0, new IndexLengthPair(
+                    pair.index0, pair.index1, hunk.deleted, pair.length1)); // at beginning
+        }
+
+        return newList;
     }
 
     /**
@@ -390,6 +429,7 @@ public final class LatexDiff {
             throws IOException {
 
         // Run lexical analyzer over both files to get lexeme and locations
+        Change.resetSequenceNumbering();
         lexemLists.clear(); // start with empty lists
         lexemLists.add(analyze(readerWrapper1));
         lexemLists.add(analyze(readerWrapper2));
@@ -414,10 +454,8 @@ public final class LatexDiff {
             // collect new hunks in list
             List<IndexLengthPair> newHunks = new ArrayList<IndexLengthPair>();
             for (Diff.change hunk = script; hunk != null; hunk = hunk.link) {
-                // remove any NEWLINE lexemes from hunk
-                hunk = removeNewlines(hunk, lexemLists.get(0), false); // any deletions?
-                hunk = removeNewlines(hunk, lexemLists.get(1), true); // any additions?
-                newHunks.add(new IndexLengthPair(hunk));
+                // remove any NEWLINE lexemes from hunk and create new hunk(s)
+                newHunks.addAll(removeNewlines(hunk));
             }
             // build new script by going from last to first new hunk:
             Diff.change newLink = null;
