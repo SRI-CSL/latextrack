@@ -165,4 +165,8 @@ Programming Emacs mode
 Cursor position: C-x =
 
 Interactive Emacs Lisp: M-x ielm
+- to obtain buffer object for testing:
 
+    ELISP> (setq buf (get-buffer "independence.tex"))
+    #<buffer independence.tex>
+    ELISP>

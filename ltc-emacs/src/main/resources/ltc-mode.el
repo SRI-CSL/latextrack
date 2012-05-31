@@ -44,6 +44,16 @@
   :type 'string
   :group 'ltc)
 
+(defface ltc-addition
+  '((t (:underline t)))
+  "Face used for marking up additions (foreground color will be set at run-time)."
+  :group 'ltc)
+
+(defface ltc-deletion
+  '((t (:strike-through t :inverse-video t)))
+  "Face used for marking up deletions (foreground color will be set at run-time)."
+  :group 'ltc)
+
 ;;; keeping track of filtering settings
 
 (defvar ltc-show-deletions t "Show deletions")
@@ -274,8 +284,9 @@
 	    (mapc (lambda (style) 
 		    (put-text-property (1+ (car style)) (1+ (nth 1 style)) 'face 
 				       (list 
-					(if (= '1 (nth 2 style)) :underline :strike-through) t 
-					:foreground (cdr (assoc (nth 3 style) color-table))))
+					(if (= '1 (nth 2 style)) 'ltc-addition 'ltc-deletion) 
+					(list
+					 :foreground (cdr (assoc (nth 3 style) color-table)))))
 		    ) styles))
 	(ltc-add-edit-hooks) ; add (local) hooks to capture user's edits
 	;; update commit graph in temp info buffer
@@ -514,7 +525,7 @@
   (setq index 1)
   (while (< index (point-max))
     (let ((delface (get-text-property index 'face))) ; face properties (if any)
-      (if (plist-get delface :strike-through)
+      (if (member 'ltc-deletion delface)
 	  ;; character is deleted
 	  (if (= start 0) ; first deletion character?
 	      (setq start index))
@@ -547,9 +558,9 @@
   "Hook to capture user's insertions while LTC mode is running."
   ;(message " --- LTC: after change with beg=%d and end=%d and len=%d" beg end len)
   (when (and self (= 0 len))
-    ;; color text and underline
+    ;; color text and use addition face
     (add-text-properties beg end (list 'face 
-				       (list :underline t :foreground (car (last self)))))
+				       (list 'ltc-addition (list :foreground (car (last self))))))
     ;; TODO: if first change (buffer-modified) then update commit graph
     ))
 
@@ -564,22 +575,20 @@
 	  (with-temp-buffer
 	    (insert delstring)
 	    ;; prepare new text properties for characters that are inserted by other or not marked up:
-	    (setq newface nil)
-	    ;;(setq newface (plist-put newface :underline nil))
-	    (setq newface (plist-put newface :strike-through t))
-	    (setq newface (plist-put newface :foreground self-color))
+	    (setq newface (list 'ltc-deletion (list :foreground self-color)))
 	    ;; collect indices which need new text properties here:
 	    (setq newindices nil)
 	    ;; go through upcoming deletion's characters one-by-one
 	    (setq index 1)
 	    (while (< index (point-max))
 	      (let ((delface (get-text-property index 'face))) ; face properties (if any)
-		(if (plist-get delface :strike-through)
+		(if (member 'ltc-deletion delface)
 		    ;; character already deleted: keep with same properties
 		    (setq index (1+ index)) ; advance index
-		  (if (and (plist-get delface :underline)
-			   (equal (color-values (plist-get delface :foreground))
-				  (color-values self-color))) ; text underlined with color for self
+		  (if (and (member 'ltc-addition delface)
+			   (equal (color-values (mapconcat (function (lambda (x) (plist-get x :foreground)))
+							   delface "")) ; obtain foreground color (if any)
+				  (color-values self-color))) ; text is addition with color for self
 		      ;; text inserted by self: remove character
 		      (delete-region index (1+ index)) ; delete character and don't advance index in this branch!
 		    ;; text inserted by other or not marked up:
