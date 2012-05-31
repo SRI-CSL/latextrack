@@ -96,6 +96,8 @@
 (define-key ltc-prefix-map (kbd "la") 'ltc-limit-authors)
 (define-key ltc-prefix-map (kbd "ld") 'ltc-limit-date)
 (define-key ltc-prefix-map (kbd "lr") 'ltc-limit-rev)
+(define-key ltc-prefix-map (kbd ">") 'ltc-next-change)
+(define-key ltc-prefix-map (kbd "<") 'ltc-prev-change)
 ;; Bind command `ltc-prefix-map' to `ltc-command-prefix' in `ltc-mode-map':
 (defvar ltc-mode-map (make-sparse-keymap) "LTC mode keymap.")
 (define-key ltc-mode-map ltc-command-prefix 'ltc-prefix-map)
@@ -383,6 +385,54 @@
   (when rev
     (setq ltc-limiting-rev (ltc-method-call "set_limited_rev" session-id rev))
     (ltc-update)))
+
+;;; --- jump to next or previous change
+
+(defun ltc-next-change ()
+  "Jump to beginning of next change (if any)."
+  (interactive)
+  (move-to-change (point) 1))
+
+(defun ltc-prev-change ()
+  "Jump to end of previous change (if any)."
+  (interactive)
+  (move-to-change (point) -1))
+
+(defun move-to-change (index dir)
+  "Move from INDEX to next or previous change indicated by DIR."
+  (if (= dir 0)
+      (error "Cannot move to change for DIR = 0"))
+  (setq index (if (> dir 0) index (1- index))) ; if looking for previous change start with previous char
+  (if (is-buf-border index dir)
+      (message "No change until %s of document found" (if (> dir 0) "end" "beginning"))
+    (setq currface (get-text-property index 'face))
+    ;; repeat..until loop: go through all characters with the *same* face
+    (while (progn
+	     (setq index (+ index dir)) ; increment or decrement index
+	     ;; the "end-test" is the last item in progn:
+	     (and (not (is-buf-border index dir))
+		  (equal currface
+			 (get-text-property index 'face)))))
+    (if (is-buf-border index dir)
+	(message "No change until %s of document found" (if (> dir 0) "end" "beginning"))
+      ;; else-form: now find the next char face with addition or deletion
+      (while (and (not (is-buf-border index dir))
+		  (and (not (member 'ltc-addition (get-text-property index 'face)))
+		       (not (member 'ltc-deletion (get-text-property index 'face)))))
+	(setq index (+ index dir))) ; increment or decrement index
+      (if (is-buf-border index dir)
+	  (message "No change until %s of document found" (if (> dir 0) "end" "beginning"))
+	;; else-form: index denotes position of change
+	(setq index (if (> dir 0) index (1+ index))) ; increment position if looking for end of previous change
+	(message "%s change found @ %d" (if (> dir 0) "Next" "Previous") index)
+	(goto-char index)))))
+
+(defun is-buf-border (index dir)
+  "Whether given INDEX is at the beginning or end of buffer determined by DIR."
+  (if (> dir 0)
+      (not (< index (point-max))) ; index >= (point-max)
+    (< index (point-min))) ; index < (point-min)
+)
 
 ;;; --- other interactive functions
 
