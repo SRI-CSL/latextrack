@@ -32,7 +32,7 @@ user.name=John Adams
 user.email=adams@usa.gov
 \end{CodeVerbatim}
 
-Another way to investigate the current git repository are graphical tools such as gitx under Mac OS X.  Note that gitx is not rquired to run LTC.  Figure~\ref{fig:gitx-screen} for using gitx on the just created repository.
+Another way to investigate the current git repository are graphical tools such as gitk (comes with git distribution) or gitx under Mac OS X.  Note that gitx is not required to run LTC.  Figure~\ref{fig:gitx-screen} for using gitx on the just created repository.
 \begin{figure}[t]
 \centering
 \mygraphics{width=\textwidth,height=.5\textheight,keepaspectratio}{figures/gitx-screen}
@@ -51,6 +51,7 @@ with
  -h       : display usage and exit
  -l LEVEL : set console log level
             SEVERE, WARNING, INFO, CONFIG (default), FINE, FINER, FINEST
+ -r       : reset to default settings
 \end{CodeVerbatim}
 
 To open our tutorial file when starting the editor, execute the following command.  We will also set the logging level to INFO to tone down the chatter.  This will open the editor as a window similar to the screen shot in Figure~\ref{fig:editor-open}.
@@ -64,11 +65,11 @@ $> java -cp $LTC/LTC-\version.jar \textbackslash
 \mygraphics{width=\textwidth,height=.5\textheight,keepaspectratio}{figures/editor-open}
 \caption{Initial opening of tutorial file in LTC Editor} \label{fig:editor-open}
 \end{figure}
-In this figure, we see a panel at the bottom-right that resembles the upper part of the gitx graphical interface to git.  There, we display the history of the .tex file of interest under git.  We can also see what git currently perceives as the current user -- John Adams because we had overridden the git settings in this repository.  (If you had another local git repository on your file system, the user information there is not changed.)
+In this figure, we see a panel at the bottom-right that resembles the upper part of the gitx graphical interface to git.  There, we display the history of the current LaTeX file under git.  We can also see what git currently perceives as the current user -- now John Adams because we had overridden the git settings in this tutorial repository.  (If you had another local git repository on your file system, the user information there is not changed.)
 
 \section{Showing and Hiding Certain Changes}
 
-The bottom-left panel of the editor allows us to customize the way LTC displays the changes of the file.  Section~\ref{sec:general-use} contains all the details of how LTC displays the changes including limiting the file history and filtering.  In this tutorial, we will just use some of the options and see their effect.
+The bottom-left panels of the editor allows us to customize the way LTC displays the changes of the file.  Section~\ref{sec:general-use} contains all the details of how LTC displays the changes including limiting the file history and filtering.  In this tutorial, we will just use some of the options and see their effect.
 
 First, notice the list of known authors (as they are stored in the git repository) and the colors assigned to each of them.  Now perform a double-click on the colored square next to Roger Sherman to open a dialog and  choose a dark color such as brown (you will want something with contrast to the white background).  Notice how the text in the editor panel on the top changes color for those parts that are attributed to Roger Sherman's edits.
 
@@ -150,18 +151,27 @@ added comment about list of charges
 \end{CodeVerbatim}
 in the text field next to the ``Commit'' button.  Once the text field is not empty, the ``Commit'' button becomes enabled.  After you commit, the commit graph will list the new entry and the editor panel will be updated.  
 
-But why is the newly added comment no longer marked up in red with underlining?  Check your settings for what to show and hide when tracking changes.  After updating the editor from the commit history, we actually perform some simple lexical analysis on the .tex file to distinguish preamble, commands, and comments in LaTeX.  Now the newly entered comment is recognized as such, and if we hide changes in comments, the markup will not show.  Check the box for ``changes in comments'' to see your latest text marked up as an addition.  Your editor should now look similar to the part shown in Figure~\ref{fig:commit-comment}.
+Now two scenarios can happen base on your setting for showing changes in comments (lower-left most panel).  If the checkbox was off, the newly added comment is no longer marked up in red with underlining.  After updating the editor from the commit history, we actually perform some simple lexical analysis on the .tex file to distinguish preamble, commands, and comments in LaTeX.  Now the newly entered comment is recognized as such, and if we hide changes in comments, the markup will not show.  If the box for ``changes in comments'' is checked, you will see your latest text marked up as an addition.  Your editor should now look similar to the part shown in Figure~\ref{fig:commit-comment}.
 \begin{figure}[t]
 \centering
 \mygraphics{width=\textwidth,height=.5\textheight,keepaspectratio}{figures/commit-comment}
 \caption{Committing a comment and showing it as an addition} \label{fig:commit-comment}
 \end{figure}
 
-The ``Commit'' button is an interface to the underlying git version control management, but you can also interact with git directly from the command line.  You will want to make sure to have changes saved and the first line in the commit graph set to ``on disk.''  Then, from the command line in the \Code{\$TUTORIAL/independence} directory, you would call something similar to
+The ``Commit'' button is an interface to the underlying git version control management, but you can also interact with git directly from the command line.  To exemplify this, we will add more text under the comment, for example
+
+\begin{CodeVerbatim}
+\begin{itemize}
+  \item He has refused his Assent to Laws, the most wholesome and necessary 
+        for the public good.
+\end{itemize}
+\end{CodeVerbatim}
+    
+You will want to make sure to have changes saved and the first line in the commit graph set to ``on disk.''  Then, from the command line in the \Code{\$TUTORIAL/independence} directory, you would call something similar to
 \begin{CodeVerbatim}
 $> git commit -o -m "first charge" -- independence.tex 
-[master 0b52499] first charge
- 1 files changed, 4 insertions(+), 0 deletions(-)
+[master 9d8dd3f] first charge
+ 1 files changed, 5 insertions(+), 0 deletions(-)
 \end{CodeVerbatim}
 Now update your editor window and see the addition of the commit from the command line to the commit graph as seen in Figure~\ref{fig:commit-cmd-line}.
 \begin{figure}[t]

@@ -387,6 +387,7 @@ public final class LTCEditor extends LTCGui {
 
         c.weightx = 0.8;
         c.weighty = 0.0;
+        c.gridy = 1;
         filteringPane.add(datePane, c);
 
         c.gridy = 2;

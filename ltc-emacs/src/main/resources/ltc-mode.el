@@ -500,7 +500,7 @@
   "Create string representation with text properties from current commit graph."
   (if commit-graph
       (let ((map (make-sparse-keymap)))
-	(define-key map [mouse-1] 'ltc-select-color)
+	(define-key map (kbd "<mouse-1>") 'ltc-select-color)
 	;; first loop: calculate longest author string for padding to next column
 	(setq msg-column (+ 2 (apply 'max (mapcar 'length (mapcar (lambda (commit)
 								    (author-to-string (nth 2 commit)))
@@ -522,9 +522,10 @@
 				  (propertize 
 				   (format (concat "%-" (number-to-string msg-column) "s") 
 					   author)
-				   'mouse-face 'highlight ;(list :foreground foreground 'highlight)
-				   'help-echo (if is-active "click to change color")
+				   'mouse-face 'highlight
+				   'help-echo (if is-active "mouse-1: change color")
 				   'keymap map
+				   'action (if is-active (cons "textColor" (nth 2 commit)))
 				   'face (list :foreground (if is-active (car (last commit)) disabledcolor)))
 				  (propertize 
 				   (format "%s" 

@@ -6,7 +6,6 @@ short-term:
 ===========
 
 - document accumulate2()
-- bug: marking up comment when hiding comments in wrong color
 - Peter's and Grit's bugs
 - Emacs bugs when editing:
   - deleting itemize environment in indie2.bundle leaves 2 characters
@@ -19,6 +18,13 @@ mid-term:
   - new application to update Emacs?
 - move away from JavaGit (interact with git via command line) to JGit library
 - write TUG article and/or tech report
+
+Open Source release:
+====================
+
+- which URL(s) to use?  Which repository (github.com or sourceforge.net)?
+- improve Maven Site: properly publish, correct places, etc. (e.g., http://www.ensor.cc/)
+- release notes/changes management
 
 long-term:
 ==========

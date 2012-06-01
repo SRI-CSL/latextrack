@@ -15,11 +15,12 @@ Before you can use \Code{ltc-mode} in Emacs, you must start the LTC server first
 
 \begin{CodeVerbatim}
 $> java -jar $LTC/LTC-${project.version}.jar
- | CONFIG: 	Default logging configuration complete
- | CONFIG: 	Logging configured to level CONFIG
- | CONFIG: 	git version: X.Y.Z
---log4j: [main] INFO  org.apache.xmlrpc.webserver.XmlRpcServlet - init
- | INFO: 	Started RPC server on port 7777.
+Fri Jun 01 09:11:13 CDT 2012 | CONFIG: 	Default logging configuration complete
+Fri Jun 01 09:11:13 CDT 2012 | CONFIG: 	Logging configured to level CONFIG
+Fri Jun 01 09:11:13 CDT 2012 | CONFIG: 	git version: 1.7.3.3
+Fri Jun 01 09:11:13 CDT 2012 | CONFIG: 	LTC version: 0.9.7-SNAPSHOT
+--log4j: 01 Jun 2012 09:11:13,659 [main] INFO  org.apache.xmlrpc.webserver.XmlRpcServlet - init
+Fri Jun 01 09:11:13 CDT 2012 | INFO: 	Started RPC server on port 7777.
 \end{CodeVerbatim}
 
 If you need to customize LTC, for example to change the port number, start the base system with option \Code{-p <PORT>}:
@@ -27,7 +28,7 @@ If you need to customize LTC, for example to change the port number, start the b
 \begin{CodeVerbatim}
 $> java -jar $LTC/LTC-${project.version}.jar -p 5555
 [...]
- | INFO: 	Started RPC server on port 5555.
+Fri Jun 01 09:11:13 CDT 2012 | INFO: 	Started RPC server on port 5555.
 \end{CodeVerbatim}
 
 The log messages from the LTC server are also saved in file \Code{~/.LTC.log}.  This log file is created every time that the server starts, so if you need the contents, please make a copy before starting the server anew.
@@ -58,7 +59,15 @@ The new, smaller window at the bottom of the frame is called ``LTC info'' and co
 
 \subsubsection{Updating the Buffer}
 
-An important command is \Code{M-x ltc-update} (currently bound to Ctrl-L U but this will change once we adhere better to Emacs conventions) or the menu item LTC $>$ Update buffer.  This will update the  view of the file based on current filtering and other settings.  Use this command when the ``LTC info'' buffer ended up in a different frame or tab, or when you make changes such as a git commit from the command line.
+An important command is \Code{M-x ltc-update} or the menu item LTC $>$ Update buffer.  This will update the  view of the file based on current filtering and other settings.  Use this command when the ``LTC info'' buffer ended up in a different frame or tab, or when you make changes such as a git commit from the command line.
+
+\subsection{Customizing LTC Mode}
+
+port
+
+command prefix
+
+markup of additions and deletions
 
 \subsection{Filtering Changes}
 
@@ -95,3 +104,5 @@ To customize the color used to designate changes in the marked up text, click on
 Customize ltc-mode: \Code{M-x customize-group RET ltc RET}
 
 \Code{M-x describe-face RET <face>} to describe faces \Code{ltc-addition} and \Code{ltc-deletion}
+
+\Code{C-u C-x =} shows the face under point (among other information)
