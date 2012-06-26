@@ -37,7 +37,7 @@ public class CliGitLog implements IGitLog {
 
     // patterns to match parsed lines against:
     // ---------------------------------------
-    private final static String GRAPH_CHARS = "[\\s\\|/\\\\]*";
+    private final static String GRAPH_CHARS = "[\\s\\|/\\\\_]*";
     // "* | commit 8e733e75aeea3e3481ca9048f4b552fb5c5aa92b"
     private final static Pattern COMMIT_PATTERN = Pattern.compile("^" + GRAPH_CHARS + "\\*" + GRAPH_CHARS + "commit (\\p{Alnum}+)\\s*$");
     // "|/  Author:     Jeff Haynie <jhaynie@appcelerator.com>"

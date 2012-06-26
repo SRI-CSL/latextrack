@@ -30,7 +30,7 @@ To create the site (with a link to download the JAR):
 
 $> mvn verify site
 
-If manual has new, externalized TikZ pictures, manually confert .pdf into .png (using Preview) under
+If manual has new, externalized TikZ pictures, manually convert .pdf into .png (using Preview) under
   all/src/site/tex/manual/figures/manual-figure*.pdf
 
 Before deploying, need to log into CSL Unix cluster to manually delete the directory ~linda/public_html/LTC/all!
@@ -46,7 +46,7 @@ To skip tests (when running repeatedly):
 $> mvn verify site -Dmaven.test.skip=true
 
 To view the contents of a JAR file without expanding it, use Firefox:
-  jar:file:///Users/linda/tmp/LTC/LTC-0.9.5-SNAPSHOT.jar!/
+  jar:file:///Users/linda/tmp/LTCjava/LTC-<version>-SNAPSHOT.jar!/
 and then browse
 
 
@@ -108,7 +108,10 @@ b) retrieving file versions (using first 6 digits of SHA1):
   $> git show <SHA1>:<TEX-FILE> [ > <TEX-FILE>.<SHA1> ]
 
 c) obtaining git tree by hand (for specified file):
-  $> git log --topo-order --graph --date=iso8601 --format=format:"commit %H%nAuthor: %an <%ae>%nDate: %ad%nParents: %P%n%s%n" <TEX-FILE>
+  in root of git repository:
+  $> git log --topo-order --graph --date=iso8601 \
+             --format=format:"commit %H%nAuthor: %an <%ae>%nDate: %ad%nParents: %P%n%s%n" \
+             <RELATIVE-PATH-TO-TEX-FILE>
 
 
 Building manual by hand

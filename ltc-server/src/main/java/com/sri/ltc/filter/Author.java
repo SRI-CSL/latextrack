@@ -21,8 +21,8 @@ import java.util.regex.Pattern;
 public final class Author implements Comparable<Author> {
 
     private final static Pattern INITIALS_PATTERN = Pattern.compile("\\b([a-zA-Z])\\S*\\b");
-    private final static Pattern EMAIL_PATTERN = Pattern.compile("^\\w([\\.\\w\\-])*[\\w]*@(\\w[\\w\\-]*\\.)+[a-zA-Z]{2,}$");
-    private final static Pattern AUTHOR_PATTERN = Pattern.compile("^\\s*(([a-zA-Z\\-]+\\s*)+)(\\s+<([^<>\\s]+)>){0,1}(\\s+\\(([A-Z]+)\\)){0,1}\\s*$");
+    private final static Pattern EMAIL_PATTERN = Pattern.compile("^\\w([\\.\\w\\-])*[\\w]*@(\\w[\\w\\-\\.\\(\\)]*)+$");
+    private final static Pattern AUTHOR_PATTERN = Pattern.compile("^\\s*(([a-zA-Z\\-\\.]+\\s*)+)(\\s+<([^<>\\s]+)>){0,1}(\\s+\\(([A-Z]+)\\)){0,1}\\s*$");
 
     public final String name;
     public final String email;

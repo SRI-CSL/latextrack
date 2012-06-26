@@ -112,5 +112,10 @@ public final class GitLogResponse extends AbstractResponse {
         public List<String> getParents() {
             return parents;
         }
+
+        @Override
+        public String toString() {
+            return "{"+sha+" "+date+" "+author+" "+message+"}";
+        }
     }
 }
