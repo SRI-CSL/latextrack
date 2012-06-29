@@ -105,6 +105,7 @@
         </pluginRepository>
     </pluginRepositories>
 
+    <!-- dependencies common to all modules -->
     <dependencies>
         <dependency>
             <groupId>args4j</groupId>

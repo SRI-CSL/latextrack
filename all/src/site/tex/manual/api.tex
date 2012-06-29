@@ -1,1 +1,21 @@
 \chapter{Writing Your Own Front End} \label{ch:plugins}
+
+In this chapter, we explain the general flow that a new editor plugin should follow.  We follow these flows in general in our reference implementation of the Emacs \Code{ltc-mode} and the Java LTC Editor.
+
+\begin{figure}
+\centering
+\mygraphics{scale=0.85}{figures/plugin/flow-LTC-on-off}
+\caption{Flow for turning LTC on and off} \label{fig:flow-LTC-on-off}
+\end{figure}
+
+\begin{figure}
+\centering
+\mygraphics{scale=0.85}{figures/plugin/flow-LTC-edit}
+\caption{Flow for editing while viewing changes} \label{fig:flow-LTC-edit}
+\end{figure}
+
+\begin{figure}
+\centering
+\mygraphics{scale=0.85}{figures/plugin/flow-LTC-save-commit}
+\caption{Flow when saving or committing while LTC is on} \label{fig:flow-LTC-save-commit}
+\end{figure}

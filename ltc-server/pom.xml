@@ -22,7 +22,7 @@
         <dependency>
             <groupId>org.jgrapht</groupId>
             <artifactId>jgrapht-jdk1.6</artifactId>
-            <version>0.8.2</version>
+            <version>0.8.3</version>
         </dependency>
         <dependency>
             <groupId>org.apache.xmlrpc</groupId>
@@ -72,6 +72,22 @@
                 </executions>
             </plugin>
 
+            <!-- cleaning any generated stuff -->
+            <plugin>
+                <artifactId>maven-clean-plugin</artifactId>
+                <version>2.5</version>
+                <configuration>
+                    <filesets>
+                        <fileset>
+                            <directory>${project.basedir}/src/main/java/com/sri/ltc/latexdiff</directory>
+                            <includes>
+                                <include>Lexer.java</include>
+                            </includes>
+                        </fileset>
+                    </filesets>
+                </configuration>
+            </plugin>
+
             <plugin>
                 <artifactId>maven-shade-plugin</artifactId>
                 <version>1.6</version>
@@ -100,10 +116,10 @@
                     </execution>
                 </executions>
             </plugin>
-
         </plugins>
     </build>
 
+    <!-- TODO: Mac OS X bundle from maven doesn't currently work: -->
     <profiles>
         <profile>
             <id>ltc-server-osx-bundle</id>

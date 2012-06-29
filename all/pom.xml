@@ -84,7 +84,7 @@
                 <version>2.5</version>
                 <executions>
                     <execution>
-                        <id>copy-shaded-jar</id>
+                        <id>copy-deployed</id>
                         <phase>pre-integration-test</phase>
                         <goals>
                             <goal>copy-resources</goal>
@@ -98,18 +98,6 @@
                                         <include>${ueber.jar}.jar</include>
                                     </includes>
                                 </resource>
-                            </resources>
-                        </configuration>
-                    </execution>
-                    <execution>
-                        <id>copy-install-sh</id>
-                        <phase>pre-integration-test</phase>
-                        <goals>
-                            <goal>copy-resources</goal>
-                        </goals>
-                        <configuration>
-                            <outputDirectory>${project.reporting.outputDirectory}/downloads</outputDirectory>
-                            <resources>
                                 <resource>
                                     <directory>src/site/resources</directory>
                                     <includes>
@@ -132,9 +120,7 @@
                                 <resource>
                                     <directory>../ltc-emacs/target/classes</directory>
                                     <includes>
-                                        <include>xml-rpc.el</include>
-                                        <include>versions.el</include>
-                                        <include>ltc-mode.el</include>
+                                        <include>*.el</include>
                                     </includes>
                                 </resource>
                             </resources>
@@ -182,7 +168,7 @@
                             <goal>copy-resources</goal>
                         </goals>
                         <configuration>
-                            <outputDirectory>src/site/tex/manual</outputDirectory>
+                            <outputDirectory>${project.basedir}/src/site/tex/manual</outputDirectory>
                             <resources>
                                 <resource>
                                     <directory>src/site/resources</directory>
@@ -208,7 +194,7 @@
                                 <resource>
                                     <directory>src/site/tex/manual/figures</directory>
                                     <includes>
-                                        <include>*.png</include>
+                                        <include>**/*.png</include>
                                     </includes>
                                 </resource>
                             </resources>
@@ -226,7 +212,7 @@
                                 <resource>
                                     <directory>src/site/tex/manual/figures</directory>
                                     <includes>
-                                        <include>*.png</include>
+                                        <include>**/*.png</include>
                                     </includes>
                                 </resource>
                             </resources>
@@ -369,6 +355,37 @@
                         <!--<version>2.6</version>-->
                         <!--</plugin>-->
                     </reportPlugins>
+                </configuration>
+            </plugin>
+
+            <!-- cleaning any generated stuff -->
+            <plugin>
+                <artifactId>maven-clean-plugin</artifactId>
+                <version>2.5</version>
+                <configuration>
+                    <filesets>
+                        <fileset>
+                            <directory>${project.basedir}/src/site/tex/manual</directory>
+                            <includes>
+                                <include>version.txt</include>
+                                <include>baseurl.txt</include>
+                                <include>manual.pdf</include>
+                                <!--<include>figures/manual-figure*.dpth</include>-->
+                                <!--<include>figures/manual-figure*.pdf</include>-->
+                                <!--<include>figures/manual-figure*.png</include>-->
+                            </includes>
+                        </fileset>
+                        <fileset>
+                            <directory>${project.basedir}/src/tex/techreport2012</directory>
+                            <includes>
+                                <include>report2012.pdf</include>
+                                <include>gen_examples.sh</include>
+                                <include>version.txt</include>
+                                <include>examples/*.unix</include>
+                                <include>examples/*.cml</include>
+                            </includes>
+                        </fileset>
+                    </filesets>
                 </configuration>
             </plugin>
         </plugins>

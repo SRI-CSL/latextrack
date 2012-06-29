@@ -94,7 +94,7 @@ more details and definitions for collapsing commits by same author
 %\caption{Example of serializing parallel branches for accumulating changes} \label{fig:example-serialization}
 %\end{figure}
 
-If we encounter branches in the commit graph, we serialize the parallel changes using the date and time information in the last commit node before the merge commit.  Then, the changes are applied in order of the time stamps.%, as Figure~\ref{fig:example-serialization} depicts.
+If we encounter branches in the commit graph, we serialize the parallel changes using the date and time information in the last commit node before the merge commit.  We simply traverse the branch with the earliest commit date.%, as Figure~\ref{fig:example-serialization} depicts.
 
 
 

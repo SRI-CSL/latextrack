@@ -148,6 +148,7 @@ public final class LatexDiff {
         return result;
     }
 
+    // for positioning details refer to tables in specification/tech report
     private List<Change> mergeDiffResult(Diff.change changes, List<Lexeme> list0, List<Lexeme> list1,
                                          String contents0) {
         SortedSet<Change> result = new TreeSet<Change>();
@@ -269,6 +270,7 @@ public final class LatexDiff {
                 // white space in front of position in new text
                 int text_end_position = (ex0 != ey0 && sx1 != sy1)?ex0:ey0;
                 // add one space after deletion if replacement without bordering space and next lexeme is a WORD:
+                // (starred cases in replacement position table)
                 boolean addSpace = (hunk.inserted > 0 &&
                         LexemeType.WORD.equals(list1.get(hunk.line1).type) &&
                         ex0 == ey0 && sx1 == sy1);
@@ -305,7 +307,7 @@ public final class LatexDiff {
         }
 
         return new ArrayList<Change>(result);
-    }
+    } // end of mergeDiffResult()
 
     // calculate pairs of indices that indicate successive lexemes in given input list
     // with the same settings for PREAMBLE, COMMENT, and COMMAND.
@@ -344,7 +346,7 @@ public final class LatexDiff {
         // add last pair
         result.add(new IndexPair(lastIndex + offset, list.size() + offset, true, lastFlags)); // last one often extends to next lexeme
         return new ArrayList<IndexPair>(result);
-    }
+    } // end of getIndices()
 
     // calc position in given lexeme list at index (either beginning or end of lexeme)
     private int calcPosition(List<Lexeme> list, int index, boolean atEnd) {

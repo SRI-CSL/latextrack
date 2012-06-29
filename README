@@ -12,7 +12,7 @@ Requirements
 For the time being, you will have to install the supplied JGraphT library into your local Maven repository by hand:
 
 $> mvn install:install-file -Dfile=lib/jgrapht-jdk1.6.jar \
-   -DgroupId=org.jgrapht -DartifactId=jgrapht-jdk1.6 -Dversion=0.8.2 -Dpackaging=jar
+   -DgroupId=org.jgrapht -DartifactId=jgrapht-jdk1.6 -Dversion=0.8.3 -Dpackaging=jar
 
 which should produce a little bit of output containing "BUILD SUCCESS".  This step has to be done only once.
 
@@ -26,7 +26,11 @@ $> mvn clean
 $> mvn compile
 $> mvn test
 
-To create the site (with a link to download the JAR):
+To create the distributable:
+
+$> mvn clean package
+
+To create the site (call "verify" for link to download the JAR etc.):
 
 $> mvn verify site
 
@@ -36,10 +40,6 @@ If manual has new, externalized TikZ pictures, manually convert .pdf into .png (
 Before deploying, need to log into CSL Unix cluster to manually delete the directory ~linda/public_html/LTC/all!
 
 $> mvn clean package site site:deploy
-
-To create the distributable:
-
-$> mvn clean package
 
 To skip tests (when running repeatedly):
 
@@ -53,7 +53,7 @@ and then browse
 Running
 -------
 
-after "mvn package verify"
+(after "mvn package")
 
 a) Server
 
@@ -77,11 +77,17 @@ b) Java Editor and Viewer
 
 c) Utilities
 
+ To perform lexical analysis of a .tex file, use either one:
+
   $> java -cp all/target/LTC-<version>.jar com.sri.ltc.latexdiff.Lexer <FILE>
   or
   $> cat <FILE> | java -cp all/target/LTC-<version>.jar com.sri.ltc.latexdiff.Lexer
 
+ To compare 2 versions of .tex files, use this utility.  Note that you can trigger XML output using "-x":
+
   $> java -cp all/target/LTC-<version>.jar com.sri.ltc.latexdiff.LatexDiff -h
+
+ To test the XML-RPC server, use this tool.  You should have the LTC server running:
 
   $> java -cp all/target/LTC-<version>.jar com.sri.ltc.server.HelloLTC -h
 
@@ -117,15 +123,25 @@ c) obtaining git tree by hand (for specified file):
 Building manual by hand
 -----------------------
 
+* To build:
+
 $> cd all/src/site/tex/manual
 $> pdflatex manual -shell-escape
+or use TeXShop
+
+* To convert .pdf to .png:
+
 $> convert -density 300 manual-figure0.pdf manual-figure0.png
 or
-$> for i in manual-figure*.pdf; do convert -density 300 $i `echo $i | sed -e 's/\.pdf/\.png/g'`; done
+$> for i in figures/manual-figure*.pdf; do convert -density 300 $i `echo $i | sed -e 's/\.pdf/\.png/g'`; done
 or use Preview.app?
+
+* To build HTML version by hand:
+
 $> htlatex manual "manual,0,png" "" "" "-interaction=nonstopmode --src-specials"
 
-converting other .tiff files in bulk (use wildcard appropriately)
+* Converting other .tiff files in bulk (use wildcard appropriately) when making new screen shots (e.g., with Grab)
+
 $> for file in *.tiff; do convert $file `basename $file .tiff`.png; done
 
 
@@ -155,17 +171,18 @@ Building Tech Report 2012
 
 $> mvn verify site   => generate examples for appendices
 $> cd all/src/tex/techreport2012
-$> pdflatex techreport2012
-$> pdflatex techreport2012
-$> bibtex techreport2012
-$> pdflatex techreport2012
-$> pdflatex techreport2012
+$> pdflatex report2012
+$> pdflatex report2012
+$> bibtex report2012
+$> pdflatex report2012
+$> pdflatex report2012
 
 
 Programming Emacs mode
 ----------------------
 
 Cursor position: C-x =
+(note that Emacs starts counting from position 1 but Java document starts from position 0!)
 
 Interactive Emacs Lisp: M-x ielm
 - to obtain buffer object for testing:
