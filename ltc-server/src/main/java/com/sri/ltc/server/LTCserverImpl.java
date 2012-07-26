@@ -8,18 +8,31 @@
  */
 package com.sri.ltc.server;
 
+import com.sri.ltc.ProgressReceiver;
 import com.sri.ltc.filter.Author;
 import com.sri.ltc.filter.Filtering;
-import com.sri.ltc.git.*;
 import com.sri.ltc.git.Commit;
+import com.sri.ltc.git.LimitedHistory;
+import com.sri.ltc.git.Remote;
+import com.sri.ltc.git.Self;
 import com.sri.ltc.latexdiff.*;
-import com.sri.ltc.ProgressReceiver;
-import edu.nyu.cs.javagit.api.*;
+import edu.nyu.cs.javagit.api.DotGit;
+import edu.nyu.cs.javagit.api.GitFile;
+import edu.nyu.cs.javagit.api.JavaGitConfiguration;
+import edu.nyu.cs.javagit.api.JavaGitException;
 import edu.nyu.cs.javagit.api.responses.GitCommitResponse;
 import edu.nyu.cs.javagit.client.Factory;
 import org.apache.xmlrpc.XmlRpcException;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
 
 import javax.swing.text.BadLocationException;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.transform.*;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stream.StreamResult;
 import java.awt.*;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
@@ -619,6 +632,12 @@ public final class LTCserverImpl implements LTCserverInterface {
         return "";
     }
 
+    @Override
+    public String create_bug_report(int sessionID, String message, String outputDirectory) throws XmlRpcException {
+        create_bug_report_xml(sessionID, message, new File(outputDirectory, "report.xml").toString());
+        return ""; // TODO: return path to zip file
+    }
+
     private String getColorKey(Author author) {
         return KEY_COLOR + author.toString();
     }
@@ -702,5 +721,140 @@ public final class LTCserverImpl implements LTCserverInterface {
             }
         }
         return 0;
+    }
+
+    private void addSimpleTextNode(Document document, Element parent, String elementName, String elementText) {
+        Element element = document.createElement(elementName);
+        parent.appendChild(element);
+
+        org.w3c.dom.Text text = document.createTextNode(elementText);
+        element.appendChild(text);
+    }
+
+    private void addAuthor(Document document, Element parent, String elementName, Author author) {
+        Element authorElement = document.createElement(elementName);
+        parent.appendChild(authorElement);
+
+        addSimpleTextNode(document, authorElement, "name", author.name);
+        addSimpleTextNode(document, authorElement, "email", author.email);
+    }
+
+    private void addAuthorLimit(Document document, Element parent, String elementName, Set<Author> authorsList) {
+        Element element = document.createElement(elementName);
+        parent.appendChild(element);
+
+        for (Author author : authorsList) {
+            addAuthor(document, element, "author", author);
+        }
+    }
+
+    private void addShowOptions(Document document, Element parent, String elementName, Set<Author> authorsList) {
+        Element element = document.createElement(elementName);
+        parent.appendChild(element);
+
+        for (Author author : authorsList) {
+            addAuthor(document, element, "author", author);
+        }
+    }
+
+    private void create_bug_report_xml(int sessionID, String message, String outputFileNameAndPath) throws XmlRpcException {
+        LOGGER.fine("Server: creating bug report as " + outputFileNameAndPath);
+
+        Session session = getSession(sessionID);
+
+        DocumentBuilderFactory documentBuilderFactory = DocumentBuilderFactory.newInstance();
+        DocumentBuilder documentBuilder = null;
+        try {
+            documentBuilder = documentBuilderFactory.newDocumentBuilder();
+        } catch (ParserConfigurationException e) {
+            logAndThrow(1, "Could not create document builder:" + e.getMessage());
+        }
+
+        assert documentBuilder != null;
+        org.w3c.dom.Document document = documentBuilder.newDocument();
+
+        Element rootElement = document.createElement("bug-report");
+        document.appendChild(rootElement);
+
+        addSimpleTextNode(document, rootElement, "user-message", message);
+        addSimpleTextNode(document, rootElement, "relative-file-path", session.gitFile.getRelativePath());
+
+        // filters
+        {
+            Element element = document.createElement("filters");
+            rootElement.appendChild(element);
+
+            addSimpleTextNode(document, element, "revision", session.getLimitRev());
+            addSimpleTextNode(document, element, "date", session.getLimitDate());
+            addAuthorLimit(document, element, "authors", session.getLimitedAuthors());
+        }
+
+        // active-revisions
+        {
+            Element element = document.createElement("active-revisions");
+            rootElement.appendChild(element);
+
+            LimitedHistory history = null;
+            try {
+                history = new LimitedHistory(session.gitFile,
+                        session.getLimitedAuthors(),
+                        session.getLimitDate(),
+                        session.getLimitRev());
+            } catch (Exception e) {
+                logAndThrow(2, "Could not create LimitedHistory:" + e.getMessage());
+            }
+
+            assert history != null;
+            for (Commit commit : history.getCommitsList()) {
+                 addSimpleTextNode(document, element, "sha", commit.sha1);
+            }
+        }
+
+        // show-options
+        {
+            Element element = document.createElement("show-options");
+            rootElement.appendChild(element);
+
+            for (Show show : LTCserverInterface.Show.values()) {
+                Element optionElement = document.createElement("show-option");
+                element.appendChild(optionElement);
+
+                addSimpleTextNode(document, optionElement, "key", show.name());
+                addSimpleTextNode(document, optionElement, "value", Boolean.toString(get_show(show.name())));
+            }
+        }
+
+        TransformerFactory transformerFactory = TransformerFactory.newInstance();
+        Transformer transformer = null;
+        try {
+            transformer = transformerFactory.newTransformer();
+        } catch (TransformerConfigurationException e) {
+            logAndThrow(3, "Could not create transformer:" + e.getMessage());
+        }
+        assert transformer != null;
+
+        transformer.setOutputProperty(OutputKeys.INDENT, "yes");
+        transformer.setOutputProperty("{http://xml.apache.org/xslt}indent-amount", "4");
+
+        FileWriter fileWriter = null;
+        try {
+            fileWriter = new FileWriter(outputFileNameAndPath);
+        } catch (IOException e) {
+            logAndThrow(3, "Could not create output file:" + e.getMessage());
+        }
+        assert fileWriter != null;
+
+        StreamResult streamResult = new StreamResult(fileWriter);
+        Source source = new DOMSource(document);
+        try {
+            transformer.transform(source, streamResult);
+
+            fileWriter.flush();
+            fileWriter.close();
+        } catch (TransformerException e) {
+            logAndThrow(3, "Could not transform document:" + e.getMessage());
+        } catch (IOException e) {
+            logAndThrow(3, "Exception creating report xml file:" + e.getMessage());
+        }
     }
 }

@@ -178,6 +178,10 @@ public final class TestGitRepository {
         }
     }
 
+    public File getFooFile() {
+        return new File(tempGitDir, DIR_STRUCTURE + File.separator + "foo");
+    }
+
     @Test
     public void showFoo() {
         final String contents = "blub\r\nbla";
@@ -185,7 +189,7 @@ public final class TestGitRepository {
         assertTrue(dotGit != null);
         try {
             // create, add, and commit file
-            GitFile gitFile = dotGit.getWorkingTree().getFile(new File(tempGitDir, DIR_STRUCTURE + File.separator + "foo"));
+            GitFile gitFile = dotGit.getWorkingTree().getFile(getFooFile());
             assertTrue(GitFileSystemObject.Status.UNTRACKED.equals(gitFile.getStatus()));
             System.out.println("File "+gitFile.getRelativePath()+" is untracked");
             // added

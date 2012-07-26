@@ -547,6 +547,16 @@ public interface LTCserverInterface {
     public int reset_all_colors() throws XmlRpcException;
 
     /**
+     * Create a bug report with current system state.
+     *
+     * @param sessionID identifies the session
+     * @param message any user-entered comments describing the bug
+     * @param outputDirectory the path that the zip file should be created in
+     * @return the name of the zip file created
+     */
+    public String create_bug_report(int sessionID, String message, String outputDirectory) throws XmlRpcException;
+
+    /**
      * Test method for implementing XML-RPC clients.
      *
      * @return 42
