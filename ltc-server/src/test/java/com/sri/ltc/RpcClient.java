@@ -174,6 +174,7 @@ public class RpcClient {
                             System.out.println("Commits:");
                             for (Object[] object : (List<Object[]>) server.get_commits(Integer.parseInt(tokens[1]))) {
                                 try {
+                                    // TODO: replace this with individual prints, or 
                                     System.out.println("  "+ Commit.fromArray(object));
                                 } catch (ParseException e) {
                                     e.printStackTrace();

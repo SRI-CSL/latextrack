@@ -17,6 +17,8 @@ import java.util.*;
 /**
  * @author linda
  */
+
+// TODO: move this out of Git namespace and genericize
 public final class CommitGraph extends SimpleDirectedGraph<Commit,DefaultEdge> {
 
     private static final long serialVersionUID = 3699166530479808547L;

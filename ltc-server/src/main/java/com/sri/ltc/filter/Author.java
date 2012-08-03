@@ -62,6 +62,7 @@ public final class Author implements Comparable<Author> {
                 null);
     }
 
+    // TODO: should be able to remove this once jgit is used
     public static Author parse(String string) throws ParseException {
         if (string == null || "".equals(string))
             return null;

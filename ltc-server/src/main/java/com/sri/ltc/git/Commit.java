@@ -21,6 +21,8 @@ import java.util.logging.Logger;
 /**
  * @author linda
  */
+
+// TODO: move out of git pacakge
 public final class Commit {
 
     public final static DateFormat FORMATTER = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss Z");
@@ -40,11 +42,13 @@ public final class Commit {
         this.date = FORMATTER.parse(dateAsString);
     }
 
+    // TODO: remove this - replace with implementation within Repository object
     public static Commit translate(GitLogResponse.Commit commit) throws ParseException {
         Author author = Author.parse(commit.getAuthor());
         return new Commit(commit.getSha(), commit.getDate(), author.name, author.email, commit.getMessage());
     }
 
+    // TODO: move toArray here
     public static Commit fromArray(Object[] array) throws ParseException {
         if (array == null)
             throw new IllegalArgumentException("Cannot create commit from NULL array");
