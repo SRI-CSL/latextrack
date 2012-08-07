@@ -9,15 +9,10 @@ import java.io.IOException;
 import java.net.URI;
 
 public class RepositoryFactory {
-    public static Repository fromURI(URI uri) throws IOException {
-        // TODO: look at URL and determine what kind of repository this is
-        // or try to guess it. For now, we're assuming this is a Git Repo, and not
-        // really treating this as a URI
+    public static Repository fromPath(File path) throws IOException {
+        // TODO: look at path and determine what kind of repository this is
+        // or try to guess it. For now, we're assuming this is a Git Repo
         
-        FileRepositoryBuilder builder = new FileRepositoryBuilder();
-        GitRepository repository = new GitRepository();
-        repository.initialize(new File(uri.getPath()));
-
-        return repository;
+        return new GitRepository(path);
     }
 }

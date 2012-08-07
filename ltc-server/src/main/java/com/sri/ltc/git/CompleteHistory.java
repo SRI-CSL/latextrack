@@ -8,9 +8,8 @@
  */
 package com.sri.ltc.git;
 
-import edu.nyu.cs.javagit.api.GitFile;
-import edu.nyu.cs.javagit.api.JavaGitException;
-import edu.nyu.cs.javagit.api.responses.GitLogResponse;
+import com.sri.ltc.versioncontrol.Commit;
+import com.sri.ltc.versioncontrol.TrackedFile;
 
 import java.io.IOException;
 import java.text.ParseException;
@@ -21,15 +20,16 @@ import java.util.List;
  */
 public final class CompleteHistory extends FileHistory {
 
-    public CompleteHistory(GitFile gitFile) throws IOException, ParseException, JavaGitException {
+    public CompleteHistory(TrackedFile gitFile) throws IOException, ParseException {
         super(gitFile);
         update();
     }
 
+    // TODO: is this method needed?
     @Override
-    List<GitLogResponse.Commit> updateCommits() throws IOException, JavaGitException, ParseException {
+    List<Commit> updateCommits() throws IOException, ParseException {
         // perform git log with static options
-        return getLog(options, "complete");
+        return gitFile.getCommits();
     }
 
     @Override

@@ -12,10 +12,8 @@ import com.google.common.collect.Sets;
 import com.sri.ltc.filter.Author;
 import com.sri.ltc.git.CompleteHistory;
 import com.sri.ltc.git.FileRemotes;
-import com.sri.ltc.git.Self;
 import com.sri.ltc.latexdiff.Accumulate;
-import edu.nyu.cs.javagit.api.GitFile;
-import edu.nyu.cs.javagit.api.JavaGitException;
+import com.sri.ltc.versioncontrol.TrackedFile;
 
 import javax.swing.text.BadLocationException;
 import java.io.IOException;
@@ -30,7 +28,7 @@ public final class Session {
     private static int nextID = 1;
 
     final int ID;
-    final GitFile gitFile;
+    final TrackedFile gitFile;
     private final CompleteHistory completeHistory;
     private final FileRemotes remotes;
     private final Set<Author> knownAuthors = Sets.newHashSet();
@@ -39,7 +37,7 @@ public final class Session {
     private String limit_rev = "";
     private final Accumulate accumulate = new Accumulate();
 
-    protected Session(GitFile gitFile) throws ParseException, IOException, JavaGitException, BadLocationException {
+    protected Session(TrackedFile gitFile) throws ParseException, IOException, BadLocationException {
         ID = generateID();
         if (gitFile == null)
             throw new IllegalArgumentException("cannot create session with NULL as git file");
@@ -47,8 +45,8 @@ public final class Session {
         // initializations based on git file:
         completeHistory = new CompleteHistory(gitFile);
         addAuthors(completeHistory.getAuthors());
-        addAuthors(Collections.singleton(new Self(gitFile).getSelf()));
-        remotes = new FileRemotes(gitFile);
+        addAuthors(Collections.singleton(gitFile.getRepository().getSelf()));
+        remotes = new FileRemotes(gitFile.getRepository());
     }
 
     private static synchronized int generateID() {
@@ -63,7 +61,7 @@ public final class Session {
         return remotes;
     }
 
-    public List<Object[]> getCommitGraphAsList() throws IOException, ParseException, JavaGitException {
+    public List<Object[]> getCommitGraphAsList() throws IOException, ParseException {
         return completeHistory.update();
     }
 

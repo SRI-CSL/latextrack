@@ -16,12 +16,8 @@ import com.sri.ltc.git.LimitedHistory;
 import com.sri.ltc.git.Remote;
 import com.sri.ltc.git.Self;
 import com.sri.ltc.latexdiff.*;
-import edu.nyu.cs.javagit.api.DotGit;
-import edu.nyu.cs.javagit.api.GitFile;
-import edu.nyu.cs.javagit.api.JavaGitConfiguration;
-import edu.nyu.cs.javagit.api.JavaGitException;
-import edu.nyu.cs.javagit.api.responses.GitCommitResponse;
-import edu.nyu.cs.javagit.client.Factory;
+import com.sri.ltc.versioncontrol.Repository;
+import com.sri.ltc.versioncontrol.RepositoryFactory;
 import org.apache.xmlrpc.XmlRpcException;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -37,6 +33,7 @@ import java.awt.*;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.io.*;
+import java.net.URI;
 import java.text.ParseException;
 import java.util.*;
 import java.util.List;
@@ -83,19 +80,6 @@ public final class LTCserverImpl implements LTCserverInterface {
 
     private final static Logger LOGGER = Logger.getLogger(LTCserverImpl.class.getName());
     static {
-        // init git
-        try {
-            if (JavaGitConfiguration.getGitPath() == null) { // only set from env if not explicitly set before
-                String gitDir = System.getenv("GIT_BIN_DIR");
-                if (gitDir != null && !"".equals(gitDir)) {
-                    LOGGER.info("Trying to set git path to \""+gitDir+"\" as obtained from GIT_BIN_DIR");
-                    JavaGitConfiguration.setGitPath(gitDir);
-                }
-            }
-            LOGGER.config("git version: "+ JavaGitConfiguration.getGitVersion());
-        } catch (Exception e) {
-            LOGGER.log(Level.SEVERE, "Cannot obtain GIT executable", e);
-        }
         // obtain version information from Maven meta-information
         try {
             InputStream inputStream = LTCserverImpl.class.getClassLoader().getResourceAsStream("META-INF/maven/com.sri.ltc/ltc-server/pom.properties");
@@ -133,12 +117,10 @@ public final class LTCserverImpl implements LTCserverInterface {
         if (!file.canRead())
             logAndThrow(2,"Cannot read given file");
 
-        // is any parent of file under git?
-        DotGit dotGit = null;
         try {
-            dotGit = DotGit.getInstance(file);
-        } catch (JavaGitException e) {
-            logAndThrow(3,"No ancestor of given file is a git repository: "+e.getMessage());
+            Repository repository = RepositoryFactory.fromPath(file);
+        } catch (IOException e) {
+            logAndThrow(3, "Could not create repository at " + file + " Exception: " + e.getMessage());
         }
         updateProgress(3);
 

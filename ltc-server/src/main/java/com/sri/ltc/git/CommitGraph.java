@@ -6,9 +6,11 @@
  *
  * Copyright 2009-2010, SRI International.
  */
+
 package com.sri.ltc.git;
 
 import com.sri.ltc.filter.Author;
+import com.sri.ltc.versioncontrol.Commit;
 import org.jgrapht.graph.DefaultEdge;
 import org.jgrapht.graph.SimpleDirectedGraph;
 
@@ -18,12 +20,15 @@ import java.util.*;
  * @author linda
  */
 
-// TODO: move this out of Git namespace and genericize
-public final class CommitGraph extends SimpleDirectedGraph<Commit,DefaultEdge> {
+// TODO: move out of git namespace
+// TODO: can jGit build this more directly?
+    
+public final class CommitGraph extends SimpleDirectedGraph<Commit, DefaultEdge> {
 
     private static final long serialVersionUID = 3699166530479808547L;
 
-    private final Map<String,Commit> verticesBySHA = new HashMap<String,Commit>();
+    // TODO: does this need to be a hashmap, or would a set suffice? commits are equal/hashed by ID
+    private final Map<String,Commit> verticesBySHA = new HashMap<String, Commit>();
     private final Set<Commit> heads = new HashSet<Commit>();
 
     public CommitGraph() {
@@ -37,15 +42,17 @@ public final class CommitGraph extends SimpleDirectedGraph<Commit,DefaultEdge> {
 
     @Override
     public boolean addVertex(Commit commit) {
-        if (heads.isEmpty())
+        if (heads.isEmpty()) {
             heads.add(commit);
-        verticesBySHA.put(commit.sha1, commit);
+        }
+        
+        verticesBySHA.put(commit.getId(), commit);
         return super.addVertex(commit);
     }
 
     @Override
     public boolean removeVertex(Commit commit) {
-        verticesBySHA.remove(commit.sha1);
+        verticesBySHA.remove(commit.getId());
         return super.removeVertex(commit);
     }
 
@@ -76,7 +83,7 @@ public final class CommitGraph extends SimpleDirectedGraph<Commit,DefaultEdge> {
 
         // copy set of vertices and calculate intersection
         for (Commit vertex : oldGraph.vertexSet())
-            if (limitingAuthors.contains(vertex.author))
+            if (limitingAuthors.contains(vertex.getAuthor()))
                 addVertex(vertex);
 
         // traverse graph depth-first to obtain edges and new heads
@@ -164,10 +171,10 @@ public final class CommitGraph extends SimpleDirectedGraph<Commit,DefaultEdge> {
         String sha;
         for (DefaultEdge e : edgeSet()) {
             builder.append("(");
-            sha = getEdgeSource(e).sha1;
+            sha = getEdgeSource(e).getId();
             builder.append(sha.substring(0,Math.min(6,sha.length())));
             builder.append(" -> ");
-            sha = getEdgeTarget(e).sha1;
+            sha = getEdgeTarget(e).getId();
             builder.append(sha.substring(0,Math.min(6,sha.length())));
             builder.append(") ");
         }

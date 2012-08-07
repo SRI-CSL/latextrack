@@ -3,16 +3,24 @@ package com.sri.ltc.versioncontrol;
 import com.sri.ltc.filter.Author;
 import com.sri.ltc.server.LTCserverInterface;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.Reader;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.List;
 import java.util.logging.Logger;
 
 public abstract class Commit {
     public final static DateFormat FORMATTER = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss Z");
     public final static Logger LOGGER = Logger.getLogger(Commit.class.getName());
 
-    protected Commit() {
+    protected Repository repository;
+
+    protected Commit(Repository repository) {
+        this.repository = repository;
     }
 
     abstract public String getId();
@@ -20,6 +28,13 @@ public abstract class Commit {
     abstract public Author getAuthor();
     abstract public Date getDate();
 
+    abstract public List<Commit> getParents();
+
+    public Reader getContents() throws IOException {
+        InputStream inputStream = repository.getContentStream(this);
+        return new InputStreamReader(inputStream);
+    }
+    
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;

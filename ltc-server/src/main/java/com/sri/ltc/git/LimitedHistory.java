@@ -9,13 +9,10 @@
 package com.sri.ltc.git;
 
 import com.sri.ltc.filter.Author;
+import com.sri.ltc.latexdiff.CommitReaderWrapper;
 import com.sri.ltc.latexdiff.ReaderWrapper;
-import com.sri.ltc.latexdiff.StringReaderWrapper;
-import edu.nyu.cs.javagit.api.GitFile;
-import edu.nyu.cs.javagit.api.JavaGitException;
-import edu.nyu.cs.javagit.api.options.GitRevParseOptions;
-import edu.nyu.cs.javagit.api.responses.GitLogResponse;
-import edu.nyu.cs.javagit.client.Factory;
+import com.sri.ltc.versioncontrol.Commit;
+import com.sri.ltc.versioncontrol.TrackedFile;
 
 import java.io.IOException;
 import java.text.ParseException;
@@ -35,8 +32,8 @@ public final class LimitedHistory extends FileHistory {
     private final String limitingDate;
     private final String limitingRev;
 
-    public LimitedHistory(GitFile gitFile, Set<Author> limitingAuthors, String limitingDate, String limitingRev)
-            throws IOException, ParseException, JavaGitException {
+    public LimitedHistory(TrackedFile gitFile, Set<Author> limitingAuthors, String limitingDate, String limitingRev)
+            throws IOException, ParseException {
         super(gitFile);
         this.limitingAuthors = limitingAuthors;
         this.limitingDate = limitingDate;
@@ -45,37 +42,39 @@ public final class LimitedHistory extends FileHistory {
     }
 
     @Override
-    List<GitLogResponse.Commit> updateCommits() throws ParseException, IOException, JavaGitException {
-        // perform git log:
-        //   with limiting date, if applicable
-        options.setOptLimitSince(null);
-        if (limitingDate != null && !"".equals(limitingDate))
-            options.setOptLimitSince(limitingDate);
-        //   with limiting revision, if applicable
-        options.setOptSince(null); // default setting
-        if (limitingRev != null && !"".equals(limitingRev)) {
-            // verify that limiting rev points to valid revision
-            GitRevParseOptions revParseOptions = new GitRevParseOptions();
-            revParseOptions.setVerify(true);
-            try {
-                List<String> revParseOutput =
-                        Factory.createGitRevParse().revParse(gitFile.getWorkingTree().getPath(),
-                                revParseOptions,
-                                limitingRev+"^");
-                options.setOptSince(revParseOutput.get(0));
-            } catch (JavaGitException e) {
-                // if "git rev-parse --verify limitingRev^" throws an exception,
-                // the specified revision doesn't exist or limitingRev might be the first
-                // (and doesn't have a parent that "^" would point to);
-                // simply ignore this setting then to not limit the following "git log" command
-            }
-        }
-        return getLog(options, "limited");
+    List<Commit> updateCommits() throws ParseException, IOException {
+        // TODO: implement this!
+//        // perform git log:
+//        //   with limiting date, if applicable
+//        options.setOptLimitSince(null);
+//        if (limitingDate != null && !"".equals(limitingDate))
+//            options.setOptLimitSince(limitingDate);
+//        //   with limiting revision, if applicable
+//        options.setOptSince(null); // default setting
+//        if (limitingRev != null && !"".equals(limitingRev)) {
+//            // verify that limiting rev points to valid revision
+//            GitRevParseOptions revParseOptions = new GitRevParseOptions();
+//            revParseOptions.setVerify(true);
+//            try {
+//                List<String> revParseOutput =
+//                        Factory.createGitRevParse().revParse(gitFile.getWorkingTree().getPath(),
+//                                revParseOptions,
+//                                limitingRev+"^");
+//                options.setOptSince(revParseOutput.get(0));
+//            } catch (JavaGitException e) {
+//                // if "git rev-parse --verify limitingRev^" throws an exception,
+//                // the specified revision doesn't exist or limitingRev might be the first
+//                // (and doesn't have a parent that "^" would point to);
+//                // simply ignore this setting then to not limit the following "git log" command
+//            }
+//        }
+//        return getLog(options, "limited");
+        return null;
     }
 
     @Override
     void transformGraph() {
-        // TODO: implement
+        // TODO: implement - maybe? (wasn't implemented pre git change)
 //        // reduce commit graph to authors
 //        commitGraph.reduceByAuthors(limitingAuthors);
 //
@@ -105,20 +104,20 @@ public final class LimitedHistory extends FileHistory {
     }
 
     @Override
-    void transformList() throws IOException, JavaGitException {
-        Author self = new Self(gitFile).getSelf();
+    void transformList() throws IOException {
+        Author self = gitFile.getRepository().getSelf();
 
         // reduce commit graph to authors
         if (limitingAuthors != null && !limitingAuthors.isEmpty())
             for (ListIterator<Commit> i = commitList.listIterator(); i.hasNext(); )
-                if (!limitingAuthors.contains(i.next().author))
+                if (!limitingAuthors.contains(i.next().getAuthor()))
                     i.remove();
 
         // collapse sequences of same author
         if (commitList.size() > 0) {
-            Author currentAuthor = commitList.get(0).author;
+            Author currentAuthor = commitList.get(0).getAuthor();
             for (ListIterator<Commit> i = commitList.listIterator(1); i.hasNext(); ) {
-                Author a = i.next().author;
+                Author a = i.next().getAuthor();
                 if (a.equals(currentAuthor))
                     i.remove();
                 else
@@ -131,9 +130,9 @@ public final class LimitedHistory extends FileHistory {
                 (limitingRev == null || "".equals(limitingRev))) {
             int i = 0; // start with most current
             // ignore most recent commit(s) of self:
-            for (; i < commitList.size() && self.name.equals(commitList.get(i).author.name); i++);
+            for (; i < commitList.size() && self.name.equals(commitList.get(i).getAuthor().name); i++);
             // keep all commits from other authors
-            for (; i < commitList.size() && !self.name.equals(commitList.get(i).author.name); i++);
+            for (; i < commitList.size() && !self.name.equals(commitList.get(i).getAuthor().name); i++);
             if (i < commitList.size())
                 commitList.subList(i+1, commitList.size()).clear(); // remove all remaining commits
         }
@@ -145,22 +144,18 @@ public final class LimitedHistory extends FileHistory {
         return commitList;
     }
 
-    public final List<Author> getAuthorsList() throws IOException, ParseException, JavaGitException {
+    public final List<Author> getAuthorsList() throws IOException, ParseException {
         List<Author> authors = new ArrayList<Author>();
         for (Commit commit : commitList)
-            authors.add(commit.author);
+            authors.add(commit.getAuthor());
         return authors;
     }
 
-    public final List<ReaderWrapper> getReadersList() throws IOException, JavaGitException, ParseException {
+    public final List<ReaderWrapper> getReadersList() throws IOException, ParseException {
         List<ReaderWrapper> readers = new ArrayList<ReaderWrapper>();
         for (Commit commit : commitList) {
             // obtain string for readers
-            String contents = Factory.createGitShow().show(
-                    gitFile.getWorkingTree().getPath(),
-                    null,
-                    commit.sha1+":"+gitFile.getRelativePath());
-            readers.add(new StringReaderWrapper(contents));
+            readers.add(new CommitReaderWrapper(commit));
         }
         return readers;
     }

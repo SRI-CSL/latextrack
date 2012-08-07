@@ -8,8 +8,7 @@
  */
 package com.sri.ltc.server;
 
-import edu.nyu.cs.javagit.api.GitFile;
-import edu.nyu.cs.javagit.api.JavaGitException;
+import com.sri.ltc.versioncontrol.TrackedFile;
 
 import javax.swing.text.BadLocationException;
 import java.io.IOException;
@@ -26,7 +25,7 @@ public class SessionManager {
     final static Map<Integer,Session> sessions =
             Collections.synchronizedMap(new HashMap<Integer,Session>());
 
-    public static int createSession(GitFile gitFile) throws IOException, JavaGitException, ParseException, BadLocationException {
+    public static int createSession(TrackedFile gitFile) throws IOException, ParseException, BadLocationException {
         Session session = new Session(gitFile);
         sessions.put(session.ID, session);
         return session.ID;

@@ -8,14 +8,7 @@
  */
 package com.sri.ltc.git;
 
-import edu.nyu.cs.javagit.api.GitFile;
-import edu.nyu.cs.javagit.api.JavaGitException;
-import edu.nyu.cs.javagit.api.commands.IGitPull;
-import edu.nyu.cs.javagit.api.commands.IGitPush;
-import edu.nyu.cs.javagit.api.commands.IGitRemote;
-import edu.nyu.cs.javagit.api.responses.AbstractResponse;
-import edu.nyu.cs.javagit.api.responses.GitRemoteResponse;
-import edu.nyu.cs.javagit.client.Factory;
+import com.sri.ltc.versioncontrol.Repository;
 
 import java.io.File;
 import java.util.HashSet;
@@ -26,14 +19,9 @@ import java.util.logging.Logger;
  * @author linda
  */
 public final class FileRemotes {
-
     private final static Logger LOGGER = Logger.getLogger(FileRemotes.class.getName());
-    private final File workingTree;
-    private final IGitRemote remote = Factory.createGitRemote();
-    private final IGitPush push = Factory.createGitPush();
-    private final IGitPull pull = Factory.createGitPull();
 
-    public FileRemotes(GitFile gitFile) {
+    public FileRemotes(Repository gitFile) {
         if (gitFile == null)
             throw new IllegalArgumentException("Cannot create remotes with NULL as git file");
         this.workingTree = gitFile.getWorkingTree().getPath();
