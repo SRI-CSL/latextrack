@@ -8,12 +8,12 @@
  */
 package com.sri.ltc.editor;
 
-import com.sri.ltc.git.Commit;
 import com.sri.ltc.git.Remote;
 import com.sri.ltc.logging.LevelOptionHandler;
 import com.sri.ltc.logging.LogConfiguration;
 import com.sri.ltc.server.LTCserverImpl;
 import com.sri.ltc.server.LTCserverInterface;
+import com.sri.ltc.versioncontrol.Commit;
 import org.apache.xmlrpc.XmlRpcException;
 import org.kohsuke.args4j.Argument;
 import org.kohsuke.args4j.CmdLineException;

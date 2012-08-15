@@ -3,17 +3,17 @@ package com.sri.ltc.versioncontrol.git;
 import com.sri.ltc.filter.Author;
 import com.sri.ltc.server.LTCserverInterface;
 import com.sri.ltc.versioncontrol.Commit;
+import com.sri.ltc.versioncontrol.Repository;
 import org.eclipse.jgit.revwalk.RevCommit;
 
 import java.util.Date;
 import java.util.List;
 
-public class GitCommit extends com.sri.ltc.versioncontrol.Commit {
+public class GitCommit extends Commit {
     private RevCommit revCommit;
 
-    public GitCommit(RevCommit revCommit) {
-        super();
-
+    public GitCommit(Repository repository, RevCommit revCommit) {
+        super(repository);
         this.revCommit = revCommit;
     }
 

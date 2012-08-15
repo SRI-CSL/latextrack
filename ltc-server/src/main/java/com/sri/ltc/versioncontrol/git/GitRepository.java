@@ -3,6 +3,7 @@ package com.sri.ltc.versioncontrol.git;
 import com.sri.ltc.filter.Author;
 import com.sri.ltc.versioncontrol.Commit;
 import com.sri.ltc.versioncontrol.Repository;
+import com.sri.ltc.versioncontrol.TrackedFile;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.lib.Constants;
 import org.eclipse.jgit.lib.IndexDiff;
@@ -58,7 +59,7 @@ public class GitRepository implements Repository {
         Git git = new Git(repository);
         // note: -must- assign the result to a variable or else nothing seems to actually happen
         RevCommit revCommit = git.commit().setMessage(message).call();
-        return new GitCommit(revCommit);
+        return new GitCommit(this, revCommit);
     }
 
     @Override
@@ -68,7 +69,7 @@ public class GitRepository implements Repository {
         Git git = new Git(repository);
         Iterable<RevCommit> log = git.log().call();
         for (RevCommit revCommit : log) {
-            commitsList.add(new GitCommit(revCommit));
+            commitsList.add(new GitCommit(this, revCommit));
         }
 
         return commitsList;
@@ -76,16 +77,16 @@ public class GitRepository implements Repository {
         // TODO: how to get commits for a single file?
     }
 
-    public Commit getCommitInfo(File path) throws IOException {
-        Git git = new Git(repository);
-        IndexDiff diff = new IndexDiff(repository, "HEAD", new FileTreeIterator(repository));
-        diff.setFilter(PathFilterGroup.createFromStrings(path.getPath()));
-        diff.diff();
+    public org.eclipse.jgit.lib.Repository getWrappedRepository() {
+        return repository;
+    }
 
-    	if (!diff.getAdded().isEmpty())
-			System.out.println("file was added");
-		if (!diff.getChanged().isEmpty())
-			System.out.println("file was changed");
+    @Override
+    public TrackedFile getFile(File file) throws IOException {
+        return new GitTrackedFile(this, file);
+    }
+
+    public Commit getCommitInfo(File path) throws IOException {
 
         
 
@@ -108,7 +109,7 @@ public class GitRepository implements Repository {
 
         ObjectId objectId = treeWalk.getObjectId(0);
         RevCommit revCommit = revWalk.parseCommit(objectId);
-        return new GitCommit(revCommit);
+        return new GitCommit(this, revCommit);
     }
 
     @Override

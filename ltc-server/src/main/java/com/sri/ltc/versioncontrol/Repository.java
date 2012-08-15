@@ -14,6 +14,8 @@ public interface Repository {
     public List<Commit> getCommits() throws Exception;
     List<URI> getRemoteRepositories() throws Exception;
 
+    public TrackedFile getFile(File file) throws IOException;
+
     // TODO: could push these into a separate interface, but probably not needed
     public Author getSelf();
     public void setSelf(Author author);

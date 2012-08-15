@@ -31,6 +31,8 @@ public abstract class Commit {
     abstract public List<Commit> getParents();
 
     public Reader getContents() throws IOException {
+        // TODO: this is a muddle - could move this implementation down into GitCommit
+        // or change GitTrackedFile to call into the repository class
         InputStream inputStream = repository.getContentStream(this);
         return new InputStreamReader(inputStream);
     }

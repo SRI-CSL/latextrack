@@ -28,7 +28,7 @@ public final class Session {
     private static int nextID = 1;
 
     final int ID;
-    final TrackedFile gitFile;
+    private final TrackedFile gitFile;
     private final CompleteHistory completeHistory;
     private final FileRemotes remotes;
     private final Set<Author> knownAuthors = Sets.newHashSet();
@@ -49,6 +49,10 @@ public final class Session {
         remotes = new FileRemotes(gitFile.getRepository());
     }
 
+    public TrackedFile getTrackedFile() {
+        return gitFile;
+    }
+    
     private static synchronized int generateID() {
         return nextID++;
     }

@@ -18,43 +18,35 @@ import java.util.logging.Logger;
 /**
  * @author linda
  */
+
+// TODO: break this into an interface and let each implementation be separate (or mash them into Repository, but that seems bad)
 public final class FileRemotes {
     private final static Logger LOGGER = Logger.getLogger(FileRemotes.class.getName());
 
     public FileRemotes(Repository gitFile) {
-        if (gitFile == null)
-            throw new IllegalArgumentException("Cannot create remotes with NULL as git file");
-        this.workingTree = gitFile.getWorkingTree().getPath();
     }
 
-    public Set<Remote> updateAndGetRemotes() throws JavaGitException {
+    public Set<Remote> updateAndGetRemotes() {
         Set<Remote> remotes = new HashSet<Remote>();
-        for (GitRemoteResponse.Remote r : remote.remote(workingTree)) {
-            remotes.add(new Remote(r.name, r.url, r.isReadOnly()));
-        }
         LOGGER.fine("Obtained current remotes with "+remotes.size()+" entries.");
         return remotes;
     }
 
-    public int addRemote(String name, String url) throws JavaGitException {
-        return remote.add(workingTree, null, name, url);
+    public int addRemote(String name, String url) {
+        // TODO: return codes?
+        return 0;
+        //return remote.add(workingTree, null, name, url);
     }
 
-    public int rmRemote(String name) throws JavaGitException {
-        return remote.rm(workingTree, null, name);
+    public int rmRemote(String name) {
+        return 0;
     }
 
-    public String pull(String repository) throws JavaGitException {
-        return errorOrEmpty(pull.master(workingTree, null, repository));
+    public String pull(String repository) {
+        return "";
     }
 
-    public String push(String repository) throws JavaGitException {
-        return errorOrEmpty(push.master(workingTree, null, repository));
-    }
-
-    private String errorOrEmpty(AbstractResponse response) {
-        if (response.isError())
-            return response.getError();
+    public String push(String repository) {
         return "";
     }
 }

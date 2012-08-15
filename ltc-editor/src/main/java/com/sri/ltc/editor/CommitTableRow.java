@@ -9,8 +9,8 @@
 package com.sri.ltc.editor;
 
 import com.sri.ltc.filter.Author;
-import com.sri.ltc.git.Commit;
 import com.sri.ltc.server.LTCserverInterface;
+import com.sri.ltc.versioncontrol.Commit;
 
 import java.text.ParseException;
 import java.util.ArrayList;

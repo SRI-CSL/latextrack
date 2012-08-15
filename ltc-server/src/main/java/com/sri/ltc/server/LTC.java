@@ -10,7 +10,6 @@ package com.sri.ltc.server;
 
 import com.sri.ltc.logging.LevelOptionHandler;
 import com.sri.ltc.logging.LogConfiguration;
-import edu.nyu.cs.javagit.api.JavaGitConfiguration;
 import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
@@ -121,15 +120,16 @@ public final class LTC {
             logger.log(Level.SEVERE, "Cannot configure logging", e);
         }
 
-        // handling path information to git executable
-        if (options.gitDir != null && !"".equals(options.gitDir)) {
-            logger.info("Trying to set git path to \""+options.gitDir+"\" from command line");
-            try {
-                JavaGitConfiguration.setGitPath(options.gitDir);
-            } catch (Exception e) {
-                logger.log(Level.SEVERE, "Cannot set git path", e);
-            }
-        }
+        // TODO: don't think we need this anymore?
+//        // handling path information to git executable
+//        if (options.gitDir != null && !"".equals(options.gitDir)) {
+//            logger.info("Trying to set git path to \""+options.gitDir+"\" from command line");
+//            try {
+//                JavaGitConfiguration.setGitPath(options.gitDir);
+//            } catch (Exception e) {
+//                logger.log(Level.SEVERE, "Cannot set git path", e);
+//            }
+//        }
 
         LTC.getInstance(); // start up server (if not already running)
     }

@@ -9,7 +9,7 @@
 package com.sri.ltc.editor;
 
 import com.sri.ltc.filter.Author;
-import com.sri.ltc.git.Commit;
+import com.sri.ltc.versioncontrol.Commit;
 
 import javax.activation.DataHandler;
 import javax.swing.*;
