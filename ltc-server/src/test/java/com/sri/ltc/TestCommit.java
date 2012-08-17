@@ -15,6 +15,7 @@ public class TestCommit extends Commit {
 
 
     public TestCommit(String id, Date date, String authorName, String authorEmail, String message) {
+        super(null);
         this.id = id;
         this.date = date;
         this.authorName = authorName;

@@ -9,9 +9,9 @@
 package com.sri.ltc;
 
 import com.sri.ltc.filter.Author;
-import com.sri.ltc.git.Commit;
 import com.sri.ltc.server.HelloLTC;
 import com.sri.ltc.server.LTCserverInterface;
+import com.sri.ltc.versioncontrol.Commit;
 import org.apache.xmlrpc.XmlRpcException;
 
 import java.io.BufferedReader;
@@ -173,12 +173,12 @@ public class RpcClient {
                         case 'P':
                             System.out.println("Commits:");
                             for (Object[] object : (List<Object[]>) server.get_commits(Integer.parseInt(tokens[1]))) {
-                                try {
-                                    // TODO: replace this with individual prints, or 
-                                    System.out.println("  "+ Commit.fromArray(object));
-                                } catch (ParseException e) {
-                                    e.printStackTrace();
-                                }
+                                    // TODO: replace this with individual prints, or?
+//                                try {
+//                                    System.out.println("  "+ Commit.fromArray(object));
+//                                } catch (ParseException e) {
+//                                    e.printStackTrace();
+//                                }
                             }
                             break;
                         case 'T':

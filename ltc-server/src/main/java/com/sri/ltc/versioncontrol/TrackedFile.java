@@ -9,12 +9,15 @@ public abstract class TrackedFile<RepositoryClass extends Repository> {
     private File file;
 
     public enum Status {
-        Unknown,
         Added,
         Changed,
+        Conflicting,
+        Ignored,
+        Missing,
         Modified,
+        NotTracked,
         Removed,
-        NotTracked
+        Unchanged,
     }
     
     abstract public List<Commit> getCommits() throws IOException;

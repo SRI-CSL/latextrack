@@ -46,6 +46,10 @@ public class GitRepository implements Repository {
         builder.readEnvironment();
 
         repository = builder.build();
+
+        if (create) {
+            repository.create();
+        }
     }
 
     @Override

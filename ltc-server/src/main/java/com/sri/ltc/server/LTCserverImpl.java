@@ -41,9 +41,6 @@ import java.util.logging.Logger;
 import java.util.prefs.BackingStoreException;
 import java.util.prefs.Preferences;
 
-import static com.sri.ltc.versioncontrol.TrackedFile.Status;
-import static com.sri.ltc.versioncontrol.TrackedFile.Status.*;
-
 /**
  * @author linda
  */
