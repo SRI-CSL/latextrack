@@ -5,18 +5,16 @@ import com.sri.ltc.versioncontrol.Commit;
 import com.sri.ltc.versioncontrol.Repository;
 import com.sri.ltc.versioncontrol.TrackedFile;
 import org.eclipse.jgit.api.Git;
+import org.eclipse.jgit.api.LogCommand;
 import org.eclipse.jgit.lib.Constants;
-import org.eclipse.jgit.lib.IndexDiff;
 import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.lib.ObjectLoader;
 import org.eclipse.jgit.revwalk.RevCommit;
 import org.eclipse.jgit.revwalk.RevTree;
 import org.eclipse.jgit.revwalk.RevWalk;
 import org.eclipse.jgit.storage.file.FileRepositoryBuilder;
-import org.eclipse.jgit.treewalk.FileTreeIterator;
 import org.eclipse.jgit.treewalk.TreeWalk;
 import org.eclipse.jgit.treewalk.filter.PathFilter;
-import org.eclipse.jgit.treewalk.filter.PathFilterGroup;
 
 import java.io.File;
 import java.io.IOException;
@@ -62,23 +60,23 @@ public class GitRepository implements Repository {
     public Commit commit(String message) throws Exception {
         Git git = new Git(repository);
         // note: -must- assign the result to a variable or else nothing seems to actually happen
-        RevCommit revCommit = git.commit().setMessage(message).call();
+        // todo: we are automatically staging changes and deletes here - that may not be desirable!
+        RevCommit revCommit = git.commit().setAll(true).setMessage(message).call();
         return new GitCommit(this, revCommit);
     }
 
     @Override
     public List<Commit> getCommits() throws Exception {
-        List<com.sri.ltc.versioncontrol.Commit> commitsList = new ArrayList<com.sri.ltc.versioncontrol.Commit>();
+        List<Commit> commitsList = new ArrayList<com.sri.ltc.versioncontrol.Commit>();
         
         Git git = new Git(repository);
-        Iterable<RevCommit> log = git.log().call();
-        for (RevCommit revCommit : log) {
+        LogCommand logCommand = git.log().add(git.getRepository().resolve(Constants.HEAD));
+
+        for (RevCommit revCommit : logCommand.call()) {
             commitsList.add(new GitCommit(this, revCommit));
         }
 
         return commitsList;
-
-        // TODO: how to get commits for a single file?
     }
 
     public org.eclipse.jgit.lib.Repository getWrappedRepository() {

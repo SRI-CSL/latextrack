@@ -34,7 +34,7 @@ public class GitCommit extends Commit {
 
     @Override
     public Date getDate() {
-        return new Date(revCommit.getCommitTime());
+        return new Date(revCommit.getCommitTime() * 1000L);
     }
 
     @Override
@@ -44,6 +44,7 @@ public class GitCommit extends Commit {
     }
 
     // TODO: not sure about this LTCserverInterface reference - may need to abstract out somehow
+    // TODO: "ON_DISK" reference doesn't seem valid with jGit - what was it for?
     @Override
     public String toString() {
         return getId().substring(0, LTCserverInterface.ON_DISK.length()) + "  " + FORMATTER.format(getDate()) + "  " + getAuthor().gitRepresentation();
