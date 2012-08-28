@@ -12,7 +12,7 @@ public interface Repository {
     public void addFile(File file) throws Exception;
     public Commit commit(String message) throws Exception;
 
-    // TODO: we don't really use this - should probably delete it
+    // TODO: we don't really use this - should probably delete it - it would simplify GitCommit's getContents method, too
     public List<Commit> getCommits() throws Exception;
     
     List<URI> getRemoteRepositories() throws Exception;

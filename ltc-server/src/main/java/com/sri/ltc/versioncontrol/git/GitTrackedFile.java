@@ -17,9 +17,7 @@ import org.eclipse.jgit.treewalk.filter.TreeFilter;
 import javax.annotation.Nullable;
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 
 public class GitTrackedFile extends TrackedFile<GitRepository> {
     public GitTrackedFile(GitRepository repository, File file) {
@@ -79,7 +77,7 @@ public class GitTrackedFile extends TrackedFile<GitRepository> {
 //                }
 //            }
         }
-            
+
         return commits;
     }
 
