@@ -3,6 +3,8 @@ package com.sri.ltc;
 import com.sri.ltc.filter.Author;
 import com.sri.ltc.versioncontrol.Commit;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.Date;
 import java.util.List;
 
@@ -12,7 +14,6 @@ public class TestCommit extends Commit {
     private String authorEmail;
     private String message;
     private Date date;
-
 
     public TestCommit(String id, Date date, String authorName, String authorEmail, String message) {
         super(null);
@@ -45,6 +46,12 @@ public class TestCommit extends Commit {
 
     @Override
     public List<Commit> getParents() {
+        assert(false); // not implemented for test class
+        return null;
+    }
+
+    @Override
+    public InputStream getContentStream() throws IOException {
         assert(false); // not implemented for test class
         return null;
     }

@@ -12,6 +12,7 @@ package com.sri.ltc.git;
 import com.sri.ltc.filter.Author;
 import com.sri.ltc.versioncontrol.CommitGraph;
 import com.sri.ltc.versioncontrol.Commit;
+import com.sri.ltc.versioncontrol.Repository;
 import com.sri.ltc.versioncontrol.TrackedFile;
 
 import java.io.IOException;
@@ -58,7 +59,8 @@ public abstract class FileHistory {
             
             // build up return list
             StringBuilder parentsAsString = new StringBuilder();
-            for (Commit parent : commit.getParents()) {
+            List<Commit> parents = commit.getParents();
+            for (Commit parent : parents) {
                 parentsAsString.append(parent + " ");
             }
 

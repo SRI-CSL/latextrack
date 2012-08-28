@@ -11,7 +11,10 @@ import java.util.List;
 public interface Repository {
     public void addFile(File file) throws Exception;
     public Commit commit(String message) throws Exception;
+
+    // TODO: we don't really use this - should probably delete it
     public List<Commit> getCommits() throws Exception;
+    
     List<URI> getRemoteRepositories() throws Exception;
 
     public TrackedFile getFile(File file) throws IOException;
@@ -20,7 +23,6 @@ public interface Repository {
     public Author getSelf();
     public void setSelf(Author author);
     public void resetSelf();
-    public InputStream getContentStream(Commit commit) throws IOException;
 
     // TODO how to handle push/pull for svn? could map pull to update
     void push(URI remote);

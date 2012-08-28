@@ -62,7 +62,7 @@ public class GitRepository implements Repository {
         // note: -must- assign the result to a variable or else nothing seems to actually happen
         // todo: we are automatically staging changes and deletes here - that may not be desirable!
         RevCommit revCommit = git.commit().setAll(true).setMessage(message).call();
-        return new GitCommit(this, revCommit);
+        return new GitCommit(this, null, revCommit);
     }
 
     @Override
@@ -73,7 +73,7 @@ public class GitRepository implements Repository {
         LogCommand logCommand = git.log().add(git.getRepository().resolve(Constants.HEAD));
 
         for (RevCommit revCommit : logCommand.call()) {
-            commitsList.add(new GitCommit(this, revCommit));
+            commitsList.add(new GitCommit(this, null, revCommit));
         }
 
         return commitsList;
@@ -88,32 +88,6 @@ public class GitRepository implements Repository {
         return new GitTrackedFile(this, file);
     }
 
-    public Commit getCommitInfo(File path) throws IOException {
-
-        
-
-        // alternative:
-        ObjectId lastCommitId = repository.resolve(Constants.HEAD);
-
-        // now we have to get the commit
-        RevWalk revWalk = new RevWalk(repository);
-        RevCommit headCommit = revWalk.parseCommit(lastCommitId);
-
-        // and using commit's tree find the path
-        RevTree tree = headCommit.getTree();
-        TreeWalk treeWalk = new TreeWalk(repository);
-        treeWalk.addTree(tree);
-        treeWalk.setRecursive(true);
-        treeWalk.setFilter(PathFilter.create(path.getPath()));
-        if (!treeWalk.next()) {
-            return null;
-        }
-
-        ObjectId objectId = treeWalk.getObjectId(0);
-        RevCommit revCommit = revWalk.parseCommit(objectId);
-        return new GitCommit(this, revCommit);
-    }
-
     @Override
     public List<URI> getRemoteRepositories() throws Exception {
         return null;
@@ -121,11 +95,13 @@ public class GitRepository implements Repository {
 
     @Override
     public void push(URI remote) {
+        // TODO
         //To change body of implemented methods use File | Settings | File Templates.
     }
 
     @Override
     public void pull(URI remote) {
+        // TODO
         //To change body of implemented methods use File | Settings | File Templates.
     }
 
@@ -151,12 +127,5 @@ public class GitRepository implements Repository {
 //        repository.getConfig().unset("user", null, "name");
 //        repository.getConfig().unset("user", null, "email");
 //        LOGGER.fine("Reset current author");
-    }
-
-    public InputStream getContentStream(com.sri.ltc.versioncontrol.Commit commit) throws IOException {
-        ObjectId objectId = ObjectId.fromString(commit.getId());
-
-        ObjectLoader loader = repository.open(objectId);
-        return loader.openStream();
     }
 }

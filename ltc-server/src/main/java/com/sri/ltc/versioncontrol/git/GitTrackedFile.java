@@ -2,7 +2,9 @@ package com.sri.ltc.versioncontrol.git;
 
 import com.sri.ltc.versioncontrol.Commit;
 import com.sri.ltc.versioncontrol.TrackedFile;
-import org.eclipse.jgit.lib.*;
+import org.eclipse.jgit.lib.Constants;
+import org.eclipse.jgit.lib.IndexDiff;
+import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.revwalk.RevCommit;
 import org.eclipse.jgit.revwalk.RevSort;
 import org.eclipse.jgit.revwalk.RevWalk;
@@ -59,7 +61,7 @@ public class GitTrackedFile extends TrackedFile<GitRepository> {
             if (exclusiveLimitDate.after(GitCommit.CommitDate(revCommit))) break;
             if (revCommit.getId().equals(limitRevCommit)) break;
 
-            commits.add(new GitCommit(getRepository(), revCommit));
+            commits.add(new GitCommit(getRepository(), this, revCommit));
 
 //            TreeWalk treeWalk = TreeWalk.forPath(wrappedRepository, getRepositoryRelativeFilePath(), revCommit.getTree());
 //            if (treeWalk != null) {
@@ -110,7 +112,8 @@ public class GitTrackedFile extends TrackedFile<GitRepository> {
         return Status.Unchanged;
     }
 
-    private String getRepositoryRelativeFilePath() {
+    // TODO: depending on how SVN integration goes, this may move up into the interface
+    public String getRepositoryRelativeFilePath() {
         String basePath = getRepository().getWrappedRepository().getWorkTree().getPath();
         return new File(basePath).toURI().relativize(getFile().toURI()).getPath();
     }

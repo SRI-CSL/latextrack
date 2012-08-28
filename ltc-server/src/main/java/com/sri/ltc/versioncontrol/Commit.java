@@ -14,14 +14,14 @@ import java.util.Date;
 import java.util.List;
 import java.util.logging.Logger;
 
-public abstract class Commit {
+public abstract class Commit<RepositoryType extends Repository> {
     public final static Logger LOGGER = Logger.getLogger(Commit.class.getName());
 
     private final static DateFormat FORMATTER = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss Z");
 
-    protected Repository repository;
+    protected RepositoryType repository;
 
-    protected Commit(Repository repository) {
+    protected Commit(RepositoryType repository) {
         this.repository = repository;
     }
 
@@ -30,7 +30,11 @@ public abstract class Commit {
     abstract public Author getAuthor();
     abstract public Date getDate();
 
-    abstract public List<Commit> getParents();
+    abstract public List<Commit<RepositoryType>> getParents();
+
+    // note: this only makes sense if the commit was a single-file commit
+    // if the commit was not filtered by file, this method will return null
+    abstract public InputStream getContentStream() throws IOException;
 
     // TODO: these two methods should probably go into a utility class of some form
     public static String serializeDate(Date date) {
@@ -42,10 +46,11 @@ public abstract class Commit {
     }
     
     public Reader getContents() throws IOException {
-        // TODO: this is a muddle - could move this implementation down into GitCommit
-        // or change GitTrackedFile to call into the repository class
-        InputStream inputStream = repository.getContentStream(this);
-        return new InputStreamReader(inputStream);
+        return new InputStreamReader(getContentStream());
+    }
+
+    public RepositoryType getRepository() {
+        return repository;
     }
     
     @Override
