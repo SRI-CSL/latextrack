@@ -7,10 +7,9 @@
  * Copyright 2009-2010, SRI International.
  */
 
-package com.sri.ltc.git;
+package com.sri.ltc.versioncontrol;
 
 import com.sri.ltc.filter.Author;
-import com.sri.ltc.versioncontrol.Commit;
 import org.jgrapht.graph.DefaultEdge;
 import org.jgrapht.graph.SimpleDirectedGraph;
 
@@ -20,14 +19,10 @@ import java.util.*;
  * @author linda
  */
 
-// TODO: move out of git namespace
-// TODO: can jGit build this more directly?
-    
 public final class CommitGraph extends SimpleDirectedGraph<Commit, DefaultEdge> {
 
     private static final long serialVersionUID = 3699166530479808547L;
 
-    // TODO: does this need to be a hashmap, or would a set suffice? commits are equal/hashed by ID
     private final Map<String,Commit> verticesBySHA = new HashMap<String, Commit>();
     private final Set<Commit> heads = new HashSet<Commit>();
 

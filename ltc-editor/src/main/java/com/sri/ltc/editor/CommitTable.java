@@ -66,7 +66,7 @@ public final class CommitTable extends JTable {
         setDefaultRenderer(Date.class, new CommitTableRenderer() {
             @Override
             String renderText(Object object) {
-                return Commit.FORMATTER.format((Date) object);
+                return Commit.serializeDate((Date) object);
             }
         });
         setDefaultRenderer(Author.class, new CommitTableRenderer() {

@@ -29,7 +29,7 @@ public class GitRepository implements Repository {
     private org.eclipse.jgit.lib.Repository repository = null;
 
     public GitRepository(File localPath) throws IOException {
-        new GitRepository(localPath, false);
+        this(localPath, false);
     }
     
     public GitRepository(File localPath, boolean create) throws IOException {

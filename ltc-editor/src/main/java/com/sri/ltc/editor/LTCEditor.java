@@ -242,7 +242,7 @@ public final class LTCEditor extends LTCGui {
                 try {
                     Date data = (Date) support.getTransferable().getTransferData(DATE_FLAVOR);
                     // insert data
-                    dateField.setText(Commit.FORMATTER.format(data));
+                    dateField.setText(Commit.serializeDate(data));
                     // signal success
                     return true;
                 } catch (UnsupportedFlavorException e) {

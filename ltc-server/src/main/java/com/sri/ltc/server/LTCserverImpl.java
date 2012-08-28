@@ -362,7 +362,7 @@ public final class LTCserverImpl implements LTCserverInterface {
 
         LOGGER.info("Server: commit_file to file \""+session.getTrackedFile().getFile().getAbsolutePath()+"\" called.");
 
-        // TODO: implement!
+        // TODO: implement! should be as easy as
 //        try {
 //            GitCommitResponse response = Factory.createGitCommit().commitOnly(session.gitFile.getWorkingTree().getPath(),
 //                    message,

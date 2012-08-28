@@ -10,8 +10,7 @@ package com.sri.ltc;
 
 import com.sri.ltc.filter.Author;
 import com.sri.ltc.versioncontrol.Commit;
-import com.sri.ltc.versioncontrol.git.GitCommit;
-import com.sri.ltc.git.CommitGraph;
+import com.sri.ltc.versioncontrol.CommitGraph;
 import org.jgrapht.DirectedGraph;
 import org.jgrapht.graph.DefaultEdge;
 import org.jgrapht.graph.SimpleDirectedGraph;

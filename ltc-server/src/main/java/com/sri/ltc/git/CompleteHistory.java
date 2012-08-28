@@ -25,7 +25,6 @@ public final class CompleteHistory extends FileHistory {
         update();
     }
 
-    // TODO: is this method needed?
     @Override
     List<Commit> updateCommits() throws IOException, ParseException {
         // perform git log with static options

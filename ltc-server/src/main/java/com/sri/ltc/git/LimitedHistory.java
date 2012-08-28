@@ -16,10 +16,7 @@ import com.sri.ltc.versioncontrol.TrackedFile;
 
 import java.io.IOException;
 import java.text.ParseException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.ListIterator;
-import java.util.Set;
+import java.util.*;
 import java.util.logging.Logger;
 
 /**
@@ -43,33 +40,11 @@ public final class LimitedHistory extends FileHistory {
 
     @Override
     List<Commit> updateCommits() throws ParseException, IOException {
-        // TODO: implement this!
-//        // perform git log:
-//        //   with limiting date, if applicable
-//        options.setOptLimitSince(null);
-//        if (limitingDate != null && !"".equals(limitingDate))
-//            options.setOptLimitSince(limitingDate);
-//        //   with limiting revision, if applicable
-//        options.setOptSince(null); // default setting
-//        if (limitingRev != null && !"".equals(limitingRev)) {
-//            // verify that limiting rev points to valid revision
-//            GitRevParseOptions revParseOptions = new GitRevParseOptions();
-//            revParseOptions.setVerify(true);
-//            try {
-//                List<String> revParseOutput =
-//                        Factory.createGitRevParse().revParse(gitFile.getWorkingTree().getPath(),
-//                                revParseOptions,
-//                                limitingRev+"^");
-//                options.setOptSince(revParseOutput.get(0));
-//            } catch (JavaGitException e) {
-//                // if "git rev-parse --verify limitingRev^" throws an exception,
-//                // the specified revision doesn't exist or limitingRev might be the first
-//                // (and doesn't have a parent that "^" would point to);
-//                // simply ignore this setting then to not limit the following "git log" command
-//            }
-//        }
-//        return getLog(options, "limited");
-        return null;
+        // perform git log:
+        //   with limiting date, if applicable
+        return gitFile.getCommits(
+                ((limitingDate == null) || limitingDate.isEmpty()) ? null : Commit.deSerializeDate(limitingDate),
+                ((limitingRev == null) || limitingRev.isEmpty()) ? null : limitingRev);
     }
 
     @Override

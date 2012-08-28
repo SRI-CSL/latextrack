@@ -10,7 +10,7 @@
 package com.sri.ltc.git;
 
 import com.sri.ltc.filter.Author;
-import com.sri.ltc.git.CommitGraph;
+import com.sri.ltc.versioncontrol.CommitGraph;
 import com.sri.ltc.versioncontrol.Commit;
 import com.sri.ltc.versioncontrol.TrackedFile;
 
@@ -67,7 +67,7 @@ public abstract class FileHistory {
                     commit.getMessage().trim(),
                     author.name,
                     author.email,
-                    commit.getDate(),
+                    Commit.serializeDate(commit.getDate()),
                     parentsAsString.toString()
             });
         }
@@ -99,6 +99,7 @@ public abstract class FileHistory {
         // do any specific list transformations before reversing
         transformList();
 
+        // TODO: currently the git api is handing them back oldest first - is that a problem? should we remove the reverse?
         Collections.reverse(commitList); // start with oldest commit first
         return list;
     }

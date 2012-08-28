@@ -4,14 +4,21 @@ import com.sri.ltc.filter.Author;
 import com.sri.ltc.server.LTCserverInterface;
 import com.sri.ltc.versioncontrol.Commit;
 import com.sri.ltc.versioncontrol.Repository;
+import org.eclipse.jgit.lib.Constants;
+import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.revwalk.RevCommit;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
 public class GitCommit extends Commit {
     private RevCommit revCommit;
 
+    public static Date CommitDate(RevCommit revCommit) {
+        return new Date(revCommit.getCommitTime() * 1000L);
+    }
+    
     public GitCommit(Repository repository, RevCommit revCommit) {
         super(repository);
         this.revCommit = revCommit;
@@ -19,7 +26,7 @@ public class GitCommit extends Commit {
 
     @Override
     public String getId() {
-        return revCommit.getId().toString();
+        return revCommit.getId().name();
     }
 
     @Override
@@ -34,19 +41,16 @@ public class GitCommit extends Commit {
 
     @Override
     public Date getDate() {
-        return new Date(revCommit.getCommitTime() * 1000L);
+        return GitCommit.CommitDate(revCommit);
     }
 
     @Override
     public List<Commit> getParents() {
-        // TODO
-        return null;
-    }
+        List<Commit> parents = new ArrayList<Commit>();
+        for (RevCommit parentCommit : revCommit.getParents()) {
+            parents.add(new GitCommit(repository, parentCommit));
+        }
 
-    // TODO: not sure about this LTCserverInterface reference - may need to abstract out somehow
-    // TODO: "ON_DISK" reference doesn't seem valid with jGit - what was it for?
-    @Override
-    public String toString() {
-        return getId().substring(0, LTCserverInterface.ON_DISK.length()) + "  " + FORMATTER.format(getDate()) + "  " + getAuthor().gitRepresentation();
+        return parents;
     }
 }

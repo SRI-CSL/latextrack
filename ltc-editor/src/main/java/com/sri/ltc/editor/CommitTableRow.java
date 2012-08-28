@@ -47,7 +47,7 @@ public final class CommitTableRow {
             throw new IllegalArgumentException("Cannot create commit table row from less than 6 objects in array");
         this.sha1 = array[0].toString();
         this.message = array[1].toString(); // TODO: limit to first newline (if any)
-        this.date = Commit.FORMATTER.parse(array[4].toString());
+        this.date = Commit.deSerializeDate(array[4].toString());
         this.author = new Author(array[2].toString(), array[3].toString(), null);
     }
 

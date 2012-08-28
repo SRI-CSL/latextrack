@@ -2,8 +2,6 @@ package com.sri.ltc.versioncontrol.git;
 
 import com.sri.ltc.versioncontrol.Commit;
 import com.sri.ltc.versioncontrol.TrackedFile;
-import org.eclipse.jgit.api.Git;
-import org.eclipse.jgit.api.LogCommand;
 import org.eclipse.jgit.lib.*;
 import org.eclipse.jgit.revwalk.RevCommit;
 import org.eclipse.jgit.revwalk.RevSort;
@@ -14,9 +12,11 @@ import org.eclipse.jgit.treewalk.filter.PathFilter;
 import org.eclipse.jgit.treewalk.filter.PathFilterGroup;
 import org.eclipse.jgit.treewalk.filter.TreeFilter;
 
+import javax.annotation.Nullable;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 public class GitTrackedFile extends TrackedFile<GitRepository> {
@@ -26,6 +26,11 @@ public class GitTrackedFile extends TrackedFile<GitRepository> {
 
     @Override
     public List<Commit> getCommits() throws IOException {
+        return getCommits(null, null);
+    }
+
+    @Override
+    public List<Commit> getCommits(@Nullable Date exclusiveLimitDate, @Nullable String exclusiveLimitRevision) throws IOException {
         // note: we could use the simpler LogCommand with add + addPath, but that
         // throws a jgit-specific exception.
 
@@ -45,7 +50,15 @@ public class GitTrackedFile extends TrackedFile<GitRepository> {
             revWalk.markStart(rootCommit);
         }
 
+        RevCommit limitRevCommit = null;
+        if (exclusiveLimitRevision != null) limitRevCommit = revWalk.parseCommit(wrappedRepository.resolve(exclusiveLimitRevision));
+
+        if (exclusiveLimitDate == null) exclusiveLimitDate = new Date(0);
+        
         for (RevCommit revCommit : revWalk) {
+            if (exclusiveLimitDate.after(GitCommit.CommitDate(revCommit))) break;
+            if (revCommit.getId().equals(limitRevCommit)) break;
+
             commits.add(new GitCommit(getRepository(), revCommit));
 
 //            TreeWalk treeWalk = TreeWalk.forPath(wrappedRepository, getRepositoryRelativeFilePath(), revCommit.getTree());
@@ -64,7 +77,7 @@ public class GitTrackedFile extends TrackedFile<GitRepository> {
 //                }
 //            }
         }
-
+            
         return commits;
     }
 
