@@ -61,7 +61,7 @@ public abstract class FileHistory {
             StringBuilder parentsAsString = new StringBuilder();
             List<Commit> parents = commit.getParents();
             for (Commit parent : parents) {
-                parentsAsString.append(parent + " ");
+                parentsAsString.append(parent.getId() + " ");
             }
 
             list.add(new Object[] {
@@ -101,7 +101,6 @@ public abstract class FileHistory {
         // do any specific list transformations before reversing
         transformList();
 
-        // TODO: currently the git api is handing them back oldest first - is that a problem? should we remove the reverse?
         Collections.reverse(commitList); // start with oldest commit first
         return list;
     }
