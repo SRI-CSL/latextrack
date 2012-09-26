@@ -25,7 +25,7 @@ public class SessionManager {
     final static Map<Integer,Session> sessions =
             Collections.synchronizedMap(new HashMap<Integer,Session>());
 
-    public static int createSession(TrackedFile gitFile) throws IOException, ParseException, BadLocationException {
+    public static int createSession(TrackedFile gitFile) throws Exception {
         Session session = new Session(gitFile);
         sessions.put(session.ID, session);
         return session.ID;

@@ -14,17 +14,13 @@ public interface Repository {
 
     // TODO: we don't really use this - should probably delete it - it would simplify GitCommit's getContents method, too
     public List<Commit> getCommits() throws Exception;
-    
-    List<URI> getRemoteRepositories() throws Exception;
 
     public TrackedFile getFile(File file) throws IOException;
 
+    public Remotes getRemotes();
+    
     // TODO: could push these into a separate interface, but probably not needed
     public Author getSelf();
     public void setSelf(Author author);
     public void resetSelf();
-
-    // TODO how to handle push/pull for svn? could map pull to update
-    void push(URI remote);
-    void pull(URI remote);
 }

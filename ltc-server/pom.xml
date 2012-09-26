@@ -23,6 +23,10 @@
             <id>jgit-repository</id>
             <url>http://download.eclipse.org/jgit/maven</url>
         </repository>
+        <repository>
+            <id>svnkit-repository</id>
+            <url>http://maven.tmatesoft.com/content/repositories/releases/</url>
+        </repository>
     </repositories>
 
     <dependencies>
@@ -57,6 +61,13 @@
             <groupId>org.eclipse.jgit</groupId>
             <artifactId>org.eclipse.jgit</artifactId>
             <version>2.0.0.201206130900-r</version>
+        </dependency>
+
+        <!-- SVN Kit dependencies -->
+        <dependency>
+            <groupId>org.tmatesoft.svnkit</groupId>
+            <artifactId>svnkit</artifactId>
+            <version>1.7.5-v1</version>
         </dependency>
     </dependencies>
 

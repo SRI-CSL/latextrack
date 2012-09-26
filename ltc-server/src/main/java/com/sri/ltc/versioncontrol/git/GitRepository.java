@@ -2,6 +2,7 @@ package com.sri.ltc.versioncontrol.git;
 
 import com.sri.ltc.filter.Author;
 import com.sri.ltc.versioncontrol.Commit;
+import com.sri.ltc.versioncontrol.Remotes;
 import com.sri.ltc.versioncontrol.Repository;
 import com.sri.ltc.versioncontrol.TrackedFile;
 import org.eclipse.jgit.api.Git;
@@ -89,20 +90,8 @@ public class GitRepository implements Repository {
     }
 
     @Override
-    public List<URI> getRemoteRepositories() throws Exception {
-        return null;
-    }
-
-    @Override
-    public void push(URI remote) {
-        // TODO
-        //To change body of implemented methods use File | Settings | File Templates.
-    }
-
-    @Override
-    public void pull(URI remote) {
-        // TODO
-        //To change body of implemented methods use File | Settings | File Templates.
+    public Remotes getRemotes() {
+        return new GitRemotes(this);
     }
 
     @Override

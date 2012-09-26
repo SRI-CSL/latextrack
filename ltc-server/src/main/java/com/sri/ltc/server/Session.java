@@ -11,7 +11,7 @@ package com.sri.ltc.server;
 import com.google.common.collect.Sets;
 import com.sri.ltc.filter.Author;
 import com.sri.ltc.git.CompleteHistory;
-import com.sri.ltc.git.FileRemotes;
+import com.sri.ltc.versioncontrol.Remotes;
 import com.sri.ltc.latexdiff.Accumulate;
 import com.sri.ltc.versioncontrol.TrackedFile;
 
@@ -30,14 +30,14 @@ public final class Session {
     final int ID;
     private final TrackedFile gitFile;
     private final CompleteHistory completeHistory;
-    private final FileRemotes remotes;
+    private final Remotes remotes;
     private final Set<Author> knownAuthors = Sets.newHashSet();
     private final Set<Author> limitedAuthors = Sets.newHashSet();
     private String limit_date = "";
     private String limit_rev = "";
     private final Accumulate accumulate = new Accumulate();
 
-    protected Session(TrackedFile gitFile) throws ParseException, IOException, BadLocationException {
+    protected Session(TrackedFile gitFile) throws Exception {
         ID = generateID();
         if (gitFile == null)
             throw new IllegalArgumentException("cannot create session with NULL as git file");
@@ -46,7 +46,7 @@ public final class Session {
         completeHistory = new CompleteHistory(gitFile);
         addAuthors(completeHistory.getAuthors());
         addAuthors(Collections.singleton(gitFile.getRepository().getSelf()));
-        remotes = new FileRemotes(gitFile.getRepository());
+        remotes = gitFile.getRepository().getRemotes();
     }
 
     public TrackedFile getTrackedFile() {
@@ -61,11 +61,11 @@ public final class Session {
         return accumulate;
     }
 
-    public FileRemotes getRemotes() {
+    public Remotes getRemotes() {
         return remotes;
     }
 
-    public List<Object[]> getCommitGraphAsList() throws IOException, ParseException {
+    public List<Object[]> getCommitGraphAsList() throws Exception {
         return completeHistory.update();
     }
 

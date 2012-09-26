@@ -25,7 +25,7 @@ public class GitTrackedFile extends TrackedFile<GitRepository> {
     }
 
     @Override
-    public List<Commit> getCommits() throws IOException {
+    public List<Commit> getCommits() throws Exception {
         return getCommits(null, null);
     }
 
@@ -82,7 +82,7 @@ public class GitTrackedFile extends TrackedFile<GitRepository> {
     }
 
     @Override
-    public Status getStatus() throws IOException {
+    public Status getStatus() throws Exception {
         org.eclipse.jgit.lib.Repository wrappedRepository = getRepository().getWrappedRepository();
 
         IndexDiff diff = new IndexDiff(wrappedRepository, Constants.HEAD, new FileTreeIterator(wrappedRepository));

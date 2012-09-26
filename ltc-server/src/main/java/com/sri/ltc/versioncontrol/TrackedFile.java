@@ -20,9 +20,11 @@ public abstract class TrackedFile<RepositoryClass extends Repository> {
         NotTracked,
         Removed,
         Unchanged,
+
+        Unknown
     }
     
-    abstract public List<Commit> getCommits() throws IOException;
+    abstract public List<Commit> getCommits() throws Exception;
     // TODO: must support/default to the following options:
     //    options.setOptFormatDate("iso8601");
     //    options.setOptOrderingTopological(true);
@@ -31,7 +33,7 @@ public abstract class TrackedFile<RepositoryClass extends Repository> {
 
     abstract public List<Commit> getCommits(@Nullable Date exclusiveLimitDate, @Nullable String exclusiveLimitRevision) throws IOException;
 
-    abstract public Status getStatus() throws IOException;
+    abstract public Status getStatus() throws Exception;
 
     protected TrackedFile(RepositoryClass repository, File file) {
         setRepository(repository);

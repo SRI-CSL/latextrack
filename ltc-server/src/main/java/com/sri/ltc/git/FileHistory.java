@@ -37,11 +37,11 @@ public abstract class FileHistory {
         this.gitFile = gitFile;
     }
 
-    abstract List<Commit> updateCommits() throws ParseException, IOException;
+    abstract List<Commit> updateCommits() throws Exception;
     abstract void transformGraph();
     abstract void transformList() throws IOException;
 
-    public final List<Object[]> update() throws IOException, ParseException {
+    public final List<Object[]> update() throws Exception {
         List<Commit> commits = updateCommits();
 
         // translate git commits into graph structure:
@@ -105,7 +105,7 @@ public abstract class FileHistory {
         return list;
     }
 
-    public List<Commit> getLog() throws IOException {
+    public List<Commit> getLog() throws Exception {
         List<Commit> commits = gitFile.getCommits();
         LOGGER.info("Obtained full history for \""+gitFile.getFile().getName()+"\" with "+commits.size()+" commits.");
         return commits;

@@ -147,6 +147,8 @@ public final class LTCserverImpl implements LTCserverInterface {
             logAndThrow(8,"ParseException during git file creation: "+e.getMessage()+" (@"+e.getErrorOffset()+")");
         } catch (BadLocationException e) {
             logAndThrow(9,"BadLocationException during git file creation: "+e.getMessage());
+        } catch (Exception e) {
+            logAndThrow(10,"General Exception during git file creation: "+e.getMessage());
         }
 
         return -1;
@@ -298,6 +300,8 @@ public final class LTCserverImpl implements LTCserverInterface {
             logAndThrow(5,"IOException during log retrieval: "+e.getMessage());
         } catch (ParseException e) {
             logAndThrow(6,"ParseException during log retrieval: "+e.getMessage()+" (@"+e.getErrorOffset()+")");
+        } catch (Exception e) {
+            logAndThrow(7,"General Exception during log retrieval: "+e.getMessage());
         }
 
         session.addAuthors(new HashSet<Author>(authors));
@@ -405,6 +409,8 @@ public final class LTCserverImpl implements LTCserverInterface {
             logAndThrow(2, "ParseException during retrieval of commit graph: "+e.getMessage()+" (offset = "+e.getErrorOffset()+")");
         } catch (IOException e) {
             logAndThrow(4,"IOException during retrieval of commit graph: "+e.getMessage());
+        } catch (Exception e) {
+            logAndThrow(4,"General Exception during retrieval of commit graph: "+e.getMessage());
         }
         return null;
     }
@@ -554,7 +560,7 @@ public final class LTCserverImpl implements LTCserverInterface {
     public int rm_remote(int sessionID, String name) throws XmlRpcException {
         Session session = getSession(sessionID);
         try {
-            if (session.getRemotes().rmRemote(name) != 0)
+            if (session.getRemotes().removeRemote(name) != 0)
                 logAndThrow(3, "Underlying git-remote command exited with non-zero code.");
         } catch (Exception e) {
             logAndThrow(2, "Exception while removing a remote: "+e.getMessage());
@@ -567,7 +573,8 @@ public final class LTCserverImpl implements LTCserverInterface {
         Session session = getSession(sessionID);
         List<String[]> remotes = new ArrayList<String[]>();
         try {
-            for (Remote remote : session.getRemotes().updateAndGetRemotes())
+            Set<Remote> remoteSet = session.getRemotes().get();
+            for (Remote remote : remoteSet)
                 remotes.add(remote.toArray());
         } catch (Exception e) {
             logAndThrow(2, "Exception while obtaining remotes: "+e.getMessage());
@@ -582,7 +589,7 @@ public final class LTCserverImpl implements LTCserverInterface {
         LOGGER.info("Server: push to repository \""+repository+"\" called.");
 
         try {
-            return session.getRemotes().push(repository);
+            session.getRemotes().push(repository);
         } catch (Exception e) {
             logAndThrow(2, "Exception while removing a remote: "+e.getMessage());
         }
@@ -596,7 +603,7 @@ public final class LTCserverImpl implements LTCserverInterface {
         LOGGER.info("Server: pull from repository \""+repository+"\" called.");
 
         try {
-            return session.getRemotes().pull(repository);
+            session.getRemotes().pull(repository);
         } catch (Exception e) {
             logAndThrow(2, "JavaGitException while removing a remote: "+e.getMessage());
         }

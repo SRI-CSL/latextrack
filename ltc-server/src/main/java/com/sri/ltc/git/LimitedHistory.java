@@ -30,7 +30,7 @@ public final class LimitedHistory extends FileHistory {
     private final String limitingRev;
 
     public LimitedHistory(TrackedFile gitFile, Set<Author> limitingAuthors, String limitingDate, String limitingRev)
-            throws IOException, ParseException {
+            throws Exception {
         super(gitFile);
         this.limitingAuthors = limitingAuthors;
         this.limitingDate = limitingDate;

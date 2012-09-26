@@ -20,13 +20,13 @@ import java.util.List;
  */
 public final class CompleteHistory extends FileHistory {
 
-    public CompleteHistory(TrackedFile gitFile) throws IOException, ParseException {
+    public CompleteHistory(TrackedFile gitFile) throws Exception {
         super(gitFile);
         update();
     }
 
     @Override
-    List<Commit> updateCommits() throws IOException, ParseException {
+    List<Commit> updateCommits() throws Exception {
         // perform git log with static options
         return gitFile.getCommits();
     }
