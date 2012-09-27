@@ -119,7 +119,7 @@ public final class LTCserverImpl implements LTCserverInterface {
         Repository repository = null;
         try {
             repository = RepositoryFactory.fromPath(file);
-        } catch (IOException e) {
+        } catch (Exception e) {
             logAndThrow(3, "Could not find repository at " + file + " Exception: " + e.getMessage());
         }
         updateProgress(3);
@@ -129,10 +129,13 @@ public final class LTCserverImpl implements LTCserverInterface {
             // test whether file tracked under git
             switch (trackedFile.getStatus()) {
                 case NotTracked:
-                    logAndThrow(4, "Given file not tracked under git");
+                    logAndThrow(4, "Given file not tracked under source code control");
                     break;
                 case Removed:
-                    logAndThrow(8, "Given file deleted or deleted to commit under git");
+                    logAndThrow(8, "Given file deleted or deleted to commit under source code control");
+                    break;
+                case Unknown:
+                    logAndThrow(8, "Given file status unknown under source code control");
                     break;
 
                 default:

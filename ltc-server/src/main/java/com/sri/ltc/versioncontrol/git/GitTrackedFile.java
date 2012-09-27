@@ -30,9 +30,9 @@ public class GitTrackedFile extends TrackedFile<GitRepository> {
     }
 
     @Override
-    public List<Commit> getCommits(@Nullable Date exclusiveLimitDate, @Nullable String exclusiveLimitRevision) throws IOException {
-        // note: we could use the simpler LogCommand with add + addPath, but that
-        // throws a jgit-specific exception.
+    public List<Commit> getCommits(@Nullable Date exclusiveLimitDate, @Nullable String exclusiveLimitRevision)
+            throws Exception {
+        // note: we could use the simpler LogCommand with add + addPath
 
         List<Commit> commits = new ArrayList<Commit>();
 

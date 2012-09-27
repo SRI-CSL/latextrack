@@ -5,6 +5,7 @@ import com.sri.ltc.server.LTCserverInterface;
 import com.sri.ltc.versioncontrol.Commit;
 import com.sri.ltc.versioncontrol.Repository;
 import com.sri.ltc.versioncontrol.TrackedFile;
+import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.lib.Constants;
 import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.lib.ObjectLoader;
@@ -17,7 +18,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
-public class GitCommit extends Commit<GitRepository> {
+public class GitCommit extends Commit<GitRepository, GitTrackedFile> {
     private RevCommit revCommit;
     private GitTrackedFile trackedFile;
 
@@ -26,9 +27,8 @@ public class GitCommit extends Commit<GitRepository> {
     }
     
     public GitCommit(GitRepository repository, GitTrackedFile trackedFile, RevCommit revCommit) {
-        super(repository);
+        super(repository, trackedFile);
         this.revCommit = revCommit;
-        this.trackedFile = trackedFile;
     }
 
     @Override
@@ -63,10 +63,10 @@ public class GitCommit extends Commit<GitRepository> {
     }
 
     @Override
-    public List<Commit<GitRepository>> getParents() {
-        List<Commit<GitRepository>> parents = new ArrayList<Commit<GitRepository>>();
+    public List<Commit> getParents() throws Exception {
+        List<Commit> parents = new ArrayList<Commit>();
         for (RevCommit parentCommit : revCommit.getParents()) {
-            parents.add(new GitCommit(getRepository(), trackedFile, parentCommit));
+            parents.add(new GitCommit(repository, trackedFile, parentCommit));
         }
 
         return parents;

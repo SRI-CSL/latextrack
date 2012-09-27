@@ -5,16 +5,7 @@ import com.sri.ltc.versioncontrol.Commit;
 import com.sri.ltc.versioncontrol.Remotes;
 import com.sri.ltc.versioncontrol.Repository;
 import com.sri.ltc.versioncontrol.TrackedFile;
-import org.tmatesoft.svn.core.SVNNodeKind;
-import org.tmatesoft.svn.core.SVNURL;
-import org.tmatesoft.svn.core.auth.ISVNAuthenticationManager;
-import org.tmatesoft.svn.core.internal.io.fs.FSRepositoryFactory;
-import org.tmatesoft.svn.core.internal.io.svn.SVNRepositoryFactoryImpl;
-import org.tmatesoft.svn.core.io.SVNRepositoryFactory;
 import org.tmatesoft.svn.core.wc.SVNClientManager;
-import org.tmatesoft.svn.core.wc.SVNInfo;
-import org.tmatesoft.svn.core.wc.SVNWCClient;
-import org.tmatesoft.svn.core.wc.SVNWCUtil;
 
 import java.io.File;
 import java.io.IOException;
@@ -74,21 +65,22 @@ public class SVNRepository implements Repository {
 
     @Override
     public Remotes getRemotes() {
-        return null;  //To change body of implemented methods use File | Settings | File Templates.
+        return new SVNRemotes(this);
     }
 
     @Override
     public Author getSelf() {
-        return null;  //To change body of implemented methods use File | Settings | File Templates.
+        // TODO:
+        return new Author("<default>", null, null);
     }
 
     @Override
     public void setSelf(Author author) {
-        //To change body of implemented methods use File | Settings | File Templates.
+        // TODO:
     }
 
     @Override
     public void resetSelf() {
-        //To change body of implemented methods use File | Settings | File Templates.
+        // TODO:
     }
 }

@@ -14,15 +14,17 @@ import java.util.Date;
 import java.util.List;
 import java.util.logging.Logger;
 
-public abstract class Commit<RepositoryType extends Repository> {
+public abstract class Commit<RepositoryClass extends Repository, TrackedFileClass extends TrackedFile<RepositoryClass>> {
     public final static Logger LOGGER = Logger.getLogger(Commit.class.getName());
 
     private final static DateFormat FORMATTER = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss Z");
 
-    protected RepositoryType repository;
+    protected RepositoryClass repository;
+    protected TrackedFileClass trackedFile;
 
-    protected Commit(RepositoryType repository) {
+    protected Commit(RepositoryClass repository, TrackedFileClass trackedFile) {
         this.repository = repository;
+        this.trackedFile = trackedFile;
     }
 
     abstract public String getId();
@@ -30,11 +32,11 @@ public abstract class Commit<RepositoryType extends Repository> {
     abstract public Author getAuthor();
     abstract public Date getDate();
 
-    abstract public List<Commit<RepositoryType>> getParents();
+    abstract public List<Commit> getParents() throws Exception;
 
     // note: this only makes sense if the commit was a single-file commit
     // if the commit was not filtered by file, this method will return null
-    abstract public InputStream getContentStream() throws IOException;
+    abstract public InputStream getContentStream() throws Exception;
 
     // TODO: these two methods should probably go into a utility class of some form
     public static String serializeDate(Date date) {
@@ -45,11 +47,11 @@ public abstract class Commit<RepositoryType extends Repository> {
         return FORMATTER.parse(date);
     }
     
-    public Reader getContents() throws IOException {
+    public Reader getContents() throws Exception {
         return new InputStreamReader(getContentStream());
     }
 
-    public RepositoryType getRepository() {
+    public RepositoryClass getRepository() {
         return repository;
     }
     
@@ -72,7 +74,7 @@ public abstract class Commit<RepositoryType extends Repository> {
 
     @Override
     public String toString() {
-        return getId().substring(0, LTCserverInterface.ON_DISK.length())
+        return getId() //.substring(0, LTCserverInterface.ON_DISK.length())
                 + "  " + serializeDate(getDate())
                 + "  " + getAuthor().gitRepresentation();
     }

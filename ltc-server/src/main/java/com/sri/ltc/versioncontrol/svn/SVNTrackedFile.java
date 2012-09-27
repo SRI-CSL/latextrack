@@ -5,31 +5,44 @@ import com.sri.ltc.versioncontrol.TrackedFile;
 import org.tmatesoft.svn.core.ISVNLogEntryHandler;
 import org.tmatesoft.svn.core.SVNException;
 import org.tmatesoft.svn.core.SVNLogEntry;
-import org.tmatesoft.svn.core.SVNURL;
-import org.tmatesoft.svn.core.wc.SVNInfo;
 import org.tmatesoft.svn.core.wc.SVNRevision;
 import org.tmatesoft.svn.core.wc.SVNStatus;
 import org.tmatesoft.svn.core.wc.SVNStatusType;
-import org.tmatesoft.svn.core.wc.xml.SVNXMLLogHandler;
 
 import javax.annotation.Nullable;
 import java.io.File;
-import java.io.IOException;
 import java.util.*;
 
 public class SVNTrackedFile extends TrackedFile<SVNRepository> {
     private class SVNLogEntryHandler implements ISVNLogEntryHandler {
-        private SVNTrackedFile trackedFile;
-        private List<Commit> commits;
-        
-        public SVNLogEntryHandler(SVNTrackedFile trackedFile, @Nullable Date exclusiveLimitDate, @Nullable String exclusiveLimitRevision) {
+        private SVNTrackedFile trackedFile = null;
+        private List<Commit> commits = new ArrayList<Commit>();
+        private Date exclusiveLimitDate;
+        private Long exclusiveLimitRevision;
+
+        public SVNLogEntryHandler(SVNTrackedFile trackedFile, @Nullable Date exclusiveLimitDate, @Nullable Long exclusiveLimitRevision) {
             this.trackedFile = trackedFile;
-            commits = new ArrayList<Commit>();
+            this.exclusiveLimitDate = exclusiveLimitDate;
+            this.exclusiveLimitRevision = exclusiveLimitRevision;
         }
         
         @Override
         public void handleLogEntry(SVNLogEntry logEntry) throws SVNException {
-            Commit commit = new SVNCommit(trackedFile, logEntry);
+            if ((exclusiveLimitDate != null) && (exclusiveLimitDate.after(logEntry.getDate()))) {
+                return;
+            }
+
+            if ((exclusiveLimitRevision != null) && (exclusiveLimitRevision < logEntry.getRevision())) {
+                return;
+            }
+
+            SVNCommit commit = new SVNCommit(trackedFile.getRepository(), trackedFile, logEntry);
+
+            if (commits.size() > 0) {
+                SVNCommit previous = (SVNCommit)commits.get(commits.size() - 1);
+                previous.setParent(commit);
+            }
+
             commits.add(commit);
         }
 
@@ -93,20 +106,28 @@ public class SVNTrackedFile extends TrackedFile<SVNRepository> {
 
     @Override
     public List<Commit> getCommits() throws Exception {
-        SVNLogEntryHandler handler = new SVNLogEntryHandler(this, null, null);
-        getRepository().getClientManager().getLogClient()
-            .doLog(
-                new File[]{ getFile() },
-                SVNRevision.create(0), SVNRevision.create(-1), false, false, 0, handler);
-
-        return handler.getCommits();
+        return getCommits(null, null);
     }
 
     @Override
-    public List<Commit> getCommits(@Nullable Date exclusiveLimitDate, @Nullable String exclusiveLimitRevision) throws IOException {
-        return null;  //To change body of implemented methods use File | Settings | File Templates.
+    public List<Commit> getCommits(@Nullable Date exclusiveLimitDate, @Nullable String exclusiveLimitRevision) throws Exception {
+        return getCommits(exclusiveLimitDate, exclusiveLimitRevision, 0);
     }
 
+    public List<Commit> getCommits(@Nullable Date exclusiveLimitDate, @Nullable String exclusiveLimitRevision, int limit) throws Exception {
+       SVNLogEntryHandler handler = new SVNLogEntryHandler(
+               this,
+               exclusiveLimitDate,
+               (exclusiveLimitRevision == null) ? null : Long.parseLong(exclusiveLimitRevision));
+
+        getRepository().getClientManager().getLogClient()
+            .doLog(
+                new File[]{ getFile() },
+                SVNRevision.create(-1), SVNRevision.create(-1), false, false, limit, handler);
+
+        return handler.getCommits();
+    }
+    
     @Override
     public Status getStatus() throws Exception {
         SVNStatus status = getRepository().getClientManager().getStatusClient().doStatus(getFile(), false);
@@ -117,12 +138,4 @@ public class SVNTrackedFile extends TrackedFile<SVNRepository> {
 
         return Status.Unknown;
     }
-
-
-//
-//    public String getRepositoryRelativeFilePath() {
-//        String basePath = getRepository().getWrappedRepository().getWorkTree().getPath();
-//        return new File(basePath).toURI().relativize(getFile().toURI()).getPath();
-//    }
-
 }

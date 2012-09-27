@@ -25,7 +25,7 @@ public final class CommitReaderWrapper extends AbstractReaderWrapper<Commit> imp
     public Reader createReader() {
         try {
             return getWrapped().getContents();
-        } catch (IOException e) {
+        } catch (Exception e) {
             // TODO: log this, better error handling generally
             return null;
         }

@@ -31,10 +31,15 @@ public abstract class TrackedFile<RepositoryClass extends Repository> {
     //    options.setOptGraph(true);
     //    options.setOptFormat("commit %H%nAuthor: %an <%ae>%nDate: %ad%nParents: %P%n%s%n");
 
-    abstract public List<Commit> getCommits(@Nullable Date exclusiveLimitDate, @Nullable String exclusiveLimitRevision) throws IOException;
+    abstract public List<Commit> getCommits(@Nullable Date exclusiveLimitDate, @Nullable String exclusiveLimitRevision)
+            throws Exception;
 
     abstract public Status getStatus() throws Exception;
 
+    public Class getRepositoryClass() {
+        return repository.getClass();
+    }
+    
     protected TrackedFile(RepositoryClass repository, File file) {
         setRepository(repository);
         setFile(file);
