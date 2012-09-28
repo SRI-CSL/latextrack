@@ -25,7 +25,7 @@ public class SVNTrackedFile extends TrackedFile<SVNRepository> {
             this.exclusiveLimitDate = exclusiveLimitDate;
             this.exclusiveLimitRevision = exclusiveLimitRevision;
         }
-        
+
         @Override
         public void handleLogEntry(SVNLogEntry logEntry) throws SVNException {
             if ((exclusiveLimitDate != null) && (exclusiveLimitDate.after(logEntry.getDate()))) {
@@ -105,6 +105,12 @@ public class SVNTrackedFile extends TrackedFile<SVNRepository> {
     }
 
     @Override
+    public Commit commit(String message) throws Exception {
+        // TODO
+        return null;  //To change body of implemented methods use File | Settings | File Templates.
+    }
+
+    @Override
     public List<Commit> getCommits() throws Exception {
         return getCommits(null, null);
     }
@@ -120,7 +126,7 @@ public class SVNTrackedFile extends TrackedFile<SVNRepository> {
                exclusiveLimitDate,
                (exclusiveLimitRevision == null) ? null : Long.parseLong(exclusiveLimitRevision));
 
-        getRepository().getClientManager().getLogClient()
+       getRepository().getClientManager().getLogClient()
             .doLog(
                 new File[]{ getFile() },
                 SVNRevision.create(-1), SVNRevision.create(-1), false, false, limit, handler);

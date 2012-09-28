@@ -6,7 +6,7 @@
  *
  * Copyright 2009-2010, SRI International.
  */
-package com.sri.ltc.git;
+package com.sri.ltc.versioncontrol;
 
 import java.text.ParseException;
 import java.util.regex.Matcher;

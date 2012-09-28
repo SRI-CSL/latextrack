@@ -8,7 +8,6 @@
  */
 package com.sri.ltc.versioncontrol;
 
-import com.sri.ltc.git.Remote;
 import java.util.Set;
 import java.util.logging.Logger;
 

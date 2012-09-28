@@ -4,7 +4,7 @@ package com.sri.ltc.versioncontrol.svn;
  * Copyright 2012, SRI International.
  */
 
-import com.sri.ltc.git.Remote;
+import com.sri.ltc.versioncontrol.Remote;
 import com.sri.ltc.versioncontrol.Remotes;
 
 import java.util.HashSet;
@@ -17,8 +17,11 @@ public class SVNRemotes extends Remotes<SVNRepository> {
 
     @Override
     public Set<Remote> get() {
-        // TODO
-        return new HashSet<Remote>();
+        // TODO:
+        //Remote remote = new Remote("default", "", false);
+        Set<Remote> remotes = new HashSet<Remote>();
+        //remotes.add(remote);
+        return remotes;
     }
 
     @Override

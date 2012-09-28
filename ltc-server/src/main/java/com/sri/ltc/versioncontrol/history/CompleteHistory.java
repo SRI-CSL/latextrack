@@ -6,7 +6,7 @@
  *
  * Copyright 2009-2010, SRI International.
  */
-package com.sri.ltc.git;
+package com.sri.ltc.versioncontrol.history;
 
 import com.sri.ltc.versioncontrol.Commit;
 import com.sri.ltc.versioncontrol.TrackedFile;

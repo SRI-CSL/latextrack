@@ -36,6 +36,8 @@ public abstract class TrackedFile<RepositoryClass extends Repository> {
 
     abstract public Status getStatus() throws Exception;
 
+    abstract public Commit commit(String message) throws Exception;
+
     public Class getRepositoryClass() {
         return repository.getClass();
     }

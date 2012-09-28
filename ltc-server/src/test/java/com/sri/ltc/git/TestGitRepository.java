@@ -6,11 +6,12 @@ import com.sri.ltc.versioncontrol.TrackedFile;
 import org.junit.ClassRule;
 import org.junit.Test;
 
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileWriter;
 import java.util.List;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 public class TestGitRepository {
     @ClassRule
@@ -24,7 +25,7 @@ public class TestGitRepository {
             TrackedFile trackedFile = createTestFileInRepository("foo", ".txt", "testUntracked", false);
             assertTrue(trackedFile.getStatus() == TrackedFile.Status.NotTracked);
         } catch (Exception e) {
-            assertFalse(e.getMessage(), false);
+            fail(e.getMessage());
         }
     }
 
@@ -37,10 +38,10 @@ public class TestGitRepository {
             TrackedFile trackedFile = createTestFileInRepository("foo", ".txt", "testAddAndCommit", true);
             assertTrue(trackedFile.getStatus() == TrackedFile.Status.Added);
             
-            repository.commit("commit from testAddAndCommit");
+            trackedFile.commit("commit from testAddAndCommit");
             assertTrue(trackedFile.getStatus() == TrackedFile.Status.Unchanged);
         } catch (Exception e) {
-            assertFalse(e.getMessage(), false);
+            fail(e.getMessage());
         }
     }
     
@@ -58,15 +59,16 @@ public class TestGitRepository {
             status = trackedFile.getStatus();
             assertTrue(status == TrackedFile.Status.Added);
 
-            repository.commit("commit A from testAddCommitAndModify");
+            trackedFile.commit("commit A from testAddCommitAndModify");
 
             status = trackedFile.getStatus();
             assertTrue(status == TrackedFile.Status.Unchanged);
 
-            // create a different file, so we can verify that we get commits only for the file we do care about
-            createTestFileInRepository("garbage", ".txt", "testAddCommitAndModify - not the file we care about", true);
-
-            repository.commit("commit garbage file from testAddCommitAndModify");
+            {
+                // create a different file, so we can verify that we get commits only for the file we do care about
+                TrackedFile garbageFile = createTestFileInRepository("garbage", ".txt", "testAddCommitAndModify - not the file we care about", true);
+                garbageFile.commit("commit garbage file from testAddCommitAndModify");
+            }
 
             System.out.println("Getting commits for " + trackedFile.getFile().getPath());
             List<Commit> commits;
@@ -81,20 +83,20 @@ public class TestGitRepository {
             status = trackedFile.getStatus();
             assertTrue(status == TrackedFile.Status.Modified);
 
-            repository.commit("commit B from testAddCommitAndModify");
+            trackedFile.commit("commit B from testAddCommitAndModify");
 
             System.out.println("Getting commits (after modification) for " + trackedFile.getFile().getPath());
             commits = trackedFile.getCommits();
             assertTrue(commits.size() == 2);
         } catch (Exception e) {
-            assertFalse(e.getMessage(), false);
+            fail(e.getMessage());
         }
     }
 
     @Test
     public void testMultifileCommit() {
-        // the idea here is to make sure that when more than one file is commited at a time,
-        // and we ask for a given file's contents, we get the correct file
+        // the idea here is to make sure that when more than one file is modified at a time,
+        // and we commit, we commit just the file we mean to.
         assertTrue(temporaryGitRepository.getRoot().exists());
         Repository repository = temporaryGitRepository.getRepository();
 
@@ -105,16 +107,28 @@ public class TestGitRepository {
             TrackedFile trackedFile1 = createTestFileInRepository("file1", ".txt", "file1 contents", true);
             TrackedFile trackedFile2 = createTestFileInRepository("file2", ".txt", "file2 contents", true);
 
-            repository.commit("Three file commit from testMultifileCommit");
+            trackedFile1.commit("Three file modify, one file commit from testMultifileCommit");
 
-            List<Commit> file1Commits = trackedFile1.getCommits();
-            Commit file1Commmit = file1Commits.get(0);
+            {
+                List<Commit> commits = trackedFile0.getCommits();
+                assertTrue(commits.size() == 0);
+            }
 
-            BufferedReader reader = new BufferedReader(file1Commmit.getContents());
-            String line = reader.readLine();
-            assertTrue(line.equals("file1 contents"));
+            {
+                List<Commit> commits = trackedFile1.getCommits();
+                Commit file1Commmit = commits.get(0);
+
+                BufferedReader reader = new BufferedReader(file1Commmit.getContents());
+                String line = reader.readLine();
+                assertTrue(line.equals("file1 contents"));
+            }
+
+            {
+                List<Commit> commits = trackedFile2.getCommits();
+                assertTrue(commits.size() == 0);
+            }
         } catch (Exception e) {
-            assertFalse(e.getMessage(), false);
+            fail(e.getMessage());
         }
     }
 

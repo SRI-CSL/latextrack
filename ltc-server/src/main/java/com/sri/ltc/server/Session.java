@@ -10,14 +10,11 @@ package com.sri.ltc.server;
 
 import com.google.common.collect.Sets;
 import com.sri.ltc.filter.Author;
-import com.sri.ltc.git.CompleteHistory;
+import com.sri.ltc.versioncontrol.history.CompleteHistory;
 import com.sri.ltc.versioncontrol.Remotes;
 import com.sri.ltc.latexdiff.Accumulate;
 import com.sri.ltc.versioncontrol.TrackedFile;
 
-import javax.swing.text.BadLocationException;
-import java.io.IOException;
-import java.text.ParseException;
 import java.util.*;
 
 /**

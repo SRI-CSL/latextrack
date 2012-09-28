@@ -1,12 +1,7 @@
 package com.sri.ltc.versioncontrol.git;
 
 import com.sri.ltc.filter.Author;
-import com.sri.ltc.server.LTCserverInterface;
 import com.sri.ltc.versioncontrol.Commit;
-import com.sri.ltc.versioncontrol.Repository;
-import com.sri.ltc.versioncontrol.TrackedFile;
-import org.eclipse.jgit.api.Git;
-import org.eclipse.jgit.lib.Constants;
 import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.lib.ObjectLoader;
 import org.eclipse.jgit.revwalk.RevCommit;
@@ -20,7 +15,6 @@ import java.util.List;
 
 public class GitCommit extends Commit<GitRepository, GitTrackedFile> {
     private RevCommit revCommit;
-    private GitTrackedFile trackedFile;
 
     public static Date CommitDate(RevCommit revCommit) {
         return new Date(revCommit.getCommitTime() * 1000L);

@@ -8,7 +8,7 @@
  */
 package com.sri.ltc.editor;
 
-import com.sri.ltc.git.Remote;
+import com.sri.ltc.versioncontrol.Remote;
 import com.sri.ltc.logging.LevelOptionHandler;
 import com.sri.ltc.logging.LogConfiguration;
 import com.sri.ltc.server.LTCserverImpl;

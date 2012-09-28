@@ -2,6 +2,7 @@ package com.sri.ltc.versioncontrol.git;
 
 import com.sri.ltc.versioncontrol.Commit;
 import com.sri.ltc.versioncontrol.TrackedFile;
+import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.lib.Constants;
 import org.eclipse.jgit.lib.IndexDiff;
 import org.eclipse.jgit.lib.Repository;
@@ -16,13 +17,21 @@ import org.eclipse.jgit.treewalk.filter.TreeFilter;
 
 import javax.annotation.Nullable;
 import java.io.File;
-import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
 
 public class GitTrackedFile extends TrackedFile<GitRepository> {
     public GitTrackedFile(GitRepository repository, File file) {
         super(repository, file);
     }
+
+     @Override
+     public Commit commit(String message) throws Exception {
+         Git git = new Git(getRepository().getWrappedRepository());
+         RevCommit revCommit = git.commit().setOnly(getRepositoryRelativeFilePath()).setMessage(message).call();
+         return new GitCommit(getRepository(), this, revCommit);
+     }
 
     @Override
     public List<Commit> getCommits() throws Exception {
@@ -110,7 +119,6 @@ public class GitTrackedFile extends TrackedFile<GitRepository> {
         return Status.Unchanged;
     }
 
-    // TODO: depending on how SVN integration goes, this may move up into the interface
     public String getRepositoryRelativeFilePath() {
         String basePath = getRepository().getWrappedRepository().getWorkTree().getPath();
         return new File(basePath).toURI().relativize(getFile().toURI()).getPath();

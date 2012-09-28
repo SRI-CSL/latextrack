@@ -4,7 +4,7 @@
 
 package com.sri.ltc.versioncontrol.git;
 
-import com.sri.ltc.git.Remote;
+import com.sri.ltc.versioncontrol.Remote;
 import com.sri.ltc.versioncontrol.Remotes;
 import org.eclipse.jgit.api.Git;
 
@@ -18,8 +18,11 @@ public class GitRemotes extends Remotes<GitRepository> {
 
     @Override
     public Set<Remote> get() {
-        // TODO
-        return new HashSet<Remote>();
+        // TODO:
+        //Remote remote = new Remote("default", "", false);
+        Set<Remote> remotes = new HashSet<Remote>();
+        //remotes.add(remote);
+        return remotes;
     }
 
     @Override

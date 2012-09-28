@@ -10,7 +10,6 @@ import java.util.List;
 
 public interface Repository {
     public void addFile(File file) throws Exception;
-    public Commit commit(String message) throws Exception;
 
     public TrackedFile getFile(File file) throws IOException;
 
