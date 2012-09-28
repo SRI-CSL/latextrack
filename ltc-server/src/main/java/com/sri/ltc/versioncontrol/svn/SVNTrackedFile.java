@@ -2,9 +2,7 @@ package com.sri.ltc.versioncontrol.svn;
 
 import com.sri.ltc.versioncontrol.Commit;
 import com.sri.ltc.versioncontrol.TrackedFile;
-import org.tmatesoft.svn.core.ISVNLogEntryHandler;
-import org.tmatesoft.svn.core.SVNException;
-import org.tmatesoft.svn.core.SVNLogEntry;
+import org.tmatesoft.svn.core.*;
 import org.tmatesoft.svn.core.wc.SVNRevision;
 import org.tmatesoft.svn.core.wc.SVNStatus;
 import org.tmatesoft.svn.core.wc.SVNStatusType;
@@ -106,8 +104,20 @@ public class SVNTrackedFile extends TrackedFile<SVNRepository> {
 
     @Override
     public Commit commit(String message) throws Exception {
-        // TODO
-        return null;  //To change body of implemented methods use File | Settings | File Templates.
+        // TODO: test!
+        SVNCommitInfo info = getRepository().getClientManager().getCommitClient()
+                .doCommit(new File[] { getFile() }, false, message, null, null, false, false, SVNDepth.FILES);
+
+        // this is somewhat inefficient, but it gets us the "parent" commit.
+        List<Commit> commits = getCommits();
+        for (Commit commit : commits) {
+            SVNCommit svnCommit = (SVNCommit)commit;
+            if (svnCommit.getLogEntry().getRevision() == info.getNewRevision()) {
+                return commit;
+            }
+        }
+
+        return null;
     }
 
     @Override

@@ -64,4 +64,8 @@ public class SVNCommit extends Commit<SVNRepository, SVNTrackedFile> {
         parents.clear();
         parents.add(parent);
     }
+
+    public SVNLogEntry getLogEntry() {
+        return logEntry;
+    }
 }
