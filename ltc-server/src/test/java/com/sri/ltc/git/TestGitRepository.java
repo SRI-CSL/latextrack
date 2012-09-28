@@ -74,9 +74,6 @@ public class TestGitRepository {
             assertTrue(commits.size() == 1);
             assertTrue(commits.get(0).getMessage().equals("commit A from testAddCommitAndModify"));
 
-            commits = repository.getCommits();
-            assertTrue(commits.size() >= 2); // we have more than two commits, since other tests may have run first
-
             FileWriter fileWriter = new FileWriter(trackedFile.getFile());
             fileWriter.append("modification");
             fileWriter.flush();
@@ -89,9 +86,6 @@ public class TestGitRepository {
             System.out.println("Getting commits (after modification) for " + trackedFile.getFile().getPath());
             commits = trackedFile.getCommits();
             assertTrue(commits.size() == 2);
-
-            commits = repository.getCommits();
-            assertTrue(commits.size() >= 3); // we have more than three commits, since other tests may have run first
         } catch (Exception e) {
             assertFalse(e.getMessage(), false);
         }

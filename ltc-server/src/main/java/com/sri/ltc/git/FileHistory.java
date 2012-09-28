@@ -12,7 +12,6 @@ package com.sri.ltc.git;
 import com.sri.ltc.filter.Author;
 import com.sri.ltc.versioncontrol.CommitGraph;
 import com.sri.ltc.versioncontrol.Commit;
-import com.sri.ltc.versioncontrol.Repository;
 import com.sri.ltc.versioncontrol.TrackedFile;
 
 import java.io.IOException;
@@ -26,7 +25,7 @@ import java.util.logging.Logger;
 public abstract class FileHistory {
 
     private final static Logger LOGGER = Logger.getLogger(FileHistory.class.getName());
-    final TrackedFile gitFile;
+    final TrackedFile trackedFile;
     List<Commit> commitList;
     final CommitGraph commitGraph = new CommitGraph();
     final Set<Author> authors = new HashSet<Author>();
@@ -34,7 +33,7 @@ public abstract class FileHistory {
     public FileHistory(TrackedFile gitFile) throws IOException, ParseException {
         if (gitFile == null)
             throw new IllegalArgumentException("Cannot create FileHistory with NULL as git file");
-        this.gitFile = gitFile;
+        this.trackedFile = gitFile;
     }
 
     abstract List<Commit> updateCommits() throws Exception;
@@ -93,10 +92,10 @@ public abstract class FileHistory {
         // serialize commit graph by selecting the path with newest commits for merges
         commitList = commitGraph.getPath(new Comparator<Commit>() {
             public int compare(Commit o1, Commit o2) {
-                return o1.getDate().compareTo(o2.getDate()); // TODO: decide whether newest/oldest commit is the key here
+                return o1.getDate().compareTo(o2.getDate());
             }
         });
-        LOGGER.info("Obtained path from commit graph for \""+gitFile.getFile().getName()+"\" with "+commitList.size()+" commits.");
+        LOGGER.info("Obtained path from commit graph for \""+ trackedFile.getFile().getName()+"\" with "+commitList.size()+" commits.");
 
         // do any specific list transformations before reversing
         transformList();
@@ -106,8 +105,8 @@ public abstract class FileHistory {
     }
 
     public List<Commit> getLog() throws Exception {
-        List<Commit> commits = gitFile.getCommits();
-        LOGGER.info("Obtained full history for \""+gitFile.getFile().getName()+"\" with "+commits.size()+" commits.");
+        List<Commit> commits = trackedFile.getCommits();
+        LOGGER.info("Obtained full history for \""+ trackedFile.getFile().getName()+"\" with "+commits.size()+" commits.");
         return commits;
     }
 

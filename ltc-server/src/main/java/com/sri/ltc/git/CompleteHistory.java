@@ -11,8 +11,6 @@ package com.sri.ltc.git;
 import com.sri.ltc.versioncontrol.Commit;
 import com.sri.ltc.versioncontrol.TrackedFile;
 
-import java.io.IOException;
-import java.text.ParseException;
 import java.util.List;
 
 /**
@@ -28,7 +26,7 @@ public final class CompleteHistory extends FileHistory {
     @Override
     List<Commit> updateCommits() throws Exception {
         // perform git log with static options
-        return gitFile.getCommits();
+        return trackedFile.getCommits();
     }
 
     @Override

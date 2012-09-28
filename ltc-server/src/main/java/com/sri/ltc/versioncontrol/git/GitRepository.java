@@ -66,20 +66,6 @@ public class GitRepository implements Repository {
         return new GitCommit(this, null, revCommit);
     }
 
-    @Override
-    public List<Commit> getCommits() throws Exception {
-        List<Commit> commitsList = new ArrayList<com.sri.ltc.versioncontrol.Commit>();
-        
-        Git git = new Git(repository);
-        LogCommand logCommand = git.log().add(git.getRepository().resolve(Constants.HEAD));
-
-        for (RevCommit revCommit : logCommand.call()) {
-            commitsList.add(new GitCommit(this, null, revCommit));
-        }
-
-        return commitsList;
-    }
-
     public org.eclipse.jgit.lib.Repository getWrappedRepository() {
         return repository;
     }

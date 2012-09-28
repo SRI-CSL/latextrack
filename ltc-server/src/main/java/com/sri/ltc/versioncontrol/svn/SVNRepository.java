@@ -54,11 +54,6 @@ public class SVNRepository implements Repository {
     }
 
     @Override
-    public List<Commit> getCommits() throws Exception {
-        return null;  //To change body of implemented methods use File | Settings | File Templates.
-    }
-
-    @Override
     public TrackedFile getFile(File file) throws IOException {
         return new SVNTrackedFile(this, file);
     }

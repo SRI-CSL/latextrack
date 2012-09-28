@@ -120,17 +120,6 @@ public final class LTC {
             logger.log(Level.SEVERE, "Cannot configure logging", e);
         }
 
-        // TODO: don't think we need this anymore?
-//        // handling path information to git executable
-//        if (options.gitDir != null && !"".equals(options.gitDir)) {
-//            logger.info("Trying to set git path to \""+options.gitDir+"\" from command line");
-//            try {
-//                JavaGitConfiguration.setGitPath(options.gitDir);
-//            } catch (Exception e) {
-//                logger.log(Level.SEVERE, "Cannot set git path", e);
-//            }
-//        }
-
         LTC.getInstance(); // start up server (if not already running)
     }
 

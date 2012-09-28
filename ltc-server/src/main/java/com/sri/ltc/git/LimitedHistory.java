@@ -39,10 +39,10 @@ public final class LimitedHistory extends FileHistory {
     }
 
     @Override
-    List<Commit> updateCommits() throws ParseException, IOException {
+    List<Commit> updateCommits() throws Exception {
         // perform git log:
         //   with limiting date, if applicable
-        return gitFile.getCommits(
+        return trackedFile.getCommits(
                 ((limitingDate == null) || limitingDate.isEmpty()) ? null : Commit.deSerializeDate(limitingDate),
                 ((limitingRev == null) || limitingRev.isEmpty()) ? null : limitingRev);
     }
@@ -80,7 +80,7 @@ public final class LimitedHistory extends FileHistory {
 
     @Override
     void transformList() throws IOException {
-        Author self = gitFile.getRepository().getSelf();
+        Author self = trackedFile.getRepository().getSelf();
 
         // reduce commit graph to authors
         if (limitingAuthors != null && !limitingAuthors.isEmpty())
@@ -112,7 +112,7 @@ public final class LimitedHistory extends FileHistory {
                 commitList.subList(i+1, commitList.size()).clear(); // remove all remaining commits
         }
 
-        LOGGER.info("Transformed list for \""+gitFile.getFile().getName()+"\" to "+commitList.size()+" commits");
+        LOGGER.info("Transformed list for \""+ trackedFile.getFile().getName()+"\" to "+commitList.size()+" commits");
     }
 
     public final List<Commit> getCommitsList() {

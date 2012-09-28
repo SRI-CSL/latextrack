@@ -25,7 +25,7 @@ public abstract class TrackedFile<RepositoryClass extends Repository> {
     }
     
     abstract public List<Commit> getCommits() throws Exception;
-    // TODO: must support/default to the following options:
+    // Note: must support/default to the following options or their equivalent
     //    options.setOptFormatDate("iso8601");
     //    options.setOptOrderingTopological(true);
     //    options.setOptGraph(true);
