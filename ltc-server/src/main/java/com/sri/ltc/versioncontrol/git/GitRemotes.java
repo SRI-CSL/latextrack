@@ -7,6 +7,8 @@ package com.sri.ltc.versioncontrol.git;
 import com.sri.ltc.versioncontrol.Remote;
 import com.sri.ltc.versioncontrol.Remotes;
 import org.eclipse.jgit.api.Git;
+import org.eclipse.jgit.lib.StoredConfig;
+import org.eclipse.jgit.merge.MergeStrategy;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -18,37 +20,44 @@ public class GitRemotes extends Remotes<GitRepository> {
 
     @Override
     public Set<Remote> get() {
-        // TODO:
-        //Remote remote = new Remote("default", "", false);
         Set<Remote> remotes = new HashSet<Remote>();
-        //remotes.add(remote);
+
+        StoredConfig config = repository.getWrappedRepository().getConfig();
+        Set<String> subsections = config.getSubsections("remote");
+        for (String subsection : subsections) {
+            String url = config.getString("remote", subsection, "url");
+            // TODO: how to determine if a remote is read-only?
+            remotes.add(new Remote(subsection, url, false));
+        }
+
         return remotes;
     }
 
     @Override
     public int addRemote(String name, String url) {
-        // TODO
+        StoredConfig config = repository.getWrappedRepository().getConfig();
+        config.setString("remote", name, "url", url);
         return 0;
     }
 
     @Override
     public int removeRemote(String name) {
-        // TODO
+        StoredConfig config = repository.getWrappedRepository().getConfig();
+        config.unsetSection("remote", name);
         return 0;
     }
 
     @Override
     public void pull(String name) throws Exception {
-        // TODO: set the repository!
         Git git = new Git(repository.getWrappedRepository());
-        git.pull().call();
+        git.fetch().setRemote(name).call();
+        // TODO: is this good? a git pull is a fetch + a merge
+        git.merge().call();
     }
 
     @Override
     public void push(String name) throws Exception {
-        // TODO: set the repository!
         Git git = new Git(repository.getWrappedRepository());
-        // TODO: Not yet implemented to avoid doing harm before this is tested, since the repo is being ignored!
-        // git.push().call();
+        git.push().setRemote(name).call();
     }
 }
