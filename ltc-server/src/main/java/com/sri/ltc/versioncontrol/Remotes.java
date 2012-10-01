@@ -18,10 +18,14 @@ import java.util.logging.Logger;
 public abstract class Remotes<RepositoryClass extends Repository> {
     private final static Logger LOGGER = Logger.getLogger(Remotes.class.getName());
 
-    protected RepositoryClass repository;
+    private RepositoryClass repository;
 
     public Remotes(RepositoryClass repository) {
         this.repository = repository;
+    }
+
+    protected RepositoryClass getRepository() {
+        return repository;
     }
 
     abstract public Set<Remote> get();
