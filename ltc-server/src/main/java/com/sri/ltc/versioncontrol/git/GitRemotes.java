@@ -49,6 +49,7 @@ public class GitRemotes extends Remotes<GitRepository> {
 
     @Override
     public void pull(String name) throws Exception {
+        // TODO: this won't work - needs authentication
         Git git = new Git(repository.getWrappedRepository());
         git.fetch().setRemote(name).call();
         // TODO: is this good? a git pull is a fetch + a merge
