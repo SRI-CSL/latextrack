@@ -35,6 +35,7 @@ public final class DocumentReaderWrapper extends AbstractReaderWrapper<MarkedUpD
         // remove any characters marked as additions
         StringBuilder newContents = new StringBuilder();
         List<Integer> removed = new ArrayList<Integer>(); // collect removed character positions
+        Boolean preambleSeen = lexeme.preambleSeen;
         try {
             for (int i = 0; i < lexeme.length; i++)
                 if (getWrapped().isAddition(lexeme.pos+i))
@@ -54,7 +55,7 @@ public final class DocumentReaderWrapper extends AbstractReaderWrapper<MarkedUpD
                         lexeme.type,
                         newContents.toString(),
                         lexeme.pos,
-                        false, false, removed.toArray(new Integer[removed.size()])
+                        preambleSeen, false, removed.toArray(new Integer[removed.size()])
                 );
         }
     }
