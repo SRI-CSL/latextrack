@@ -413,6 +413,85 @@ public final class TestAccumulate {
         );
     }
 
+
+    @Test
+    public void testPreambleBleeding() throws IOException, BadLocationException {
+        // in this case, the preamble additions/removals were throwing off a later lexeme
+        // by making it appear to be part of the preamble. The original examples came from
+        // the tutorial/independence.tex files, hence the naming of the variables.
+
+        MarkedUpDocument document = new MarkedUpDocument();
+
+        String version4Text = "\\documentclass{article}\n" +
+                "\n" +
+                "\\title{The Declaration of Independence}\n" +
+                "\\author{John Adams\\\\\n" +
+                "Benjamin   Franklin\\\\\n" +
+                "Thomas Jefferson} \n" +
+                "\\date{June 28, 1776} \n" +
+                "\n" +
+                "\\begin{document}\n" +
+                "\\maketitle\n" +
+                "\n" +
+                "When in the Course of human events, it becomes necessary for one\n" +
+                "people to dissolve the political bands which have connected them with\n" +
+                "another, and to assume among the powers of the earth, the separate and\n" +
+                "equal station to which the Laws of Nature and of Nature's God entitle\n" +
+                "them, a decent respect to the opinions of mankind requires that they\n" +
+                "should declare the causes which impel them to the separation.  We hold\n" +
+                "these truths to be self-evident, that all men are created equal, that\n" +
+                "they are endowed by their Creator with certain unalienable Rights, that\n" +
+                "among these are Life, Liberty and the pursuit of Happiness.\n" +
+                "\n" +
+                "\n" +
+                "\\end{document}";
+
+        String version3Text =
+                "\\documentclass{article}\n" +
+                "\n" +
+                "\\title{The Declaration of Independence}\n" +
+                "\\author{John Adams\\\\ \n" +
+                "Benjamin Franklin\\\\\n" +
+                "Thomas Jefferson} \n" +
+                "\\date{June 28, 1776} \n" +
+                "\n" +
+                "\\begin{document}\n" +
+                "\\maketitle\n" +
+                "\n" +
+                "When in the Course of human events, it becomes necessary for one people to dissolve the ppoliticall bands which have connected them with another, and to assume among the powers of the earth, the separate and equal station to which the Laws of Nature entitle them, a decent respect to the opinions of mankind requires that they should declare the causes which impel them to the separation. % More about ``$e = m\\cdot c^2$'':\n" +
+                "We hold these truths to be self-evident, that they are provided by their Creator with certain unalienable Rights, that among these are \n" +
+                "\n" +
+                "Life, Liberty and the pursuit of Happyness.\n" +
+                "\n" +
+                "\\end{document}";
+
+        String version2Text =
+                "\\documentclass{article}\n" +
+                "\n" +
+                "\\title{The Declaration of Independence}\n" +
+                "\\author{John Adams\\\\ \n" +
+                "Thomas Jefferson} \n" +
+                "\\date{June 28, 1776} \n" +
+                "\n" +
+                "\\begin{document}\n" +
+                "\\makteitle\n" +
+                "\n" +
+                "If % or should this be ``When''?\n" +
+                "in the Course of human events, it becomes imperative for one people too disolve ppoilticall ties that have connected them with another, and to assume among the powers of the earth, the separate and equal station to which the Laws of Nature entitle  them, a desent respect to the opinions of mankind requires that they should declare the causes which impel them to the\n" +
+                "%Need more about happiness and life.\n" +
+                "\n" +
+                "\\end{document}";
+
+        map = perform(0, EnumSet.of(Change.Flag.SMALL, Change.Flag.COMMENT), new String[] { version2Text, version3Text, version4Text });
+        int styleCountWithPreamble = ((List<Integer[]>) map.get(LTCserverInterface.KEY_STYLES)).size();
+
+        map = perform(0, EnumSet.of(Change.Flag.SMALL, Change.Flag.COMMENT, Change.Flag.PREAMBLE), new String[] { version2Text, version3Text, version4Text });
+        int styleCountWithoutPreamble = ((List<Integer[]>) map.get(LTCserverInterface.KEY_STYLES)).size();
+
+        // If this is broken, more than just one change (the change in the preamble) will show up
+        assertEquals("Style count without preamble", 1, styleCountWithPreamble - styleCountWithoutPreamble);
+    }
+
     // render given text as HTML, so as to cut and paste into a browser
     @SuppressWarnings("unchecked")
     private static void renderHTML(Map map) {
