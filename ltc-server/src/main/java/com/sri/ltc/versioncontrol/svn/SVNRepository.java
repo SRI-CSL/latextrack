@@ -14,12 +14,17 @@ import java.io.File;
 import java.io.IOException;
 
 public class SVNRepository implements Repository {
+    private Author defaultAuthor;
+    private Author currentAuthor;
     private File initialPath;
     private SVNClientManager clientManager = null;
 
     public SVNRepository(File initialPath) throws Exception {
         clientManager = SVNClientManager.newInstance();
         this.initialPath = initialPath;
+
+        defaultAuthor = new Author(System.getProperty("user.name"), null, null);
+        currentAuthor = defaultAuthor;
     }
 
     public SVNClientManager getClientManager() {
@@ -44,20 +49,17 @@ public class SVNRepository implements Repository {
 
     @Override
     public Author getSelf() {
-        // TODO:
-        return new Author("<default>", null, null);
+        return currentAuthor;
     }
 
     @Override
     public void setSelf(Author author) {
-        // TODO:
-        throw new NotImplementedException();
+        currentAuthor = author;
     }
 
     @Override
     public void resetSelf() {
-        // TODO:
-        throw new NotImplementedException();
+        currentAuthor = defaultAuthor;
     }
 
     public String getURL() throws SVNException {

@@ -26,11 +26,11 @@ public class SVNTrackedFile extends TrackedFile<SVNRepository> {
 
         @Override
         public void handleLogEntry(SVNLogEntry logEntry) throws SVNException {
-            if ((inclusiveLimitDate != null) && (inclusiveLimitDate.after(logEntry.getDate()))) {
+            if ((inclusiveLimitDate != null) && (inclusiveLimitDate.compareTo(logEntry.getDate()) > 0)) {
                 return;
             }
 
-            if ((inclusiveLimitRevision != null) && (inclusiveLimitRevision >= logEntry.getRevision())) {
+            if ((inclusiveLimitRevision != null) && (inclusiveLimitRevision > logEntry.getRevision())) {
                 return;
             }
 
