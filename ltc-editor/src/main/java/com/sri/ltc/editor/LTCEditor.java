@@ -74,6 +74,42 @@ public final class LTCEditor extends LTCGui {
     private final RemoteComboBoxModel remoteModel = new RemoteComboBoxModel(session, pushButton, pullButton);
     private final JFileChooser fileChooser = new JFileChooser();
     private final JTextField fileField = new JTextField();
+    private final Action updateAction = new AbstractAction("Update") {
+        private static final long serialVersionUID = -7081121785169995463L;
+        public void actionPerformed(ActionEvent event) {
+            String path = fileField.getText();
+            try {
+                // if empty path, close session (if any) and clear fields
+                if ("".equals(path)) {
+                    close();
+                    return;
+                }
+                // non-empty path: now look at current status of session
+                File file = new File(path);
+                // if current session is valid, compare prior path to new one to decide whether to close and init
+                // if current session is not valid, simply start a new one
+                if (session.isValid()) {
+                    if (!session.getCanonicalPath().equals(file.getCanonicalPath())) {
+                        if (!close()) {
+                            fileField.setText(session.getCanonicalPath());
+                            return;
+                        }
+                        session.startInitAndUpdate(file, dateField.getText(), revField.getText(), textPane.getCaretPosition());
+                    } else {
+                        session.startUpdate(dateField.getText(), revField.getText(), false, textPane.getText(), textPane.stopFiltering(), textPane.getCaretPosition());
+                    }
+                } else {
+                    session.startInitAndUpdate(file, dateField.getText(), revField.getText(), textPane.getCaretPosition());
+                }
+                // update file chooser and preference for next time:
+                fileChooser.setCurrentDirectory(file.getParentFile());
+                preferences.put(KEY_LAST_DIR, file.getParent());
+            } catch (Exception e) {
+                clear();
+                LOGGER.log(Level.SEVERE, e.getMessage(), e);
+            }
+        }
+    };
     private final JTextField dateField = new JTextField();
     private final JTextField revField = new JTextField();
     private final JTextField commitMsgField = new JTextField();
@@ -173,42 +209,7 @@ public final class LTCEditor extends LTCGui {
 
     private void createUIComponents() {
         // add action to update button
-        getUpdateButton().setAction(new AbstractAction("Update") {
-            private static final long serialVersionUID = -7081121785169995463L;
-            public void actionPerformed(ActionEvent event) {
-                String path = fileField.getText();
-                try {
-                    // if empty path, close session (if any) and clear fields
-                    if ("".equals(path)) {
-                        close();
-                        return;
-                    }
-                    // non-empty path: now look at current status of session
-                    File file = new File(path);
-                    // if current session is valid, compare prior path to new one to decide whether to close and init
-                    // if current session is not valid, simply start a new one
-                    if (session.isValid()) {
-                        if (!session.getCanonicalPath().equals(file.getCanonicalPath())) {
-                            if (!close()) {
-                                fileField.setText(session.getCanonicalPath());
-                                return;
-                            }
-                            session.startInitAndUpdate(file, dateField.getText(), revField.getText(), textPane.getCaretPosition());
-                        } else {
-                            session.startUpdate(dateField.getText(), revField.getText(), false, textPane.getText(), textPane.stopFiltering(), textPane.getCaretPosition());
-                        }
-                    } else {
-                        session.startInitAndUpdate(file, dateField.getText(), revField.getText(), textPane.getCaretPosition());
-                    }
-                    // update file chooser and preference for next time:
-                    fileChooser.setCurrentDirectory(file.getParentFile());
-                    preferences.put(KEY_LAST_DIR, file.getParent());
-                } catch (Exception e) {
-                    clear();
-                    LOGGER.log(Level.SEVERE, e.getMessage(), e);
-                }
-            }
-        });
+        getUpdateButton().setAction(updateAction);
 
         // file chooser
         fileChooser.setCurrentDirectory(new File(
@@ -387,7 +388,6 @@ public final class LTCEditor extends LTCGui {
 
         c.weightx = 0.8;
         c.weighty = 0.0;
-        c.gridy = 1;
         filteringPane.add(datePane, c);
 
         c.gridy = 2;

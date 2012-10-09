@@ -85,6 +85,11 @@ public final class LatexPane extends JTextPane {
         return "("+(line+1)+","+(col+1)+")@"+offset;
     }
 
+    @Override
+    public int getCaretPosition() {
+        return super.getCaretPosition();
+    }
+
     /**
      * Utility method for setting the font and color of a JTextPane. The
      * result is roughly equivalent to calling setFont(...) and

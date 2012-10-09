@@ -30,7 +30,7 @@ To create the distributable:
 
 $> mvn clean package
 
-To create the site (call "verify" for link to download the JAR etc.):
+To create the site (include "verify" for link to download the JAR etc.):
 
 $> mvn verify site
 

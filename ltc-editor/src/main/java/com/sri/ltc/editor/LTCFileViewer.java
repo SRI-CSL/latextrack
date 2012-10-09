@@ -11,7 +11,10 @@ package com.sri.ltc.editor;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.sri.ltc.filter.Filtering;
-import com.sri.ltc.latexdiff.*;
+import com.sri.ltc.latexdiff.Accumulate;
+import com.sri.ltc.latexdiff.Change;
+import com.sri.ltc.latexdiff.FileReaderWrapper;
+import com.sri.ltc.latexdiff.ReaderWrapper;
 import com.sri.ltc.server.LTCserverInterface;
 import org.kohsuke.args4j.*;
 
@@ -20,7 +23,6 @@ import javax.swing.event.ListDataEvent;
 import javax.swing.event.ListDataListener;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
-import javax.swing.text.BadLocationException;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.MouseAdapter;
@@ -200,16 +202,6 @@ public final class LTCFileViewer extends LTCGui implements ListSelectionListener
                     }
                 }
 
-                // calculate caret position
-                int caretPosition = textPane.getCaretPosition();
-                try {
-                    Map<MarkedUpDocument.KEYS,Object> map =
-                            MarkedUpDocument.applyDeletions(textPane.getText(), textPane.stopFiltering(), caretPosition);
-                    caretPosition = (Integer) map.get(MarkedUpDocument.KEYS.POSITION);
-                } catch (BadLocationException e) {
-                    LOGGER.log(Level.SEVERE, e.getMessage(), e);
-                }
-
                 // perform accumulation
                 if (!readers.isEmpty())
                     try {
@@ -223,7 +215,8 @@ public final class LTCFileViewer extends LTCGui implements ListSelectionListener
                                         filter.getShowingStatus(LTCserverInterface.Show.PREAMBLE),
                                         filter.getShowingStatus(LTCserverInterface.Show.COMMENTS),
                                         filter.getShowingStatus(LTCserverInterface.Show.COMMANDS)),
-                                caretPosition);
+                                textPane.getCaretPosition()
+                        );
                         textPane.updateFromMaps(
                                 (String) map.get(LTCserverInterface.KEY_TEXT),
                                 (java.util.List<Integer[]>) map.get(LTCserverInterface.KEY_STYLES),
