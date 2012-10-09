@@ -39,7 +39,7 @@ public class GitTrackedFile extends TrackedFile<GitRepository> {
     }
 
     @Override
-    public List<Commit> getCommits(@Nullable Date exclusiveLimitDate, @Nullable String exclusiveLimitRevision)
+    public List<Commit> getCommits(@Nullable Date inclusiveLimitDate, @Nullable String inclusiveLimitRevision)
             throws Exception {
         // note: we could use the simpler LogCommand with add + addPath
 
@@ -60,15 +60,16 @@ public class GitTrackedFile extends TrackedFile<GitRepository> {
         }
 
         RevCommit limitRevCommit = null;
-        if (exclusiveLimitRevision != null) limitRevCommit = revWalk.parseCommit(wrappedRepository.resolve(exclusiveLimitRevision));
+        if (inclusiveLimitRevision != null) limitRevCommit = revWalk.parseCommit(wrappedRepository.resolve(inclusiveLimitRevision));
 
-        if (exclusiveLimitDate == null) exclusiveLimitDate = new Date(0);
+        if (inclusiveLimitDate == null) inclusiveLimitDate = new Date(0);
         
         for (RevCommit revCommit : revWalk) {
-            if (exclusiveLimitDate.after(GitCommit.CommitDate(revCommit))) break;
-            if (revCommit.getId().equals(limitRevCommit)) break;
 
             commits.add(new GitCommit(getRepository(), this, revCommit));
+
+            if (inclusiveLimitDate.compareTo(GitCommit.CommitDate(revCommit)) >= 0) break;
+            if (revCommit.getId().equals(limitRevCommit)) break;
 
 //            TreeWalk treeWalk = TreeWalk.forPath(wrappedRepository, getRepositoryRelativeFilePath(), revCommit.getTree());
 //            if (treeWalk != null) {

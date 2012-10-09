@@ -15,22 +15,22 @@ public class SVNTrackedFile extends TrackedFile<SVNRepository> {
     private class SVNLogEntryHandler implements ISVNLogEntryHandler {
         private SVNTrackedFile trackedFile = null;
         private List<Commit> commits = new ArrayList<Commit>();
-        private Date exclusiveLimitDate;
-        private Long exclusiveLimitRevision;
+        private Date inclusiveLimitDate;
+        private Long inclusiveLimitRevision;
 
         public SVNLogEntryHandler(SVNTrackedFile trackedFile, @Nullable Date exclusiveLimitDate, @Nullable Long exclusiveLimitRevision) {
             this.trackedFile = trackedFile;
-            this.exclusiveLimitDate = exclusiveLimitDate;
-            this.exclusiveLimitRevision = exclusiveLimitRevision;
+            this.inclusiveLimitDate = exclusiveLimitDate;
+            this.inclusiveLimitRevision = exclusiveLimitRevision;
         }
 
         @Override
         public void handleLogEntry(SVNLogEntry logEntry) throws SVNException {
-            if ((exclusiveLimitDate != null) && (exclusiveLimitDate.after(logEntry.getDate()))) {
+            if ((inclusiveLimitDate != null) && (inclusiveLimitDate.after(logEntry.getDate()))) {
                 return;
             }
 
-            if ((exclusiveLimitRevision != null) && (exclusiveLimitRevision < logEntry.getRevision())) {
+            if ((inclusiveLimitRevision != null) && (inclusiveLimitRevision >= logEntry.getRevision())) {
                 return;
             }
 
@@ -126,15 +126,15 @@ public class SVNTrackedFile extends TrackedFile<SVNRepository> {
     }
 
     @Override
-    public List<Commit> getCommits(@Nullable Date exclusiveLimitDate, @Nullable String exclusiveLimitRevision) throws Exception {
-        return getCommits(exclusiveLimitDate, exclusiveLimitRevision, 0);
+    public List<Commit> getCommits(@Nullable Date inclusiveLimitDate, @Nullable String inclusiveLimitRevision) throws Exception {
+        return getCommits(inclusiveLimitDate, inclusiveLimitRevision, 0);
     }
 
-    public List<Commit> getCommits(@Nullable Date exclusiveLimitDate, @Nullable String exclusiveLimitRevision, int limit) throws Exception {
+    public List<Commit> getCommits(@Nullable Date inclusiveLimitDate, @Nullable String inclusiveLimitRevision, int limit) throws Exception {
        SVNLogEntryHandler handler = new SVNLogEntryHandler(
                this,
-               exclusiveLimitDate,
-               (exclusiveLimitRevision == null) ? null : Long.parseLong(exclusiveLimitRevision));
+               inclusiveLimitDate,
+               (inclusiveLimitRevision == null) ? null : Long.parseLong(inclusiveLimitRevision));
 
        getRepository().getClientManager().getLogClient()
             .doLog(

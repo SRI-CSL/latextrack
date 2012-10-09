@@ -31,7 +31,7 @@ public abstract class TrackedFile<RepositoryClass extends Repository> {
     //    options.setOptGraph(true);
     //    options.setOptFormat("commit %H%nAuthor: %an <%ae>%nDate: %ad%nParents: %P%n%s%n");
 
-    abstract public List<Commit> getCommits(@Nullable Date exclusiveLimitDate, @Nullable String exclusiveLimitRevision)
+    abstract public List<Commit> getCommits(@Nullable Date inclusiveLimitDate, @Nullable String inclusiveLimitRevision)
             throws Exception;
 
     abstract public Status getStatus() throws Exception;
