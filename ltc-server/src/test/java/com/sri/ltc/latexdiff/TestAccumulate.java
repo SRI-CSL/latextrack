@@ -169,10 +169,10 @@ public final class TestAccumulate {
         map = perform(3,
                 "\n\nIf % or should this be ``When''?\nin the Course",
                 "\n\nWhen in the Course");
-        assertMap("\n\nIf % or should this be ``When''? in the Course", 2, 28);
+        assertMap("\n\nIf % or should this be ``When''?\nWhen in the Course", 2, 36);
         assertStyle(
-                new int[] {2, 2},
-                new int[][] {{2, 27}, {31, 34}},
+                new int[] {2, 1},
+                new int[][] {{2, 35}, {35, 40}},
                 null);
     }
 
