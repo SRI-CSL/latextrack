@@ -125,6 +125,27 @@ public class TestLatexDiff {
     }
 
     @Test
+    public void commentThenText() throws IOException {
+        changes = getChanges(
+                "% Need life\n",
+                "% Need \nLife"
+        );
+
+
+        assertAddition(0, 6, 4,
+                Lists.newArrayList(new IndexFlagsPair<Integer>(
+                        12,
+                        EnumSet.noneOf(Change.Flag.class)))
+        );
+
+        assertDeletion(1, 6, 6,
+                Lists.newArrayList(
+                    new IndexFlagsPair<String>(" life", EnumSet.of(Change.Flag.DELETION, Change.Flag.COMMENT))
+                )
+         );
+    }
+
+    @Test
     public void test3Diff() throws IOException, BadLocationException {
         MarkedUpDocument document = new MarkedUpDocument();
         document.insertString(0, "  Lorem ipsum   dolor sit. ", null);

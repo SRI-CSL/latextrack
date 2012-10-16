@@ -180,6 +180,7 @@ public final class LatexDiff {
                         // see (http://spider.my/static/contrib/Levenshtein.java)
                         if (!(SPACE.contains(lexeme0.type) && SPACE.contains(lexeme1.type)) &&
                                 lexeme0.type.equals(lexeme1.type) &&
+                                lexeme0.inComment == lexeme1.inComment &&
                                 Levenshtein.getLevenshteinDistance(lexeme0.contents, lexeme1.contents) <
                                         Math.min(3, Math.min(lexeme0.contents.length(), lexeme1.contents.length()))) {
                             // small change: determine character diff using arrays of characters from contents
@@ -379,12 +380,13 @@ public final class LatexDiff {
         // Diff between lexeme (without locations):
         // collect relevant lexemes into arrays
         for (int i=0; i<2; i++) {
-            // go through each lexem list and build up string arrays:
+            // go through each lexeme list and build up string arrays:
             List<Lexeme> lexemes = lexemLists.get(i);
             diffInputs[i] = new String[lexemes.size()];
             int j=0;
             for (Lexeme lexeme : lexemes) {
-                diffInputs[i][j] = lexeme.type+" "+lexeme.displayContents();
+                // do we need to also consider preamble state here? e.g. + (lexeme.preambleSeen ? " P" : "");
+                diffInputs[i][j] = lexeme.type + " " + lexeme.displayContents() + (lexeme.inComment ? " C" : "");
                 j++;
             }
         }

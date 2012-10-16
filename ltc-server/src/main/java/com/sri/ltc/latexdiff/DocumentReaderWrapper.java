@@ -55,7 +55,7 @@ public final class DocumentReaderWrapper extends AbstractReaderWrapper<MarkedUpD
                         lexeme.type,
                         newContents.toString(),
                         lexeme.pos,
-                        lexeme.preambleSeen, false, removed.toArray(new Integer[removed.size()])
+                        lexeme.preambleSeen, lexeme.inComment, removed.toArray(new Integer[removed.size()])
                 );
         }
     }
