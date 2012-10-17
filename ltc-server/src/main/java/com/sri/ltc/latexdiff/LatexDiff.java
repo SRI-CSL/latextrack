@@ -180,9 +180,9 @@ public final class LatexDiff {
                         // see (http://spider.my/static/contrib/Levenshtein.java)
                         if (!(SPACE.contains(lexeme0.type) && SPACE.contains(lexeme1.type)) &&
                                 lexeme0.type.equals(lexeme1.type) &&
-                                lexeme0.inComment == lexeme1.inComment &&
-                                Levenshtein.getLevenshteinDistance(lexeme0.contents, lexeme1.contents) <
-                                        Math.min(3, Math.min(lexeme0.contents.length(), lexeme1.contents.length()))) {
+                                (lexeme0.inComment == lexeme1.inComment) &&
+                                (Levenshtein.getLevenshteinDistance(lexeme0.contents, lexeme1.contents) <
+                                        Math.min(3, Math.min(lexeme0.contents.length(), lexeme1.contents.length())))) {
                             // small change: determine character diff using arrays of characters from contents
                             Diff chardiff = new Diff(
                                     toCharacters(lexeme0.contents.toCharArray()),
