@@ -148,6 +148,30 @@ public final class LatexDiff {
         return result;
     }
 
+    private boolean isSmallChange(Lexeme lexeme0, Lexeme lexeme1) {
+        // small changes := lexemes are not both SPACE
+        //   are not both either comments or _not_ comments
+        //   and and are of the same type
+        //   and have a Levenshtein distance less than 3 and less than the length of shorter lexeme
+
+        // TODO: consider using Damerau-Levenshtein and limit to 1 instead!
+        // see (http://spider.my/static/contrib/Levenshtein.java)
+
+        if (SPACE.contains(lexeme0.type) && SPACE.contains(lexeme1.type)) return false;
+//        if (lexeme0.inComment != lexeme1.inComment) return false;
+//        if (!lexeme0.inComment) {
+            if (!lexeme0.type.equals(lexeme1.type)) return false;
+//        }
+
+        int distance = Levenshtein.getLevenshteinDistance(lexeme0.contents, lexeme1.contents);
+        if (distance >= 3) return false;
+
+        int shorterLength = Math.min(lexeme0.contents.length(), lexeme1.contents.length());
+        if (distance >= shorterLength) return false;
+
+        return true;
+    }
+
     // for positioning details refer to tables in specification/tech report
     private List<Change> mergeDiffResult(Diff.change changes, List<Lexeme> list0, List<Lexeme> list1,
                                          String contents0) {
@@ -174,15 +198,7 @@ public final class LatexDiff {
                     for (i1=start_i1; i1<hunk.line1+hunk.inserted; i1++) {
                         Lexeme lexeme0 = list0.get(i0);
                         Lexeme lexeme1 = list1.get(i1);
-                        // small changes := lexemes are not both SPACE and of the same type and
-                        //   have a Levenshtein distance less than 3 and less than the length of shorter lexeme
-                        // TODO: consider using Damerau-Levenshtein and limit to 1 instead!
-                        // see (http://spider.my/static/contrib/Levenshtein.java)
-                        if (!(SPACE.contains(lexeme0.type) && SPACE.contains(lexeme1.type)) &&
-                                lexeme0.type.equals(lexeme1.type) &&
-                                (lexeme0.inComment == lexeme1.inComment) &&
-                                (Levenshtein.getLevenshteinDistance(lexeme0.contents, lexeme1.contents) <
-                                        Math.min(3, Math.min(lexeme0.contents.length(), lexeme1.contents.length())))) {
+                        if (isSmallChange(lexeme0, lexeme1)) {
                             // small change: determine character diff using arrays of characters from contents
                             Diff chardiff = new Diff(
                                     toCharacters(lexeme0.contents.toCharArray()),

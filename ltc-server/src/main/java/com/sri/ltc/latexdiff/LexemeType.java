@@ -21,9 +21,11 @@ public enum LexemeType {
     PARAGRAPH (false),
     WHITESPACE (false),
     END_OF_FILE (false),
-    START_OF_FILE (false);
+    START_OF_FILE (false),
+    COMMENT_END (false);
 
     private final boolean isPrintable;
+    
     LexemeType(boolean printable) {
         isPrintable = printable;
     }

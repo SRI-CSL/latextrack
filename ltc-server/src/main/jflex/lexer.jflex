@@ -34,6 +34,11 @@ import java.util.regex.Pattern;
         return lexemes;
     }
 
+    private LexemeType convertToWordIfComment(LexemeType type) {
+        if (yystate() == IN_COMMENT) return LexemeType.WORD;
+        else return type;
+    }
+    
     /* Main function to run analysis stand-alone. */
     public static void main(String argv[]) {
         Reader reader;
@@ -75,12 +80,12 @@ space       = [ \t\f]
 
 <YYINITIAL,PREAMBLE_SEEN,IN_COMMENT>
   \\[A-Za-z]+        { return Lists.newArrayList(
-                         new Lexeme(LexemeType.COMMAND, yytext(), yychar, preambleSeen, yystate() == IN_COMMENT)); } 
+                         new Lexeme(convertToWordIfComment(LexemeType.COMMAND), yytext(), yychar, preambleSeen, yystate() == IN_COMMENT)); }
   /* commands that are more than one letter long */
 
 <YYINITIAL,PREAMBLE_SEEN,IN_COMMENT>
   \\[^ \t\r\n\f]     { return Lists.newArrayList(
-                         new Lexeme(LexemeType.COMMAND, yytext(), yychar, preambleSeen, yystate() == IN_COMMENT)); }
+                         new Lexeme(convertToWordIfComment(LexemeType.COMMAND), yytext(), yychar, preambleSeen, yystate() == IN_COMMENT)); }
   /* commands that are one non-whitespace character after backslash */
 
 \\begin\{document\}  { preambleSeen = true;
@@ -101,12 +106,12 @@ space       = [ \t\f]
 
 <YYINITIAL,PREAMBLE_SEEN,IN_COMMENT>
   {punctuation}      { return Lists.newArrayList(
-                         new Lexeme(LexemeType.PUNCTUATION, yytext(), yychar, preambleSeen, yystate() == IN_COMMENT)); }
+                         new Lexeme(convertToWordIfComment(LexemeType.PUNCTUATION), yytext(), yychar, preambleSeen, yystate() == IN_COMMENT)); }
   /* match single punctuation characters */
 
 <YYINITIAL,PREAMBLE_SEEN,IN_COMMENT>
   {symbol}           { return Lists.newArrayList(
-                         new Lexeme(LexemeType.SYMBOL, yytext(), yychar, preambleSeen, yystate() == IN_COMMENT)); }
+                         new Lexeme(convertToWordIfComment(LexemeType.SYMBOL), yytext(), yychar, preambleSeen, yystate() == IN_COMMENT)); }
   /* match single symbol characters */
 
 <YYINITIAL,PREAMBLE_SEEN,IN_COMMENT>
@@ -124,8 +129,15 @@ space       = [ \t\f]
   /* paragraphs are 2 or more end-of-lines and possibly white space without line breaks in between */
 
 <YYINITIAL,PREAMBLE_SEEN,IN_COMMENT> 
-  {space}*{EOL}      { return processNewline(
-                         new Lexeme(LexemeType.WHITESPACE, yytext(), yychar, preambleSeen, false), yystate() == IN_COMMENT); } 
+  {space}*{EOL}      {
+     Lexeme newLine = new Lexeme(LexemeType.WHITESPACE, yytext(), yychar, preambleSeen, (yystate() == IN_COMMENT));
+     List<Lexeme> lexemes = Lists.newArrayList(newLine);
+        if (yystate() == IN_COMMENT) {
+            yybegin(prior_state);
+            lexemes.add(new Lexeme(LexemeType.COMMENT_END, "", yychar, preambleSeen, (yystate() == IN_COMMENT)));
+            }
+        return lexemes;
+        }
   /* other, non-paragraph line breaks */
 
 <YYINITIAL,PREAMBLE_SEEN,IN_COMMENT> 
