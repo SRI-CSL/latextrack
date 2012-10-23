@@ -57,14 +57,17 @@ public final class LatexDiff {
                 new Lexeme(LexemeType.START_OF_FILE, "", 0, false, false)}));
         Lexer scanner = new Lexer(wrapper.createReader());
         List<Lexeme> lexemes;
-        while ((lexemes = scanner.yylex()) != null)
-            for (Lexeme lexeme : lexemes)
+        while ((lexemes = scanner.yylex()) != null) {
+            for (Lexeme lexeme : lexemes) {
                 if (!LexemeType.WHITESPACE.equals(lexeme.type)) { // ignore whitespace
                     lexeme = wrapper.removeAdditions(lexeme); // remove any additions
                     if (lexeme != null)
                         list.add(lexeme);
                 }
+            }
+        }
         scanner.yyclose();
+
         // remove paragraphs in the preamble if there is one:
         if (list.get(list.size()-1).preambleSeen) { // EOF Lexeme has seen preamble
             for (Iterator<Lexeme> i = list.iterator(); i.hasNext(); ) {
