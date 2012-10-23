@@ -57,13 +57,12 @@ public final class LatexDiff {
                 new Lexeme(LexemeType.START_OF_FILE, "", 0, false, false)}));
         Lexer scanner = new Lexer(wrapper.createReader());
         List<Lexeme> lexemes;
+
         while ((lexemes = scanner.yylex()) != null) {
             for (Lexeme lexeme : lexemes) {
-                if (!LexemeType.WHITESPACE.equals(lexeme.type)) { // ignore whitespace
-                    lexeme = wrapper.removeAdditions(lexeme); // remove any additions
-                    if (lexeme != null)
-                        list.add(lexeme);
-                }
+                lexeme = wrapper.removeAdditions(lexeme); // remove any additions
+                if (lexeme != null)
+                    list.add(lexeme);
             }
         }
         scanner.yyclose();
@@ -153,7 +152,6 @@ public final class LatexDiff {
 
     private boolean isSmallChange(Lexeme lexeme0, Lexeme lexeme1) {
         // small changes := lexemes are not both SPACE
-        //   are not both either comments or _not_ comments
         //   and and are of the same type
         //   and have a Levenshtein distance less than 3 and less than the length of shorter lexeme
 
@@ -161,10 +159,7 @@ public final class LatexDiff {
         // see (http://spider.my/static/contrib/Levenshtein.java)
 
         if (SPACE.contains(lexeme0.type) && SPACE.contains(lexeme1.type)) return false;
-//        if (lexeme0.inComment != lexeme1.inComment) return false;
-//        if (!lexeme0.inComment) {
-            if (!lexeme0.type.equals(lexeme1.type)) return false;
-//        }
+        if (!lexeme0.type.equals(lexeme1.type)) return false;
 
         int distance = Levenshtein.getLevenshteinDistance(lexeme0.contents, lexeme1.contents);
         if (distance >= 3) return false;
