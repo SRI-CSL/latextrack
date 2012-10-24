@@ -57,14 +57,16 @@ public final class LatexDiff {
                 new Lexeme(LexemeType.START_OF_FILE, "", 0, false, false)}));
         Lexer scanner = new Lexer(wrapper.createReader());
         List<Lexeme> lexemes;
-        while ((lexemes = scanner.yylex()) != null)
-            for (Lexeme lexeme : lexemes)
-                if (!LexemeType.WHITESPACE.equals(lexeme.type)) { // ignore whitespace
-                    lexeme = wrapper.removeAdditions(lexeme); // remove any additions
-                    if (lexeme != null)
-                        list.add(lexeme);
-                }
+
+        while ((lexemes = scanner.yylex()) != null) {
+            for (Lexeme lexeme : lexemes) {
+                lexeme = wrapper.removeAdditions(lexeme); // remove any additions
+                if (lexeme != null)
+                    list.add(lexeme);
+            }
+        }
         scanner.yyclose();
+
         // remove paragraphs in the preamble if there is one:
         if (list.get(list.size()-1).preambleSeen) { // EOF Lexeme has seen preamble
             for (Iterator<Lexeme> i = list.iterator(); i.hasNext(); ) {
@@ -148,6 +150,26 @@ public final class LatexDiff {
         return result;
     }
 
+    private boolean isSmallChange(Lexeme lexeme0, Lexeme lexeme1) {
+        // small changes := lexemes are not both SPACE
+        //   and and are of the same type
+        //   and have a Levenshtein distance less than 3 and less than the length of shorter lexeme
+
+        // TODO: consider using Damerau-Levenshtein and limit to 1 instead!
+        // see (http://spider.my/static/contrib/Levenshtein.java)
+
+        if (SPACE.contains(lexeme0.type) && SPACE.contains(lexeme1.type)) return false;
+        if (!lexeme0.type.equals(lexeme1.type)) return false;
+
+        int distance = Levenshtein.getLevenshteinDistance(lexeme0.contents, lexeme1.contents);
+        if (distance >= 3) return false;
+
+        int shorterLength = Math.min(lexeme0.contents.length(), lexeme1.contents.length());
+        if (distance >= shorterLength) return false;
+
+        return true;
+    }
+
     // for positioning details refer to tables in specification/tech report
     private List<Change> mergeDiffResult(Diff.change changes, List<Lexeme> list0, List<Lexeme> list1,
                                          String contents0) {
@@ -174,14 +196,7 @@ public final class LatexDiff {
                     for (i1=start_i1; i1<hunk.line1+hunk.inserted; i1++) {
                         Lexeme lexeme0 = list0.get(i0);
                         Lexeme lexeme1 = list1.get(i1);
-                        // small changes := lexemes are not both SPACE and of the same type and
-                        //   have a Levenshtein distance less than 3 and less than the length of shorter lexeme
-                        // TODO: consider using Damerau-Levenshtein and limit to 1 instead!
-                        // see (http://spider.my/static/contrib/Levenshtein.java)
-                        if (!(SPACE.contains(lexeme0.type) && SPACE.contains(lexeme1.type)) &&
-                                lexeme0.type.equals(lexeme1.type) &&
-                                Levenshtein.getLevenshteinDistance(lexeme0.contents, lexeme1.contents) <
-                                        Math.min(3, Math.min(lexeme0.contents.length(), lexeme1.contents.length()))) {
+                        if (isSmallChange(lexeme0, lexeme1)) {
                             // small change: determine character diff using arrays of characters from contents
                             Diff chardiff = new Diff(
                                     toCharacters(lexeme0.contents.toCharArray()),
@@ -379,12 +394,13 @@ public final class LatexDiff {
         // Diff between lexeme (without locations):
         // collect relevant lexemes into arrays
         for (int i=0; i<2; i++) {
-            // go through each lexem list and build up string arrays:
+            // go through each lexeme list and build up string arrays:
             List<Lexeme> lexemes = lexemLists.get(i);
             diffInputs[i] = new String[lexemes.size()];
             int j=0;
             for (Lexeme lexeme : lexemes) {
-                diffInputs[i][j] = lexeme.type+" "+lexeme.displayContents();
+                // do we need to also consider preamble state here? e.g. + (lexeme.preambleSeen ? " P" : "");
+                diffInputs[i][j] = lexeme.type + " " + lexeme.displayContents() + (lexeme.inComment ? " C" : "");
                 j++;
             }
         }
