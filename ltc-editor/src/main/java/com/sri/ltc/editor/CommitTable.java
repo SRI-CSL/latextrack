@@ -9,7 +9,7 @@
 package com.sri.ltc.editor;
 
 import com.sri.ltc.filter.Author;
-import com.sri.ltc.git.Commit;
+import com.sri.ltc.versioncontrol.Commit;
 
 import javax.activation.DataHandler;
 import javax.swing.*;
@@ -66,7 +66,7 @@ public final class CommitTable extends JTable {
         setDefaultRenderer(Date.class, new CommitTableRenderer() {
             @Override
             String renderText(Object object) {
-                return Commit.FORMATTER.format((Date) object);
+                return Commit.serializeDate((Date) object);
             }
         });
         setDefaultRenderer(Author.class, new CommitTableRenderer() {
