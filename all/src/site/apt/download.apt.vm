@@ -22,7 +22,7 @@ Download LTC
 
   []
 
-  Or, use the {{{./downloads/ltc-install.sh}ltc-install.sh}} Bash script to automatically fetch the latest JAR file to
+  Or, use the {{{./downloads/ltc-install.sh}ltc-install.sh}} bash script to automatically fetch the latest JAR file to
   a location of your choice and optionally extract the Emacs Lisp files to your Emacs directory.
   You can obtain usage information by invoking the script this way:
 
@@ -36,7 +36,8 @@ $> sh ltc-install.sh -h
 | <<Java>>                  | 1.6 or above                       | <<<$> java -version>>>
 | (JDK if using <<<jar>>>)  |                                    |
 *---------------------------+------------------------------------+-----------------------+
-| <<git>>                   | 1.7.2 or above                     | <<<$> git --version>>>
+| <<git>> or <<svn>>        | 1.7.2 or above                     | <<<$> git --version>>>
+|                           | 1.6.3 or above                     | <<<$> svn --version>>>
 *---------------------------+------------------------------------+-----------------------+
 | <<Emacs>>                 | 23 or above; no support for XEmacs |
 | (if using <<<ltc-mode>>>) |                                    |

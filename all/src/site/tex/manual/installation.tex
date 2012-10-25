@@ -7,7 +7,11 @@ We have tested the system on Mac OS X and Linux. It is designed to run on Unix p
 Further requirements for running LTC are as follows.
 \begin{description}
 \item[Java] 1.6 or above.  If using the \Code{jar} tool to extract Emacs Lisp files, you will need the JDK, otherwise the JRE should suffice.
-\item[git] 1.7.2 or above.  We currently use the git command line interface and thus the system may break if git changes substantially.  In the future, we will move to the JGit library to avoid this dependency.
+\item[Version Control System]  One of the version control systems below:
+  \begin{description}
+  \item[git] 1.7.2 or above.
+  \item[svn] 1.6.3 or above.
+  \end{description}
 \item[Emacs] 23 or above.  Only if the user wants to use \Code{ltc-mode} in Emacs to interact with LTC.  XEmacs is not supported.
 \end{description}
 
@@ -17,11 +21,11 @@ Currently, everything is wrapped into the \Code{LTC-\version.jar} file, which ca
 
 \section{Configuration}
 
-This section contains details of configuring git, LTC and Emacs to work together.  Most of these steps only need to be carried out once per installation of LTC.
+This section contains details of configuring git or svn, LTC and Emacs to work together.  Most of these steps only need to be carried out once per installation of LTC.
 
 \subsection{Git}
 
-The current version of LTC requires git as the underlying version control system, which manages the history of the LaTeX files of interest. If you are already using git for other things, you may skip the following few steps as your git is probably already configured. However, we do recommend to add the common LaTeX build products with wildcards to the list of ignored files as outlined at the end of this section, which may not be configured if git has not been used to manage repositories with LaTeX files.
+The current version of LTC supports git as an underlying version control system, which manages the history of the LaTeX files of interest. If you are already using git for other things, you may skip the following few steps as your git is probably already configured. However, we do recommend to add the common LaTeX build products with wildcards to the list of ignored files as outlined at the end of this section, which may not be configured if git has not been used to manage repositories with LaTeX files.
 
 First, test that the git installation is found. Otherwise, add the git binary directory to the \Code{PATH} environment variable.  
 \begin{CodeVerbatim}
@@ -56,6 +60,18 @@ Then, issue the git config command below (with a possibly adjusted file name and
 \begin{CodeVerbatim}
 $> git config --global core.excludesfile ~/.gitignore_global
 \end{CodeVerbatim}
+
+\subsection{Subversion}
+
+First, test that the svn installation is found. Otherwise, add the svn binary directory to the \Code{PATH} environment variable.  
+\begin{CodeVerbatim}
+$> svn --version
+svn, version 1.6.3 (r38063)
+   compiled Jun 23 2009, 16:38:16
+
+...
+\end{CodeVerbatim}
+% TODO: write more about subversion configuration here!
 
 %\subsection{LTC Server}
 

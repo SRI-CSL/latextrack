@@ -16,7 +16,7 @@
     <name>LaTeX Track Changes</name>
     <description>
         LaTeX Track Changes (LTC) provides a system to view changes made over time to a LaTeX document that is stored
-        under git (a distributed source code management system).
+        under a version control system (such as git or svn).
     </description>
     <packaging>jar</packaging>
 

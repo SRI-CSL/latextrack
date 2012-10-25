@@ -22,8 +22,17 @@
                 Why use git?  Could other version control systems be used?
             </question>
             <answer>
-                <p><a href="http://git-scm.com/">Git</a> is free and open source and as the version control system for the Linux kernel and other high-profile open source systems under very active development.  Git is also a distributed version control system, which suits the idea of collaborating authors working mostly offline (some people write best when not connected to the Internet with all its distractions).</p>
-                <p>That said, in principle, LTC could work with other version control systems to obtain the history of a .tex file of interest.  We leave this as a future exercise for the open source community to provide a different back-end  for say subversion.</p>
+                <p><a href="http://git-scm.com/">Git</a> is free and open source and as the version control system for
+                    the Linux kernel and other high-profile open source systems under very active development.  Git is
+                    also a distributed version control system, which suits the idea of collaborating authors working
+                    mostly offline (some people write best when not connected to the Internet with all its distractions).</p>
+                <p>That said, we have recently added support for Subversion to manage versions of the .tex file of
+                    interest.  As the database is typically stored on an off-site server, the author must be connected
+                    to this machine via the Internet or other networking while using LTC.  Also, since each version
+                    needs to be fetched from afar, it may also create more latency than using git.</p>
+                <p>LTC could work with other version control systems if there is interest.  We leave this as a future
+                    exercise for the open source community to provide a different back-end for a new version control
+                    system.</p>
             </answer>
         </faq>
     </part>
