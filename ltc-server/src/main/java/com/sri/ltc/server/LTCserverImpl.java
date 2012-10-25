@@ -11,17 +11,10 @@ package com.sri.ltc.server;
 import com.sri.ltc.ProgressReceiver;
 import com.sri.ltc.filter.Author;
 import com.sri.ltc.filter.Filtering;
-import com.sri.ltc.git.Commit;
-import com.sri.ltc.git.LimitedHistory;
-import com.sri.ltc.git.Remote;
-import com.sri.ltc.git.Self;
+import com.sri.ltc.versioncontrol.history.LimitedHistory;
+import com.sri.ltc.versioncontrol.Remote;
 import com.sri.ltc.latexdiff.*;
-import edu.nyu.cs.javagit.api.DotGit;
-import edu.nyu.cs.javagit.api.GitFile;
-import edu.nyu.cs.javagit.api.JavaGitConfiguration;
-import edu.nyu.cs.javagit.api.JavaGitException;
-import edu.nyu.cs.javagit.api.responses.GitCommitResponse;
-import edu.nyu.cs.javagit.client.Factory;
+import com.sri.ltc.versioncontrol.*;
 import org.apache.xmlrpc.XmlRpcException;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -83,19 +76,6 @@ public final class LTCserverImpl implements LTCserverInterface {
 
     private final static Logger LOGGER = Logger.getLogger(LTCserverImpl.class.getName());
     static {
-        // init git
-        try {
-            if (JavaGitConfiguration.getGitPath() == null) { // only set from env if not explicitly set before
-                String gitDir = System.getenv("GIT_BIN_DIR");
-                if (gitDir != null && !"".equals(gitDir)) {
-                    LOGGER.info("Trying to set git path to \""+gitDir+"\" as obtained from GIT_BIN_DIR");
-                    JavaGitConfiguration.setGitPath(gitDir);
-                }
-            }
-            LOGGER.config("git version: "+ JavaGitConfiguration.getGitVersion());
-        } catch (Exception e) {
-            LOGGER.log(Level.SEVERE, "Cannot obtain GIT executable", e);
-        }
         // obtain version information from Maven meta-information
         try {
             InputStream inputStream = LTCserverImpl.class.getClassLoader().getResourceAsStream("META-INF/maven/com.sri.ltc/ltc-server/pom.properties");
@@ -133,35 +113,42 @@ public final class LTCserverImpl implements LTCserverInterface {
         if (!file.canRead())
             logAndThrow(2,"Cannot read given file");
 
-        // is any parent of file under git?
-        DotGit dotGit = null;
+        Repository repository = null;
         try {
-            dotGit = DotGit.getInstance(file);
-        } catch (JavaGitException e) {
-            logAndThrow(3,"No ancestor of given file is a git repository: "+e.getMessage());
+            repository = RepositoryFactory.fromPath(file);
+        } catch (Exception e) {
+            logAndThrow(3, "Could not find repository at " + file + " Exception: " + e.getMessage());
         }
         updateProgress(3);
 
         try {
+            TrackedFile trackedFile = repository.getFile(file);
             // test whether file tracked under git
-            GitFile gitFile = dotGit.getWorkingTree().getFile(file);
-            switch (gitFile.getStatus()) {
-                case UNTRACKED:
-                    logAndThrow(4,"Given file not tracked under git");
-                case DELETED:
-                    logAndThrow(8,"Given file deleted or deleted to commit under git");
+            switch (trackedFile.getStatus()) {
+                case NotTracked:
+                    logAndThrow(4, "Given file not tracked under source code control");
+                    break;
+                case Removed:
+                    logAndThrow(8, "Given file deleted or deleted to commit under source code control");
+                    break;
+                case Unknown:
+                    logAndThrow(8, "Given file status unknown under source code control");
+                    break;
+
+                default:
+                    break;
             }
             updateProgress(10);
 
-            return SessionManager.createSession(gitFile);
-        } catch (JavaGitException e) {
-            logAndThrow(6,"JavaGitException during git file creation: "+e.getMessage());
+            return SessionManager.createSession(trackedFile);
         } catch (IOException e) {
             logAndThrow(7,"IOException during git file creation: "+e.getMessage());
         } catch (ParseException e) {
             logAndThrow(8,"ParseException during git file creation: "+e.getMessage()+" (@"+e.getErrorOffset()+")");
         } catch (BadLocationException e) {
             logAndThrow(9,"BadLocationException during git file creation: "+e.getMessage());
+        } catch (Exception e) {
+            logAndThrow(10,"General Exception during git file creation: "+e.getMessage());
         }
 
         return -1;
@@ -173,7 +160,7 @@ public final class LTCserverImpl implements LTCserverInterface {
         if (session == null)
             logAndThrow(1,"Cannot close session with given ID");
 
-        LOGGER.info("Server: close_session for file \""+session.gitFile.getFile().getAbsolutePath()+"\", "+
+        LOGGER.info("Server: close_session for file \""+session.getTrackedFile().getFile().getAbsolutePath()+"\", "+
                 "text with "+currentText.length()+" characters, "+
                 (deletions != null?
                         deletions.size()+" deletions, ":
@@ -203,7 +190,7 @@ public final class LTCserverImpl implements LTCserverInterface {
     public int save_file(int sessionID, String currentText, List deletions) throws XmlRpcException {
         Session session = getSession(sessionID);
 
-        LOGGER.info("Server: save_file to file \""+session.gitFile.getFile().getAbsolutePath()+"\" "+
+        LOGGER.info("Server: save_file to file \""+session.getTrackedFile().getFile().getAbsolutePath()+"\" "+
                 "text with "+currentText.length()+" characters"+
                 (deletions != null?
                         " and "+deletions.size()+" deletions":
@@ -217,7 +204,7 @@ public final class LTCserverImpl implements LTCserverInterface {
                 currentText = document.getText(0, document.getLength());
             }
             // write current text to file
-            BufferedWriter out = new BufferedWriter(new FileWriter(session.gitFile.getFile(), false));
+            BufferedWriter out = new BufferedWriter(new FileWriter(session.getTrackedFile().getFile(), false));
             out.write(currentText);
             out.close();
         } catch (BadLocationException e) {
@@ -235,7 +222,7 @@ public final class LTCserverImpl implements LTCserverInterface {
     public Map get_changes(int sessionID, boolean isModified, String currentText, List deletions, int caretPosition) throws XmlRpcException {
         Session session = getSession(sessionID);
 
-        LOGGER.info("Server: get_changes for file \""+session.gitFile.getFile().getAbsolutePath()+"\", "+
+        LOGGER.info("Server: get_changes for file \""+session.getTrackedFile().getFile().getAbsolutePath()+"\", "+
                 (isModified?"":"not ")+"modified, "+
                 "text with "+currentText.length()+" characters, "+
                 (deletions != null?
@@ -260,25 +247,25 @@ public final class LTCserverImpl implements LTCserverInterface {
         List<String> sha1 = new ArrayList<String>();
         try {
             // create history with limits and obtain SHA1s, authors, and readers:
-            LimitedHistory history = new LimitedHistory(session.gitFile,
+            LimitedHistory history = new LimitedHistory(session.getTrackedFile(),
                     session.getLimitedAuthors(),
                     session.getLimitDate(),
                     session.getLimitRev());
             updateProgress(12);
             for (Commit commit : history.getCommitsList())
-                sha1.add(commit.sha1);
+                sha1.add(commit.getId());
             authors = history.getAuthorsList();
             updateProgress(15);
             readers = history.getReadersList();
             updateProgress(45);
 
-            Author self = new Self(session.gitFile).getSelf();
+            Author self = session.getTrackedFile().getRepository().getSelf();
             // add file on disk to list, if modified or new but not committed yet
-            switch (session.gitFile.getStatus()) {
-                case ADDED:
-                case MODIFIED:
-                case UPDATED:
-                    ReaderWrapper fileReader = new FileReaderWrapper(session.gitFile.getFile().getCanonicalPath());
+            switch (session.getTrackedFile().getStatus()) {
+                case Added:
+                case Modified:
+                case Changed:
+                    ReaderWrapper fileReader = new FileReaderWrapper(session.getTrackedFile().getFile().getCanonicalPath());
                     if (authors.size() > 0 && authors.get(authors.size()-1).equals(self)) {
                         // replace last reader and SHA1
                         readers.remove(readers.size()-1);
@@ -305,16 +292,16 @@ public final class LTCserverImpl implements LTCserverInterface {
             // if no readers, then use text from file and self as author
             if (readers.size() == 0 && authors.size() == 0) {
                 authors.add(self);
-                readers.add(new FileReaderWrapper(session.gitFile.getFile().getCanonicalPath()));
+                readers.add(new FileReaderWrapper(session.getTrackedFile().getFile().getCanonicalPath()));
                 sha1.add("");
             }
             updateProgress(47);
-        } catch (JavaGitException e) {
-            logAndThrow(4,"JavaGitException during log retrieval: "+e.getMessage());
         } catch (IOException e) {
             logAndThrow(5,"IOException during log retrieval: "+e.getMessage());
         } catch (ParseException e) {
             logAndThrow(6,"ParseException during log retrieval: "+e.getMessage()+" (@"+e.getErrorOffset()+")");
+        } catch (Exception e) {
+            logAndThrow(7,"General Exception during log retrieval: "+e.getMessage());
         }
 
         session.addAuthors(new HashSet<Author>(authors));
@@ -377,22 +364,12 @@ public final class LTCserverImpl implements LTCserverInterface {
         if (message == null || "".equals(message))
             logAndThrow(2, "Cannot commit file with an empty message");
 
-        LOGGER.info("Server: commit_file to file \""+session.gitFile.getFile().getAbsolutePath()+"\" called.");
+        LOGGER.info("Server: commit_file to file \""+session.getTrackedFile().getFile().getAbsolutePath()+"\" called.");
 
         try {
-            GitCommitResponse response = Factory.createGitCommit().commitOnly(session.gitFile.getWorkingTree().getPath(),
-                    message,
-                    session.gitFile.getRelativePath());
-
-            if (response.isError()) {
-                String output = response.getOutput();
-                if (output.startsWith("nothing to commit"))
-                    logAndThrow(5, "Nothing to commit");
-                else
-                    logAndThrow(6, "Error during git commit: "+output);
-            }
-        } catch (JavaGitException e) {
-            logAndThrow(4,"JavaGitException during git commit: "+e.getMessage());
+            session.getTrackedFile().commit(message);
+        } catch (Exception e) {
+            logAndThrow(4, "JavaGitException during git commit: " + e.getMessage());
         }
 
         return 0;
@@ -419,10 +396,10 @@ public final class LTCserverImpl implements LTCserverInterface {
             return session.getCommitGraphAsList();
         } catch (ParseException e) {
             logAndThrow(2, "ParseException during retrieval of commit graph: "+e.getMessage()+" (offset = "+e.getErrorOffset()+")");
-        } catch (JavaGitException e) {
-            logAndThrow(3,"JavaGitException during retrieval of commit graph: "+e.getMessage());
         } catch (IOException e) {
             logAndThrow(4,"IOException during retrieval of commit graph: "+e.getMessage());
+        } catch (Exception e) {
+            logAndThrow(4,"General Exception during retrieval of commit graph: "+e.getMessage());
         }
         return null;
     }
@@ -430,29 +407,20 @@ public final class LTCserverImpl implements LTCserverInterface {
     public Object[] get_self(int sessionID) throws XmlRpcException {
         Session session = getSession(sessionID);
         try {
-            return concatAuthorAndColor(new Self(session.gitFile).getSelf());
+            return concatAuthorAndColor(session.getTrackedFile().getRepository().getSelf());
         } catch (IllegalArgumentException e) {
             return new Object[0]; // if self is undefined
-        } catch (JavaGitException e) {
-            logAndThrow(2,"JavaGitException during self retrieval: "+e.getMessage());
-        } catch (IOException e) {
-            logAndThrow(3,"IOException during self retrieval: "+e.getMessage());
         }
-        return null;
     }
 
     public Object[] set_self(int sessionID, String name, String email) throws XmlRpcException {
         Session session = getSession(sessionID);
         try {
             Author a = new Author(name, email, null);
-            new Self(session.gitFile).setSelf(a);
+            session.getTrackedFile().getRepository().setSelf(a);
             session.addAuthors(Collections.singleton(a));
         } catch (IllegalArgumentException e) {
             logAndThrow(4,"Cannot create author to set as self with given arguments: "+e.getMessage());
-        } catch (JavaGitException e) {
-            logAndThrow(5,"JavaGitException during setting self: "+e.getMessage());
-        } catch (IOException e) {
-            logAndThrow(6,"IOException during setting self: "+e.getMessage());
         }
         return get_self(sessionID);
     }
@@ -460,11 +428,9 @@ public final class LTCserverImpl implements LTCserverInterface {
     public Object[] reset_self(int sessionID) throws XmlRpcException {
         Session session = getSession(sessionID);
         try {
-            new Self(session.gitFile).resetSelf();
-        } catch (JavaGitException e) {
-            logAndThrow(4,"JavaGitException during resetting self: "+e.getMessage());
-        } catch (IOException e) {
-            logAndThrow(5,"IOException during resetting self: "+e.getMessage());
+            session.getTrackedFile().getRepository().resetSelf();
+        } catch (Exception e) {
+            logAndThrow(5,"Exception during resetting self: "+e.getMessage());
         }
         return get_self(sessionID);
     }
@@ -573,7 +539,7 @@ public final class LTCserverImpl implements LTCserverInterface {
         try {
             if (session.getRemotes().addRemote(name, url) != 0)
                 logAndThrow(3, "Underlying git-remote command exited with non-zero code.");
-        } catch (JavaGitException e) {
+        } catch (Exception e) {
             logAndThrow(2, "JavaGitException while adding a remote: "+e.getMessage());
         }
         return 0;
@@ -583,10 +549,10 @@ public final class LTCserverImpl implements LTCserverInterface {
     public int rm_remote(int sessionID, String name) throws XmlRpcException {
         Session session = getSession(sessionID);
         try {
-            if (session.getRemotes().rmRemote(name) != 0)
+            if (session.getRemotes().removeRemote(name) != 0)
                 logAndThrow(3, "Underlying git-remote command exited with non-zero code.");
-        } catch (JavaGitException e) {
-            logAndThrow(2, "JavaGitException while removing a remote: "+e.getMessage());
+        } catch (Exception e) {
+            logAndThrow(2, "Exception while removing a remote: "+e.getMessage());
         }
         return 0;
     }
@@ -596,10 +562,11 @@ public final class LTCserverImpl implements LTCserverInterface {
         Session session = getSession(sessionID);
         List<String[]> remotes = new ArrayList<String[]>();
         try {
-            for (Remote remote : session.getRemotes().updateAndGetRemotes())
+            Set<Remote> remoteSet = session.getRemotes().get();
+            for (Remote remote : remoteSet)
                 remotes.add(remote.toArray());
-        } catch (JavaGitException e) {
-            logAndThrow(2, "JavaGitException while obtaining remotes: "+e.getMessage());
+        } catch (Exception e) {
+            logAndThrow(2, "Exception while obtaining remotes: "+e.getMessage());
         }
         return remotes;
     }
@@ -611,9 +578,9 @@ public final class LTCserverImpl implements LTCserverInterface {
         LOGGER.info("Server: push to repository \""+repository+"\" called.");
 
         try {
-            return session.getRemotes().push(repository);
-        } catch (JavaGitException e) {
-            logAndThrow(2, "JavaGitException while removing a remote: "+e.getMessage());
+            session.getRemotes().push(repository);
+        } catch (Exception e) {
+            logAndThrow(2, "Exception while removing a remote: "+e.getMessage());
         }
         return "";
     }
@@ -625,8 +592,8 @@ public final class LTCserverImpl implements LTCserverInterface {
         LOGGER.info("Server: pull from repository \""+repository+"\" called.");
 
         try {
-            return session.getRemotes().pull(repository);
-        } catch (JavaGitException e) {
+            session.getRemotes().pull(repository);
+        } catch (Exception e) {
             logAndThrow(2, "JavaGitException while removing a remote: "+e.getMessage());
         }
         return "";
@@ -777,7 +744,8 @@ public final class LTCserverImpl implements LTCserverInterface {
         document.appendChild(rootElement);
 
         addSimpleTextNode(document, rootElement, "user-message", message);
-        addSimpleTextNode(document, rootElement, "relative-file-path", session.gitFile.getRelativePath());
+        // TODO: this is probably not relative any more! need to check
+        addSimpleTextNode(document, rootElement, "relative-file-path", session.getTrackedFile().getFile().getPath());
 
         // filters
         {
@@ -796,7 +764,7 @@ public final class LTCserverImpl implements LTCserverInterface {
 
             LimitedHistory history = null;
             try {
-                history = new LimitedHistory(session.gitFile,
+                history = new LimitedHistory(session.getTrackedFile(),
                         session.getLimitedAuthors(),
                         session.getLimitDate(),
                         session.getLimitRev());
@@ -806,7 +774,7 @@ public final class LTCserverImpl implements LTCserverInterface {
 
             assert history != null;
             for (Commit commit : history.getCommitsList()) {
-                 addSimpleTextNode(document, element, "sha", commit.sha1);
+                 addSimpleTextNode(document, element, "sha", commit.getId());
             }
         }
 

@@ -9,7 +9,7 @@
 package com.sri.ltc.editor;
 
 import com.sri.ltc.filter.Author;
-import com.sri.ltc.git.Remote;
+import com.sri.ltc.versioncontrol.Remote;
 
 import javax.swing.*;
 import java.awt.*;
