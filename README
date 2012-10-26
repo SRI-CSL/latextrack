@@ -7,7 +7,7 @@ Requirements
 - Java 6 or higher
 - git 1.7.2.2 or higher
 - Maven 3
-- JGraphT 0.8.2 in local Maven repository:
+- JGraphT 0.8.3 in local Maven repository:
 
 For the time being, you will have to install the supplied JGraphT library into your local Maven repository by hand:
 

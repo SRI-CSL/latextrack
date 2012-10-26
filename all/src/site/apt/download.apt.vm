@@ -7,11 +7,34 @@
 
 Download LTC
 
-  The whole system is packaged in {{{./downloads/LTC-${project.version}.jar}LTC-${project.version}.jar}}.
+  The system can be used via the included LTC Editor or with Emacs.
 
-  The system can be used via the included LTC Editor or with Emacs. The JAR file contains the necessary
-  Emacs Lisp files for <<<ltc-mode>>>.  You can extract those files
-  with the <<<jar>>> tool (as explained in the {{{./html_multipage/manual/manualch1.html}installation chapter of the manual}})
+  Use the {{{./downloads/ltc-install.sh}ltc-install.sh}} (right-click and "Save As...") bash script to automatically
+  fetch the latest JAR file to a location of your choice and optionally extract the Emacs Lisp files to your Emacs
+  directory.
+  You can obtain usage information by invoking the script this way:
+
++----
+$> sh ltc-install.sh -h
++----
+
+  For example, if you want to use Emacs and the directory <<<~/Library/Preferences/Emacs>>> as the place where you
+  store mode files for Emacs, you may want to call the script via (where <<<~/tmp/LTC>>> is the installation location):
+
++----
+$> sh ltc-install.sh ~/tmp/LTC ~/Library/Preferences/Emacs
+...
+Done with installing LTC in ~/tmp/LTC
+To start LTC server with default options, use the following command:
+
+  java -jar ~/tmp/LTC/LTC.jar
+
++----
+
+  Or, download {{{./downloads/LTC-${project.version}.jar}LTC-${project.version}.jar}} manually.
+  To use it with Emacs, the JAR file contains the necessary Emacs Lisp files for <<<ltc-mode>>>.
+  You can extract those files with the <<<jar>>> tool (as explained in the
+  {{{./html_multipage/manual/manualch1.html}installation chapter of the manual}})
   or you may download the files individually here:
 
   * {{{./downloads/emacs/xml-rpc.el}xml-rpc.el}}
@@ -21,14 +44,6 @@ Download LTC
   * {{{./downloads/emacs/ltc-mode.el}ltc-mode.el}}
 
   []
-
-  Or, use the {{{./downloads/ltc-install.sh}ltc-install.sh}} bash script to automatically fetch the latest JAR file to
-  a location of your choice and optionally extract the Emacs Lisp files to your Emacs directory.
-  You can obtain usage information by invoking the script this way:
-
-+----
-$> sh ltc-install.sh -h
-+----
 
 * System Requirements
 

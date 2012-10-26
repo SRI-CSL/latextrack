@@ -22,9 +22,10 @@ usage ()  # print error message if given as argument and then general usage
 
 usage: $0 <OPTIONS> <JAVA DIR> [<EMACS DIR>]
 
-Install $JAR_FILE into given <JAVA DIR>.  If you specify via option -d a download
-directory, the script will look there for the recent version to be copied.  
-Otherwise, it will try to download the JAR from the web using 'wget' or 'curl'.
+Install $JAR_FILE into given <JAVA DIR>.  
+If you specify via option -d a directory, the script will look there for a file 
+with the recent version to be copied.  Otherwise, it will try to download the JAR
+from the web using 'wget' or 'curl'.
 
 If successfully downloaded or copied, the script creates a symbolic link pointing 
 to the latest version in
@@ -180,5 +181,5 @@ ln -v -s $JAR_FILE $JAVA_DIR/LTC.jar
 # message
 
 echo "Done with installing LTC in ${JAVA_DIR}"
-printf "To start LTC server with default options, use the following command:\n  java -jar %s/LTC.jar\n\n" $JAVA_DIR
+printf "To start LTC server with default options, use the following command:\n\n  java -jar %s/LTC.jar\n\n" $JAVA_DIR
 

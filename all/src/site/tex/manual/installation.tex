@@ -23,6 +23,8 @@ Currently, everything is wrapped into the \Code{LTC-\version.jar} file, which ca
 
 This section contains details of configuring git or svn, LTC and Emacs to work together.  Most of these steps only need to be carried out once per installation of LTC.
 
+Note that the system decides automatically whether your LaTeX file is under git or svn version control.
+
 \subsection{Git}
 
 The current version of LTC supports git as an underlying version control system, which manages the history of the LaTeX files of interest. If you are already using git for other things, you may skip the following few steps as your git is probably already configured. However, we do recommend to add the common LaTeX build products with wildcards to the list of ignored files as outlined at the end of this section, which may not be configured if git has not been used to manage repositories with LaTeX files.
@@ -71,7 +73,8 @@ svn, version 1.6.3 (r38063)
 
 ...
 \end{CodeVerbatim}
-% TODO: write more about subversion configuration here!
+
+[TODO: write more about subversion configuration here!]
 
 %\subsection{LTC Server}
 
