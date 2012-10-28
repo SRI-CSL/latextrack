@@ -33,8 +33,13 @@ public final class Lexeme {
         this.inComment = inComment;
         this.removed = removed;
     }
+
     public String displayContents() {
         return type.isPrintable()?contents:"";
+    }
+
+    public boolean isSignificantChange() {
+        return ((type != LexemeType.WHITESPACE) && (type != LexemeType.PARAGRAPH));
     }
 
     @Override
