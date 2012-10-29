@@ -10,7 +10,7 @@
 
     <groupId>com.sri.ltc</groupId>
     <artifactId>LTC</artifactId>
-    <version>0.9.8-SNAPSHOT</version>
+    <version>0.9.8</version>
     <packaging>pom</packaging>
     <inceptionYear>2009</inceptionYear>
     <properties>
@@ -32,12 +32,6 @@
     </organization>
 
     <developers>
-        <developer>
-            <name>Brian Blonski</name>
-            <email>brian.blonski at sri dot com</email>
-            <organization>SRI International</organization>
-            <organizationUrl>http://www.sri.com</organizationUrl>
-        </developer>
         <developer>
             <name>Skip Breidbach</name>
             <email>skip.breidbach at sri dot com</email>

@@ -7,14 +7,15 @@ Requirements
 - Java 6 or higher
 - git 1.7.2.2 or higher
 - Maven 3
-- JGraphT 0.8.3 in local Maven repository:
+- LaTeX (for building manual)
 
-For the time being, you will have to install the supplied JGraphT library into your local Maven repository by hand:
-
-$> mvn install:install-file -Dfile=lib/jgrapht-jdk1.6.jar \
-   -DgroupId=org.jgrapht -DartifactId=jgrapht-jdk1.6 -Dversion=0.8.3 -Dpackaging=jar
-
-which should produce a little bit of output containing "BUILD SUCCESS".  This step has to be done only once.
+(We no longer need JGraphT 0.8.3 in the local Maven repository; to remove before building for the first time simply
+ remove the directory from your local repository:
+   $> rm -rf ~/.m2/repository/org/jgrapht
+ and during the next compile cycle, you should see Maven downloading the library from conjars.org:
+   Downloading: http://conjars.org/repo/jgrapht/jgrapht/0.8.3/jgrapht-0.8.3.pom
+   ...
+)
 
 
 Developing
@@ -67,6 +68,7 @@ When finishing the bigger feature:
 When you’re feature complete, simply start a release branch — again, based on 'develop' — to bump the version number
 and fix the last bugs before releasing:
   $> git flow release start v1.0
+TODO: more details on release flow (e.g., incrementing version numbers in Maven etc.)
 
 
 Running
