@@ -50,6 +50,25 @@ To view the contents of a JAR file without expanding it, use Firefox:
 and then browse
 
 
+Branching Model
+---------------
+
+We are now following the ideas behind
+  http://nvie.com/posts/a-successful-git-branching-model/
+and also start using "git-flow" as explained in
+  http://jeffkreeftmeijer.com/2010/why-arent-you-using-git-flow/
+
+We are using the default branch prefixes.  In short, if working on a bigger feature, create a new feature branch from
+your current 'develop' branch:
+  $> git flow feature start <feature name>
+When finishing the bigger feature:
+  $> git flow feature finish <feature name>
+
+When you’re feature complete, simply start a release branch — again, based on 'develop' — to bump the version number
+and fix the last bugs before releasing:
+  $> git flow release start v1.0
+
+
 Running
 -------
 
