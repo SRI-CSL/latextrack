@@ -70,6 +70,7 @@ and fix the last bugs before releasing:
   $> git flow release start v1.0
   $> mvn versions:set -DnewVersion=1.0
   $> mvn versions:commit
+    [delete ~/public_html/LTC/all on thor]
   $> mvn clean package verify site site:deploy
   $> git flow release finish v1.0
     [supply tag message]
