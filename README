@@ -68,7 +68,11 @@ When finishing the bigger feature:
 When you’re feature complete, simply start a release branch — again, based on 'develop' — to bump the version number
 and fix the last bugs before releasing:
   $> git flow release start v1.0
-TODO: more details on release flow (e.g., incrementing version numbers in Maven etc.)
+  $> mvn versions:set -DnewVersion=1.0
+  $> mvn versions:commit
+  $> mvn clean package verify site site:deploy
+  $> git flow release finish v1.0
+    [supply tag message]
 
 
 Running
