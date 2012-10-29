@@ -86,25 +86,28 @@ public final class LatexDiff {
         return characters;
     }
 
-    private EnumSet<Change.Flag> buildFlags(boolean isDeletion, boolean isSmall, boolean inPreamble, boolean inComment, boolean isCommand) {
+    private EnumSet<Change.Flag> buildFlags(boolean isDeletion, boolean isSmall, boolean inPreamble, boolean inComment, boolean isCommand, boolean isWhiteSpace) {
         EnumSet<Change.Flag> flags = EnumSet.noneOf(Change.Flag.class);
         if (isDeletion) flags.add(Change.Flag.DELETION);
         if (isSmall) flags.add(Change.Flag.SMALL);
         if (inPreamble) flags.add(Change.Flag.PREAMBLE);
         if (inComment) flags.add(Change.Flag.COMMENT);
         if (isCommand) flags.add(Change.Flag.COMMAND);
+        if (isWhiteSpace) flags.add(Change.Flag.WHITESPACE);
         return flags;
     }
 
-    private EnumSet<Change.Flag> buildFlags(boolean isDeletion, boolean inComment, Lexeme lexeme, boolean preamblePresent) {
-        return buildFlags(isDeletion, false,
+    private EnumSet<Change.Flag> buildFlags(boolean isDeletion, boolean isSmall, boolean inComment, Lexeme lexeme, boolean preamblePresent) {
+        return buildFlags(isDeletion,
+                isSmall,
                 preamblePresent && !lexeme.preambleSeen,
                 inComment,
-                LexemeType.COMMAND.equals(lexeme.type));
+                LexemeType.COMMAND.equals(lexeme.type),
+                LexemeType.WHITESPACE.equals(lexeme.type));
     }
 
     @SuppressWarnings("unchecked")
-    private SortedSet<Change> mergeSmallDiffResult(Diff.change changes, String text0, Lexeme lexeme1, boolean inPreamble) {
+    private SortedSet<Change> mergeSmallDiffResult(Diff.change changes, String text0, Lexeme lexeme1, boolean preamblePresent) {
         SortedSet<Change> result = new TreeSet<Change>();
 
         Queue<Integer> removed = Lists.newLinkedList(Lists.newArrayList(lexeme1.removed));
@@ -134,7 +137,7 @@ public final class LatexDiff {
                         start_position,
                         Arrays.asList(new IndexFlagsPair<Integer>(
                                 start_position + hunk.inserted,
-                                buildFlags(false, true, inPreamble, lexeme1.inComment, LexemeType.COMMAND.equals(lexeme1.type))))));
+                                buildFlags(false, true, lexeme1.inComment, lexeme1, preamblePresent)))));
             }
 
             // Deletions
@@ -143,7 +146,7 @@ public final class LatexDiff {
                         start_position,
                         Arrays.asList(new IndexFlagsPair<String>(
                                 text0.substring(hunk.line0, hunk.line0+hunk.deleted),
-                                buildFlags(true, true, inPreamble, lexeme1.inComment, LexemeType.COMMAND.equals(lexeme1.type))))));
+                                buildFlags(true, true, lexeme1.inComment, lexeme1, preamblePresent)))));
             }
         }
 
@@ -185,7 +188,7 @@ public final class LatexDiff {
     private List<Change> mergeDiffResult(Diff.change changes, List<Lexeme> list0, List<Lexeme> list1,
                                          String contents0) {
         SortedSet<Change> result = new TreeSet<Change>();
-        boolean preambleSeen = list1.get(list1.size()-1).preambleSeen; // whether list1 has seen preamble
+        boolean preamblePresent = list1.get(list1.size()-1).preambleSeen; // whether list1 has seen preamble
 
         // go through linked list of changes and convert each hunk into Change(s):
         int last_i0 = 0, last_i1 = 0; // remember last position of replacements to avoid checking them again
@@ -212,10 +215,11 @@ public final class LatexDiff {
                             Diff chardiff = new Diff(
                                     toCharacters(lexeme0.contents.toCharArray()),
                                     toCharacters(lexeme1.contents.toCharArray()));
-                            result.addAll(mergeSmallDiffResult(chardiff.diff_2(false),
-                                    lexeme0.contents,
-                                    lexeme1,
-                                    preambleSeen && !lexeme1.preambleSeen));
+                            result.addAll(
+                                    mergeSmallDiffResult(chardiff.diff_2(false),
+                                        lexeme0.contents,
+                                        lexeme1,
+                                        preamblePresent));
                             // prepare new hunks (if needed)
                             if (i0 > last_i0 || i1 > last_i1)
                                 newHunks.add(new IndexLengthPair(last_i0, last_i1, i0 - last_i0, i1 - last_i1));
@@ -269,7 +273,7 @@ public final class LatexDiff {
 
                 if (lexemesAffected.size() > 0) {
                     List<IndexFlagsPair<Integer>> flags = new ArrayList<IndexFlagsPair<Integer>>();
-                    List<IndexPair> indices = getIndices(lexemesAffected, preambleSeen, hunk.line1, false, false);
+                    List<IndexPair> indices = getIndices(lexemesAffected, preamblePresent, hunk.line1, false, false);
                     for (IndexPair indexPair : indices) {
                         if (indexPair.left.equals(indexPair.right)) { // extra pair to indicate change in flags
                             int ix = calcPosition(list1, indexPair.left-1, true);
@@ -315,7 +319,7 @@ public final class LatexDiff {
                     List<IndexFlagsPair<String>> flags = new ArrayList<IndexFlagsPair<String>>();
                     // deletions are in comment if the position in new text is in comment
                     boolean isTextInComment = list1.get(hunk.line1-1).inComment;
-                    List<IndexPair> indices = getIndices(lexemesAffected, preambleSeen, hunk.line0, true, isTextInComment);
+                    List<IndexPair> indices = getIndices(lexemesAffected, preamblePresent, hunk.line0, true, isTextInComment);
 
                     for (IndexPair indexPair : indices) {
                         if (indexPair.left.equals(indexPair.right)) { // extra pair to indicate change in flags
@@ -361,11 +365,13 @@ public final class LatexDiff {
         // go through list and collect pairs of indices for regions with the same flags:
         int lastIndex = 0;
         Set<Change.Flag> lastFlags = buildFlags(isDeletion,
-                (isDeletion?inComment:list.get(0).inComment),
+                false,
+                (isDeletion ? inComment : list.get(0).inComment),
                 list.get(0), preamblePresent);
         for (int i = 1; i < list.size(); i++) {
             Set<Change.Flag> currentFlags = buildFlags(isDeletion,
-                    (isDeletion?inComment:list.get(i).inComment),
+                    false,
+                    (isDeletion ? inComment : list.get(i).inComment),
                     list.get(i), preamblePresent);
             if (!lastFlags.equals(currentFlags)) {
                 // evaluate difference to next region:
@@ -400,7 +406,7 @@ public final class LatexDiff {
     /**
      * Obtain changes from two texts given as wrapped readers.  The return value is a list of changes ordered 
      * by position in the new text.  If positions are the same, the change is ordered by an order imposed on 
-     * the subclasses of Change (see {@link Change.ORDER}).  Finally, we also employ unique sequence numbers
+     * the subclasses of Change (see {@link Change<Object>.ORDER}).  Finally, we also employ unique sequence numbers
      * for each diff operation, which will be used if the subclasses are of the same class.
      *
      * @param readerWrapper1 text that denotes old version
