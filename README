@@ -68,12 +68,17 @@ When finishing the bigger feature:
 When you’re feature complete, simply start a release branch — again, based on 'develop' — to bump the version number
 and fix the last bugs before releasing:
   $> git flow release start v1.0
+    [do minor fixes if needed]
   $> mvn versions:set -DnewVersion=1.0
   $> mvn versions:commit
-    [delete ~/public_html/LTC/all on thor]
+  $> git commit -am "preparing release of v1.0"
+    [delete ~/public_html/LTC/all on thor before:]
   $> mvn clean package verify site site:deploy
   $> git flow release finish v1.0
     [supply tag message]
+  $> mvn versions:set -DnewVersion=1.1-SNAPSHOT
+  $> mvn versions:commit
+  $> git commit -am "bumping next release number to v1.1-SNAPSHOT"
 
 
 Running
