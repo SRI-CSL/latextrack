@@ -114,7 +114,8 @@ public final class MarkedUpDocument extends DefaultStyledDocument {
 
     public void insertDeletion(int offset, String text, Set<Change.Flag> flags) throws BadLocationException {
         Style style;
-        // TODO remove the UNADORNED STYLE
+        // TODO possibly replace _all_ whitespace with a single ' ' character - this will require
+        // TODO that the Accumulate method that calls this is altered to do so
         if (flags.contains(Change.Flag.WHITESPACE)) {
             text = text.replace('\r', ' ');
             text = text.replace('\n', ' ');
