@@ -39,7 +39,7 @@ public final class Lexeme {
     }
 
     public boolean isSignificantChange() {
-        return ((type != LexemeType.WHITESPACE) && (type != LexemeType.PARAGRAPH));
+        return ( /*(type != LexemeType.WHITESPACE) && */ (type != LexemeType.PARAGRAPH));
     }
 
     @Override

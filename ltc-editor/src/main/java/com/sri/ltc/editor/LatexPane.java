@@ -17,6 +17,7 @@ import java.awt.*;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseEvent;
+import java.io.Console;
 import java.util.List;
 import java.util.Map;
 import java.util.prefs.Preferences;
@@ -53,10 +54,14 @@ public final class LatexPane extends JTextPane {
         // define styles for additions and deletions
         StyledDocument document = getStyledDocument();
         Style style;
+
         style = document.addStyle(STYLE_PREFIX+1, null); // addition
         StyleConstants.setUnderline(style, true);
+
         style = document.addStyle(STYLE_PREFIX+2, null); // deletion
         StyleConstants.setStrikeThrough(style, true);
+
+        style = document.addStyle(STYLE_PREFIX+3, null); // unadorned
 
         // more initialization
         setCaretPosition(0);
@@ -185,11 +190,16 @@ public final class LatexPane extends JTextPane {
                 Style style;
                 for (Integer[] tuple : styles) {
                     if (tuple != null && tuple.length == 4) {
-                        style = document.getStyle(STYLE_PREFIX+tuple[2]);
-                        StyleConstants.setForeground(style, colors.get(tuple[3]));
-                        document.setCharacterAttributes(tuple[0], tuple[1]-tuple[0],
-                                style,
-                                true);
+                        try {
+                            style = document.getStyle(STYLE_PREFIX+tuple[2]);
+                            StyleConstants.setForeground(style, colors.get(tuple[3]));
+                            document.setCharacterAttributes(tuple[0], tuple[1]-tuple[0],
+                                    style,
+                                    true);
+                        }
+                        catch (Exception e) {
+                            System.out.println("Exception getting style info");
+                        }
                     }
                 }
             }

@@ -125,6 +125,8 @@ public final class Accumulate {
 
                 if (change instanceof Deletion) {
                     for (IndexFlagsPair<String> pair : ((Deletion) change).getFlags()) {
+                        if (pair.flags.contains(Change.Flag.WHITESPACE)) continue;
+
                         document.insertDeletion(
                                 change.start_position + current_offset,
                                 pair.index,
