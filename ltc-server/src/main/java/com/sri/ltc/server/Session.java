@@ -25,7 +25,7 @@ public final class Session {
     private static int nextID = 1;
 
     final int ID;
-    private final TrackedFile gitFile;
+    private final TrackedFile trackedFile;
     private final CompleteHistory completeHistory;
     private final Remotes remotes;
     private final Set<Author> knownAuthors = Sets.newHashSet();
@@ -38,7 +38,7 @@ public final class Session {
         ID = generateID();
         if (trackedFile == null)
             throw new IllegalArgumentException("cannot create session with NULL as tracked file");
-        this.gitFile = trackedFile;
+        this.trackedFile = trackedFile;
         // initializations based on git file:
         completeHistory = new CompleteHistory(trackedFile);
         addAuthors(completeHistory.getAuthors());
@@ -47,7 +47,7 @@ public final class Session {
     }
 
     public TrackedFile getTrackedFile() {
-        return gitFile;
+        return trackedFile;
     }
     
     private static synchronized int generateID() {

@@ -42,7 +42,9 @@ import static org.junit.Assert.fail;
 public class TestLTC_API {
 
     @ClassRule
-    public static TemporaryGitRepository repository = new TemporaryGitRepository();
+    public static TemporaryGitRepository temporaryGitRepository = new TemporaryGitRepository();
+
+    // TODO: test also with SVN repository!
 
     @Rule
     public TemporaryFolder folder = new TemporaryFolder();
@@ -53,16 +55,15 @@ public class TestLTC_API {
     public void bugReport() throws Exception {
         // create moderately interesting git repository
         // create, add and commit 2 files:
-        TrackedFile file1 = repository.createTestFileInRepository("file1-", ".txt", "contents of file1", true);
+        TrackedFile file1 = temporaryGitRepository.createTestFileInRepository("file1-", ".txt", "contents of file1", true);
         file1.commit("commtting file1");
-        TrackedFile file2 = repository.createTestFileInRepository("file2-", ".txt", "contents of file2", true);
+        TrackedFile file2 = temporaryGitRepository.createTestFileInRepository("file2-", ".txt", "contents of file2", true);
         file2.commit("committing file2");
         // modify and commit file 2:
-        repository.modifyTestFileInRepository(file2, "changing contents of file2", false);
+        temporaryGitRepository.modifyTestFileInRepository(file2, "changing contents of file2", false);
         file2.commit("changed file2");
 
         int sessionID = API.init_session(file2.getFile().getPath());
-        String reportPath;
 
         // first case: existing directory for bug report
         checkReport(API.create_bug_report(sessionID, "something is wrong", folder.getRoot().getPath()),
@@ -88,9 +89,13 @@ public class TestLTC_API {
             // check that it contains "report.xml"
             ZipEntry xmlEntry = zipFile.getEntry("report.xml");
             assertTrue("ZIP contains \"report.xml\"", xmlEntry != null);
-            checkXML(zipFile.getInputStream(xmlEntry), message);
+            String bundleName = checkXML(zipFile.getInputStream(xmlEntry), message);
 
-            // TODO: check that it contains a bundle?
+            // check that it contains the bundle file, if indicated by "report.xml":
+            if (bundleName != null) {
+                ZipEntry bundleEntry = zipFile.getEntry(bundleName);
+                assertTrue("ZIP contains bundle", bundleEntry != null);
+            }
         } catch (IOException e) {
             fail("file is not a ZIP: "+e.getMessage());
         } finally {
@@ -102,11 +107,13 @@ public class TestLTC_API {
         }
     }
 
-    private void checkXML(InputStream is, String message) {
+    private String checkXML(InputStream is, String message) {
+        String bundleName = null;
+
         // root = bug-report
         // contains elements user-message (with given message), relative-file-path, filters (with 3 sub),
         // active-revisions, show-options (with at least one show-option sub)
-
+        // may contain bundle-name
         try {
             DocumentBuilderFactory documentBuilderFactory = DocumentBuilderFactory.newInstance();
             DocumentBuilder documentBuilder = documentBuilderFactory.newDocumentBuilder();
@@ -148,6 +155,13 @@ public class TestLTC_API {
             assertTrue("only one list of options to show", nodes.getLength() == 1);
             children = nodes.item(0).getChildNodes();
             assertTrue("at least one show option", children.getLength() >= 1);
+
+            // bundle name, if any
+            nodes = root.getElementsByTagName("bundle-name");
+            if (nodes.getLength() > 0) {
+                assertTrue("only one bundle name", nodes.getLength() == 1);
+                bundleName = nodes.item(0).getFirstChild().getNodeValue();
+            }
         } catch (ParserConfigurationException e) {
             fail("cannot configure XML parsing: "+e.getMessage());
         } catch (SAXException e) {
@@ -155,5 +169,7 @@ public class TestLTC_API {
         } catch (IOException e) {
             fail("IOException while parsing XML: "+e.getMessage());
         }
+
+        return bundleName;
     }
 }

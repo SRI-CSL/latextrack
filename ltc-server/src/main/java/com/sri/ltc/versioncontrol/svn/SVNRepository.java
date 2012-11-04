@@ -50,7 +50,7 @@ public class SVNRepository implements Repository {
     @Override
     public File getBundle(File outputDirectory) throws IOException {
         // TODO: decide here what to do
-        throw new NotImplementedException();
+        return null;
     }
 
     @Override
