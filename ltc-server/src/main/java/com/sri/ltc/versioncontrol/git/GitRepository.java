@@ -8,8 +8,12 @@ import com.sri.ltc.versioncontrol.TrackedFile;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.revwalk.RevCommit;
 import org.eclipse.jgit.storage.file.FileRepositoryBuilder;
+import org.eclipse.jgit.storage.pack.PackConfig;
+import org.eclipse.jgit.transport.BundleWriter;
 
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.logging.Logger;
 
@@ -57,6 +61,17 @@ public class GitRepository implements Repository {
     @Override
     public Remotes getRemotes() {
         return new GitRemotes(this);
+    }
+
+    @Override
+    public File getBundle(File outputDirectory) throws IOException {
+        File bundle = new File(outputDirectory, "bundle.git");
+        BundleWriter bundleWriter = new BundleWriter(repository);
+        // TODO: somehow specify --all here...
+        FileOutputStream fos = new FileOutputStream(bundle);
+        bundleWriter.writeBundle(null, fos);
+        fos.close();
+        return bundle;
     }
 
     @Override

@@ -2,7 +2,6 @@ package com.sri.ltc.versioncontrol;
 
 import javax.annotation.Nullable;
 import java.io.File;
-import java.io.IOException;
 import java.util.Date;
 import java.util.List;
 

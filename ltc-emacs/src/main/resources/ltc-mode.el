@@ -98,6 +98,7 @@
 (define-key ltc-prefix-map (kbd "lr") 'ltc-limit-rev)
 (define-key ltc-prefix-map (kbd ">") 'ltc-next-change)
 (define-key ltc-prefix-map (kbd "<") 'ltc-prev-change)
+(define-key ltc-prefix-map (kbd "b") 'ltc-bug-report)
 ;; Bind command `ltc-prefix-map' to `ltc-command-prefix' in `ltc-mode-map':
 (defvar ltc-mode-map (make-sparse-keymap) "LTC mode keymap.")
 (define-key ltc-mode-map ltc-command-prefix 'ltc-prefix-map)
@@ -186,7 +187,13 @@
 		      (concat " [" (shorten 7 ltc-limiting-rev) "]...")))]
     )
    "--"
+   "MOVE TO" 
+   ;; TODO: add prev and next change
+   "--"
+   ["Bug report..." ltc-bug-report]
+   "--"
    ["Turn LTC off" ltc-mode]
+   "--"
    ))
 
 ;;; ----------------------------------------------------------------------------
@@ -433,6 +440,23 @@
       (not (< index (point-max))) ; index >= (point-max)
     (< index (point-min))) ; index < (point-min)
 )
+
+;;; --- create bug report
+
+(defun ltc-bug-report (directory msg)
+  "Create a bug report with MSG and use DIRECTORY.  If successful, will print message in mini-buffer with the created file name."
+  (interactive 
+   (if ltc-mode
+       (list
+	(read-directory-name "Directory where to create bug report files (create if not exist): ")
+	(read-string "Explanation: "))
+     '(nil nil))) ; sets directory = nil and msg = nil
+  (when directory
+    (message "Calling create_bug_report with '%s' in directory %s" msg directory)
+    ;(setq file (ltc-method-call "create_bug_report" session-id msg directory))
+    ;; TODO: continue here
+    )
+  )
 
 ;;; --- other interactive functions
 

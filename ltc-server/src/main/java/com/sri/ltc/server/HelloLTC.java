@@ -30,7 +30,6 @@ import java.util.logging.Logger;
 public class HelloLTC {
 
     private final static Logger LOGGER = Logger.getLogger(HelloLTC.class.getName());
-    private static LTCserverInterface server;
 
     private static void printUsage(PrintStream out, CmdLineParser parser) {
         out.println("usage: java -cp ... com.sri.ltc.server.HelloLTC [options...] \nwith");
@@ -57,10 +56,10 @@ public class HelloLTC {
         try {
             // obtain server instance:
             Client client = new Client(new URL("http://localhost:"+MyOptions.port+"/xmlrpc"));
-            server = (LTCserverInterface) client.GetProxy(LTCserverInterface.class);
+            LTCserverInterface server = (LTCserverInterface) client.GetProxy(LTCserverInterface.class);
 
             // request answer to the question of life:
-            System.out.println("The answer to the question of life is: "+server.hello());
+            System.out.println("The answer to the question of life is: "+ server.hello());
             System.out.println("(Seeing this means your LTC server on port "+MyOptions.port+" is running.)");
         } catch (MalformedURLException e) {
             LOGGER.log(Level.SEVERE, "Couldn't obtain server URL", e);

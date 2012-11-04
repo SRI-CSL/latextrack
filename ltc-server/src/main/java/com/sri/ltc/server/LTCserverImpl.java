@@ -37,6 +37,8 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.prefs.BackingStoreException;
 import java.util.prefs.Preferences;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
 
 /**
  * @author linda
@@ -601,8 +603,33 @@ public final class LTCserverImpl implements LTCserverInterface {
 
     @Override
     public String create_bug_report(int sessionID, String message, String outputDirectory) throws XmlRpcException {
-        create_bug_report_xml(sessionID, message, new File(outputDirectory, "report.xml").toString());
-        return ""; // TODO: return path to zip file
+        // create an XML with current settings etc.
+        File xmlFile = new File(outputDirectory, "report.xml");
+        create_bug_report_xml(sessionID, message, xmlFile.getAbsolutePath());
+
+        // TODO: bundle repository
+
+        // create zip
+        File zipFile = new File(outputDirectory, "report.zip");
+        byte[] buf = new byte[1024];
+        try {
+            ZipOutputStream zos = new ZipOutputStream(new FileOutputStream(zipFile, false));
+            // add "report.xml"
+            zos.putNextEntry(new ZipEntry(xmlFile.getName())); // don't store parent directories
+            FileInputStream fis = new FileInputStream(xmlFile);
+            int len;
+            while ((len = fis.read(buf)) >= 0)
+                zos.write(buf, 0, len);
+            zos.closeEntry();
+            // TODO: add "bundle"
+            zos.close();
+        } catch (FileNotFoundException e) {
+            logAndThrow(2, "FileNotFoundException while creating report as ZIP file: " + e.getMessage());
+        } catch (IOException e) {
+            logAndThrow(3, "IOException while creating report as ZIP file: "+e.getMessage());
+        }
+
+        return zipFile.getAbsolutePath();
     }
 
     private String getColorKey(Author author) {
@@ -806,9 +833,13 @@ public final class LTCserverImpl implements LTCserverInterface {
 
         FileWriter fileWriter = null;
         try {
-            fileWriter = new FileWriter(outputFileNameAndPath);
+            // create any parent directories:
+            File file = new File(outputFileNameAndPath);
+            if (file.getParentFile().mkdirs())
+                LOGGER.fine("Created parent directories of " + outputFileNameAndPath);
+            fileWriter = new FileWriter(file, false);
         } catch (IOException e) {
-            logAndThrow(3, "Could not create output file:" + e.getMessage());
+            logAndThrow(3, "Could not create output file: " + e.getMessage());
         }
         assert fileWriter != null;
 
@@ -820,7 +851,7 @@ public final class LTCserverImpl implements LTCserverInterface {
             fileWriter.flush();
             fileWriter.close();
         } catch (TransformerException e) {
-            logAndThrow(3, "Could not transform document:" + e.getMessage());
+            logAndThrow(3, "Could not transform document: " + e.getMessage());
         } catch (IOException e) {
             logAndThrow(3, "Exception creating report xml file:" + e.getMessage());
         }
