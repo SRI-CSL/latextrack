@@ -37,6 +37,8 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.prefs.BackingStoreException;
 import java.util.prefs.Preferences;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
 
 /**
  * @author linda
@@ -67,13 +69,6 @@ public final class LTCserverImpl implements LTCserverInterface {
             progressReceiver.updateProgress(progress);
     }
 
-    public int hello() {
-        LOGGER.info("Server: Hello World!");
-        return 42;
-    }
-
-    // TODO: apply locks to make block atomic...
-
     private final static Logger LOGGER = Logger.getLogger(LTCserverImpl.class.getName());
     static {
         // obtain version information from Maven meta-information
@@ -100,6 +95,14 @@ public final class LTCserverImpl implements LTCserverInterface {
         if (session == null)
             logAndThrow(1,"Cannot retrieve session with given ID");
         return session;
+    }
+
+    // -- begin API implementation
+    // TODO: apply locks to make block atomic...?
+
+    public int hello() {
+        LOGGER.info("Server: Hello World!");
+        return 42;
     }
 
     public int init_session(String path) throws XmlRpcException {
@@ -142,13 +145,13 @@ public final class LTCserverImpl implements LTCserverInterface {
 
             return SessionManager.createSession(trackedFile);
         } catch (IOException e) {
-            logAndThrow(7,"IOException during git file creation: "+e.getMessage());
+            logAndThrow(7,"IOException during tracked file creation: "+e.getMessage());
         } catch (ParseException e) {
-            logAndThrow(8,"ParseException during git file creation: "+e.getMessage()+" (@"+e.getErrorOffset()+")");
+            logAndThrow(8,"ParseException during tracked file creation: "+e.getMessage()+" (@"+e.getErrorOffset()+")");
         } catch (BadLocationException e) {
-            logAndThrow(9,"BadLocationException during git file creation: "+e.getMessage());
+            logAndThrow(9,"BadLocationException during tracked file creation: "+e.getMessage());
         } catch (Exception e) {
-            logAndThrow(10,"General Exception during git file creation: "+e.getMessage());
+            logAndThrow(10,"General Exception during tracked file creation: "+e.getMessage());
         }
 
         return -1;
@@ -558,6 +561,7 @@ public final class LTCserverImpl implements LTCserverInterface {
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public List get_remotes(int sessionID) throws XmlRpcException {
         Session session = getSession(sessionID);
         List<String[]> remotes = new ArrayList<String[]>();
@@ -601,8 +605,53 @@ public final class LTCserverImpl implements LTCserverInterface {
 
     @Override
     public String create_bug_report(int sessionID, String message, String outputDirectory) throws XmlRpcException {
-        create_bug_report_xml(sessionID, message, new File(outputDirectory, "report.xml").toString());
-        return ""; // TODO: return path to zip file
+        LOGGER.fine("Server: creating bug report in directory \""+outputDirectory+"\"");
+
+        // bundle repository
+        File bundle = null;
+        try {
+            bundle = getSession(sessionID).getTrackedFile().getRepository().getBundle(new File(outputDirectory));
+        } catch (IOException e) {
+            logAndThrow(4, "IOException while creating repository bundle: " + e.getMessage());
+        }
+
+        // create an XML with current settings etc.
+        File xmlFile = new File(outputDirectory, "report.xml");
+        create_bug_report_xml(sessionID, message, bundle, xmlFile.getAbsolutePath());
+
+        // create zip
+        File zipFile = new File(outputDirectory, "report.zip");
+        LOGGER.fine("Server: zipping up bug report as \""+zipFile.getAbsolutePath()+"\"");
+        byte[] buf = new byte[1024];
+        FileInputStream fis;
+        int len;
+        try {
+            ZipOutputStream zos = new ZipOutputStream(new FileOutputStream(zipFile, false));
+
+            // add "report.xml"
+            zos.putNextEntry(new ZipEntry(xmlFile.getName())); // don't store parent directories
+            fis = new FileInputStream(xmlFile);
+            while ((len = fis.read(buf)) >= 0)
+                zos.write(buf, 0, len);
+            zos.closeEntry();
+
+            // add bundle file (if exists)
+            if (bundle != null) {
+                zos.putNextEntry(new ZipEntry(bundle.getName())); // don't store parent directories
+                fis = new FileInputStream(bundle);
+                while ((len = fis.read(buf)) >= 0)
+                    zos.write(buf, 0, len);
+                zos.closeEntry();
+            }
+
+            zos.close();
+        } catch (FileNotFoundException e) {
+            logAndThrow(2, "FileNotFoundException while creating report as ZIP file: " + e.getMessage());
+        } catch (IOException e) {
+            logAndThrow(3, "IOException while creating report as ZIP file: "+e.getMessage());
+        }
+
+        return zipFile.getAbsolutePath();
     }
 
     private String getColorKey(Author author) {
@@ -689,6 +738,7 @@ public final class LTCserverImpl implements LTCserverInterface {
         }
         return 0;
     }
+    // --- end API implementation
 
     private void addSimpleTextNode(Document document, Element parent, String elementName, String elementText) {
         Element element = document.createElement(elementName);
@@ -724,17 +774,18 @@ public final class LTCserverImpl implements LTCserverInterface {
         }
     }
 
-    private void create_bug_report_xml(int sessionID, String message, String outputFileNameAndPath) throws XmlRpcException {
-        LOGGER.fine("Server: creating bug report as " + outputFileNameAndPath);
+    private void create_bug_report_xml(int sessionID, String message, File bundle, String outputFileNameAndPath) throws XmlRpcException {
+        LOGGER.fine("Server: creating XML report as " + outputFileNameAndPath);
 
         Session session = getSession(sessionID);
+        assert session != null;
 
         DocumentBuilderFactory documentBuilderFactory = DocumentBuilderFactory.newInstance();
         DocumentBuilder documentBuilder = null;
         try {
             documentBuilder = documentBuilderFactory.newDocumentBuilder();
         } catch (ParserConfigurationException e) {
-            logAndThrow(1, "Could not create document builder:" + e.getMessage());
+            logAndThrow(2, "Could not create document builder:" + e.getMessage());
         }
 
         assert documentBuilder != null;
@@ -769,12 +820,12 @@ public final class LTCserverImpl implements LTCserverInterface {
                         session.getLimitDate(),
                         session.getLimitRev());
             } catch (Exception e) {
-                logAndThrow(2, "Could not create LimitedHistory:" + e.getMessage());
+                logAndThrow(3, "Could not create LimitedHistory:" + e.getMessage());
             }
 
             assert history != null;
             for (Commit commit : history.getCommitsList()) {
-                 addSimpleTextNode(document, element, "sha", commit.getId());
+                addSimpleTextNode(document, element, "sha", commit.getId());
             }
         }
 
@@ -792,12 +843,18 @@ public final class LTCserverImpl implements LTCserverInterface {
             }
         }
 
+        // bundle name (if any):
+        if (bundle != null)
+            addSimpleTextNode(document, rootElement, "bundle-name", bundle.getName());
+
+        // create XML file:
+
         TransformerFactory transformerFactory = TransformerFactory.newInstance();
         Transformer transformer = null;
         try {
             transformer = transformerFactory.newTransformer();
         } catch (TransformerConfigurationException e) {
-            logAndThrow(3, "Could not create transformer:" + e.getMessage());
+            logAndThrow(4, "Could not create transformer:" + e.getMessage());
         }
         assert transformer != null;
 
@@ -806,9 +863,13 @@ public final class LTCserverImpl implements LTCserverInterface {
 
         FileWriter fileWriter = null;
         try {
-            fileWriter = new FileWriter(outputFileNameAndPath);
+            // create any parent directories:
+            File file = new File(outputFileNameAndPath);
+            if (file.getParentFile().mkdirs())
+                LOGGER.fine("Created parent directories of " + outputFileNameAndPath);
+            fileWriter = new FileWriter(file, false);
         } catch (IOException e) {
-            logAndThrow(3, "Could not create output file:" + e.getMessage());
+            logAndThrow(5, "Could not create output file: " + e.getMessage());
         }
         assert fileWriter != null;
 
@@ -820,9 +881,9 @@ public final class LTCserverImpl implements LTCserverInterface {
             fileWriter.flush();
             fileWriter.close();
         } catch (TransformerException e) {
-            logAndThrow(3, "Could not transform document:" + e.getMessage());
+            logAndThrow(6, "Could not transform document: " + e.getMessage());
         } catch (IOException e) {
-            logAndThrow(3, "Exception creating report xml file:" + e.getMessage());
+            logAndThrow(7, "Exception creating report xml file:" + e.getMessage());
         }
     }
 }

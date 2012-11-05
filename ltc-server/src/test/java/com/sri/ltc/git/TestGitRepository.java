@@ -1,14 +1,11 @@
 package com.sri.ltc.git;
 
 import com.sri.ltc.versioncontrol.Commit;
-import com.sri.ltc.versioncontrol.Repository;
 import com.sri.ltc.versioncontrol.TrackedFile;
 import org.junit.ClassRule;
 import org.junit.Test;
 
 import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileWriter;
 import java.util.List;
 
 import static org.junit.Assert.*;
@@ -22,7 +19,7 @@ public class TestGitRepository {
         assertTrue(temporaryGitRepository.getRoot().exists());
 
         try {
-            TrackedFile trackedFile = createTestFileInRepository("foo", ".txt", "testUntracked", false);
+            TrackedFile trackedFile = temporaryGitRepository.createTestFileInRepository("foo", ".txt", "testUntracked", false);
             assertTrue(trackedFile.getStatus() == TrackedFile.Status.NotTracked);
         } catch (Exception e) {
             fail(e.getMessage());
@@ -31,31 +28,29 @@ public class TestGitRepository {
 
     @Test
     public void testAddAndCommit() {
-        Repository repository = temporaryGitRepository.getRepository();
         assertTrue(temporaryGitRepository.getRoot().exists());
 
         try {
-            TrackedFile trackedFile = createTestFileInRepository("foo", ".txt", "testAddAndCommit", true);
+            TrackedFile trackedFile = temporaryGitRepository.createTestFileInRepository("foo", ".txt", "testAddAndCommit", true);
             assertTrue(trackedFile.getStatus() == TrackedFile.Status.Added);
-            
+
             trackedFile.commit("commit from testAddAndCommit");
             assertTrue(trackedFile.getStatus() == TrackedFile.Status.Unchanged);
         } catch (Exception e) {
             fail(e.getMessage());
         }
     }
-    
+
     @Test
     public void testAddCommitAndModify() {
         assertTrue(temporaryGitRepository.getRoot().exists());
-        Repository repository = temporaryGitRepository.getRepository();
 
         TrackedFile.Status status;
 
         try {
             System.out.println("Working with repository in " + temporaryGitRepository.getRoot().getPath());
 
-            TrackedFile trackedFile = createTestFileInRepository("foo", ".txt", "testAddCommitAndModify", true);
+            TrackedFile trackedFile = temporaryGitRepository.createTestFileInRepository("foo", ".txt", "testAddCommitAndModify", true);
             status = trackedFile.getStatus();
             assertTrue(status == TrackedFile.Status.Added);
 
@@ -66,7 +61,7 @@ public class TestGitRepository {
 
             {
                 // create a different file, so we can verify that we get commits only for the file we do care about
-                TrackedFile garbageFile = createTestFileInRepository("garbage", ".txt", "testAddCommitAndModify - not the file we care about", true);
+                TrackedFile garbageFile = temporaryGitRepository.createTestFileInRepository("garbage", ".txt", "testAddCommitAndModify - not the file we care about", true);
                 garbageFile.commit("commit garbage file from testAddCommitAndModify");
             }
 
@@ -76,10 +71,7 @@ public class TestGitRepository {
             assertTrue(commits.size() == 1);
             assertTrue(commits.get(0).getMessage().equals("commit A from testAddCommitAndModify"));
 
-            FileWriter fileWriter = new FileWriter(trackedFile.getFile());
-            fileWriter.append("modification");
-            fileWriter.flush();
-            fileWriter.close();
+            temporaryGitRepository.modifyTestFileInRepository(trackedFile, "modification", true);
             status = trackedFile.getStatus();
             assertTrue(status == TrackedFile.Status.Modified);
 
@@ -98,14 +90,13 @@ public class TestGitRepository {
         // the idea here is to make sure that when more than one file is modified at a time,
         // and we commit, we commit just the file we mean to.
         assertTrue(temporaryGitRepository.getRoot().exists());
-        Repository repository = temporaryGitRepository.getRepository();
 
         try {
             System.out.println("Working with repository in " + temporaryGitRepository.getRoot().getPath());
 
-            TrackedFile trackedFile0 = createTestFileInRepository("file0", ".txt", "file0 contents", true);
-            TrackedFile trackedFile1 = createTestFileInRepository("file1", ".txt", "file1 contents", true);
-            TrackedFile trackedFile2 = createTestFileInRepository("file2", ".txt", "file2 contents", true);
+            TrackedFile trackedFile0 = temporaryGitRepository.createTestFileInRepository("file0", ".txt", "file0 contents", true);
+            TrackedFile trackedFile1 = temporaryGitRepository.createTestFileInRepository("file1", ".txt", "file1 contents", true);
+            TrackedFile trackedFile2 = temporaryGitRepository.createTestFileInRepository("file2", ".txt", "file2 contents", true);
 
             trackedFile1.commit("Three file modify, one file commit from testMultifileCommit");
 
@@ -132,17 +123,4 @@ public class TestGitRepository {
         }
     }
 
-    private TrackedFile createTestFileInRepository(String prefix, String suffix, String contents, boolean add) throws Exception {
-        File file = File.createTempFile(prefix, suffix, temporaryGitRepository.getRoot());
-        FileWriter fileWriter = new FileWriter(file);
-        fileWriter.append(contents);
-        fileWriter.flush();
-        fileWriter.close();
-
-        if (add) {
-            temporaryGitRepository.getRepository().addFile(file);
-        }
-
-        return temporaryGitRepository.getRepository().getFile(file);
-    }
 }

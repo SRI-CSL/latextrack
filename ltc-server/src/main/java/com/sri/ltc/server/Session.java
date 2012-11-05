@@ -25,7 +25,7 @@ public final class Session {
     private static int nextID = 1;
 
     final int ID;
-    private final TrackedFile gitFile;
+    private final TrackedFile trackedFile;
     private final CompleteHistory completeHistory;
     private final Remotes remotes;
     private final Set<Author> knownAuthors = Sets.newHashSet();
@@ -34,20 +34,20 @@ public final class Session {
     private String limit_rev = "";
     private final Accumulate accumulate = new Accumulate();
 
-    protected Session(TrackedFile gitFile) throws Exception {
+    protected Session(TrackedFile trackedFile) throws Exception {
         ID = generateID();
-        if (gitFile == null)
-            throw new IllegalArgumentException("cannot create session with NULL as git file");
-        this.gitFile = gitFile;
+        if (trackedFile == null)
+            throw new IllegalArgumentException("cannot create session with NULL as tracked file");
+        this.trackedFile = trackedFile;
         // initializations based on git file:
-        completeHistory = new CompleteHistory(gitFile);
+        completeHistory = new CompleteHistory(trackedFile);
         addAuthors(completeHistory.getAuthors());
-        addAuthors(Collections.singleton(gitFile.getRepository().getSelf()));
-        remotes = gitFile.getRepository().getRemotes();
+        addAuthors(Collections.singleton(trackedFile.getRepository().getSelf()));
+        remotes = trackedFile.getRepository().getRemotes();
     }
 
     public TrackedFile getTrackedFile() {
-        return gitFile;
+        return trackedFile;
     }
     
     private static synchronized int generateID() {
