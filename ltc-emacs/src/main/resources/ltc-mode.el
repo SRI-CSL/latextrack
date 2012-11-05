@@ -187,8 +187,9 @@
 		      (concat " [" (shorten 7 ltc-limiting-rev) "]...")))]
     )
    "--"
-   "MOVE TO" 
-   ;; TODO: add prev and next change
+   "MOVE CURSOR"
+   ["To previous change" ltc-prev-change]
+   ["To next change" ltc-next-change]
    "--"
    ["Bug report..." ltc-bug-report]
    "--"
