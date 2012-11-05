@@ -98,6 +98,7 @@
 (define-key ltc-prefix-map (kbd "lr") 'ltc-limit-rev)
 (define-key ltc-prefix-map (kbd ">") 'ltc-next-change)
 (define-key ltc-prefix-map (kbd "<") 'ltc-prev-change)
+(define-key ltc-prefix-map (kbd "b") 'ltc-bug-report)
 ;; Bind command `ltc-prefix-map' to `ltc-command-prefix' in `ltc-mode-map':
 (defvar ltc-mode-map (make-sparse-keymap) "LTC mode keymap.")
 (define-key ltc-mode-map ltc-command-prefix 'ltc-prefix-map)
@@ -186,7 +187,14 @@
 		      (concat " [" (shorten 7 ltc-limiting-rev) "]...")))]
     )
    "--"
+   "MOVE CURSOR"
+   ["To previous change" ltc-prev-change]
+   ["To next change" ltc-next-change]
+   "--"
+   ["Bug report..." ltc-bug-report]
+   "--"
    ["Turn LTC off" ltc-mode]
+   "--"
    ))
 
 ;;; ----------------------------------------------------------------------------
@@ -238,17 +246,25 @@
   (remove-hook 'kill-buffer-hook 'ltc-hook-before-kill t) ; remove hook to intercept closing buffer
   ;; close session and obtain text for buffer without track changes
   (if session-id
-      (let ((map (ltc-method-call "close_session" session-id 
-				  (buffer-string) 
-				  (compile-deletions)
-				  (1- (point))))
-	    (old-buffer-modified-p (buffer-modified-p))) ; maintain modified flag
+      (progn
 	(message "Stopping LTC mode for file \"%s\"..." (buffer-file-name))
-	;; replace text in buffer with return value from closing session
 	(erase-buffer)
-	(insert (cdr (assoc-string "text" map)))
-	(goto-char (1+ (cdr (assoc-string "caret" map)))) ; Emacs starts counting from 1!
-	(set-buffer-modified-p old-buffer-modified-p)
+	(condition-case err 
+	    (let ((map (ltc-method-call "close_session" session-id 
+					(buffer-string) 
+					(compile-deletions)
+					(1- (point))))
+		  (old-buffer-modified-p (buffer-modified-p))) ; maintain modified flag
+	      ;; replace text in buffer with return value from closing session
+	      (insert (cdr (assoc-string "text" map)))
+	      (goto-char (1+ (cdr (assoc-string "caret" map)))) ; Emacs starts counting from 1!
+	      (set-buffer-modified-p old-buffer-modified-p))
+	  ('error 
+	   (message "Error while closing session (reverting to text from file): %s" (error-message-string err))
+	   ;; replace buffer with text from file
+	   (insert-file-contents (buffer-file-name))
+	   (set-buffer-modified-p nil)
+	   nil))
 	(setq session-id nil)))
   ;; close any open temp info buffer 
   (when (setq b (get-buffer ltc-info-buffer))
@@ -432,7 +448,22 @@
   (if (> dir 0)
       (not (< index (point-max))) ; index >= (point-max)
     (< index (point-min))) ; index < (point-min)
-)
+  )
+
+;;; --- create bug report
+
+(defun ltc-bug-report (directory msg)
+  "Create a bug report with MSG and use DIRECTORY.  If successful, will print message in mini-buffer with the created file name."
+  (interactive 
+   (if ltc-mode
+       (list
+	(read-directory-name "Directory where to save bug report files (created if not exist): ")
+	(read-string "Explanation: "))
+     '(nil nil))) ; sets directory = nil and msg = nil
+  (when directory
+    (setq file (ltc-method-call "create_bug_report" session-id msg (expand-file-name directory)))
+    (message "Created bug report at %s" file)
+    ))
 
 ;;; --- other interactive functions
 

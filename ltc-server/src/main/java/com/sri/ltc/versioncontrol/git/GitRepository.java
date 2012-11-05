@@ -1,15 +1,15 @@
 package com.sri.ltc.versioncontrol.git;
 
 import com.sri.ltc.filter.Author;
-import com.sri.ltc.versioncontrol.Commit;
 import com.sri.ltc.versioncontrol.Remotes;
 import com.sri.ltc.versioncontrol.Repository;
 import com.sri.ltc.versioncontrol.TrackedFile;
 import org.eclipse.jgit.api.Git;
-import org.eclipse.jgit.revwalk.RevCommit;
 import org.eclipse.jgit.storage.file.FileRepositoryBuilder;
+import org.eclipse.jgit.transport.BundleWriter;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.logging.Logger;
 
@@ -57,6 +57,20 @@ public class GitRepository implements Repository {
     @Override
     public Remotes getRemotes() {
         return new GitRemotes(this);
+    }
+
+    @Override
+    public File getBundle(File outputDirectory) throws IOException {
+        LOGGER.fine("Creating "+outputDirectory+"/bundle.git file (not yet implemented)");
+//        File bundle = new File(outputDirectory, "bundle.git");
+//        BundleWriter bundleWriter = new BundleWriter(repository);
+//        // TODO: somehow specify --all here...
+//        bundleWriter.include("--all");
+//        FileOutputStream fos = new FileOutputStream(bundle);
+//        bundleWriter.writeBundle(null, fos);
+//        fos.close();
+//        return bundle;
+        return null; // TODO: until we figured out how to specify --all with BundleWriter!
     }
 
     @Override
