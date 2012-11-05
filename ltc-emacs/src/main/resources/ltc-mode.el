@@ -246,17 +246,25 @@
   (remove-hook 'kill-buffer-hook 'ltc-hook-before-kill t) ; remove hook to intercept closing buffer
   ;; close session and obtain text for buffer without track changes
   (if session-id
-      (let ((map (ltc-method-call "close_session" session-id 
-				  (buffer-string) 
-				  (compile-deletions)
-				  (1- (point))))
-	    (old-buffer-modified-p (buffer-modified-p))) ; maintain modified flag
+      (progn
 	(message "Stopping LTC mode for file \"%s\"..." (buffer-file-name))
-	;; replace text in buffer with return value from closing session
 	(erase-buffer)
-	(insert (cdr (assoc-string "text" map)))
-	(goto-char (1+ (cdr (assoc-string "caret" map)))) ; Emacs starts counting from 1!
-	(set-buffer-modified-p old-buffer-modified-p)
+	(condition-case err 
+	    (let ((map (ltc-method-call "close_session" session-id 
+					(buffer-string) 
+					(compile-deletions)
+					(1- (point))))
+		  (old-buffer-modified-p (buffer-modified-p))) ; maintain modified flag
+	      ;; replace text in buffer with return value from closing session
+	      (insert (cdr (assoc-string "text" map)))
+	      (goto-char (1+ (cdr (assoc-string "caret" map)))) ; Emacs starts counting from 1!
+	      (set-buffer-modified-p old-buffer-modified-p))
+	  ('error 
+	   (message "Error while closing session (reverting to text from file): %s" (error-message-string err))
+	   ;; replace buffer with text from file
+	   (insert-file-contents (buffer-file-name))
+	   (set-buffer-modified-p nil)
+	   nil))
 	(setq session-id nil)))
   ;; close any open temp info buffer 
   (when (setq b (get-buffer ltc-info-buffer))
