@@ -605,6 +605,8 @@ public final class LTCserverImpl implements LTCserverInterface {
 
     @Override
     public String create_bug_report(int sessionID, String message, String outputDirectory) throws XmlRpcException {
+        LOGGER.fine("Server: creating bug report in directory \""+outputDirectory+"\"");
+
         // bundle repository
         File bundle = null;
         try {
@@ -619,6 +621,7 @@ public final class LTCserverImpl implements LTCserverInterface {
 
         // create zip
         File zipFile = new File(outputDirectory, "report.zip");
+        LOGGER.fine("Server: zipping up bug report as \""+zipFile.getAbsolutePath()+"\"");
         byte[] buf = new byte[1024];
         FileInputStream fis;
         int len;
@@ -772,7 +775,7 @@ public final class LTCserverImpl implements LTCserverInterface {
     }
 
     private void create_bug_report_xml(int sessionID, String message, File bundle, String outputFileNameAndPath) throws XmlRpcException {
-        LOGGER.fine("Server: creating bug report as " + outputFileNameAndPath);
+        LOGGER.fine("Server: creating XML report as " + outputFileNameAndPath);
 
         Session session = getSession(sessionID);
         assert session != null;

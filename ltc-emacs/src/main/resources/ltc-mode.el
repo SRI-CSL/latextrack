@@ -439,7 +439,7 @@
   (if (> dir 0)
       (not (< index (point-max))) ; index >= (point-max)
     (< index (point-min))) ; index < (point-min)
-)
+  )
 
 ;;; --- create bug report
 
@@ -448,15 +448,13 @@
   (interactive 
    (if ltc-mode
        (list
-	(read-directory-name "Directory where to create bug report files (create if not exist): ")
+	(read-directory-name "Directory where to save bug report files (created if not exist): ")
 	(read-string "Explanation: "))
      '(nil nil))) ; sets directory = nil and msg = nil
   (when directory
-    (message "Calling create_bug_report with '%s' in directory %s" msg directory)
-    ;(setq file (ltc-method-call "create_bug_report" session-id msg directory))
-    ;; TODO: continue here
-    )
-  )
+    (setq file (ltc-method-call "create_bug_report" session-id msg (expand-file-name directory)))
+    (message "Created bug report at %s" file)
+    ))
 
 ;;; --- other interactive functions
 

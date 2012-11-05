@@ -61,6 +61,7 @@ public class GitRepository implements Repository {
 
     @Override
     public File getBundle(File outputDirectory) throws IOException {
+        LOGGER.fine("Creating "+outputDirectory+"/bundle.git file (not yet implemented)");
 //        File bundle = new File(outputDirectory, "bundle.git");
 //        BundleWriter bundleWriter = new BundleWriter(repository);
 //        // TODO: somehow specify --all here...
@@ -68,6 +69,7 @@ public class GitRepository implements Repository {
 //        FileOutputStream fos = new FileOutputStream(bundle);
 //        bundleWriter.writeBundle(null, fos);
 //        fos.close();
+//        return bundle;
         return null; // TODO: until we figured out how to specify --all with BundleWriter!
     }
 
