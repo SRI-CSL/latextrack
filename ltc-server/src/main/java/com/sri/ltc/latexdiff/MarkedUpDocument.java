@@ -47,7 +47,6 @@ public final class MarkedUpDocument extends DefaultStyledDocument {
         StyleConstants.setStrikeThrough(style, true);
 
         style = addStyle(UNADORNED_STYLE, null);
-        StyleConstants.setFontSize(style, 0);
     }
 
     public MarkedUpDocument(String initialText, List<Object[]> deletions, int caretPosition) throws BadLocationException {
@@ -114,11 +113,11 @@ public final class MarkedUpDocument extends DefaultStyledDocument {
 
     public void insertDeletion(int offset, String text, Set<Change.Flag> flags) throws BadLocationException {
         Style style;
-        // TODO possibly replace _all_ whitespace with a single ' ' character - this will require
-        // TODO that the Accumulate method that calls this is altered to do so
         if (flags.contains(Change.Flag.WHITESPACE)) {
-            text = text.replace('\r', ' ');
-            text = text.replace('\n', ' ');
+            // we're not interested in marking up spare newlines as deletions - that just confuses the
+            // display. Instead, we will mark it, and other whitespace changes, with a special, "unadorned"
+            // style to distinguish them from other deletions.
+            text = text.replaceAll("[\\r\\n]", " ");
             style = getStyle(UNADORNED_STYLE);
         } else {
             style = getStyle(DELETION_STYLE);

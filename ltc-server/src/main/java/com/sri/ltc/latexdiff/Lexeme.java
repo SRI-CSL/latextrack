@@ -38,10 +38,6 @@ public final class Lexeme {
         return type.isPrintable()?contents:"";
     }
 
-    public boolean isSignificantChange() {
-        return ( /*(type != LexemeType.WHITESPACE) && */ (type != LexemeType.PARAGRAPH));
-    }
-
     @Override
     public String toString() {
         StringBuilder result = new StringBuilder(type+" "+displayContents()+"  @ "+pos+" ("+length+")");

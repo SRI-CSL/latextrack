@@ -173,10 +173,10 @@ public final class LatexDiff {
         return true;
     }
 
-    private List<Lexeme> removeInsignificantChanges(List<Lexeme> lexemes) {
+    private List<Lexeme> removeParagraphs(List<Lexeme> lexemes) {
         List<Lexeme> newList = new ArrayList();
         for (Lexeme lexeme : lexemes) {
-            if (lexeme.isSignificantChange()) {
+            if (lexeme.type != LexemeType.PARAGRAPH) {
                 newList.add(lexeme);
             }
         }
@@ -269,7 +269,7 @@ public final class LatexDiff {
             if (hunk.inserted > 0) {
                 // build list of flags:
                 List<Lexeme> lexemesAffected = list1.subList(hunk.line1, hunk.line1+hunk.inserted);
-                lexemesAffected = removeInsignificantChanges(lexemesAffected);
+                //lexemesAffected = removeParagraphs(lexemesAffected);
 
                 if (lexemesAffected.size() > 0) {
                 List<IndexFlagsPair<Integer>> flags = new ArrayList<IndexFlagsPair<Integer>>();
@@ -299,7 +299,7 @@ public final class LatexDiff {
             // Deletions
             if (hunk.deleted > 0) {
                 List<Lexeme> lexemesAffected = list0.subList(hunk.line0, hunk.line0+hunk.deleted);
-                lexemesAffected = removeInsignificantChanges(lexemesAffected);
+                lexemesAffected = removeParagraphs(lexemesAffected);
 
                 if (lexemesAffected.size() > 0) {
                 int text_start = calcPosition(list0, hunk.line0-1, true); // start with end of prior lexeme
