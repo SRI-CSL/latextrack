@@ -27,6 +27,7 @@ public final class MarkedUpDocument extends DefaultStyledDocument {
 
     public enum KEYS {TEXT, POSITION}
 
+    private final static String UNADORNED_STYLE = "unadorned";
     private final static String ADDITION_STYLE = "addition";
     private final static String DELETION_STYLE = "deletion";
     private final static String AUTHOR_INDEX = "author index";
@@ -38,10 +39,14 @@ public final class MarkedUpDocument extends DefaultStyledDocument {
     public MarkedUpDocument() {
         // define styles for additions and deletions
         Style style;
-        style = this.addStyle(ADDITION_STYLE, null);
+
+        style = addStyle(ADDITION_STYLE, null);
         StyleConstants.setUnderline(style, true);
-        style = this.addStyle(DELETION_STYLE, null);
+
+        style = addStyle(DELETION_STYLE, null);
         StyleConstants.setStrikeThrough(style, true);
+
+        style = addStyle(UNADORNED_STYLE, null);
     }
 
     public MarkedUpDocument(String initialText, List<Object[]> deletions, int caretPosition) throws BadLocationException {
@@ -107,7 +112,17 @@ public final class MarkedUpDocument extends DefaultStyledDocument {
     }
 
     public void insertDeletion(int offset, String text, Set<Change.Flag> flags) throws BadLocationException {
-        Style style = getStyle(DELETION_STYLE);
+        Style style;
+        if (flags.contains(Change.Flag.WHITESPACE)) {
+            // we're not interested in marking up spare newlines as deletions - that just confuses the
+            // display. Instead, we will mark it, and other whitespace changes, with a special, "unadorned"
+            // style to distinguish them from other deletions.
+            text = text.replaceAll("[\\r\\n]", " ");
+            style = getStyle(UNADORNED_STYLE);
+        } else {
+            style = getStyle(DELETION_STYLE);
+        }
+        
         style.addAttribute(FLAGS_ATTR, flags);
         insertString(offset, text, style);
     }
@@ -122,7 +137,7 @@ public final class MarkedUpDocument extends DefaultStyledDocument {
         Style style;
         for (int i = start_position; i < end_position; i++) {
             Object styleName = getCharacterElement(i).getAttributes().getAttribute(StyleConstants.NameAttribute);
-            if (!DELETION_STYLE.equals(styleName) && !ADDITION_STYLE.equals(styleName)) {
+            if (!DELETION_STYLE.equals(styleName) && !ADDITION_STYLE.equals(styleName) && (!UNADORNED_STYLE.equals(styleName))) {
                 style = getStyle(ADDITION_STYLE);
                 style.addAttribute(FLAGS_ATTR, flags);
                 setCharacterAttributes(i, 1, style, true);
@@ -218,11 +233,16 @@ public final class MarkedUpDocument extends DefaultStyledDocument {
         }
 
         private Integer[] asList() {
+            // TODO: remove hardcoded values and replace with constants
+            // consider creating an enum and a map to convert that enum to string
             Integer[] values = {start, end, 0, 0};
             if (ADDITION_STYLE.equals(style))
                 values[2] = 1;
             if (DELETION_STYLE.equals(style))
                 values[2] = 2;
+            if (UNADORNED_STYLE.equals(style))
+                values[2] = 3;
+
             if (author != null)
                 values[3] = author;
             return values;

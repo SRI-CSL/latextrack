@@ -28,6 +28,7 @@ public abstract class Change<T> implements Comparable<Change> {
         SMALL('S'),
         PREAMBLE('P'),
         COMMENT('%'),
+        WHITESPACE('b'),
         COMMAND('C');
         private final char indicator;
         private Flag(char indicator) {
