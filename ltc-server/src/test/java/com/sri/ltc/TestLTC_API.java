@@ -99,11 +99,12 @@ public class TestLTC_API {
         } catch (IOException e) {
             fail("file is not a ZIP: "+e.getMessage());
         } finally {
-            if (zipFile != null)
+            if (zipFile != null) {
                 try {
                     zipFile.close();
                 } catch (IOException e) { //ignored
                 }
+            }
         }
     }
 
