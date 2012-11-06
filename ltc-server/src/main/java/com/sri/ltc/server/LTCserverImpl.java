@@ -607,6 +607,11 @@ public final class LTCserverImpl implements LTCserverInterface {
     public String create_bug_report(int sessionID, String message, String outputDirectory) throws XmlRpcException {
         LOGGER.fine("Server: creating bug report in directory \""+outputDirectory+"\"");
 
+        File outputDirectoryFile = new File(outputDirectory);
+        if (outputDirectoryFile.mkdirs()) {
+            LOGGER.fine("Created report directory " + outputDirectory);
+        }
+
         // bundle repository
         File bundle = null;
         try {
@@ -774,6 +779,7 @@ public final class LTCserverImpl implements LTCserverInterface {
         }
     }
 
+    // assumes: the directory exists already
     private void create_bug_report_xml(int sessionID, String message, File bundle, String outputFileNameAndPath) throws XmlRpcException {
         LOGGER.fine("Server: creating XML report as " + outputFileNameAndPath);
 
@@ -863,10 +869,7 @@ public final class LTCserverImpl implements LTCserverInterface {
 
         FileWriter fileWriter = null;
         try {
-            // create any parent directories:
             File file = new File(outputFileNameAndPath);
-            if (file.getParentFile().mkdirs())
-                LOGGER.fine("Created parent directories of " + outputFileNameAndPath);
             fileWriter = new FileWriter(file, false);
         } catch (IOException e) {
             logAndThrow(5, "Could not create output file: " + e.getMessage());
