@@ -27,15 +27,11 @@
             <id>svnkit-repository</id>
             <url>http://maven.tmatesoft.com/content/repositories/releases/</url>
         </repository>
-        <repository>
-            <id>conjars.org</id>
-            <url>http://conjars.org/repo</url>
-        </repository>
     </repositories>
 
     <dependencies>
         <dependency>
-            <groupId>jgrapht</groupId>
+            <groupId>net.sf.jgrapht</groupId>
             <artifactId>jgrapht</artifactId>
             <version>0.8.3</version>
         </dependency>
@@ -77,7 +73,7 @@
         <dependency>
             <groupId>org.tmatesoft.svnkit</groupId>
             <artifactId>svnkit</artifactId>
-            <version>1.7.5-v1</version>
+            <version>1.7.6</version>
         </dependency>
     </dependencies>
 
@@ -125,7 +121,6 @@
 
             <plugin>
                 <artifactId>maven-shade-plugin</artifactId>
-                <version>1.6</version>
                 <executions>
                     <execution>
                         <goals>

@@ -41,6 +41,6 @@ Manual
 
   * {{{./manual/manual.pdf}PDF}}
 
-  * {{{./html_singlepage/manual/manual.html}HTML on a single page}}
+  * {{{./html_singlepage/manual/manual.html}HTML all on a single page}}
 
-  * {{{./html_multipage/manual/manual.html}HTML on multiple pages}}
+  * {{{./html_multipage/manual/manual.html}HTML tree with multiple pages}}
