@@ -118,7 +118,11 @@ public final class MarkedUpDocument extends DefaultStyledDocument {
             // display. Instead, we will mark it, and other whitespace changes, with a special, "unadorned"
             // style to distinguish them from other deletions.
             text = text.replaceAll("[\\r\\n]", " ");
-            style = getStyle(UNADORNED_STYLE);
+            // SAB: this is causing other problems, like turning a contiguous block of changes
+            // into an interrupted set of changes. Turning this off until we can figure out a
+            // better approach.
+            //style = getStyle(UNADORNED_STYLE);
+            style = getStyle(DELETION_STYLE);
         } else {
             style = getStyle(DELETION_STYLE);
         }
