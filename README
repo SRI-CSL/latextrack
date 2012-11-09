@@ -160,19 +160,25 @@ $> cd all/src/site/tex/manual
 $> pdflatex manual -shell-escape
 or use TeXShop
 
-* To convert .pdf to .png:
+* To build HTML version by hand:
 
+$> cd all/src/site/tex/manual
+$> htlatex manual "manual,0,png" "" "" "-interaction=nonstopmode --src-specials"
+
+* Converting images using Makefile:
+
+$> cd all/src/site/tex/manual/figures
+$> make
+
+* To convert manually:
+
+$> cd all/src/site/tex/manual/figures
 $> convert -density 300 manual-figure0.pdf manual-figure0.png
 or
 $> for i in figures/manual-figure*.pdf; do convert -density 300 $i `echo $i | sed -e 's/\.pdf/\.png/g'`; done
 or use Preview.app?
 
-* To build HTML version by hand:
-
-$> htlatex manual "manual,0,png" "" "" "-interaction=nonstopmode --src-specials"
-
-* Converting other .tiff files in bulk (use wildcard appropriately) when making new screen shots (e.g., with Grab)
-
+$> cd all/src/site/tex/manual/figures
 $> for file in *.tiff; do convert $file `basename $file .tiff`.png; done
 
 

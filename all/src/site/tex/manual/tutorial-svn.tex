@@ -1,0 +1,35 @@
+% !TEX root = manual.tex
+\chapter{Tutorial with Subversion} \label{ch:tutorial-svn}
+
+\section{Creating the Example File}
+
+This tutorial uses an example svn repository, which is hosted on the Internet.  To create the example file that is under svn version control, go into a directory of your choice (say \Code{\$TUTORIAL}) and do the following.
+
+\begin{CodeVerbatim}
+$> cd $TUTORIAL
+$> svn co svn://svn.code.sf.net/p/latextrack/tutorial-svn/trunk independence
+A    independence/independence.tex
+Checked out revision 7.
+$> cd independence/
+$> svn status
+$> svn log -q independence.tex 
+------------------------------------------------------------------------
+r7 | lilalinda | 2012-11-08 11:38:42 -0600 (Thu, 08 Nov 2012)
+------------------------------------------------------------------------
+r6 | lilalinda | 2012-11-08 11:38:27 -0600 (Thu, 08 Nov 2012)
+------------------------------------------------------------------------
+r5 | lilalinda | 2012-11-08 11:38:10 -0600 (Thu, 08 Nov 2012)
+------------------------------------------------------------------------
+r4 | lilalinda | 2012-11-08 11:37:52 -0600 (Thu, 08 Nov 2012)
+------------------------------------------------------------------------
+r3 | lilalinda | 2012-11-08 11:37:08 -0600 (Thu, 08 Nov 2012)
+------------------------------------------------------------------------
+r2 | lilalinda | 2012-11-08 11:35:53 -0600 (Thu, 08 Nov 2012)
+------------------------------------------------------------------------
+\end{CodeVerbatim}
+
+[TODO: impersonate as different people for svn creation and tutorial!]
+
+\section{Running the LTC Editor}
+
+[TODO]

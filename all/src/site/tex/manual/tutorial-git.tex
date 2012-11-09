@@ -1,4 +1,5 @@
-\chapter{Tutorial} \label{ch:tutorial}
+% !TEX root = manual.tex
+\chapter{Tutorial with Git} \label{ch:tutorial-git}
 
 This tutorial uses an example git repository called ``independence.bundle,'' which can be downloaded from the \hlink{\baseurl download.html}{../../download.html}{LTC web site.}
 
@@ -42,9 +43,9 @@ The other point to note here is the way that gitx displays the changes in the fi
 
 \section{Running the LTC Editor}
 
-Now that we are comfortable with the git repository, let us start the LTC Editor to interact with LTC and track the changes of the file.  Assume you have saved the jar file as \Code{\$LTC/LTC-\version.jar}, we can look at the command line options of the editor:
+Now that we are comfortable with the git repository, let us start the LTC Editor to interact with LTC and track the changes of the file.  Assume you have installed LTC as \Code{\$LTC/LTC.jar}, we can look at the command line options of the editor:
 \begin{CodeVerbatim}[commandchars=\\\{\}]
-$> java -cp $LTC/LTC-\version.jar com.sri.ltc.editor.LTCEditor -h
+$> java -cp $LTC/LTC.jar com.sri.ltc.editor.LTCEditor -h
 usage: java -cp ... com.sri.ltc.editor.LTCEditor [options...] [FILE] 
 with
  FILE     : load given file to track changes
@@ -57,7 +58,7 @@ with
 To open our tutorial file when starting the editor, execute the following command.  We will also set the logging level to INFO to tone down the chatter.  This will open the editor as a window similar to the screen shot in Figure~\ref{fig:editor-open}.
 \begin{CodeVerbatim}[samepage=true,commandchars=\\\{\}]
 $> cd $TUTORIAL/independence
-$> java -cp $LTC/LTC-\version.jar \textbackslash
+$> java -cp $LTC/LTC.jar \textbackslash
    com.sri.ltc.editor.LTCEditor -l INFO independence.tex
 \end{CodeVerbatim}
 \begin{figure}[t]

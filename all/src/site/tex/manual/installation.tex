@@ -1,3 +1,4 @@
+% !TEX root = manual.tex
 \chapter{Installation \& Configuration} \label{ch:install}
 
 \section{Requirements}
@@ -15,17 +16,17 @@ Further requirements for running LTC are as follows.
 \item[Emacs] 23 or above.  Only if the user wants to use \Code{ltc-mode} in Emacs to interact with LTC.  XEmacs is not supported.
 \end{description}
 
-\section{Installation}
+\section{Installation and Upgrade}
 
-Currently, we provide a shell script \Code{ltc-install.sh} to perform LTC installation.  It can be downloaded from the \hlink{\baseurl download.html}{../../download.html}{LTC web site.}  Use it to install the LTC JAR file in a location of your choice.  Also, if you use the Emacs \Code{ltc-mode}, be prepared to supply the location where to put the Emacs Lisp files (see more details below in Section~\ref{sec:config-emacs}).
+Currently, we provide a shell script \Code{ltc-install.sh} to perform LTC installation and upgrades.  It can be downloaded from the \hlink{\baseurl download.html}{../../download.html}{LTC web site.}  Use it to install the LTC JAR file in a location of your choice.  Also, if you use the Emacs \Code{ltc-mode}, be prepared to supply the location where to put the Emacs Lisp files (see more details below in Section~\ref{sec:config-emacs}).
 
 In the future, we may provide installers for the target platforms.
 
-Let us assume for the remainder of this manual, that you have placed the downloaded jar file into a directory called \Code{\$LTC}. Then, you would install LTC using the script in the following way.
+Let us assume for the remainder of this manual, that you have used a directory called \Code{\$LTC} as the installation location. Then, you would install LTC using the script in the following way.  Note that you will need a second argument to install LTC for Emacs as explained in more detail below (Section~\ref{sec:config-emacs}).  It doesn't hurt to run the script twice, as it will replace LTC with the latest version.
 
 \begin{CodeVerbatim}
 $> sh ltc-install.sh -h
-[... prints help message]
+[... prints help message about using LTC install script]
 $> sh ltc-install.sh $LTC
 [...]
 Done with installing LTC in $LTC
@@ -38,8 +39,10 @@ To start LTC server with default options, use the following command:
 Now you can look at the command line options of LTC Server using the switch \Code{-h} or omit the switch to start LTC Server with default values.
 \begin{CodeVerbatim}
 $> java -jar $LTC/LTC.jar -h
-[... prints help message]
+[... prints help message about using LTC Server]
 \end{CodeVerbatim}
+
+To upgrade from an earlier LTC version, you would download a fresh install script from the \hlink{\baseurl download.html}{../../download.html}{LTC web site.} Then run it again with the same argument(s).  The script will download the latest version from the web site and configure the link in \Code{\$LTC/LTC.jar} so that future invocations  will resolve to the newest version.
 
 \section{Configuration}
 
@@ -114,18 +117,16 @@ To use the supplied \Code{ltc-mode} in Emacs, you will have to put the relevant 
 \end{enumerate}
 
 Now based on which method of the above you choose, supply the directory \Code{\$EMACS\_DIR} as the second argument to the install script:
-
-change into that directory and extract the Emacs Lisp files from the downloaded LTC installation:
 \begin{CodeVerbatim}
 $> sh ltc-install.sh $LTC $EMACS_DIR
 \end{CodeVerbatim}
 
-In order to enable the LTC mode in Emacs, add the following line to your \Code{.emacs} or other Emacs configuration file:
+In order to enable the LTC mode in Emacs, add the following line to your \Code{.emacs} or other Emacs configuration file (for example, \Code{\char`\~/Library/Preferences/Emacs/Preferences.el} is the default for Aquamacs under Mac OS X) :
 \begin{CodeVerbatim}
 (autoload 'ltc-mode "ltc-mode" "" t)
 \end{CodeVerbatim}
 
-We recommend to avoid adding a hook from \Code{latex-mode} to \Code{ltc-mode} as our mode requires the \Code{latex-mode} to be fully executed before it works. The hooks are not guaranteed to be executed in particular order, so it is best to manually invoke LTC mode.
+We recommend to avoid adding a hook from \Code{latex-mode} to \Code{ltc-mode} (usually done with \Code{add-hook}) as our mode requires the \Code{latex-mode} to be fully executed before it works. The hooks are not guaranteed to be executed in particular order, so it is best to manually invoke LTC mode.
 
 \begin{figure}[t]
 \centering

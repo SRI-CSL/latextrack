@@ -107,12 +107,16 @@ The answer to the question of life is: 42
 
         <faq id="strikethrough-emacs">
             <question>
-                My ltc-mode seems to be working but deletions are missing strike-through markup (in Mac OS X).
+                My ltc-mode seems to be working but deletions are missing strike-through markup.
             </question>
             <answer>
-                <p>Unfortunately, Emacs under Mac OS X is missing the Courier font in strike-through is not available.
-                Other operating systems such as Linux do not have this problem.
-                You can customize Emacs to use a different font face for marking up deletions using .</p>
+                <p>Unfortunately, Emacs under Mac OS X is missing the Courier font in strike-through.
+                Other operating systems such as Linux do not have this problem but the default setting for marking up
+                deletions may not show the strike-through.</p>
+                <p>You can customize Emacs to use a different font face for marking up deletions using command
+                "M-x customize-group RET ltc RET" once LTC mode has been loaded at least once via "M-x ltc-mode"
+                (which may have been unsuccessful).  Then, customize the faces called "Ltc Addition" and "Ltc Deletion"
+                to your liking.</p>
             </answer>
         </faq>
 
