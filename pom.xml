@@ -10,7 +10,7 @@
 
     <groupId>com.sri.ltc</groupId>
     <artifactId>LTC</artifactId>
-    <version>0.9.9-SNAPSHOT</version>
+    <version>0.9.10-SNAPSHOT</version>
     <packaging>pom</packaging>
     <inceptionYear>2009</inceptionYear>
     <properties>
