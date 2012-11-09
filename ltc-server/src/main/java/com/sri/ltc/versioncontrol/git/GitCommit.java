@@ -57,7 +57,7 @@ public class GitCommit extends Commit<GitRepository, GitTrackedFile> {
     }
 
     @Override
-    public List<Commit> getParents() throws Exception {
+    public List<Commit> getParents() {
         List<Commit> parents = new ArrayList<Commit>();
         for (RevCommit parentCommit : revCommit.getParents()) {
             parents.add(new GitCommit(repository, trackedFile, parentCommit));

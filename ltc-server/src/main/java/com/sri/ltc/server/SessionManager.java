@@ -9,6 +9,7 @@
 package com.sri.ltc.server;
 
 import com.sri.ltc.versioncontrol.TrackedFile;
+import com.sri.ltc.versioncontrol.VersionControlException;
 
 import javax.swing.text.BadLocationException;
 import java.io.IOException;
@@ -25,7 +26,7 @@ public class SessionManager {
     final static Map<Integer,Session> sessions =
             Collections.synchronizedMap(new HashMap<Integer,Session>());
 
-    public static int createSession(TrackedFile gitFile) throws Exception {
+    public static int createSession(TrackedFile gitFile) throws IOException, ParseException, VersionControlException {
         Session session = new Session(gitFile);
         sessions.put(session.ID, session);
         return session.ID;

@@ -726,45 +726,5 @@
 	     (match-string 3 author) ; email
 	   "")))))
 
-;;; old code:
-
-(defun ltc-parse-file (file)
-  (let* ((cmd (concat "java -cp /homes/owre/LTC/build/change-tracking.jar "
-		      "com.sri.latexdiff.Lexer "
-		      file))
-	 (str (shell-command-to-string cmd)))
-    (ltc-parse-list str 0)))
-
-(defvar ltc-parse-regexp
-  "\\([^ ]+\\) \\([^\(]+\\)(\\([^,]+\\),\\([^\)]+\\)) \\([^\n]+\\)\n")
-
-(defun ltc-parse-list (str pos)
-  (let ((plist nil))
-    (while (string-match ltc-parse-regexp str pos)
-      (let ((type (substring str (match-beginning 1) (match-end 1)))
-	    (contents (substring str (match-beginning 2) (- (match-end 2) 2)))
-	    (line (substring str (match-beginning 3) (match-end 3)))
-	    (column (substring str (match-beginning 4) (match-end 4)))
-	    (length (substring str (match-beginning 5) (match-end 5))))
-	(push (list type contents line column length) plist)
-	(setq pos (match-end 0))))
-    (nreverse plist)))
-
-(defface ltc-paragraph
-  '((((class color) (background dark)) 
-     (:foreground "lightgrey" :bold t)) 
-    (((class color) (background light)) 
-     ( :foreground "lightgrey" :bold t)) 
-    (t (:bold t :underline t))) 
-  "Face used to visualize paragraph char mapping. 
-
-See `blank-display-mappings'." 
-  :group 'blank)
-
-;; 2230 = \x8B6
-;(setq buffer-display-table (make-display-table)) 
-;(aset buffer-display-table 10
-;      (vector 32 (make-glyph-code 2230 'ltc-paragraph) 10))
-
 
 (provide 'ltc-mode)

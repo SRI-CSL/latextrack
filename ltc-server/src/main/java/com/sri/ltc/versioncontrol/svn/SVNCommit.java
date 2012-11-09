@@ -42,7 +42,7 @@ public class SVNCommit extends Commit<SVNRepository, SVNTrackedFile> {
     }
 
     @Override
-    public List<Commit> getParents() throws Exception {
+    public List<Commit> getParents() {
         return parents;
     }
 

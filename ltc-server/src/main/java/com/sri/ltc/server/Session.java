@@ -10,11 +10,14 @@ package com.sri.ltc.server;
 
 import com.google.common.collect.Sets;
 import com.sri.ltc.filter.Author;
+import com.sri.ltc.versioncontrol.VersionControlException;
 import com.sri.ltc.versioncontrol.history.CompleteHistory;
 import com.sri.ltc.versioncontrol.Remotes;
 import com.sri.ltc.latexdiff.Accumulate;
 import com.sri.ltc.versioncontrol.TrackedFile;
 
+import java.io.IOException;
+import java.text.ParseException;
 import java.util.*;
 
 /**
@@ -34,7 +37,7 @@ public final class Session {
     private String limit_rev = "";
     private final Accumulate accumulate = new Accumulate();
 
-    protected Session(TrackedFile trackedFile) throws Exception {
+    protected Session(TrackedFile trackedFile) throws IOException, ParseException, VersionControlException {
         ID = generateID();
         if (trackedFile == null)
             throw new IllegalArgumentException("cannot create session with NULL as tracked file");

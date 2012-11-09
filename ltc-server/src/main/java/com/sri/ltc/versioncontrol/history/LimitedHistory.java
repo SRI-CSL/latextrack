@@ -13,6 +13,7 @@ import com.sri.ltc.latexdiff.CommitReaderWrapper;
 import com.sri.ltc.latexdiff.ReaderWrapper;
 import com.sri.ltc.versioncontrol.Commit;
 import com.sri.ltc.versioncontrol.TrackedFile;
+import com.sri.ltc.versioncontrol.VersionControlException;
 
 import java.io.IOException;
 import java.text.ParseException;
@@ -29,9 +30,9 @@ public final class LimitedHistory extends FileHistory {
     private final String limitingDate;
     private final String limitingRev;
 
-    public LimitedHistory(TrackedFile gitFile, Set<Author> limitingAuthors, String limitingDate, String limitingRev)
+    public LimitedHistory(TrackedFile file, Set<Author> limitingAuthors, String limitingDate, String limitingRev)
             throws Exception {
-        super(gitFile);
+        super(file);
         this.limitingAuthors = limitingAuthors;
         this.limitingDate = limitingDate;
         this.limitingRev = limitingRev;
@@ -39,7 +40,7 @@ public final class LimitedHistory extends FileHistory {
     }
 
     @Override
-    List<Commit> updateCommits() throws Exception {
+    List<Commit> updateCommits() throws ParseException, VersionControlException, IOException {
         // perform git log:
         //   with limiting date, if applicable
         return trackedFile.getCommits(

@@ -10,7 +10,10 @@ package com.sri.ltc.versioncontrol.history;
 
 import com.sri.ltc.versioncontrol.Commit;
 import com.sri.ltc.versioncontrol.TrackedFile;
+import com.sri.ltc.versioncontrol.VersionControlException;
 
+import java.io.IOException;
+import java.text.ParseException;
 import java.util.List;
 
 /**
@@ -18,13 +21,13 @@ import java.util.List;
  */
 public final class CompleteHistory extends FileHistory {
 
-    public CompleteHistory(TrackedFile gitFile) throws Exception {
-        super(gitFile);
+    public CompleteHistory(TrackedFile file) throws IOException, ParseException, VersionControlException {
+        super(file);
         update();
     }
 
     @Override
-    List<Commit> updateCommits() throws Exception {
+    List<Commit> updateCommits() throws VersionControlException, IOException {
         // perform git log with static options
         return trackedFile.getCommits();
     }

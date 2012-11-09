@@ -2,6 +2,7 @@ package com.sri.ltc.versioncontrol.svn;
 
 import com.sri.ltc.versioncontrol.Commit;
 import com.sri.ltc.versioncontrol.TrackedFile;
+import com.sri.ltc.versioncontrol.VersionControlException;
 import org.tmatesoft.svn.core.*;
 import org.tmatesoft.svn.core.wc.SVNRevision;
 import org.tmatesoft.svn.core.wc.SVNStatus;
@@ -121,35 +122,43 @@ public class SVNTrackedFile extends TrackedFile<SVNRepository> {
     }
 
     @Override
-    public List<Commit> getCommits() throws Exception {
+    public List<Commit> getCommits() throws VersionControlException {
         return getCommits(null, null);
     }
 
     @Override
-    public List<Commit> getCommits(@Nullable Date inclusiveLimitDate, @Nullable String inclusiveLimitRevision) throws Exception {
+    public List<Commit> getCommits(@Nullable Date inclusiveLimitDate, @Nullable String inclusiveLimitRevision) throws VersionControlException {
         return getCommits(inclusiveLimitDate, inclusiveLimitRevision, 0);
     }
 
-    public List<Commit> getCommits(@Nullable Date inclusiveLimitDate, @Nullable String inclusiveLimitRevision, int limit) throws Exception {
-       SVNLogEntryHandler handler = new SVNLogEntryHandler(
-               this,
-               inclusiveLimitDate,
-               (inclusiveLimitRevision == null) ? null : Long.parseLong(inclusiveLimitRevision));
+    private List<Commit> getCommits(@Nullable Date inclusiveLimitDate, @Nullable String inclusiveLimitRevision, int limit) throws VersionControlException {
+        SVNLogEntryHandler handler = new SVNLogEntryHandler(
+                this,
+                inclusiveLimitDate,
+                (inclusiveLimitRevision == null) ? null : Long.parseLong(inclusiveLimitRevision));
 
-       getRepository().getClientManager().getLogClient()
-            .doLog(
-                new File[]{ getFile() },
-                SVNRevision.create(-1), SVNRevision.create(-1), false, false, limit, handler);
+        try {
+            getRepository().getClientManager().getLogClient()
+                    .doLog(
+                            new File[]{getFile()},
+                            SVNRevision.create(-1), SVNRevision.create(-1), false, false, limit, handler);
+        } catch (SVNException e) {
+            throw new VersionControlException(e);
+        }
 
         return handler.getCommits();
     }
-    
+
     @Override
-    public Status getStatus() throws Exception {
-        SVNStatus status = getRepository().getClientManager().getStatusClient().doStatus(getFile(), false);
-        SVNStatusType contentsStatus = status.getContentsStatus();
-        if (svnStatus.containsKey(contentsStatus.getID())) {
-            return svnStatus.get(contentsStatus.getID());
+    public Status getStatus() throws VersionControlException {
+        try {
+            SVNStatus status = getRepository().getClientManager().getStatusClient().doStatus(getFile(), false);
+            SVNStatusType contentsStatus = status.getContentsStatus();
+            if (svnStatus.containsKey(contentsStatus.getID())) {
+                return svnStatus.get(contentsStatus.getID());
+            }
+        } catch (SVNException e) {
+            throw new VersionControlException(e);
         }
 
         return Status.Unknown;

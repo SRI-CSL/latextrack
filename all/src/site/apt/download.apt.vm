@@ -57,7 +57,7 @@ To start LTC server with default options, use the following command:
   * Subversion: In a directory of your choice, do
 
 +----
-svn checkout svn://svn.code.sf.net/p/latextrack/tutorial-svn/trunk independence-svn
+svn checkout svn://svn.code.sf.net/p/latextrack/tutorial-svn/trunk independence
 +----
 
   []

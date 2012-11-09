@@ -32,7 +32,7 @@ public abstract class Commit<RepositoryClass extends Repository, TrackedFileClas
     abstract public Author getAuthor();
     abstract public Date getDate();
 
-    abstract public List<Commit> getParents() throws Exception;
+    abstract public List<Commit> getParents();
 
     // note: this only makes sense if the commit was a single-file commit
     // if the commit was not filtered by file, this method will return null

@@ -13,6 +13,7 @@ import com.sri.ltc.filter.Author;
 import com.sri.ltc.versioncontrol.CommitGraph;
 import com.sri.ltc.versioncontrol.Commit;
 import com.sri.ltc.versioncontrol.TrackedFile;
+import com.sri.ltc.versioncontrol.VersionControlException;
 
 import java.io.IOException;
 import java.text.ParseException;
@@ -30,17 +31,17 @@ public abstract class FileHistory {
     final CommitGraph commitGraph = new CommitGraph();
     final Set<Author> authors = new HashSet<Author>();
 
-    public FileHistory(TrackedFile gitFile) throws IOException, ParseException {
-        if (gitFile == null)
+    protected FileHistory(TrackedFile file) throws IOException, ParseException {
+        if (file == null)
             throw new IllegalArgumentException("Cannot create FileHistory with NULL as git file");
-        this.trackedFile = gitFile;
+        this.trackedFile = file;
     }
 
-    abstract List<Commit> updateCommits() throws Exception;
+    abstract List<Commit> updateCommits() throws ParseException, VersionControlException, IOException;
     abstract void transformGraph();
     abstract void transformList() throws IOException;
 
-    public final List<Object[]> update() throws Exception {
+    public final List<Object[]> update() throws ParseException, IOException, VersionControlException {
         List<Commit> commits = updateCommits();
 
         // translate git commits into graph structure:

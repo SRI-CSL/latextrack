@@ -2,6 +2,7 @@ package com.sri.ltc.versioncontrol;
 
 import javax.annotation.Nullable;
 import java.io.File;
+import java.io.IOException;
 import java.util.Date;
 import java.util.List;
 
@@ -23,17 +24,16 @@ public abstract class TrackedFile<RepositoryClass extends Repository> {
         Unknown
     }
     
-    abstract public List<Commit> getCommits() throws Exception;
+    abstract public List<Commit> getCommits() throws VersionControlException, IOException;
     // Note: must support/default to the following options or their equivalent
     //    options.setOptFormatDate("iso8601");
     //    options.setOptOrderingTopological(true);
     //    options.setOptGraph(true);
     //    options.setOptFormat("commit %H%nAuthor: %an <%ae>%nDate: %ad%nParents: %P%n%s%n");
 
-    abstract public List<Commit> getCommits(@Nullable Date inclusiveLimitDate, @Nullable String inclusiveLimitRevision)
-            throws Exception;
+    abstract public List<Commit> getCommits(@Nullable Date inclusiveLimitDate, @Nullable String inclusiveLimitRevision) throws VersionControlException, IOException;
 
-    abstract public Status getStatus() throws Exception;
+    abstract public Status getStatus() throws VersionControlException;
 
     abstract public Commit commit(String message) throws Exception;
 

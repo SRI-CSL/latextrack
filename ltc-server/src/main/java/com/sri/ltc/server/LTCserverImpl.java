@@ -120,7 +120,7 @@ public final class LTCserverImpl implements LTCserverInterface {
         try {
             repository = RepositoryFactory.fromPath(file);
         } catch (Exception e) {
-            logAndThrow(3, "Could not find repository at " + file + " Exception: " + e.getMessage());
+            logAndThrow(3, "Could not find version control (git or svn) for this file");
         }
         updateProgress(3);
 
@@ -129,13 +129,13 @@ public final class LTCserverImpl implements LTCserverInterface {
             // test whether file tracked under git
             switch (trackedFile.getStatus()) {
                 case NotTracked:
-                    logAndThrow(4, "Given file not tracked under source code control");
+                    logAndThrow(4, "File not tracked under version control");
                     break;
                 case Removed:
-                    logAndThrow(8, "Given file deleted or deleted to commit under source code control");
+                    logAndThrow(5, "File deleted or deleted to commit under version control");
                     break;
                 case Unknown:
-                    logAndThrow(8, "Given file status unknown under source code control");
+                    logAndThrow(6, "File status unknown under version control");
                     break;
 
                 default:
@@ -148,10 +148,8 @@ public final class LTCserverImpl implements LTCserverInterface {
             logAndThrow(7,"IOException during tracked file creation: "+e.getMessage());
         } catch (ParseException e) {
             logAndThrow(8,"ParseException during tracked file creation: "+e.getMessage()+" (@"+e.getErrorOffset()+")");
-        } catch (BadLocationException e) {
-            logAndThrow(9,"BadLocationException during tracked file creation: "+e.getMessage());
-        } catch (Exception e) {
-            logAndThrow(10,"General Exception during tracked file creation: "+e.getMessage());
+        } catch (VersionControlException e) {
+            logAndThrow(10,"VersionControlException during tracked file creation: "+e.getMessage());
         }
 
         return -1;
