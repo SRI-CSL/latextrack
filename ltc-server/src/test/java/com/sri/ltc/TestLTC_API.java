@@ -56,7 +56,7 @@ public class TestLTC_API {
         // create moderately interesting git repository
         // create, add and commit 2 files:
         TrackedFile file1 = temporaryGitRepository.createTestFileInRepository("file1-", ".txt", "contents of file1", true);
-        file1.commit("commtting file1");
+        file1.commit("committing file1");
         TrackedFile file2 = temporaryGitRepository.createTestFileInRepository("file2-", ".txt", "contents of file2", true);
         file2.commit("committing file2");
         // modify and commit file 2:
