@@ -20,6 +20,9 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
+ * Exception handling modeled after jfpoilpret's answer (not the accepted one!) in:
+ *   http://stackoverflow.com/questions/6523623/gracefull-exception-handling-in-swing-worker
+ *
  * @author linda
  */
 public abstract class LTCWorker<T,V> extends SwingWorker<T,V> implements ProgressReceiver {

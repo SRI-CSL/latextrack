@@ -94,6 +94,10 @@ public class LTCSession {
                         LOGGER.log(Level.SEVERE, e.getMessage(), e);
                     } catch (ExecutionException e) {
                         LOGGER.log(Level.SEVERE, e.getMessage(), e);
+                        JOptionPane.showMessageDialog(editor.getFrame(),
+                                "An error occurred:\n"+e.getMessage(),
+                                "Error while updating",
+                                JOptionPane.ERROR_MESSAGE);
                     }
             }
         }).execute();

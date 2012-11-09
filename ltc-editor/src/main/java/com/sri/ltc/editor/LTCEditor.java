@@ -94,11 +94,13 @@ public final class LTCEditor extends LTCGui {
                             fileField.setText(session.getCanonicalPath());
                             return;
                         }
+                        clear();
                         session.startInitAndUpdate(file, dateField.getText(), revField.getText(), textPane.getCaretPosition());
                     } else {
                         session.startUpdate(dateField.getText(), revField.getText(), false, textPane.getText(), textPane.stopFiltering(), textPane.getCaretPosition());
                     }
                 } else {
+                    clear();
                     session.startInitAndUpdate(file, dateField.getText(), revField.getText(), textPane.getCaretPosition());
                 }
                 // update file chooser and preference for next time:
