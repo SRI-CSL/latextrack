@@ -91,7 +91,7 @@ public final class LTCEditor extends LTCGui {
                 if (session.isValid()) {
                     if (!session.getCanonicalPath().equals(file.getCanonicalPath())) {
                         if (!close()) {
-                            fileField.setText(session.getCanonicalPath());
+                            fileField.setText(session.getCanonicalPath()); // undo setting of file field
                             return;
                         }
                         clear();
@@ -158,6 +158,7 @@ public final class LTCEditor extends LTCGui {
         commitModel.init(commits, true);
         selfModel.init(authors, self);
         saveButton.setEnabled(false); // start with modified = false
+        setFile(session.getCanonicalPath(), false);
     }
 
     protected void finishUpdate(Map<Integer, Object[]> authors,
@@ -196,6 +197,7 @@ public final class LTCEditor extends LTCGui {
     }
 
     private void clear() {
+        fileField.setText(fileChooser.getCurrentDirectory().getAbsolutePath()+"/");
         try {
             textPane.clearAndGetDocument();
         } catch (BadLocationException e) {
@@ -299,8 +301,7 @@ public final class LTCEditor extends LTCGui {
             public void actionPerformed(ActionEvent e) {
                 if (fileChooser.showOpenDialog(getFrame()) == JFileChooser.APPROVE_OPTION) {
                     File file = fileChooser.getSelectedFile();
-                    fileField.setText(file.getAbsolutePath());
-                    getUpdateButton().doClick();
+                    LTCEditor.this.setFile(file.getAbsolutePath(), true);
                 }
             }
         }), BorderLayout.LINE_END);
@@ -524,9 +525,10 @@ public final class LTCEditor extends LTCGui {
         createLowerRightPane(getLowerRightPane());
     }
 
-    private void setFile(String path) {
+    private void setFile(String path, boolean doUpdate) {
         fileField.setText(path);
-        getUpdateButton().doClick(); // crude way to invoke ENTER on JTextField
+        if (doUpdate)
+            getUpdateButton().doClick(); // crude way to invoke ENTER on JTextField
     }
 
     private static void printUsage(PrintStream out, CmdLineParser parser) {
@@ -593,7 +595,7 @@ public final class LTCEditor extends LTCGui {
         if (options.file != null)
             SwingUtilities.invokeLater(new Runnable() {
                 public void run() {
-                    editor.setFile(options.file.getAbsolutePath());
+                    editor.setFile(options.file.getAbsolutePath(), true);
                 }
             });
     }

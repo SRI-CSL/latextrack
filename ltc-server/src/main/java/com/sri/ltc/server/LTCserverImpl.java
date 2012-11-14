@@ -349,10 +349,8 @@ public final class LTCserverImpl implements LTCserverInterface {
             map.put(LTCserverInterface.KEY_AUTHORS, mappedAuthors); // add current author map
             map.put(LTCserverInterface.KEY_SHA1, sha1); // add list of SHA1s used
             session.getAccumulate().removePropertyChangeListener(listener);
-        } catch (IOException e) {
-            logAndThrow(2,"IOException during change accumulation: "+e.getMessage());
-        } catch (BadLocationException e) {
-            logAndThrow(3,"BadLocationException at "+e.offsetRequested()+" during change accumulation: "+e.getMessage());
+        } catch (Exception e) {
+            logAndThrow(2,"Exception during change accumulation: "+e.getMessage());
         }
         updateProgress(90);
 

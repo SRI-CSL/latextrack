@@ -75,7 +75,7 @@ public final class Accumulate {
     public Map perform(ReaderWrapper[] priorText,
                        Integer[] authorIndices,
                        Set<Change.Flag> flagsToHide,
-                       int caretPosition) throws IOException, BadLocationException {
+                       int caretPosition) throws Exception {
 
         // init return value:
         Map map = new HashMap();

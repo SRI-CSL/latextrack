@@ -21,7 +21,7 @@ import java.util.EnumSet;
 public final class TestLatexDiffMixed extends TestLatexDiff {
 
     @Test
-    public void commentsAdded() throws IOException {
+    public void commentsAdded() throws Exception {
         changes = getChanges(
                 "Lorem ipsum dolor sit amet,",
                 "Lorem ipsum dolor sit amet, "+
@@ -70,7 +70,7 @@ public final class TestLatexDiffMixed extends TestLatexDiff {
     }
 
     @Test
-    public void commandsDeleted() throws IOException {
+    public void commandsDeleted() throws Exception {
         changes = getChanges(
                 "Lorem ipsum dolor sit amet, \\consectetur \\adipiscing",
                 "Lorem ipsum dolor sit amet,");
@@ -118,7 +118,7 @@ public final class TestLatexDiffMixed extends TestLatexDiff {
     }
 
     @Test
-    public void replacementsMixed() throws IOException {
+    public void replacementsMixed() throws Exception {
         changes = getChanges(
                 "Lorem ipsum dolor sit amet \\consectetur adipiscing  elit. ",
                 "Lorem ipsum dolor sit amet, consectetur   elit.");

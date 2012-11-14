@@ -20,7 +20,7 @@ import java.util.EnumSet;
 public final class TestLatexDiffAdditions extends TestLatexDiff {
 
     @Test
-    public void additionsAtBeginning() throws IOException {
+    public void additionsAtBeginning() throws Exception {
         changes = getChanges(
                 "\\ipsum  ",
                 "Lorem\\ipsum");
@@ -84,7 +84,7 @@ public final class TestLatexDiffAdditions extends TestLatexDiff {
     }
 
     @Test
-    public void additionsInMiddle() throws IOException {
+    public void additionsInMiddle() throws Exception {
         changes = getChanges(
                 "Lorem  sit amet. ",
                 "Lorem ipsum dolor sit amet. ");
@@ -100,7 +100,7 @@ public final class TestLatexDiffAdditions extends TestLatexDiff {
     }
 
     @Test
-    public void additionsAtEnd() throws IOException {
+    public void additionsAtEnd() throws Exception {
         changes = getChanges(
                 "Lorem",
                 "Lorem ipsum ");

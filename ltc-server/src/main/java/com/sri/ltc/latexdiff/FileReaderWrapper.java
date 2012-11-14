@@ -22,12 +22,7 @@ public final class FileReaderWrapper extends AbstractReaderWrapper<String> imple
     }
 
     @Override
-    public Reader createReader() {
-        try {
-            return new FileReader(getWrapped());
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        }
-        return null;
+    public Reader createReader() throws FileNotFoundException {
+        return new FileReader(getWrapped());
     }
 }

@@ -2,6 +2,8 @@ package com.sri.ltc.versioncontrol.svn;
 
 import com.sri.ltc.filter.Author;
 import com.sri.ltc.versioncontrol.Commit;
+import com.sri.ltc.versioncontrol.VersionControlException;
+import org.tmatesoft.svn.core.SVNException;
 import org.tmatesoft.svn.core.SVNLogEntry;
 import org.tmatesoft.svn.core.wc.SVNRevision;
 
@@ -47,15 +49,19 @@ public class SVNCommit extends Commit<SVNRepository, SVNTrackedFile> {
     }
 
     @Override
-    public InputStream getContentStream() throws Exception {
+    public InputStream getContentStream() throws VersionControlException {
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-        getRepository().getClientManager().getWCClient()
-                .doGetFileContents(
-                        trackedFile.getFile(),
-                        SVNRevision.create(logEntry.getRevision()), SVNRevision.create(logEntry.getRevision()),
-                        true,
-                        outputStream
-                        );
+        try {
+            getRepository().getClientManager().getWCClient()
+                    .doGetFileContents(
+                            trackedFile.getFile(),
+                            SVNRevision.create(logEntry.getRevision()), SVNRevision.create(logEntry.getRevision()),
+                            true,
+                            outputStream
+                    );
+        } catch (SVNException e) {
+            throw new VersionControlException(e);
+        }
 
         return new ByteArrayInputStream(outputStream.toByteArray());
     }

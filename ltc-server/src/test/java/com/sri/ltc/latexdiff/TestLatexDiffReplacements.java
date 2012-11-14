@@ -20,7 +20,7 @@ import java.util.EnumSet;
 public final class TestLatexDiffReplacements extends TestLatexDiff {
 
     @Test
-    public void replacements() throws IOException {
+    public void replacements() throws Exception {
         changes = getChanges(  // case Aa
                 "Lorem\\amet.",
                 " Lorem, dolor. ");

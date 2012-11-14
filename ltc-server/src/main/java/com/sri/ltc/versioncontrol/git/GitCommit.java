@@ -2,6 +2,7 @@ package com.sri.ltc.versioncontrol.git;
 
 import com.sri.ltc.filter.Author;
 import com.sri.ltc.versioncontrol.Commit;
+import com.sri.ltc.versioncontrol.VersionControlException;
 import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.lib.ObjectLoader;
 import org.eclipse.jgit.revwalk.RevCommit;
@@ -19,7 +20,7 @@ public class GitCommit extends Commit<GitRepository, GitTrackedFile> {
     public static Date CommitDate(RevCommit revCommit) {
         return new Date(revCommit.getCommitTime() * 1000L);
     }
-    
+
     public GitCommit(GitRepository repository, GitTrackedFile trackedFile, RevCommit revCommit) {
         super(repository, trackedFile);
         this.revCommit = revCommit;
@@ -46,14 +47,18 @@ public class GitCommit extends Commit<GitRepository, GitTrackedFile> {
     }
 
     @Override
-    public InputStream getContentStream() throws IOException {
+    public InputStream getContentStream() throws VersionControlException {
         if (trackedFile == null) return null;
-        
-        TreeWalk treeWalk = TreeWalk.forPath(getRepository().getWrappedRepository(), trackedFile.getRepositoryRelativeFilePath(), revCommit.getTree());
-        ObjectId objectId = treeWalk.getObjectId(0);
-        ObjectLoader loader = getRepository().getWrappedRepository().open(objectId);
 
-        return loader.openStream();
+        try {
+            TreeWalk treeWalk = TreeWalk.forPath(getRepository().getWrappedRepository(), trackedFile.getRepositoryRelativeFilePath(), revCommit.getTree());
+            ObjectId objectId = treeWalk.getObjectId(0);
+            ObjectLoader loader = getRepository().getWrappedRepository().open(objectId);
+
+            return loader.openStream();
+        } catch (IOException e) {
+            throw new VersionControlException(e);
+        }
     }
 
     @Override

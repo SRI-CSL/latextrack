@@ -113,7 +113,7 @@ public final class LimitedHistory extends FileHistory {
                 commitList.subList(i+1, commitList.size()).clear(); // remove all remaining commits
         }
 
-        LOGGER.info("Transformed list for \""+ trackedFile.getFile().getName()+"\" to "+commitList.size()+" commits");
+        LOGGER.fine("Transformed list for \""+ trackedFile.getFile().getName()+"\" to "+commitList.size()+" commits");
     }
 
     public final List<Commit> getCommitsList() {

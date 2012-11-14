@@ -1,9 +1,7 @@
 package com.sri.ltc.versioncontrol;
 
 import com.sri.ltc.filter.Author;
-import com.sri.ltc.server.LTCserverInterface;
 
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
@@ -36,7 +34,7 @@ public abstract class Commit<RepositoryClass extends Repository, TrackedFileClas
 
     // note: this only makes sense if the commit was a single-file commit
     // if the commit was not filtered by file, this method will return null
-    abstract public InputStream getContentStream() throws Exception;
+    abstract public InputStream getContentStream() throws VersionControlException;
 
     // TODO: these two methods should probably go into a utility class of some form
     public static String serializeDate(Date date) {
@@ -47,7 +45,10 @@ public abstract class Commit<RepositoryClass extends Repository, TrackedFileClas
         return FORMATTER.parse(date);
     }
     
-    public Reader getContents() throws Exception {
+    public Reader getContents() throws VersionControlException {
+        InputStream is = getContentStream();
+        if (is == null)
+            throw new NullPointerException("Cannot get content stream");
         return new InputStreamReader(getContentStream());
     }
 

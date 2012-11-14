@@ -225,3 +225,103 @@ Interactive Emacs Lisp: M-x ielm
 - to obtain buffer object for testing:
     ELISP> (setq buf (get-buffer "independence.tex"))
     #<buffer independence.tex>
+
+
+Creating SVN repository for tutorial
+------------------------------------
+
+1. Create local repository and dump
+
+ a) Create svn repository (in your home)
+
+  $> cd
+  $> svnadmin create svnrepos
+
+  Now edit svnrepos/conf/svnserve.conf and svnrepos/conf/passwd to contain & start server:
+
+  $> grep -v "^#" svnrepos/conf/svnserve.conf
+
+  [general]
+  anon-access = none
+  auth-access = write
+  password-db = passwd
+
+  [sasl]
+  $> grep -v "^#" svnrepos/conf/passwd
+
+  [users]
+  franklin = ltc
+  adams = ltc
+  sherman = ltc
+  jefferson = ltc
+  $> svnserve -d -r /Users/linda/svnrepos
+
+ b) Fill with first commit
+
+  $> cd ~/tmp/Tutorial
+  $> mkdir initial-svn
+  $> cd initial-svn
+  $> cp ../independence1.tex independence.tex
+  $> svn import --username jefferson -m "first version" ~/tmp/Tutorial/initial-svn file:///Users/linda/svnrepos/tutorial-svn
+  Adding         /Users/linda/tmp/Tutorial/initial-svn/independence.tex
+
+  Committed revision 1.
+
+ c) Checkout and create other versions
+
+  $> cd ~/tmp/Tutorial
+  $> svn co --username adams svn://localhost/tutorial-svn
+  Authentication realm: <svn://localhost:3690> 8b541c79-ea44-4304-8055-ab4e1cd7933f
+  Password for 'adams':
+  A    tutorial-svn/independence.tex
+  Checked out revision 1.
+  $> cp ../independence2.tex independence.tex
+  $> svn commit -m "second version" --username adams independence.tex
+  Sending        independence.tex
+  Transmitting file data .
+  Committed revision 2.
+  $> svn up
+  At revision 2.
+
+  ... and repeat for versions 3 through 6.
+
+  $> svn up
+  At revision 6.
+  $> svn log -q
+  ------------------------------------------------------------------------
+  r6 | sherman | 2012-11-13 13:01:00 -0600 (Tue, 13 Nov 2012)
+  ------------------------------------------------------------------------
+  r5 | sherman | 2012-11-13 13:00:35 -0600 (Tue, 13 Nov 2012)
+  ------------------------------------------------------------------------
+  r4 | jefferson | 2012-11-13 12:59:45 -0600 (Tue, 13 Nov 2012)
+  ------------------------------------------------------------------------
+  r3 | franklin | 2012-11-13 12:59:03 -0600 (Tue, 13 Nov 2012)
+  ------------------------------------------------------------------------
+  r2 | adams | 2012-11-13 12:58:04 -0600 (Tue, 13 Nov 2012)
+  ------------------------------------------------------------------------
+  r1 | jefferson | 2012-11-13 12:51:35 -0600 (Tue, 13 Nov 2012)
+  ------------------------------------------------------------------------
+
+ d) Dump repository into file
+
+  $> cd
+  $> svnadmin dump svnrepos > tutorialsvn
+  * Dumped revision 0.
+  * Dumped revision 1.
+  * Dumped revision 2.
+  * Dumped revision 3.
+  * Dumped revision 4.
+  * Dumped revision 5.
+  * Dumped revision 6.
+  $> gzip -v tutorialsvn
+  tutorialsvn:	 77.7% -- replaced with tutorialsvn.gz
+
+2. Replace repository at sf.net
+
+[Shell only works in "classic" mode, so setting up a publicly available SVN server]
+
+3. Stop local svnserver
+
+  $> ps axu | grep svn
+  linda           2395   0.0  0.0  2433896    408   ??  Ss   12:53PM   0:00.01 svnserve -d -r /Users/linda/svnrepos
+  $> kill -9 2395

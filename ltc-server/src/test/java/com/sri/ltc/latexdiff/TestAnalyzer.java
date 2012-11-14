@@ -15,8 +15,8 @@ import java.io.IOException;
 import java.util.EnumSet;
 import java.util.List;
 
-import static junit.framework.Assert.assertEquals;
-import static junit.framework.Assert.assertTrue;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 /**
  * @author linda
@@ -33,12 +33,12 @@ public final class TestAnalyzer {
         assertEquals("Number of lexemes", size, lexemes.size());
     }
 
-    private static List<Lexeme> analyze(ReaderWrapper wrapper) throws IOException {
+    private static List<Lexeme> analyze(ReaderWrapper wrapper) throws Exception {
         return latexDiff.analyze(wrapper);
     }
 
     @Test
-    public void analyzeSimple() throws IOException {
+    public void analyzeSimple() throws Exception {
         // exercise simple analyses
         lexemes = analyze(new StringReaderWrapper("Lorem ipsum dolor sit amet. "));
         assertLexemes(8);
@@ -54,7 +54,7 @@ public final class TestAnalyzer {
     }
 
     @Test
-    public void analyzePreamble() throws IOException {
+    public void analyzePreamble() throws Exception {
         // paragraphs in preamble
         lexemes = analyze(new StringReaderWrapper(
                 " \n\n \\begin{document}  \n \nLorem ipsum \n dolor sit amet. \n "
@@ -66,7 +66,7 @@ public final class TestAnalyzer {
     }
 
     @Test
-    public void analyzeComments() throws IOException {
+    public void analyzeComments() throws Exception {
         // starting with comments etc.
         lexemes = analyze(new StringReaderWrapper(
                 " \\begin{document}  \n \nLorem ipsum %%%  HERE IS A COMMENT WITH SPACE AND MORE %...\n dolor sit amet. \n "
@@ -87,7 +87,7 @@ public final class TestAnalyzer {
     }
 
     @Test
-    public void analyzeDoc() throws IOException, BadLocationException {
+    public void analyzeDoc() throws Exception {
         MarkedUpDocument document = new MarkedUpDocument();
         document.insertString(0, "Lorem ipsum  dolor sit  amet. ", null);
         document.insertDeletion(7, "s", EnumSet.of(Change.Flag.SMALL, Change.Flag.DELETION));

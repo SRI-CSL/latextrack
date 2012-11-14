@@ -9,6 +9,7 @@
 package com.sri.ltc.latexdiff;
 
 import com.sri.ltc.versioncontrol.Commit;
+import com.sri.ltc.versioncontrol.VersionControlException;
 
 import java.io.*;
 
@@ -22,12 +23,7 @@ public final class CommitReaderWrapper extends AbstractReaderWrapper<Commit> imp
     }
 
     @Override
-    public Reader createReader() {
-        try {
-            return getWrapped().getContents();
-        } catch (Exception e) {
-            // TODO: log this, better error handling generally
-            return null;
-        }
+    public Reader createReader() throws VersionControlException {
+        return getWrapped().getContents();
     }
 }

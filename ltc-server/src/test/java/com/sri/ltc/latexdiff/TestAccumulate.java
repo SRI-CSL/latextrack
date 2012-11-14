@@ -37,11 +37,11 @@ public final class TestAccumulate {
 
     private static Accumulate accumulate = new Accumulate();
 
-    private static Map perform(int caretPosition, String... texts) throws IOException, BadLocationException {
+    private static Map perform(int caretPosition, String... texts) throws Exception {
         return perform(caretPosition, EnumSet.noneOf(Change.Flag.class), texts);
     }
 
-    private static Map perform(int caretPosition, Set<Change.Flag> flagsToHide, String... texts) throws IOException, BadLocationException {
+    private static Map perform(int caretPosition, Set<Change.Flag> flagsToHide, String... texts) throws Exception {
         ReaderWrapper[] readers = null;
         if (texts != null) {
             readers = new ReaderWrapper[texts.length];
@@ -79,29 +79,45 @@ public final class TestAccumulate {
 
     @Test(expected = NullPointerException.class)
     public void twoNullReaders() throws IOException, BadLocationException {
-        perform(0, (String) null, (String) null);
+        try {
+            perform(0, (String) null, (String) null);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     @Test
-    public void oneOrNoVersions() throws IOException, BadLocationException {
-        map = perform(0, (String[]) null);
+    public void oneOrNoVersions() throws Exception {
+        try {
+            map = perform(0, (String[]) null);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
         assertMap("", 0, 0);
         map = perform(0, EnumSet.of(Change.Flag.PREAMBLE, Change.Flag.COMMENT, Change.Flag.DELETION), "");
         assertMap("", 0, 0);
         String text = "Hello World.";
         int position = 7;
-        map = perform(position, text);
+        try {
+            map = perform(position, text);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
         assertMap(text, 0, position);
     }
 
     @Test
     @SuppressWarnings("unchecked")
-    public void twoVersions() throws IOException, BadLocationException {
+    public void twoVersions() throws Exception {
         // adding paragraph and more at end
-        map = perform(22,
-                "Lorem ipsum dolor sit    \t",
-                "   Lorem ipsum \n \t\n  dolor sit amet. "
-        );
+        try {
+            map = perform(22,
+                    "Lorem ipsum dolor sit    \t",
+                    "   Lorem ipsum \n \t\n  dolor sit amet. "
+            );
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
         assertMap("   Lorem ipsum \n \t\n  dolor sit amet. ", 2, 22);
         assertStyle(
                 new int[] {1, 1}, // all 2 markups are additions
@@ -109,10 +125,14 @@ public final class TestAccumulate {
                 null);
 
         // removing paragraph in the middle and more at end
-        map = perform(25,
-                "   Lorem ipsum \n \ndolor sit amet. ",
-                "Lorem ipsum dolor sit    \t"
-        );
+        try {
+            map = perform(25,
+                    "   Lorem ipsum \n \ndolor sit amet. ",
+                    "Lorem ipsum dolor sit    \t"
+            );
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
         assertMap("Lorem ipsum \n \n dolor sit amet.    \t", 2, 35);
         assertStyle(
                 new int[] {2, 2}, // all 2 markups are deletions
@@ -139,10 +159,14 @@ public final class TestAccumulate {
 
         // deletion with lots of white space following:
         // think about this behavior: suggest to ignore end position of deletion???  NO.
-        map = perform(30,
-                "\t  Lorem ipsum dolor sit amet; \nconsectetur adipiscing elit.",
-                "Lorem ipsum dolor sit amet, consectetur adipiscing elit. \n "
-        );
+        try {
+            map = perform(30,
+                    "\t  Lorem ipsum dolor sit amet; \nconsectetur adipiscing elit.",
+                    "Lorem ipsum dolor sit amet, consectetur adipiscing elit. \n "
+            );
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
         assertMap("Lorem ipsum dolor sit amet; \n, consectetur adipiscing elit. \n ", 2, 33);
         assertStyle(
                 new int[] {2, 1}, // one deletion and one addition
@@ -150,10 +174,14 @@ public final class TestAccumulate {
                 null);
 
         // small changes:
-        map = perform(12,
-                "\t  Lorem ippsu dolor sit amet",
-                "Lorem ipsum dolor sit amt \n "
-        );
+        try {
+            map = perform(12,
+                    "\t  Lorem ippsu dolor sit amet",
+                    "Lorem ipsum dolor sit amt \n "
+            );
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
         assertMap("Lorem ippsum dolor sit amet \n ", 3, 13);
         assertStyle(
                 new int[] {2, 1, 2}, // 1 addition and 2 deletions
@@ -166,9 +194,13 @@ public final class TestAccumulate {
         );
         assertMap("Lorem ipsum dolor sit amt \n ", 0, 0);
         // reproduce tutorial bug
-        map = perform(3,
-                "\n\nIf % or should this be ``When''?\nin the Course",
-                "\n\nWhen in the Course");
+        try {
+            map = perform(3,
+                    "\n\nIf % or should this be ``When''?\nin the Course",
+                    "\n\nWhen in the Course");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
         assertMap("\n\nIf % or should this be ``When''?\nWhen in the Course", 2, 36);
         assertStyle(
                 new int[] {2, 1},
@@ -179,36 +211,48 @@ public final class TestAccumulate {
     // TODO: exercise various filters with small and large changes (2 and 3 versions)
 
     @Test
-    public void threeVersions() throws IOException, BadLocationException {
+    public void threeVersions() throws Exception {
         // small changes accumulate: positioning!
-        map = perform(0,
-                " Lorem isut",
-                "Lorem   isum",
-                "  Lorem  ipsum"
-        );
+        try {
+            map = perform(0,
+                    " Lorem isut",
+                    "Lorem   isum",
+                    "  Lorem  ipsum"
+            );
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
         assertMap("  Lorem  ipsutm", 3, 0);
         assertStyle(
                 new int[] {1, 2, 1},
                 new int[][] {{10, 11}, {13, 14}, {14, 15}},
                 new int[] {2, 1, 1}
         );
-        map = perform(0,
-                " Lorem iut",
-                "Lorem   isu",
-                "  Lorem  ipsum"
-        );
+        try {
+            map = perform(0,
+                    " Lorem iut",
+                    "Lorem   isu",
+                    "  Lorem  ipsum"
+            );
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
         assertMap("  Lorem  ipsumt", 4, 0);
         assertStyle(
                 new int[] {1, 1, 1, 2},
                 new int[][] {{10, 11}, {11, 12}, {13, 14}, {14, 15}},
                 new int[] {2, 1, 2, 1}
         );
-        map = perform(0,
-                "Lorem ipsum dorstamet,",
-                " Lorem ipsum  dorstamt,",
-                "Lorem  ipsum  dorsitamt,",
-                "Lorem ipsum dolorsitamt,"
-        );
+        try {
+            map = perform(0,
+                    "Lorem ipsum dorstamet,",
+                    " Lorem ipsum  dorstamt,",
+                    "Lorem  ipsum  dorsitamt,",
+                    "Lorem ipsum dolorsitamt,"
+            );
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
         assertMap("Lorem ipsum dolorsitamet,", 3, 0);
         assertStyle(
                 new int[] {1, 1, 2},
@@ -216,22 +260,30 @@ public final class TestAccumulate {
                 new int[] {3, 2, 1}
         );
         // no change in latest version
-        map = perform(0,
-                "\t  Lorem ipsum; dolor sit amet.\n",
-                "\t Lorem   ipsum dolor sit amet,  ",
-                "Lorem ipsum dolor sit amet, \n "
-        );
+        try {
+            map = perform(0,
+                    "\t  Lorem ipsum; dolor sit amet.\n",
+                    "\t Lorem   ipsum dolor sit amet,  ",
+                    "Lorem ipsum dolor sit amet, \n "
+            );
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
         assertMap("Lorem ipsum; dolor sit amet.\n, \n ", 3, 0);
         assertStyle(
                 new int[] {2, 2, 1}, // 2 deletions and 1 addition
                 new int[][] {{11, 12}, {27, 29}, {29, 33}},
                 new int[] {1, 1});
         // no change from first to second version
-        map = perform(0,
-                "\t Lorem   ipsum dolor sit amet,  ",
-                " Lorem ipsum dolor sit amet, \n ",
-                "Lorem ipsum; dolor sit amet.\n"
-        );
+        try {
+            map = perform(0,
+                    "\t Lorem   ipsum dolor sit amet,  ",
+                    " Lorem ipsum dolor sit amet, \n ",
+                    "Lorem ipsum; dolor sit amet.\n"
+            );
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
         assertMap("Lorem ipsum; dolor sit amet, \n .\n", 3, 0);
         assertStyle(
                 new int[] {1, 2, 1}, // 2 deletions and 1 addition
@@ -239,11 +291,15 @@ public final class TestAccumulate {
                 new int[] {2, 2, 2}
         );
         // back and forth
-        map = perform(0,
-                "Lorem\t ipsum dolor",
-                "Lorem dolor",
-                "Lorem  ipsum"
-        );
+        try {
+            map = perform(0,
+                    "Lorem\t ipsum dolor",
+                    "Lorem dolor",
+                    "Lorem  ipsum"
+            );
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
         assertMap("Lorem\t ipsum dolor  ipsum", 3, 0);
         assertStyle(
                 new int[] {2, 2, 1},
@@ -263,11 +319,15 @@ public final class TestAccumulate {
                 new int[] {2}
         );
         // small addition and deletion with command
-        map = perform(0,
-                "Lorem ipm   \\dolor amet",
-                "Lorem ipsum \\dolor",
-                "Lorem  ipsum"
-        );
+        try {
+            map = perform(0,
+                    "Lorem ipm   \\dolor amet",
+                    "Lorem ipsum \\dolor",
+                    "Lorem  ipsum"
+            );
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
         assertMap("Lorem  ipsum \\dolor amet", 3, 0);
         assertStyle(
                 new int[] {1, 2, 2},
@@ -287,11 +347,15 @@ public final class TestAccumulate {
                 new int[] {1}
         );
         // replacement with trailing white space over 3 versions:
-        map = perform(0,
-                "\t  Lorem ipsum; dolor sit amet.\n",
-                "Lorem ipsum dolor \nsit amet",
-                "Lorem ipsum dolor sit amet, \n "
-        );
+        try {
+            map = perform(0,
+                    "\t  Lorem ipsum; dolor sit amet.\n",
+                    "Lorem ipsum dolor \nsit amet",
+                    "Lorem ipsum dolor sit amet, \n "
+            );
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
         assertMap("Lorem ipsum; dolor sit amet., \n ", 3, 0);
         assertStyle(
                 new int[] {2, 2, 1},
@@ -319,14 +383,18 @@ public final class TestAccumulate {
     }
 
     @Test
-    public void fourVersions() throws IOException, BadLocationException {
+    public void fourVersions() throws Exception {
         // back and forth
-        map = perform(0,
-                "Lorem ipsum",
-                "Lorem ipsum dolor",
-                "Lorem dolor",
-                "Lorem ipsum"
-        );
+        try {
+            map = perform(0,
+                    "Lorem ipsum",
+                    "Lorem ipsum dolor",
+                    "Lorem dolor",
+                    "Lorem ipsum"
+            );
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
         assertMap("Lorem ipsum dolor ipsum", 3, 0);
         assertStyle(
                 new int[] {2, 2, 1},
@@ -335,17 +403,21 @@ public final class TestAccumulate {
         );
 
         // delete in 2nd version, add back in 4th version, add in 3rd and 4th version,...
-        map = perform(0,
-                "  Lorem ipsum dolor sit amet\n \n adipiscing elit. ",
-                "Lorem ipsum \n sit amet, consectetur rerum  adipiscing elit. ",
-                "\tLorem ipsum  sit amet, consectetur  \t  rerum adipiscing elit, aliquam commodo.\n",
-                "Lorem ipsum   dolor sit amet, consectetur adipiscing elit. Aliquam commodo. "
-        );
+        try {
+            map = perform(0,
+                    "  Lorem ipsum dolor sit amet\n \n adipiscing elit. ",
+                    "Lorem ipsum \n sit amet, consectetur rerum  adipiscing elit. ",
+                    "\tLorem ipsum  sit amet, consectetur  \t  rerum adipiscing elit, aliquam commodo.\n",
+                    "Lorem ipsum   dolor sit amet, consectetur adipiscing elit. Aliquam commodo. "
+            );
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
 //        renderHTML(map);
     }
 
     @Test
-    public void filtering() throws IOException, BadLocationException {
+    public void filtering() throws Exception {
         // deletion in preamble, small deletion and addition of comment
         map = perform(0, EnumSet.of(Change.Flag.PREAMBLE, Change.Flag.COMMENT),
                 "Lorem ipsumm dolor",
@@ -415,7 +487,7 @@ public final class TestAccumulate {
 
 
     @Test
-    public void testPreambleBleeding() throws IOException, BadLocationException {
+    public void testPreambleBleeding() throws Exception {
         // in this case, the preamble additions/removals were throwing off a later lexeme
         // by making it appear to be part of the preamble. The original examples came from
         // the tutorial/independence.tex files, hence the naming of the variables.

@@ -11,13 +11,13 @@ package com.sri.ltc.latexdiff;
 import com.google.common.collect.Lists;
 import org.junit.Test;
 
-import javax.swing.text.BadLocationException;
 import java.io.IOException;
 import java.util.EnumSet;
 import java.util.List;
 
-import static junit.framework.Assert.assertEquals;
-import static junit.framework.Assert.assertTrue;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+
 
 /**
  * @author linda
@@ -27,7 +27,7 @@ public class TestLatexDiff {
     private static final LatexDiff latexDiff = new LatexDiff();
     protected List<Change> changes;
 
-    protected static List<Change> getChanges(String text1, String text2) throws IOException {
+    protected static List<Change> getChanges(String text1, String text2) throws Exception {
         return latexDiff.getChanges(
                 new StringReaderWrapper(text1),
                 new StringReaderWrapper(text2));
@@ -50,12 +50,12 @@ public class TestLatexDiff {
     }
 
     @Test(expected = NullPointerException.class)
-    public void nullReader() throws IOException {
+    public void nullReader() throws Exception {
         changes = getChanges("", null);
     }
 
     @Test
-    public void whitespace() throws IOException {
+    public void whitespace() throws Exception {
         changes = getChanges("", " \n   \t");
         assertTrue("Changes is empty", changes.isEmpty());
         changes = getChanges(
@@ -81,7 +81,7 @@ public class TestLatexDiff {
     }
 
     @Test
-    public void inComment() throws IOException {
+    public void inComment() throws Exception {
         changes = getChanges(
                 " \nLorem ipsum %%%  HERE IS A COMMMENT WITH SPACE...\n dolor sit amet. \n ",
                 "Lorem ipsum \n%%%  HERE IS A COMMENT WITH SPACE AND MORE %...\n dolor sit amet."
@@ -95,7 +95,7 @@ public class TestLatexDiff {
     }
 
     @Test
-    public void inPreamble() throws IOException {
+    public void inPreamble() throws Exception {
         changes = getChanges(
                 " \n\n \\begin{document}  \n \nLorem ipsum \n dolor sit amet. \n ",
                 " \n\\usepackage{lipsum}\n \\begin{document}  \n \nLorem ipsum \n dolor sit amet. \n "
@@ -125,7 +125,7 @@ public class TestLatexDiff {
     }
 
     @Test
-    public void commentThenText() throws IOException {
+    public void commentThenText() throws Exception {
         changes = getChanges(
                 "% Need life\n",
                 "% Need \nLife"
@@ -146,7 +146,7 @@ public class TestLatexDiff {
     }
 
     @Test
-    public void test3Diff() throws IOException, BadLocationException {
+    public void test3Diff() throws Exception {
         MarkedUpDocument document = new MarkedUpDocument();
         document.insertString(0, "  Lorem ipsum   dolor sit. ", null);
         document.markupAddition(7, 16, EnumSet.noneOf(Change.Flag.class));

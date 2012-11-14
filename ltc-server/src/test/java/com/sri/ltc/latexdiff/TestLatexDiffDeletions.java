@@ -20,7 +20,7 @@ import java.util.EnumSet;
 public final class TestLatexDiffDeletions extends TestLatexDiff {
 
     @Test
-    public void deletionsAtBeginning() throws IOException {
+    public void deletionsAtBeginning() throws Exception {
         changes = getChanges(
                 "Lorem ipsum",
                 " ipsum"
@@ -60,7 +60,7 @@ public final class TestLatexDiffDeletions extends TestLatexDiff {
     }
 
     @Test
-    public void deletionsInMiddle() throws IOException {
+    public void deletionsInMiddle() throws Exception {
         changes = getChanges(
                 "Lorem ipsum dolor",
                 "Lorem  dolor"
@@ -118,7 +118,7 @@ public final class TestLatexDiffDeletions extends TestLatexDiff {
     }
 
     @Test
-    public void deletionsAtEnd() throws IOException {
+    public void deletionsAtEnd() throws Exception {
         changes = getChanges(
                 "Lorem ipsum",
                 "Lorem"
@@ -182,7 +182,7 @@ public final class TestLatexDiffDeletions extends TestLatexDiff {
     }
 
     @Test
-    public void examples() throws IOException {
+    public void examples() throws Exception {
         changes = getChanges(
                 " hello\\cite{ABC} world!",
                 "hello  world!");

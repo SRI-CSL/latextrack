@@ -51,7 +51,7 @@ public class TestCommit extends Commit {
     }
 
     @Override
-    public InputStream getContentStream() throws IOException {
+    public InputStream getContentStream() {
         assert(false); // not implemented for test class
         return null;
     }

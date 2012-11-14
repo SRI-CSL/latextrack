@@ -52,7 +52,7 @@ public final class LatexDiff {
      * @return List of Lexemes obtained from analysis (never null) and preamble index.
      * @throws IOException if the scanner encounters an IOException
      */
-    public List<Lexeme> analyze(ReaderWrapper wrapper) throws IOException {
+    public List<Lexeme> analyze(ReaderWrapper wrapper) throws Exception {
         List<Lexeme> list = new ArrayList<Lexeme>(Arrays.asList(new Lexeme[]{
                 new Lexeme(LexemeType.START_OF_FILE, "", 0, false, false)}));
         Lexer scanner = new Lexer(wrapper.createReader());
@@ -177,7 +177,7 @@ public final class LatexDiff {
     }
 
     private List<Lexeme> removeParagraphs(List<Lexeme> lexemes) {
-        List<Lexeme> newList = new ArrayList();
+        List<Lexeme> newList = Lists.newArrayList();
         for (Lexeme lexeme : lexemes) {
             if (lexeme.type != LexemeType.PARAGRAPH) {
                 newList.add(lexeme);
@@ -417,7 +417,7 @@ public final class LatexDiff {
      * @throws IOException if the text cannot be extracted from the wrapped reader
      */
     public synchronized List<Change> getChanges(ReaderWrapper readerWrapper1, ReaderWrapper readerWrapper2)
-            throws IOException {
+            throws Exception {
 
         // Run lexical analyzer over both files to get lexeme and locations
         Change.resetSequenceNumbering();
@@ -494,7 +494,7 @@ public final class LatexDiff {
         } catch (FileNotFoundException e) {
             e.printStackTrace();
             System.exit(ReturnCodes.FILE_NOT_FOUND.ordinal());
-        } catch (IOException e) {
+        } catch (Exception e) {
             e.printStackTrace();
             System.exit(ReturnCodes.SCANNING_ERROR.ordinal());
         }

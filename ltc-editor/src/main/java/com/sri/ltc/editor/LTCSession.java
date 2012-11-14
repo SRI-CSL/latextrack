@@ -174,6 +174,7 @@ public class LTCSession {
                         LOGGER.log(Level.SEVERE, e.getMessage(), e);
                     } catch (ExecutionException e) {
                         LOGGER.log(Level.SEVERE, e.getMessage(), e);
+                        e.printStackTrace();
                     }
             }
         }).execute();

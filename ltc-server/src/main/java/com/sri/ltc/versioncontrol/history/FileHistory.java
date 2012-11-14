@@ -96,7 +96,7 @@ public abstract class FileHistory {
                 return o1.getDate().compareTo(o2.getDate());
             }
         });
-        LOGGER.info("Obtained path from commit graph for \""+ trackedFile.getFile().getName()+"\" with "+commitList.size()+" commits.");
+        LOGGER.fine("Obtained path from commit graph for \""+ trackedFile.getFile().getName()+"\" with "+commitList.size()+" commits.");
 
         // do any specific list transformations before reversing
         transformList();

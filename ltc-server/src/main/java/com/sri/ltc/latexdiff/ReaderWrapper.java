@@ -15,7 +15,7 @@ import java.io.Reader;
  */
 public interface ReaderWrapper {
 
-    public Reader createReader();
+    public Reader createReader() throws Exception;
 
     public Lexeme removeAdditions(Lexeme lexeme);
 }

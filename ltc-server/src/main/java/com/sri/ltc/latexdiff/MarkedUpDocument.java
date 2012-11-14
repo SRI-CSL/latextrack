@@ -177,13 +177,8 @@ public final class MarkedUpDocument extends DefaultStyledDocument {
         return getCaretPosition();
     }
 
-    public Reader getReader() {
-        try {
-            return new StringReader(getText(0, getLength()));
-        } catch (BadLocationException e) {
-            e.printStackTrace();
-        }
-        return null;
+    public Reader getReader() throws BadLocationException {
+        return new StringReader(getText(0, getLength()));
     }
 
     public List<Integer[]> getStyles() {

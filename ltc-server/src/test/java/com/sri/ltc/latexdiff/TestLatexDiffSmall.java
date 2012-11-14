@@ -22,7 +22,7 @@ import static org.junit.Assert.assertTrue;
 public final class TestLatexDiffSmall extends TestLatexDiff {
 
     @Test
-    public void smallAdditions() throws IOException {
+    public void smallAdditions() throws Exception {
         changes = getChanges(
                 "Lorem ipsum dolr sit amet. ",
                 "Lorem ipsum dolor sit amet.");
@@ -89,7 +89,7 @@ public final class TestLatexDiffSmall extends TestLatexDiff {
     }
 
     @Test
-    public void smallDeletions() throws IOException {
+    public void smallDeletions() throws Exception {
         changes = getChanges(
                 "Lorem ipsum doloer sit amet. ",
                 "Lorem ipsum dolor sit amet.");
@@ -138,7 +138,7 @@ public final class TestLatexDiffSmall extends TestLatexDiff {
     }
 
     @Test
-    public void smallReplacements() throws IOException {
+    public void smallReplacements() throws Exception {
         changes = getChanges(
                 "Lorem ipsum dloer sit amet. ",
                 "Lorem ipsum dolor sit amet.");

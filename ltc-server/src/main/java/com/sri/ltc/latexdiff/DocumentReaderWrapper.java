@@ -26,7 +26,7 @@ public final class DocumentReaderWrapper extends AbstractReaderWrapper<MarkedUpD
     }
 
     @Override
-    public Reader createReader() {
+    public Reader createReader() throws BadLocationException {
         return getWrapped().getReader();
     }
 
