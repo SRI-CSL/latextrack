@@ -8,7 +8,7 @@ import java.io.FilenameFilter;
 
 public class RepositoryFactory {
 
-    private final static FilenameFilter gitFilter = new FilenameFilter() {
+    public final static FilenameFilter GIT_FILTER = new FilenameFilter() {
         @Override
         public boolean accept(File file, String s) {
             return ".git".equals(s);
@@ -25,7 +25,7 @@ public class RepositoryFactory {
         // walk up the parent dirs and look for .git directory
         testPath = path.getParentFile();
         while (testPath != null && testPath.isDirectory()) {
-            if (testPath.listFiles(gitFilter).length == 1)
+            if (testPath.listFiles(GIT_FILTER).length == 1)
                 return new GitRepository(path);
             else
                 testPath = testPath.getParentFile();

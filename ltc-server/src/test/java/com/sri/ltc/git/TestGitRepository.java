@@ -1,11 +1,16 @@
 package com.sri.ltc.git;
 
 import com.sri.ltc.versioncontrol.Commit;
+import com.sri.ltc.versioncontrol.RepositoryFactory;
 import com.sri.ltc.versioncontrol.TrackedFile;
+import com.sri.ltc.versioncontrol.VersionControlException;
 import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.Test;
 
 import java.io.BufferedReader;
+import java.io.File;
+import java.io.IOException;
 import java.util.List;
 
 import static org.junit.Assert.*;
@@ -13,6 +18,9 @@ import static org.junit.Assert.*;
 public class TestGitRepository {
     @ClassRule
     public static TemporaryGitRepository temporaryGitRepository = new TemporaryGitRepository();
+
+    @Rule
+    public TemporaryGitRepository toBeRemoved = new TemporaryGitRepository();
 
     @Test
     public void testUntracked() {
@@ -123,4 +131,56 @@ public class TestGitRepository {
         }
     }
 
+    @Test(expected = NullPointerException.class)
+    public void badThingsWithRepo() throws VersionControlException, IOException {
+        // do bad things to repo such as removing .git or the whole tree...
+
+        assertTrue(toBeRemoved.getRoot().exists());
+        TrackedFile trackedFile = null;
+        List<Commit> commits = null;
+
+        try {
+            // commit a few revisions
+            trackedFile = toBeRemoved.createTestFileInRepository("foo", ".txt", "first version of file", true);
+            assertEquals("tracked file is added", TrackedFile.Status.Added, trackedFile.getStatus());
+            trackedFile.commit("commit A from badThingsWithRepo");
+            toBeRemoved.modifyTestFileInRepository(trackedFile, "\n more text into file", true);
+            assertEquals("tracked file is modified", TrackedFile.Status.Modified, trackedFile.getStatus());
+            trackedFile.commit("commit B from badThingsWithRepo");
+
+            // getting commits works
+            commits = trackedFile.getCommits();
+            assertEquals("2 commits", 2, commits.size());
+
+            // checking out file structure
+            assertTrue("root is directory", toBeRemoved.getRoot().isDirectory());
+            File[] gitDir = toBeRemoved.getRoot().listFiles(RepositoryFactory.GIT_FILTER);
+            assertTrue(".git exists", gitDir != null);
+            assertEquals("only 1 .git exists", 1, gitDir.length);
+
+            // now doing bad things...
+            assertTrue(".git is directory", gitDir[0].isDirectory());
+            deleteFolder(gitDir[0]);
+            assertTrue("second deletion doesn't work", !gitDir[0].delete());
+        } catch (Exception e) {
+            fail(e.getMessage());
+        }
+
+        assert trackedFile != null;
+        commits = trackedFile.getCommits();
+    }
+
+    private static void deleteFolder(File folder) {
+        if (!folder.isDirectory())
+            return;
+        File[] files = folder.listFiles();
+        if (files!=null)  //some JVMs return null for empty dirs
+            for (File f: files) {
+                if (f.isDirectory())
+                    deleteFolder(f);
+                else
+                    f.delete();
+            }
+        folder.delete();
+    }
 }
