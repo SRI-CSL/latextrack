@@ -11,7 +11,14 @@ public class RepositoryFactory {
     public final static FilenameFilter GIT_FILTER = new FilenameFilter() {
         @Override
         public boolean accept(File file, String s) {
-            return ".git".equals(s);
+            return file.isDirectory() && ".git".equals(s);
+        }
+    };
+
+    public final static FilenameFilter SVN_FILTER = new FilenameFilter() {
+        @Override
+        public boolean accept(File file, String s) {
+            return file.isDirectory() && ".svn".equals(s);
         }
     };
 

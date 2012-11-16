@@ -39,7 +39,7 @@ import static org.junit.Assert.fail;
  * Test cases for API calls in LTC.
  * @author linda
  */
-public class TestLTC_API {
+public final class TestLTC_API {
 
     @ClassRule
     public static TemporaryGitRepository temporaryGitRepository = new TemporaryGitRepository();

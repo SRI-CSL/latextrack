@@ -1,5 +1,6 @@
 package com.sri.ltc.git;
 
+import com.sri.ltc.Utils;
 import com.sri.ltc.versioncontrol.Commit;
 import com.sri.ltc.versioncontrol.RepositoryFactory;
 import com.sri.ltc.versioncontrol.TrackedFile;
@@ -160,7 +161,7 @@ public class TestGitRepository {
 
             // now doing bad things...
             assertTrue(".git is directory", gitDir[0].isDirectory());
-            deleteFolder(gitDir[0]);
+            Utils.deleteFolder(gitDir[0]);
             assertTrue("second deletion doesn't work", !gitDir[0].delete());
         } catch (Exception e) {
             fail(e.getMessage());
@@ -168,19 +169,5 @@ public class TestGitRepository {
 
         assert trackedFile != null;
         commits = trackedFile.getCommits();
-    }
-
-    private static void deleteFolder(File folder) {
-        if (!folder.isDirectory())
-            return;
-        File[] files = folder.listFiles();
-        if (files!=null)  //some JVMs return null for empty dirs
-            for (File f: files) {
-                if (f.isDirectory())
-                    deleteFolder(f);
-                else
-                    f.delete();
-            }
-        folder.delete();
     }
 }

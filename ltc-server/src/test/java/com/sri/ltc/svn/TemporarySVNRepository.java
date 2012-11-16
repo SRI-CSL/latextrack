@@ -18,8 +18,9 @@ import org.tmatesoft.svn.core.SVNURL;
 import org.tmatesoft.svn.core.wc.*;
 
 import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
+
+import static org.junit.Assert.assertTrue;
 
 /**
  * @author linda
@@ -35,7 +36,7 @@ public class TemporarySVNRepository extends TemporaryFolder{
     @Override
     protected void before() throws Throwable {
         super.before();
-        assert this.getRoot().exists();
+        assertTrue("root folder exists", this.getRoot().exists());
 
         // check out SVN test repo
         File svnRoot = new File(this.getRoot().toString() + "/" + TEST_REPO);
@@ -53,6 +54,9 @@ public class TemporarySVNRepository extends TemporaryFolder{
         repository = new SVNRepository(svnRoot);
 
         // TODO: check that .svn exists?
+        File svn = new File(getRoot() + "/" + TEST_REPO + "/.svn");
+        assertTrue(".svn directory exists", svn.exists());
+        assertTrue(".svn is directory", svn.isDirectory());
 
         repository.setSelf(new Author("adams", null, null));
     }
@@ -62,5 +66,9 @@ public class TemporarySVNRepository extends TemporaryFolder{
             throw new RuntimeException("Repository is not initialized");
 
         return repository.getFile(new File(getRoot() + "/" + TEST_REPO + "/" + FILE_NAME));
+    }
+
+    public Repository getRepository() {
+        return repository;
     }
 }
