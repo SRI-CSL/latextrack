@@ -9,15 +9,16 @@
 package com.sri.ltc.latexdiff;
 
 import com.google.common.collect.Lists;
+import org.junit.Ignore;
 import org.junit.Test;
 
-import java.io.IOException;
 import java.util.EnumSet;
 
 /**
  * Testing changes with mixed type lexemes.
  * @author linda
  */
+@Ignore
 public final class TestLatexDiffMixed extends TestLatexDiff {
 
     @Test

@@ -8,12 +8,15 @@
  */
 package com.sri.ltc;
 
+import com.sri.ltc.categories.IntegrationTests;
 import com.sri.ltc.server.LTC;
 import org.junit.*;
+import org.junit.experimental.categories.Category;
 
 /**
  * @author linda
  */
+@Category(IntegrationTests.class)
 public final class TestLTCserver {
 
     private static LTC ltc;

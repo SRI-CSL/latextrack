@@ -9,6 +9,7 @@
 package com.sri.ltc.latexdiff;
 
 import com.sri.ltc.server.LTCserverInterface;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import javax.swing.text.BadLocationException;
@@ -24,6 +25,7 @@ import static org.junit.Assert.assertTrue;
 /**
  * @author linda
  */
+@Ignore
 public final class TestAccumulate {
 
     private final static char[] HTML_STYLES = {'u', 's'};

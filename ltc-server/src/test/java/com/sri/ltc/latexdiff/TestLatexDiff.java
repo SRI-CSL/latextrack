@@ -9,9 +9,9 @@
 package com.sri.ltc.latexdiff;
 
 import com.google.common.collect.Lists;
+import org.junit.Ignore;
 import org.junit.Test;
 
-import java.io.IOException;
 import java.util.EnumSet;
 import java.util.List;
 
@@ -22,6 +22,7 @@ import static org.junit.Assert.assertTrue;
 /**
  * @author linda
  */
+@Ignore
 public class TestLatexDiff {
 
     private static final LatexDiff latexDiff = new LatexDiff();

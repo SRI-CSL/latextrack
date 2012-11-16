@@ -9,10 +9,12 @@
 package com.sri.ltc.svn;
 
 import com.sri.ltc.Utils;
+import com.sri.ltc.categories.IntegrationTests;
 import com.sri.ltc.versioncontrol.*;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -27,6 +29,7 @@ import static org.junit.Assert.fail;
 /**
  * @author linda
  */
+@Category(IntegrationTests.class)
 public class TestSVNRepository {
     @ClassRule
     public static TemporarySVNRepository temporarySVNRepository = new TemporarySVNRepository();

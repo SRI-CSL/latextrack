@@ -9,14 +9,15 @@
 package com.sri.ltc.latexdiff;
 
 import com.google.common.collect.Lists;
+import org.junit.Ignore;
 import org.junit.Test;
 
-import java.io.IOException;
 import java.util.EnumSet;
 
 /**
  * @author linda
  */
+@Ignore
 public final class TestLatexDiffDeletions extends TestLatexDiff {
 
     @Test

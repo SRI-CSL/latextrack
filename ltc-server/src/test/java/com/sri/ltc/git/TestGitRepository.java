@@ -1,6 +1,7 @@
 package com.sri.ltc.git;
 
 import com.sri.ltc.Utils;
+import com.sri.ltc.categories.IntegrationTests;
 import com.sri.ltc.versioncontrol.Commit;
 import com.sri.ltc.versioncontrol.RepositoryFactory;
 import com.sri.ltc.versioncontrol.TrackedFile;
@@ -8,6 +9,7 @@ import com.sri.ltc.versioncontrol.VersionControlException;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -16,6 +18,7 @@ import java.util.List;
 
 import static org.junit.Assert.*;
 
+@Category(IntegrationTests.class)
 public class TestGitRepository {
     @ClassRule
     public static TemporaryGitRepository temporaryGitRepository = new TemporaryGitRepository();

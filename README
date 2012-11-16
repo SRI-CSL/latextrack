@@ -31,20 +31,17 @@ To create the distributable:
 
 $> mvn clean package
 
+To perform tests labeled as
+@Category(IntegrationTests.class)
+either run goal "integration-test" or "verify" (which will call "integration-test")
+
 To create the site (include "verify" for link to download the JAR etc.):
 
 $> mvn verify site
 
-If manual has new, externalized TikZ pictures, manually convert .pdf into .png (using Preview) under
-  all/src/site/tex/manual/figures/manual-figure*.pdf
-
 Before deploying, need to log into CSL Unix cluster to manually delete the directory ~linda/public_html/LTC/all!
 
-$> mvn clean package site site:deploy
-
-To skip tests (when running repeatedly):
-
-$> mvn verify site -Dmaven.test.skip=true
+$> mvn clean package verify site site:deploy
 
 To view the contents of a JAR file without expanding it, use Firefox:
   jar:file:///Users/linda/tmp/LTCjava/LTC-<version>-SNAPSHOT.jar!/
@@ -126,7 +123,17 @@ c) Utilities
 Testing
 -------
 
-$> mvn test
+For unit tests:
+
+  $> mvn clean test
+
+For integration tests (labeled with IntegrationTests category):
+
+  $> mvn integration-test
+
+To skip all tests:
+
+  $> mvn verify -Dmaven.test.skip=true
 
 
 Git Repositories etc.
