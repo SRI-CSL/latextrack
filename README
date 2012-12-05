@@ -9,14 +9,6 @@ Requirements
 - Maven 3
 - LaTeX (for building manual)
 
-(We no longer need JGraphT 0.8.3 in the local Maven repository; to remove before building for the first time simply
- remove the directory from your local repository:
-   $> rm -rf ~/.m2/repository/org/jgrapht
- and during the next compile cycle, you should see Maven downloading the library from conjars.org:
-   Downloading: http://conjars.org/repo/jgrapht/jgrapht/0.8.3/jgrapht-0.8.3.pom
-   ...
-)
-
 
 Developing
 ----------
@@ -220,6 +212,17 @@ $> pdflatex report2012
 $> bibtex report2012
 $> pdflatex report2012
 $> pdflatex report2012
+
+
+License and Copyright information
+---------------------------------
+
+We use the Maven plugin to update the project license files using:
+  $> mvn license:update-project-license
+
+In order to manage the copyright statements at the beginning of all source files, we use the capabilities of the IDE.
+For IntelliJ IDEA 11.x, use
+
 
 
 Programming Emacs mode

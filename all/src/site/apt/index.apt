@@ -8,8 +8,8 @@ LaTeX Track Changes
 
 
    LaTeX Track Changes (LTC) is a system that allows collaborators on a LaTeX writing project to view and query changes
-   in the .tex documents.  To provide a history for LTC, we assume that the writing project is stored in a git version
-   control system.  Other version control systems could be supported in the future.
+   in the .tex documents.  To provide a history for LTC, we assume that the writing project is stored in a git or svn
+   version control system.  Other version control systems could be supported in the future.
 
    In contrast to Microsoft Word, for example, we do not ask the authors to turn the system on or off
    to track changes.  Also, changes do not need to be accepted or rejected.  Instead, whatever the history of the

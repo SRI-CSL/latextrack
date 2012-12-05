@@ -29,6 +29,7 @@
                 <item name="Manual (browse tree)" href="html_multipage/manual/manual.html" collapse="false"/>
             </item>
             <item name="FAQ" href="faq.html" />
+            <item name="License" href="license.html" />
         </menu>
         <menu ref="reports"/>
 
