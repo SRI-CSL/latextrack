@@ -125,10 +125,8 @@
                 <artifactId>license-maven-plugin</artifactId>
                 <version>1.3</version>
                 <configuration>
-                    <verbose>true</verbose>
                     <licenseName>gpl_v3</licenseName>
                     <licenseFile>LICENSE</licenseFile>
-                    <dryRun>true</dryRun>
                 </configuration>
                 <executions>
                     <execution>
