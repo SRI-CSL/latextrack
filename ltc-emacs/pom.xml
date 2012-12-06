@@ -38,6 +38,29 @@
                     </execution>
                 </executions>
             </plugin>
+            <!-- check headers for copyright -->
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>license-maven-plugin</artifactId>
+                <version>1.3</version>
+                <configuration>
+                    <licenseName>gpl_v3</licenseName>
+                    <licenseFile>LICENSE</licenseFile>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>check-copyright</id>
+                        <phase>process-sources</phase>
+                        <goals>
+                            <goal>update-file-header</goal>
+                        </goals>
+                        <configuration>
+                            <descriptionTemplate>${project.basedir}/../description.ftl</descriptionTemplate>
+                            <addJavaLicenseAfterPackage>false</addJavaLicenseAfterPackage>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
         </plugins>
     </build>
 
