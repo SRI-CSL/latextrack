@@ -54,6 +54,7 @@
                 <configuration>
                     <licenseName>gpl_v3</licenseName>
                     <licenseFile>LICENSE</licenseFile>
+                    <addJavaLicenseAfterPackage>false</addJavaLicenseAfterPackage>
                 </configuration>
                 <executions>
                     <execution>

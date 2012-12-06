@@ -127,6 +127,7 @@
                 <configuration>
                     <licenseName>gpl_v3</licenseName>
                     <licenseFile>LICENSE</licenseFile>
+                    <addJavaLicenseAfterPackage>false</addJavaLicenseAfterPackage>
                 </configuration>
                 <executions>
                     <execution>
@@ -137,7 +138,6 @@
                         </goals>
                         <configuration>
                             <descriptionTemplate>${project.basedir}/../description.ftl</descriptionTemplate>
-                            <addJavaLicenseAfterPackage>false</addJavaLicenseAfterPackage>
                             <extraExtensions>
                                 <jflex>java</jflex>
                             </extraExtensions>
