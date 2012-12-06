@@ -1,11 +1,3 @@
-/**
- ************************ 80 columns *******************************************
- * Remote
- *
- * Created on Oct 25, 2010.
- *
- * Copyright 2009-2010, SRI International.
- */
 package com.sri.ltc.versioncontrol;
 
 import java.text.ParseException;

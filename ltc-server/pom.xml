@@ -128,16 +128,21 @@
                     <verbose>true</verbose>
                     <licenseName>gpl_v3</licenseName>
                     <licenseFile>LICENSE</licenseFile>
+                    <dryRun>true</dryRun>
                 </configuration>
                 <executions>
                     <execution>
                         <id>check-copyright</id>
                         <phase>process-sources</phase>
                         <goals>
-                            <goal>check-file-header</goal>
+                            <goal>update-file-header</goal>
                         </goals>
                         <configuration>
                             <descriptionTemplate>${project.basedir}/../description.ftl</descriptionTemplate>
+                            <addJavaLicenseAfterPackage>false</addJavaLicenseAfterPackage>
+                            <extraExtensions>
+                                <jflex>java</jflex>
+                            </extraExtensions>
                             <excludes>
                                 <exclude>**/bmsi/gnudiff/*</exclude>
                             </excludes>

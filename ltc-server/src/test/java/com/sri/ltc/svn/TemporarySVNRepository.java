@@ -1,11 +1,3 @@
-/**
- ************************ 80 columns *******************************************
- * TemporarySVNRepository
- *
- * Created on 11/14/12.
- *
- * Copyright 2009-2010, SRI International.
- */
 package com.sri.ltc.svn;
 
 import com.sri.ltc.filter.Author;

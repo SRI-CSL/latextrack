@@ -1,11 +1,3 @@
-/**
- ************************ 80 columns *******************************************
- * TestLTCserver
- *
- * Created on 11/11/11.
- *
- * Copyright 2009-2010, SRI International.
- */
 package com.sri.ltc;
 
 import com.sri.ltc.categories.IntegrationTests;

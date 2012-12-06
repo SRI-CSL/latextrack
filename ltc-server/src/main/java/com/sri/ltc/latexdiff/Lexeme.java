@@ -1,11 +1,3 @@
-/**
- ************************ 80 columns *******************************************
- * Lexeme
- *
- * Created on Dec 29, 2009.
- *
- * Copyright 2009-2010, SRI International.
- */
 package com.sri.ltc.latexdiff;
 
 /**

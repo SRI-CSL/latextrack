@@ -1,12 +1,3 @@
-/**
- ************************ 80 columns *******************************************
- * CommitGraph
- *
- * Created on Sep 15, 2010.
- *
- * Copyright 2009-2010, SRI International.
- */
-
 package com.sri.ltc.versioncontrol;
 
 import com.sri.ltc.filter.Author;
@@ -18,7 +9,6 @@ import java.util.*;
 /**
  * @author linda
  */
-
 public final class CommitGraph extends SimpleDirectedGraph<Commit, DefaultEdge> {
 
     private static final long serialVersionUID = 3699166530479808547L;

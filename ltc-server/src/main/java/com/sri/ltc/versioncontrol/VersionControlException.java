@@ -1,11 +1,3 @@
-/**
- ************************ 80 columns *******************************************
- * VersionControlException
- *
- * Created on 11/9/12.
- *
- * Copyright 2009-2010, SRI International.
- */
 package com.sri.ltc.versioncontrol;
 
 /**

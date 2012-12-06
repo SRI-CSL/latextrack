@@ -1,11 +1,3 @@
-/**
- ************************ 80 columns *******************************************
- * TestLatexDiffDeletions
- *
- * Created on 2/8/12.
- *
- * Copyright 2009-2010, SRI International.
- */
 package com.sri.ltc.latexdiff;
 
 import com.google.common.collect.Lists;

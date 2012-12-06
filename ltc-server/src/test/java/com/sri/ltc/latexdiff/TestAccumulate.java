@@ -1,11 +1,3 @@
-/**
- ************************ 80 columns *******************************************
- * TestAccumulate
- *
- * Created on 12/21/11.
- *
- * Copyright 2009-2010, SRI International.
- */
 package com.sri.ltc.latexdiff;
 
 import com.sri.ltc.server.LTCserverInterface;

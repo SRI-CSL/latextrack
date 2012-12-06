@@ -1,9 +1,5 @@
 package com.sri.ltc.versioncontrol.svn;
 
-/**
- * Copyright 2012, SRI International.
- */
-
 import com.sri.ltc.versioncontrol.Remote;
 import com.sri.ltc.versioncontrol.Remotes;
 import org.tmatesoft.svn.core.SVNException;

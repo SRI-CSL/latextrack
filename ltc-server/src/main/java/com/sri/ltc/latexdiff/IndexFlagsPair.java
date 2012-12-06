@@ -1,11 +1,3 @@
-/**
- ************************ 80 columns *******************************************
- * IndexFlagsPair
- *
- * Created on 3/13/12.
- *
- * Copyright 2009-2010, SRI International.
- */
 package com.sri.ltc.latexdiff;
 
 import com.google.common.collect.ImmutableSet;

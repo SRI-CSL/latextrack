@@ -1,11 +1,3 @@
-/**
- ************************ 80 columns *******************************************
- * Self
- *
- * Created on Aug 11, 2010.
- *
- * Copyright 2009-2010, SRI International.
- */
 package com.sri.ltc.versioncontrol;
 
 import java.util.Set;

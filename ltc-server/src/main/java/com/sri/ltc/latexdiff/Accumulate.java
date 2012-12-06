@@ -1,11 +1,3 @@
-/**
- ************************ 80 columns *******************************************
- * Accumulate
- *
- * Created on May 20, 2010.
- *
- * Copyright 2009-2010, SRI International.
- */
 package com.sri.ltc.latexdiff;
 
 import com.sri.ltc.server.LTCserverInterface;

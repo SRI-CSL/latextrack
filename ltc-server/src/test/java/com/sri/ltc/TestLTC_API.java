@@ -1,11 +1,3 @@
-/**
- ************************ 80 columns *******************************************
- * TestLTC_API
- *
- * Created on 11/1/12.
- *
- * Copyright 2009-2010, SRI International.
- */
 package com.sri.ltc;
 
 import com.google.common.collect.Sets;
@@ -33,7 +25,6 @@ import java.util.zip.ZipFile;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
-
 
 /**
  * Test cases for API calls in LTC.

@@ -1,11 +1,3 @@
-/**
- ************************ 80 columns *******************************************
- * RpcClient
- *
- * Created on May 17, 2010.
- *
- * Copyright 2009-2010, SRI International.
- */
 package com.sri.ltc;
 
 import com.sri.ltc.filter.Author;

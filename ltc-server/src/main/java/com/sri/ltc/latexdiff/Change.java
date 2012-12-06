@@ -1,11 +1,3 @@
-/**
- ************************ 80 columns *******************************************
- * Change
- *
- * Created on Jan 6, 2010.
- *
- * Copyright 2009-2010, SRI International.
- */
 package com.sri.ltc.latexdiff;
 
 import com.google.common.collect.*;

@@ -1,11 +1,3 @@
-/**
- ************************ 80 columns *******************************************
- * LTC
- *
- * Created on May 17, 2010.
- *
- * Copyright 2009-2010, SRI International.
- */
 package com.sri.ltc.server;
 
 import com.sri.ltc.logging.LevelOptionHandler;

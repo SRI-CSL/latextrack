@@ -1,11 +1,3 @@
-/**
- ************************ 80 columns *******************************************
- * DocumentReaderWrapper
- *
- * Created on 4/20/12.
- *
- * Copyright 2009-2010, SRI International.
- */
 package com.sri.ltc.latexdiff;
 
 import javax.swing.text.BadLocationException;

@@ -1,7 +1,3 @@
-/**
- * Copyright 2012, SRI International.
- */
-
 package com.sri.ltc.versioncontrol.git;
 
 import com.sri.ltc.versioncontrol.Remote;
