@@ -31,9 +31,9 @@ To perform tests labeled as
 @Category(IntegrationTests.class)
 either run goal "integration-test" or "verify" (which will call "integration-test")
 
-To create the site (include "verify" for link to download the JAR etc.):
+To create the site:
 
-$> mvn verify site
+$> mvn site
 
 
 Deploying the site
@@ -57,7 +57,7 @@ For path information and login help, type "sf-help".
 
 When this has finished and you see the prompt, you are ready to regenerate the information and upload it:
 
-$> mvn clean verify site site:deploy
+$> mvn clean site site:deploy
 
 When this has finished, go back to your shell and shut it down.  You may look at the uploaded files if you wish:
 
@@ -243,27 +243,13 @@ or
  $> mvn versions:revert                          => to use backup info and roll back
 
 
-Building Tech Report 2012
--------------------------
-
-$> mvn verify site   => generate examples for appendices
-$> cd all/src/tex/techreport2012
-$> pdflatex report2012
-$> pdflatex report2012
-$> bibtex report2012
-$> pdflatex report2012
-$> pdflatex report2012
-
-
 License and Copyright information
 ---------------------------------
 
 We use the Maven plugin to update the project license files using:
   $> mvn license:update-project-license
 
-In order to manage the copyright statements at the beginning of all source files, we use the capabilities of the IDE.
-For IntelliJ IDEA 11.x, use
-
+The default Maven lifecycle will manage the copyright statements at the beginning of all source files.
 
 
 Programming Emacs mode
@@ -367,7 +353,7 @@ Creating SVN repository for tutorial
   $> gzip -v tutorialsvn
   tutorialsvn:	 77.7% -- replaced with tutorialsvn.gz
 
-2. Replace repository at sf.net
+2. Replace repository at sf.net (does not work as the non-Classic projects at sf.net don't support this)
 
 [Shell only works in "classic" mode, so setting up a publicly available SVN server]
 
