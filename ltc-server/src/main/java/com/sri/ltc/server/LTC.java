@@ -21,6 +21,10 @@
  */
 package com.sri.ltc.server;
 
+import com.apple.eawt.AboutHandler;
+import com.apple.eawt.AppEvent;
+import com.apple.eawt.QuitHandler;
+import com.apple.eawt.QuitResponse;
 import com.sri.ltc.logging.LevelOptionHandler;
 import com.sri.ltc.logging.LogConfiguration;
 import org.kohsuke.args4j.CmdLineException;
@@ -28,7 +32,9 @@ import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
 
 import javax.servlet.ServletException;
+import javax.swing.*;
 import java.io.*;
+import java.net.URL;
 import java.util.logging.Level;
 import java.util.logging.LogManager;
 import java.util.logging.Logger;
@@ -133,6 +139,43 @@ public final class LTC {
             logger.log(Level.SEVERE, "Cannot configure logging", e);
         }
 
+        // customize for Mac OS X (in the hope that AWT isn't loaded yet)
+        final String NAME = "LTC Server";
+        System.setProperty("apple.laf.useScreenMenuBar", "true");
+        System.setProperty("com.apple.mrj.application.apple.menu.about.name", NAME);
+        System.setProperty("apple.awt.showGrowBox", "true");
+        try {
+            UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+        } catch (Exception e) {
+            logger.log(Level.SEVERE, "setting UI look & feel", e);
+        }
+
+        String osName = System.getProperty("os.name").toLowerCase();
+        boolean IS_MAC = osName.startsWith("mac os x");
+        if (IS_MAC) {
+            URL imageURL = Console.class.getResource("/images/LTC-icon.png");
+            if (imageURL != null) {
+                ImageIcon icon = new ImageIcon(imageURL);
+                com.apple.eawt.Application application = com.apple.eawt.Application.getApplication();
+                application.setDockIconImage(icon.getImage());
+                application.setAboutHandler(new AboutHandler() {
+                    @Override
+                    public void handleAbout(AppEvent.AboutEvent aboutEvent) {
+                        // TODO: copyright?
+
+                    }
+                });
+                application.setQuitHandler(new QuitHandler() {
+                    @Override
+                    public void handleQuitRequestWith(AppEvent.QuitEvent quitEvent, QuitResponse quitResponse) {
+                        // TODO: do anything here?
+                        quitResponse.performQuit();
+                    }
+                });
+                // TODO: enable preferences and set handler?
+            }
+        }
+
         LTC.getInstance(); // start up server (if not already running)
     }
 
@@ -145,8 +188,5 @@ public final class LTC {
 
         @Option(name="-p",usage="port on localhost used for XML-RPC")
         static int port = LTCserverInterface.PORT;
-
-        @Option(name="-g",usage="path to directory with git executable",required=false,metaVar="PATH")
-        String gitDir = null;
     }
 }
