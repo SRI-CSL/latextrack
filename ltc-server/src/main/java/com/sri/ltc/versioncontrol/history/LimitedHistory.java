@@ -21,6 +21,7 @@
  */
 package com.sri.ltc.versioncontrol.history;
 
+import com.google.common.collect.Lists;
 import com.sri.ltc.filter.Author;
 import com.sri.ltc.latexdiff.CommitReaderWrapper;
 import com.sri.ltc.latexdiff.ReaderWrapper;
@@ -42,6 +43,7 @@ public final class LimitedHistory extends FileHistory {
     private final Set<Author> limitingAuthors;
     private final String limitingDate;
     private final String limitingRev;
+    private final List<Commit> commitListExpanded = Lists.newArrayList();
 
     public LimitedHistory(TrackedFile file, Set<Author> limitingAuthors, String limitingDate, String limitingRev)
             throws Exception {
@@ -54,8 +56,6 @@ public final class LimitedHistory extends FileHistory {
 
     @Override
     List<Commit> updateCommits() throws ParseException, VersionControlException, IOException {
-        // perform git log:
-        //   with limiting date, if applicable
         return trackedFile.getCommits(
                 ((limitingDate == null) || limitingDate.isEmpty()) ? null : Commit.deSerializeDate(limitingDate),
                 ((limitingRev == null) || limitingRev.isEmpty()) ? null : limitingRev);
@@ -96,23 +96,11 @@ public final class LimitedHistory extends FileHistory {
     void transformList() throws IOException {
         Author self = trackedFile.getRepository().getSelf();
 
-        // reduce commit graph to authors
+        // reduce commit path to authors (if any specified)
         if (limitingAuthors != null && !limitingAuthors.isEmpty())
             for (ListIterator<Commit> i = commitList.listIterator(); i.hasNext(); )
                 if (!limitingAuthors.contains(i.next().getAuthor()))
                     i.remove();
-
-        // collapse sequences of same author
-        if (commitList.size() > 0) {
-            Author currentAuthor = commitList.get(0).getAuthor();
-            for (ListIterator<Commit> i = commitList.listIterator(1); i.hasNext(); ) {
-                Author a = i.next().getAuthor();
-                if (a.equals(currentAuthor))
-                    i.remove();
-                else
-                    currentAuthor = a;
-            }
-        }
 
         // if no limiting date nor rev then reduce list until last commit of calling author (by name only)
         if ((limitingDate == null || "".equals(limitingDate)) &&
@@ -124,6 +112,19 @@ public final class LimitedHistory extends FileHistory {
             for (; i < commitList.size() && !self.name.equals(commitList.get(i).getAuthor().name); i++);
             if (i < commitList.size())
                 commitList.subList(i+1, commitList.size()).clear(); // remove all remaining commits
+        }
+
+        // collapse sequences of same author, but remember the collapsed as path
+        commitListExpanded.addAll(commitList);
+        if (commitList.size() > 0) {
+            Author currentAuthor = commitList.get(0).getAuthor();
+            for (ListIterator<Commit> i = commitList.listIterator(1); i.hasNext(); ) {
+                Author a = i.next().getAuthor();
+                if (a.equals(currentAuthor))
+                    i.remove();
+                else
+                    currentAuthor = a;
+            }
         }
 
         LOGGER.fine("Transformed list for \""+ trackedFile.getFile().getName()+"\" to "+commitList.size()+" commits");
@@ -147,5 +148,18 @@ public final class LimitedHistory extends FileHistory {
             readers.add(new CommitReaderWrapper(commit));
         }
         return readers;
+    }
+
+    /**
+     * Get the IDs (SHA1s) from the expanded list of commits before
+     * consecutive authors were collapsed.
+     *
+     * @return List of Strings containing all IDs on the commit path used
+     */
+    public final List<String> getIDsFromExpanded() {
+        List<String> IDs = new ArrayList<String>();
+        for (Commit commit : commitListExpanded)
+            IDs.add(commit.getId());
+        return IDs;
     }
 }

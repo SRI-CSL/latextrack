@@ -266,8 +266,8 @@ public final class LTCserverImpl implements LTCserverInterface {
                     session.getLimitDate(),
                     session.getLimitRev());
             updateProgress(12);
-            for (Commit commit : history.getCommitsList())
-                sha1.add(commit.getId());
+            // TODO: temporarily fixing Peter's complaint that we should color everything in between:
+            sha1 = history.getIDsFromExpanded();
             authors = history.getAuthorsList();
             updateProgress(15);
             readers = history.getReadersList();
@@ -280,11 +280,10 @@ public final class LTCserverImpl implements LTCserverInterface {
                 case Modified:
                 case Changed:
                     ReaderWrapper fileReader = new FileReaderWrapper(session.getTrackedFile().getFile().getCanonicalPath());
-                    if (authors.size() > 0 && authors.get(authors.size()-1).equals(self)) {
-                        // replace last reader and SHA1
+                    if (authors.size() > 0 && authors.get(authors.size()-1).equals(self))
+                        // replace last reader
                         readers.remove(readers.size()-1);
-                        sha1.remove(sha1.size()-1);
-                    } else
+                    else
                         // add self as author
                         authors.add(self);
                     readers.add(fileReader);
@@ -293,14 +292,16 @@ public final class LTCserverImpl implements LTCserverInterface {
             // add current text from editor, if modified since last save:
             if (isModified) {
                 ReaderWrapper currentTextReader = new StringReaderWrapper(currentText);
-                if (authors.size() > 0 && authors.get(authors.size()-1).equals(self)) {
-                    // replace last reader and SHA1
+                if (authors.size() > 0 && authors.get(authors.size()-1).equals(self))
+                    // replace last reader
                     readers.remove(readers.size()-1);
-                    sha1.remove(sha1.size()-1);
-                } else
+                else
                     // add self as author
                     authors.add(self);
                 readers.add(currentTextReader);
+                // replace ON_DISK if present, otherwise append MODIFIED
+                if (sha1.size() > 0 && LTCserverInterface.ON_DISK.equals(sha1.get(sha1.size()-1)))
+                    sha1.remove(sha1.size()-1);
                 sha1.add(LTCserverInterface.MODIFIED);
             }
             // if no readers, then use text from file and self as author

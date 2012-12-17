@@ -21,6 +21,7 @@
  */
 package com.sri.ltc.versioncontrol.history;
 
+import com.google.common.collect.Lists;
 import com.sri.ltc.filter.Author;
 import com.sri.ltc.versioncontrol.CommitGraph;
 import com.sri.ltc.versioncontrol.Commit;
@@ -115,12 +116,6 @@ public abstract class FileHistory {
 
         Collections.reverse(commitList); // start with oldest commit first
         return list;
-    }
-
-    public List<Commit> getLog() throws Exception {
-        List<Commit> commits = trackedFile.getCommits();
-        LOGGER.info("Obtained full history for \""+ trackedFile.getFile().getName()+"\" with "+commits.size()+" commits.");
-        return commits;
     }
 
     public Set<Author> getAuthors() {

@@ -41,7 +41,6 @@ public final class CompleteHistory extends FileHistory {
 
     @Override
     List<Commit> updateCommits() throws VersionControlException, IOException {
-        // perform git log with static options
         return trackedFile.getCommits();
     }
 

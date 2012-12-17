@@ -128,8 +128,8 @@ public interface LTCserverInterface {
      * color name.  The value under {@link #KEY_CARET} contains the transformed cursor
      * position into the new text of the one given as an argument to the method.
      * Another entry under {@link #KEY_SHA1} in the returned map is a list of SHA1 keys
-     * that have been used to obtain the changes.  These could be matched to the list
-     * of all commits from {@link #get_commits(int)}.
+     * that have been used to obtain the changes including those that are in between.
+     * These could be matched to the list of all commits from {@link #get_commits(int)}.
      *
      * @param sessionID identifies the session
      * @param isModified whether the text has been modified since the last save operation
