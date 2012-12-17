@@ -34,6 +34,8 @@ import java.awt.event.MouseEvent;
 import java.io.Console;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.prefs.Preferences;
 
 /**
@@ -42,6 +44,7 @@ import java.util.prefs.Preferences;
 @SuppressWarnings("serial")
 public final class LatexPane extends JTextPane {
 
+    private static final Logger LOGGER = Logger.getLogger(LatexPane.class.getName());
     private static String KEY_SHOW_PARAGRAPHS = "showParagraphs";
     protected final static String STYLE_PREFIX = "style no. ";
     private final LatexDocumentFilter documentFilter = new LatexDocumentFilter(this);
@@ -218,11 +221,15 @@ public final class LatexPane extends JTextPane {
                 }
             }
             // set proper caret position and scroll to it
+            if (caretPosition < 0)
+                caretPosition = 0;
+            if (caretPosition > getDocument().getLength())
+                caretPosition = getDocument().getLength();
             setCaretPosition(caretPosition);
             scrollRectToVisible(modelToView(getCaret().getDot()));
             requestFocusInWindow();
         } catch (BadLocationException e) {
-            e.printStackTrace();
+            LOGGER.log(Level.SEVERE, "while updating text", e);
         }
         startFiltering();
     }

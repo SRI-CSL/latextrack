@@ -27,7 +27,7 @@
 # variables with default values
 
 declare JAR_FILE=${ueber.jar}.jar
-declare DOWNLOAD_URL=${temp.url}/downloads
+declare DOWNLOAD_URL=${url}/downloads
 declare DOWNLOAD_DIR=""
 declare EMACS_DIR=""
 declare FETCH_TYPE=-1  # indicates nothng has been set

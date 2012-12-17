@@ -6,7 +6,7 @@
 ;;    Sam Owre <sam.owre@sri.com>
 ;; Maintainer: Linda Briesemeister <linda.briesemeister@sri.com>
 ;; Created: 20 May 2010
-;; URL: ${temp.url}
+;; URL: ${url}
 ;;
 ;; This file is not part of GNU Emacs.
 ;;
@@ -67,7 +67,7 @@
 (defgroup ltc nil
   "Latex Track Changes mode."
   :version "${project.version}"
-  :link '(url-link "${temp.url}")
+  :link '(url-link "${url}")
   :tag "LTC"
   :prefix "ltc-"
   :group 'tex)
@@ -287,7 +287,6 @@
   (if session-id
       (progn
 	(message "Stopping LTC mode for file \"%s\"..." (buffer-file-name))
-	(erase-buffer)
 	(condition-case err 
 	    (let ((map (ltc-method-call "close_session" session-id 
 					(buffer-string) 
@@ -295,12 +294,14 @@
 					(1- (point))))
 		  (old-buffer-modified-p (buffer-modified-p))) ; maintain modified flag
 	      ;; replace text in buffer with return value from closing session
+	      (erase-buffer)
 	      (insert (cdr (assoc-string "text" map)))
 	      (goto-char (1+ (cdr (assoc-string "caret" map)))) ; Emacs starts counting from 1!
 	      (set-buffer-modified-p old-buffer-modified-p))
 	  ('error 
 	   (message "Error while closing session (reverting to text from file): %s" (error-message-string err))
 	   ;; replace buffer with text from file
+	   (erase-buffer)
 	   (insert-file-contents (buffer-file-name))
 	   (set-buffer-modified-p nil)
 	   nil))
