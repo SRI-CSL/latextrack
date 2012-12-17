@@ -1,17 +1,15 @@
     ------
-    Download
+    Installation and Update
     ------
     Linda Briesemeister
     ------
     ------
 
-Download LTC
+Installing and Updating LTC
 
-  The system can be used via the included LTC Editor or with Emacs.
-
-  Use the {{{./downloads/ltc-install.sh}ltc-install.sh}} (right-click and "Save As...") bash script to automatically
-  fetch the latest JAR file to a location of your choice and optionally extract the Emacs Lisp files to your Emacs
-  directory.
+  Use the {{{http://sourceforge.net/projects/latextrack/files/ltc-install.sh/download}ltc-install.sh}} script to
+  automatically fetch the latest JAR file to a location of your choice and optionally extract the Emacs Lisp files to
+  your Emacs directory. To <<update>> from an older version, also use this script.
   You can obtain usage information by invoking the script this way:
 
 +----
@@ -52,12 +50,12 @@ To start LTC server with default options, use the following command:
   To perform the tutorial in the manual or to start playing with LTC, we provide the following repositories that contain
   examples.
 
-  * Git: Download {{{./downloads/examples/independence.bundle}independence.bundle}} and use as explained in the tutorial.
+  * Git: Download {{{http://sourceforge.net/projects/latextrack/files/examples/independence.bundle/download}independence.bundle}} and use as explained in the tutorial.
 
   * Subversion: In a directory of your choice, do
 
 +----
-svn checkout svn://svn.code.sf.net/p/latextrack/tutorial-svn/trunk independence
+svn checkout https://spartan.csl.sri.com/svn/public/LTC/tutorial-svn independence
 +----
 
   []

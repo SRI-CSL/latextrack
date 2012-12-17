@@ -23,6 +23,12 @@
 
 <project name="LaTeX Track Changes">
 
+    <bannerLeft>
+        <name>LTC</name>
+        <src>images/LTC-logo.png</src>
+        <href>index.html</href>
+    </bannerLeft>
+
     <bannerRight>
         <name>SRI</name>
         <src>images/SRI-logo.jpg</src>
@@ -45,14 +51,23 @@
     <body>
         <menu name="LTC">
             <item name="Introduction" href="index.html"/>
-            <item name="Download" href="download.html"/>
+            <item name="Installation" href="install.html"/>
             <item name="Usage" href="usage.html">
                 <item name="Manual (all in window)" href="html_singlepage/manual/manual.html" collapse="false"/>
                 <item name="Manual (browse tree)" href="html_multipage/manual/manual.html" collapse="false"/>
+                <item name="Manual as PDF" href="manual/manual.pdf" collapse="false"/>
             </item>
             <item name="FAQ" href="faq.html" />
             <item name="License" href="license.html" />
         </menu>
+
+        <menu name="Sourceforge" inherit="top">
+            <item name="Project Page"
+                  href="http://sourceforge.net/projects/latextrack" />
+            <item name="Downloads"
+                  href="http://sourceforge.net/projects/latextrack/files" />
+        </menu>
+
         <menu ref="reports"/>
 
     </body>

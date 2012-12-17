@@ -16,9 +16,9 @@ Further requirements for running LTC are as follows.
 \item[Emacs] 23 or above.  Only if the user wants to use \Code{ltc-mode} in Emacs to interact with LTC.  XEmacs is not supported.
 \end{description}
 
-\section{Installation and Upgrade}
+\section{Installation and Update}
 
-Currently, we provide a shell script \Code{ltc-install.sh} to perform LTC installation and upgrades.  It can be downloaded from the \hlink{\baseurl download.html}{../../download.html}{LTC web site.}  Use it to install the LTC JAR file in a location of your choice.  Also, if you use the Emacs \Code{ltc-mode}, be prepared to supply the location where to put the Emacs Lisp files (see more details below in Section~\ref{sec:config-emacs}).
+Currently, we provide a shell script \Code{ltc-install.sh} to perform LTC installation and updates.  It can be downloaded from \url{http://sourceforge.net/projects/latextrack/files/}.  Use it to install the LTC JAR file in a location of your choice.  Also, if you use the Emacs \Code{ltc-mode}, be prepared to supply the location where to put the Emacs Lisp files (see more details below in Section~\ref{sec:config-emacs}).
 
 In the future, we may provide installers for the target platforms.
 
@@ -36,25 +36,25 @@ To start LTC server with default options, use the following command:
 
 \end{CodeVerbatim}
 
-Now you can look at the command line options of LTC Server using the switch \Code{-h} or omit the switch to start LTC Server with default values.
+To update from an earlier LTC version, run the \Code{ltc-install.sh} script again with the same argument(s).  The script will download the latest version from the web site and configure the link in \Code{\$LTC/LTC.jar} so that future invocations  will resolve to the newest version.
+
+After installing LTC, you can look at the command line options of LTC Server using the switch \Code{-h} or omit the switch to start LTC Server with default values.
 \begin{CodeVerbatim}
 $> java -jar $LTC/LTC.jar -h
 [... prints help message about using LTC Server]
 \end{CodeVerbatim}
 
-To upgrade from an earlier LTC version, you would download a fresh install script from the \hlink{\baseurl download.html}{../../download.html}{LTC web site.} Then run it again with the same argument(s).  The script will download the latest version from the web site and configure the link in \Code{\$LTC/LTC.jar} so that future invocations  will resolve to the newest version.
-
 \section{Configuration}
 
-This section contains details of configuring git or svn, LTC and Emacs to work together.  Most of these steps only need to be carried out once per installation of LTC.
+This section contains details of configuring git or svn, LTC and Emacs to work together.  These steps typically only need to be carried out once per installation of LTC.
 
 Note that the system decides automatically whether your LaTeX file is under git or svn version control.
 
-\subsection{Git}
+\subsection{General Git Configuration}
 
 The current version of LTC supports git as an underlying version control system, which manages the history of the LaTeX files of interest. If you are already using git for other things, you may skip the following few steps as your git is probably already configured. However, we do recommend to add the common LaTeX build products with wildcards to the list of ignored files as outlined at the end of this section, which may not be configured if git has not been used to manage repositories with LaTeX files.
 
-First, test that the git installation is found. Otherwise, add the git binary directory to the \Code{PATH} environment variable.  
+First, test that the git installation is found. Otherwise, you may want to add the git binary directory to the \Code{PATH} environment variable.  
 \begin{CodeVerbatim}
 $> git --version
 git version 1.7.2
@@ -88,9 +88,11 @@ Then, issue the git config command below (with a possibly adjusted file name and
 $> git config --global core.excludesfile ~/.gitignore_global
 \end{CodeVerbatim}
 
-\subsection{Subversion}
+To learn how to set up a writing project under a git repository for using it with LTC refer to Section~\ref{sec:git-use}.
 
-First, test that the svn installation is found. Otherwise, add the svn binary directory to the \Code{PATH} environment variable.  
+\subsection{General Subversion Configuration}
+
+First, test that the svn installation is found. Otherwise, you may want to add the svn binary directory to the \Code{PATH} environment variable.  
 \begin{CodeVerbatim}
 $> svn --version
 svn, version 1.6.18 (r1303927)
@@ -102,8 +104,6 @@ svn, version 1.6.18 (r1303927)
 [TODO: write more about subversion configuration here!]
 
 %\subsection{LTC Server}
-
-%Another option is to declare a specific environment variable \Code{GIT\_BIN\_DIR} to point to the directory that contains the git binary.
 
 \subsection{Emacs \texttt{ltc-mode}} \label{sec:config-emacs}
 
@@ -142,4 +142,4 @@ If you need to change the port number that Emacs uses to communicate with the LT
 
 \section{Troubleshooting}
 
-We are keeping a list of \hlink{\baseurl faq.html}{../../faq.html}{frequently-asked-questions} at the project's web site that may help for troubleshooting.  There will also be mailing lists and a way to report bugs available in the future.
+We are keeping a list of \hlink{\baseurl /faq.html}{../../faq.html}{frequently-asked-questions} at the project's web site that may help for troubleshooting.  There will also be mailing lists and a way to report bugs available in the future.

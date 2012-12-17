@@ -12,15 +12,12 @@ In this section, we explain how to use Emacs as the editor of the .tex-file with
 
 \subsection{Starting the LTC Server}
 
-Before you can use \Code{ltc-mode} in Emacs, you must start the LTC server first.  To do so, you call Java with the JAR-file that you installed in directory \Code{\$LTC}. 
+Before you can use \Code{ltc-mode} in Emacs, you must start the LTC server first.  To do so, you call Java with the JAR-file that you installed in directory \Code{\$LTC}.  This should produce output similar to the one below. 
 
 \begin{CodeVerbatim}
 $> java -jar $LTC/LTC.jar 
-Fri Oct 26 10:23:58 EDT 2012 | CONFIG: 	Default logging configuration complete
-Fri Oct 26 10:23:58 EDT 2012 | CONFIG: 	Logging configured to level CONFIG
-Fri Oct 26 10:23:59 EDT 2012 | CONFIG: 	LTC version: 0.9.8-SNAPSHOT
---log4j: 26 Oct 2012 10:23:59,188 [main] INFO  org.apache.xmlrpc.webserver.XmlRpcServlet - init
-Fri Oct 26 10:23:59 EDT 2012 | INFO: 	Started RPC server on port 7777.
+[...]
+<current date> | INFO: 	Started RPC server on port 7777.
 \end{CodeVerbatim}
 
 If you need to customize LTC, for example to change the port number, start the base system with option \Code{-p <PORT>}:
@@ -28,7 +25,7 @@ If you need to customize LTC, for example to change the port number, start the b
 \begin{CodeVerbatim}
 $> java -jar $LTC/LTC.jar -p 5555
 [...]
-Fri Oct 26 10:26:24 EDT 2012 | INFO: 	Started RPC server on port 5555.
+<current date> | INFO: 	Started RPC server on port 5555.
 \end{CodeVerbatim}
 
 The log messages from the LTC server are also saved in file \Code{~/.LTC.log}.  This log file is created every time that the server starts, so if you need the contents, please make a copy before starting the server anew.

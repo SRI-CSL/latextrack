@@ -7,7 +7,7 @@
     <parent>
         <groupId>com.sri.ltc</groupId>
         <artifactId>LTC</artifactId>
-        <version>0.9.10-SNAPSHOT</version>
+        <version>0.9.10</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
@@ -19,11 +19,41 @@
         under a version control system (such as git or svn).
     </description>
     <packaging>jar</packaging>
+    <url>http://latextrack.sourceforge.net</url>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <ueber.jar>LTC-${project.version}</ueber.jar>
     </properties>
+
+    <distributionManagement>
+        <site>
+            <id>latextrack.sf.net</id>
+            <url>scp://lilalinda@shell.sourceforge.net/home/project-web/latextrack/htdocs</url>
+        </site>
+    </distributionManagement>
+
+    <issueManagement>
+        <system>SourceForge2</system>
+        <url>http://sourceforge.net/p/latextrack/tickets/</url>
+    </issueManagement>
+
+    <mailingLists>
+        <mailingList>
+            <name>LTC Support</name>
+            <subscribe>http://lists.sourceforge.net/lists/listinfo/latextrack-support</subscribe>
+            <unsubscribe>http://lists.sourceforge.net/lists/listinfo/latextrack-support</unsubscribe>
+            <post>latextrack-support@lists.sourceforge.net</post>
+            <archive>http://sourceforge.net/mailarchive/forum.php?forum_name=latextrack-support</archive>
+        </mailingList>
+        <mailingList>
+            <name>LTC Announcements</name>
+            <subscribe>http://lists.sourceforge.net/lists/listinfo/latextrack-announce</subscribe>
+            <unsubscribe>http://lists.sourceforge.net/lists/listinfo/latextrack-announce</unsubscribe>
+            <post>latextrack-announce@lists.sourceforge.net</post>
+            <archive>http://sourceforge.net/mailarchive/forum.php?forum_name=latextrack-announce</archive>
+        </mailingList>
+    </mailingLists>
 
     <dependencies>
         <dependency>
@@ -36,7 +66,6 @@
             <version>${project.version}</version>
             <artifactId>ltc-editor</artifactId>
         </dependency>
-        <!-- TODO: add dependency when Java sources exist in ltc-emacs -->
         <dependency>
             <groupId>${project.groupId}</groupId>
             <version>${project.version}</version>
@@ -45,7 +74,19 @@
     </dependencies>
 
     <build>
+        <extensions>
+            <extension>
+                <groupId>org.apache.maven.wagon</groupId>
+                <artifactId>wagon-ssh</artifactId>
+                <version>1.0-beta-6</version>
+            </extension>
+        </extensions>
+
         <plugins>
+            <!-- === Default Lifecycle === -->
+
+            <!-- ~~~ process-sources ~~~ -->
+
             <!-- check headers for copyright -->
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
@@ -69,6 +110,8 @@
                     </execution>
                 </executions>
             </plugin>
+
+            <!-- ~~~ package ~~~ -->
 
             <!-- assemble ueber-jar with all dependencies during package phase -->
             <plugin>
@@ -100,89 +143,39 @@
                 </configuration>
             </plugin>
 
-            <!-- handling resources for packaging and site -->
+            <!-- ~~~ deploy ~~~ -->
+
+            <!-- custom deploy: upload JAR -->
+            <!-- TODO: delete & create remote subdirectory with version number in phase "install"?;
+                 maybe sshexec plugin? (http://evgeny-goldin.com/wiki/Sshexec-maven-plugin) -->
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>wagon-maven-plugin</artifactId>
+                <version>1.0-beta-4</version>
+                <configuration>
+                    <serverId>sourceforge</serverId>
+                    <fromFile>${project.build.directory}/${ueber.jar}.jar</fromFile>
+                    <url>scp://lilalinda@shell.sourceforge.net/home/frs/project/l/la/latextrack/LTC/${project.version}</url>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>custom-deploy</id>
+                        <phase>deploy</phase>
+                        <goals>
+                            <goal>upload-single</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <!-- === Site Lifecycle === -->
+
+            <!-- handling resources for site -->
             <plugin>
                 <artifactId>maven-resources-plugin</artifactId>
                 <version>2.6</version>
                 <executions>
-                    <execution>
-                        <id>copy-deployed</id>
-                        <phase>pre-integration-test</phase>
-                        <goals>
-                            <goal>copy-resources</goal>
-                        </goals>
-                        <configuration>
-                            <outputDirectory>${project.reporting.outputDirectory}/downloads</outputDirectory>
-                            <resources>
-                                <resource>
-                                    <directory>${project.build.directory}</directory>
-                                    <includes>
-                                        <include>${ueber.jar}.jar</include>
-                                    </includes>
-                                </resource>
-                                <resource>
-                                    <directory>src/site/resources</directory>
-                                    <includes>
-                                        <include>ltc-install.sh</include>
-                                    </includes>
-                                    <filtering>true</filtering>
-                                </resource>
-                            </resources>
-                        </configuration>
-                    </execution>
-                    <execution>
-                        <id>copy-emacs-files</id>
-                        <phase>pre-integration-test</phase>
-                        <goals>
-                            <goal>copy-resources</goal>
-                        </goals>
-                        <configuration>
-                            <outputDirectory>${project.reporting.outputDirectory}/downloads/emacs</outputDirectory>
-                            <resources>
-                                <resource>
-                                    <directory>../ltc-emacs/target/classes</directory>
-                                    <includes>
-                                        <include>*.el</include>
-                                    </includes>
-                                </resource>
-                            </resources>
-                        </configuration>
-                    </execution>
-                    <execution>
-                        <id>jar-for-generating-examples</id>
-                        <phase>pre-integration-test</phase>
-                        <goals>
-                            <goal>copy-resources</goal>
-                        </goals>
-                        <configuration>
-                            <outputDirectory>src/tex/techreport2012</outputDirectory>
-                            <resources>
-                                <resource>
-                                    <directory>src/site/resources</directory>
-                                    <includes>
-                                        <include>gen_examples.sh</include>
-                                        <include>version.txt</include>
-                                    </includes>
-                                    <filtering>true</filtering>
-                                </resource>
-                            </resources>
-                        </configuration>
-                    </execution>
-                    <execution>
-                        <id>copy-examples</id>
-                        <phase>pre-site</phase>
-                        <goals>
-                            <goal>copy-resources</goal>
-                        </goals>
-                        <configuration>
-                            <outputDirectory>${project.reporting.outputDirectory}/downloads/examples</outputDirectory>
-                            <resources>
-                                <resource>
-                                    <directory>src/site/examples</directory>
-                                </resource>
-                            </resources>
-                        </configuration>
-                    </execution>
+                    <!-- ~~~ pre-site ~~~ -->
                     <execution>
                         <id>generate-txt</id>
                         <phase>pre-site</phase>
@@ -203,6 +196,26 @@
                             </resources>
                         </configuration>
                     </execution>
+                    <!-- copy logo to figures for manual -->
+                    <execution>
+                        <id>copy-logo</id>
+                        <phase>pre-site</phase>
+                        <goals>
+                            <goal>copy-resources</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>${project.basedir}/src/site/tex/manual/figures</outputDirectory>
+                            <resources>
+                                <resource>
+                                    <directory>${project.basedir}/src/site/resources/images</directory>
+                                    <includes>
+                                        <include>LTC-logo.png</include>
+                                    </includes>
+                                </resource>
+                            </resources>
+                        </configuration>
+                    </execution>
+                    <!-- ~~~ site ~~~ -->
                     <!-- copy all *.png files to (1) html_singlepage, and (2) html_multipage -->
                     <execution>
                         <id>copy-png-files-to-single</id>
@@ -243,6 +256,7 @@
                 </executions>
             </plugin>
 
+            <!-- ~~~ pre-site ~~~ -->
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>exec-maven-plugin</artifactId>
@@ -260,24 +274,12 @@
                             <goal>exec</goal>
                         </goals>
                     </execution>
-                    <!-- generating examples for tech report 2012 -->
-                    <execution>
-                        <id>examples-for-tech-report</id>
-                        <phase>pre-site</phase>
-                        <configuration>
-                            <executable>sh</executable>
-                            <arguments>
-                                <argument>src/tex/techreport2012/gen_examples.sh</argument>
-                            </arguments>
-                        </configuration>
-                        <goals>
-                            <goal>exec</goal>
-                        </goals>
-                    </execution>
                 </executions>
             </plugin>
 
-            <!-- running latex and htlatex on manual for site; create tech report -->
+            <!-- ~~~ site ~~~ -->
+
+            <!-- running latex and htlatex on manual for site -->
             <plugin>
                 <groupId>de.akquinet.jbosscc.latex</groupId>
                 <artifactId>maven-latex-plugin</artifactId>
@@ -330,22 +332,6 @@
                             <goal>tex4ht</goal>
                         </goals>
                     </execution>
-                    <!--<execution>-->
-                    <!--<id>compile-techreport</id>-->
-                    <!--<configuration>-->
-                    <!--<settings>-->
-                    <!--<cleanUp>false</cleanUp>-->
-                    <!--<tempDirectory>tex_tmp</tempDirectory>-->
-                    <!--<texDirectory>src/tex</texDirectory>-->
-                    <!--<outputDirectory>tex/techreport2012</outputDirectory>-->
-                    <!--<texCommand>pdflatex</texCommand>-->
-                    <!--</settings>-->
-                    <!--</configuration>-->
-                    <!--<phase>post-site</phase>-->
-                    <!--<goals>-->
-                    <!--<goal>latex</goal>-->
-                    <!--</goals>-->
-                    <!--</execution>-->
                 </executions>
             </plugin>
 
@@ -365,11 +351,15 @@
                                 <report>project-team</report>
                                 <report>license</report>
                                 <report>dependencies</report>
+                                <!-- TODO: decide about additional reports: -->
                                 <!--<report>dependency-convergence</report>-->
                                 <!--<report>scm</report>-->
+                                <report>mailing-list</report>
+                                <report>issue-tracking</report>
                                 <report>summary</report>
                             </reports>
                         </plugin>
+                        <!-- TODO: decide about javadoc -->
                         <!--<plugin>-->
                         <!--<groupId>org.apache.maven.plugins</groupId>-->
                         <!--<artifactId>maven-javadoc-plugin</artifactId>-->
@@ -391,6 +381,10 @@
                 </configuration>
             </plugin>
 
+            <!-- === Clean Lifecycle === -->
+
+            <!-- ~~~ clean ~~~ -->
+
             <!-- cleaning any generated stuff -->
             <plugin>
                 <artifactId>maven-clean-plugin</artifactId>
@@ -403,19 +397,7 @@
                                 <include>version.txt</include>
                                 <include>baseurl.txt</include>
                                 <include>manual.pdf</include>
-                                <!--<include>figures/manual-figure*.dpth</include>-->
-                                <!--<include>figures/manual-figure*.pdf</include>-->
-                                <!--<include>figures/manual-figure*.png</include>-->
-                            </includes>
-                        </fileset>
-                        <fileset>
-                            <directory>${project.basedir}/src/tex/techreport2012</directory>
-                            <includes>
-                                <include>report2012.pdf</include>
-                                <include>gen_examples.sh</include>
-                                <include>version.txt</include>
-                                <include>examples/*.unix</include>
-                                <include>examples/*.cml</include>
+                                <include>figures/LTC-logo.png</include>
                             </includes>
                         </fileset>
                     </filesets>

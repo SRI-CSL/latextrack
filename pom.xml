@@ -10,13 +10,12 @@
 
     <groupId>com.sri.ltc</groupId>
     <artifactId>LTC</artifactId>
-    <version>0.9.10-SNAPSHOT</version>
+    <version>0.9.10</version>
     <packaging>pom</packaging>
     <inceptionYear>2009</inceptionYear>
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <!--<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>-->
-        <temp.url>http://www.csl.sri.com/users/linda/LTC/all/</temp.url> <!-- TODO: change to <url> when we have a proper location -->
+        <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
     </properties>
 
     <modules>
@@ -37,12 +36,19 @@
             <email>skip.breidbach at sri dot com</email>
             <organization>SRI International</organization>
             <organizationUrl>http://www.sri.com</organizationUrl>
+            <roles>
+                <role>Developer</role>
+            </roles>
         </developer>
         <developer>
             <name>Linda Briesemeister</name>
             <email>linda.briesemeister at sri dot com</email>
             <organization>SRI International</organization>
             <organizationUrl>http://www.sri.com</organizationUrl>
+            <roles>
+                <role>Maintainer</role>
+                <role>Developer</role>
+            </roles>
         </developer>
     </developers>
 
@@ -53,7 +59,7 @@
             <organization>SRI International</organization>
             <organizationUrl>http://www.sri.com</organizationUrl>
             <roles>
-                <role>project founder</role>
+                <role>Project Founder</role>
             </roles>
         </contributor>
         <contributor>
@@ -62,7 +68,7 @@
             <organization>SRI International</organization>
             <organizationUrl>http://www.sri.com</organizationUrl>
             <roles>
-                <role>project leader</role>
+                <role>Froject Leader</role>
             </roles>
         </contributor>
         <contributor>
@@ -70,6 +76,27 @@
             <email>taltman at AI dot sri dot com</email>
             <organization>SRI International</organization>
             <organizationUrl>http://www.sri.com</organizationUrl>
+            <roles>
+                <role>Project Adviser</role>
+            </roles>
+        </contributor>
+        <contributor>
+            <name>Cher Cai</name>
+            <email>cher dot cai AT sri dot com</email>
+            <organization>SRI International</organization>
+            <organizationUrl>http://www.sri.com</organizationUrl>
+            <roles>
+                <role>Logo Designer</role>
+            </roles>
+        </contributor>
+        <contributor>
+            <name>Mickey Cook</name>
+            <email>mickey dot cook AT sri dot com</email>
+            <organization>SRI International</organization>
+            <organizationUrl>http://www.sri.com</organizationUrl>
+            <roles>
+                <role>Logo Designer</role>
+            </roles>
         </contributor>
     </contributors>
 
@@ -79,13 +106,6 @@
             <url>http://www.gnu.org/licenses/gpl.txt</url>
         </license>
     </licenses>
-
-    <distributionManagement>
-        <site>
-            <id>temp website</id>
-            <url>scp://linda@thor.csl.sri.com/homes/linda/public_html/LTC/</url>
-        </site>
-    </distributionManagement>
 
     <!-- dependencies common to all modules -->
     <dependencies>
@@ -97,7 +117,7 @@
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
-            <version>4.11-beta-1</version>
+            <version>4.11</version>
             <scope>test</scope>
         </dependency>
     </dependencies>
@@ -108,17 +128,28 @@
                 <plugin>
                     <artifactId>maven-site-plugin</artifactId>
                     <version>3.2</version>
-                    <dependencies>
-                        <dependency><!-- add support for ssh/scp -->
-                            <groupId>org.apache.maven.wagon</groupId>
-                            <artifactId>wagon-ssh</artifactId>
-                            <version>1.0</version>
-                        </dependency>
-                    </dependencies>
                 </plugin>
                 <plugin>
                     <artifactId>maven-shade-plugin</artifactId>
                     <version>2.0</version>
+                </plugin>
+                <plugin>
+                    <artifactId>maven-install-plugin</artifactId>
+                    <version>2.3.1</version>
+                    <executions>
+                        <execution>
+                            <id>default-install</id>
+                            <phase>none</phase>
+                        </execution>
+                    </executions>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-deploy-plugin</artifactId>
+                    <version>2.7</version>
+                    <configuration>
+                        <skip>true</skip>
+                    </configuration>
                 </plugin>
             </plugins>
         </pluginManagement>

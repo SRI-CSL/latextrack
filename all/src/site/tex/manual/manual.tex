@@ -2,6 +2,7 @@
 
 % ----- useful packages
 \usepackage[letterpaper,verbose,pdftex]{geometry}
+\usepackage[cc]{titlepic} % for picture in title
 \usepackage{graphicx} % for including figures
 \usepackage{tikz} % for portable graphics
 %\usepackage{amsmath} % align and other math constructs
@@ -87,13 +88,12 @@ Linda Briesemeister\\
 \texttt{linda.briesemeister@sri.com}\\
 SRI International
 }
+\titlepic{\hlink{\baseurl /index.html}{../../index.html}{\includegraphics[width=2cm]{figures/LTC-logo.png}}}
 \date{\today} 
 
 \begin{document}
 \maketitle
-{\pagestyle{empty}\cleardoublepage} % empty page after title (since we are using 'twopage' option)
-
-\tableofcontents
+%{\pagestyle{empty}\cleardoublepage} % empty page after title (since we are using 'twopage' option)
 
 \chapter*{Acknowledgements and Disclaimer}
 
@@ -109,6 +109,8 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General
 Public License for more details.
 
 See Appendix~\ref{ch:license} or \href{http://www.gnu.org/licenses/}{http://www.gnu.org/licenses/} for the complete license.
+
+\tableofcontents
 
 \input{installation}
 

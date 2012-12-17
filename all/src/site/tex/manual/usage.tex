@@ -7,11 +7,11 @@ As a minimum implementation of a user interface to LTC, we also provide a Java a
 
 Before we address using these specific user interfaces, we discuss how to setup your repository for a LaTeX writing project with git (Section~\ref{sec:git-use}) or svn (Section~\ref{sec:svn-use}) and then the general usage of LTC in Section~\ref{sec:general-use}.
 
-\section{Git Repository} \label{sec:git-use}
+\section{Using a Git Repository} \label{sec:git-use}
 
 For each writing project, LTC expects the history of the .tex files contained in a git repository.  As git is a distributed version control system, this repository is local to your machine.  If you need to exchange data with a collaborating author, you will push your repository or pull their repository and merge it with your local copy.
 
-This section only covers how to set up the git repository for your writing project.  Please refer to other git documentation about general git usage and how to manage your writing project with git.
+This section only covers a small subset of what git can do with respect to setting up a repository for your writing project.  Please refer to other git documentation about general git usage and how to further manage your writing project with git.
 
 \subsection{Initializing a Local Repository}
 
@@ -66,27 +66,76 @@ $> git commit -a -m "Initial commit of project"
 
 The option \Code{-m} stands for a brief message that you would like to attach to your commit. Note that you have to give some sort of message for every commit you make. Do \textit{not} try to skip the message part. Moreover, having meaningful one-line message for commit is always useful as other and you yourself can refer to later on to see what changes you made and why.
 
-\subsection{Cloning a Repository}
+\subsection{Uploading Your Initial Repository}\label{sec:upload-git}
 
-To start a git repository from an existing one, you want to clone it.  Assuming that your local copy should be located in a directory \Code{my\_project}, you would need to execute the following command from the parent directory of \Code{my\_project}.
+To share your local git repository, you can clone it to a shared file system or to a file server that each collaborator can access via \Code{ssh}.  Another option is that your system administrators provide you with a central git repository server.  Contact them for details on how to upload your git repository there.
+
+In the following commands, we are giving the remote repository the name \Code{project.git} but you can choose whatever you want.  The ending \Code{.git} is somewhat standard, though, so we advise to keep it.  
+
+To clone to a \textit{shared file system}, you will want to find a suitable directory \Code{\$SHARED\_PATH} where you want to create the shared repository. The following command is issued from inside your initial repository.
+
 \begin{CodeVerbatim}
-$> git clone user@server:path-to-git-repos/project.git my_project
+$> git clone --bare . $SHARED_PATH/project.git
+\end{CodeVerbatim}
+
+To clone to a \textit{file server accessible via ssh and scp}, you would do the following from the top-level directory of your initial repository. The remote repository should be located under \Code{\$REMOTE\_PATH} on the server.  We assume that you have performed at least one commit since initializing the git repository.
+\begin{CodeVerbatim}
+$> git status
+# On branch master
+nothing to commit, working directory clean
+$> cd ..
+$> git clone --bare $PROJECT project.git
+Cloning into bare repository 'project.git'...
+done.
+$ touch project.git/git-daemon-export-ok
+$ scp -rq project.git username@server:$REMOTE_PATH
+\end{CodeVerbatim}
+
+In either case, make sure that file permissions allow collaborators to access and read the files on the server.
+
+Next, you will want to add a short name for the newly designated shared location called ``origin'' so that the push and pull command below work as if you had cloned the repository from someone else.  If you used a git server, your system administrators can tell you how to configure your original repository to include the new remote location, or you can clone the remote repository anew as shown in the next section.
+\begin{CodeVerbatim}
+$> git remote add origin $SHARED_PATH/project.git
+\end{CodeVerbatim}
+or
+\begin{CodeVerbatim}
+$> git remote add origin username@server:$REMOTE_PATH/project.git
+\end{CodeVerbatim}
+
+\subsection{Cloning from a Remote Repository}
+
+To start a git repository from an existing one (either on a shared file server or a central repository), you want to clone it.  You need to know the remote location in terms of user name, server address and path to the git repository.  Your system administrator can tell you these in the form of \Code{username@server:path-to-git-repos/project.git}, or, if you used a shared file system as in Section~\ref{sec:upload-git}, you simply use \Code{\$SHARED\_PATH/project.git} instead of the address above. 
+
+Assuming that your local copy should be located in a directory \Code{my\_project}, you would need to execute the following command from the parent directory of \Code{my\_project}.  Feel free to call your new working directory something else by substituting the last argument.
+\begin{CodeVerbatim}
+$> git clone username@server:path-to-git-repos/project.git my_project
 Cloning into my_project...
 done.
 $> cd my_project
+$> git remote -v
 \end{CodeVerbatim}
 
-\section{Subversion Repository} \label{sec:svn-use}
+\subsection{Push and Pull}
 
-[TODO]
+To exchange data with the central repository, you typically push and pull.  In the simplest case, the following should work (if this is the original and not a cloned repository, you must have added the new short name ``origin'' via the \Code{git remote add origin} command above).
+\begin{CodeVerbatim}
+$> git push origin master
+$> git pull origin master
+\end{CodeVerbatim}
+
+If git complains about uncommitted changes and that the working copy is not clean, you may have to commit or stash changes before these commands can run successfully.
+
+Please refer to the many online resources to learn more about git, or ask you system administrator.
+
+\section{Using a Subversion Repository} \label{sec:svn-use}
+
+[TODO: write this section]
 
 \section{General Usage} \label{sec:general-use}
 
 In this section we describe abstractly how one would use LTC in a pattern of a work cycle. %TODO: more
 
-graph operations
-
-filtering
+[TODO: graph operations; filtering]
 
 \input{emacs}
 \input{java}
