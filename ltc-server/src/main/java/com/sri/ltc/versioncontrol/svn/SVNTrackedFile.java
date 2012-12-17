@@ -1,7 +1,29 @@
+/*
+ * #%L
+ * LaTeX Track Changes (LTC) allows collaborators on a version-controlled LaTeX writing project to view and query changes in the .tex documents.
+ * %%
+ * Copyright (C) 2009 - 2012 SRI International
+ * %%
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as
+ * published by the Free Software Foundation, either version 3 of the 
+ * License, or (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public 
+ * License along with this program.  If not, see
+ * <http://www.gnu.org/licenses/gpl-3.0.html>.
+ * #L%
+ */
 package com.sri.ltc.versioncontrol.svn;
 
 import com.sri.ltc.versioncontrol.Commit;
 import com.sri.ltc.versioncontrol.TrackedFile;
+import com.sri.ltc.versioncontrol.VersionControlException;
 import org.tmatesoft.svn.core.*;
 import org.tmatesoft.svn.core.wc.SVNRevision;
 import org.tmatesoft.svn.core.wc.SVNStatus;
@@ -121,35 +143,43 @@ public class SVNTrackedFile extends TrackedFile<SVNRepository> {
     }
 
     @Override
-    public List<Commit> getCommits() throws Exception {
+    public List<Commit> getCommits() throws VersionControlException {
         return getCommits(null, null);
     }
 
     @Override
-    public List<Commit> getCommits(@Nullable Date inclusiveLimitDate, @Nullable String inclusiveLimitRevision) throws Exception {
+    public List<Commit> getCommits(@Nullable Date inclusiveLimitDate, @Nullable String inclusiveLimitRevision) throws VersionControlException {
         return getCommits(inclusiveLimitDate, inclusiveLimitRevision, 0);
     }
 
-    public List<Commit> getCommits(@Nullable Date inclusiveLimitDate, @Nullable String inclusiveLimitRevision, int limit) throws Exception {
-       SVNLogEntryHandler handler = new SVNLogEntryHandler(
-               this,
-               inclusiveLimitDate,
-               (inclusiveLimitRevision == null) ? null : Long.parseLong(inclusiveLimitRevision));
+    private List<Commit> getCommits(@Nullable Date inclusiveLimitDate, @Nullable String inclusiveLimitRevision, int limit) throws VersionControlException {
+        SVNLogEntryHandler handler = new SVNLogEntryHandler(
+                this,
+                inclusiveLimitDate,
+                (inclusiveLimitRevision == null) ? null : Long.parseLong(inclusiveLimitRevision));
 
-       getRepository().getClientManager().getLogClient()
-            .doLog(
-                new File[]{ getFile() },
-                SVNRevision.create(-1), SVNRevision.create(-1), false, false, limit, handler);
+        try {
+            getRepository().getClientManager().getLogClient()
+                    .doLog(
+                            new File[]{getFile()},
+                            SVNRevision.create(-1), SVNRevision.create(-1), false, false, limit, handler);
+        } catch (SVNException e) {
+            throw new VersionControlException(e);
+        }
 
         return handler.getCommits();
     }
-    
+
     @Override
-    public Status getStatus() throws Exception {
-        SVNStatus status = getRepository().getClientManager().getStatusClient().doStatus(getFile(), false);
-        SVNStatusType contentsStatus = status.getContentsStatus();
-        if (svnStatus.containsKey(contentsStatus.getID())) {
-            return svnStatus.get(contentsStatus.getID());
+    public Status getStatus() throws VersionControlException {
+        try {
+            SVNStatus status = getRepository().getClientManager().getStatusClient().doStatus(getFile(), false);
+            SVNStatusType contentsStatus = status.getContentsStatus();
+            if (svnStatus.containsKey(contentsStatus.getID())) {
+                return svnStatus.get(contentsStatus.getID());
+            }
+        } catch (SVNException e) {
+            throw new VersionControlException(e);
         }
 
         return Status.Unknown;

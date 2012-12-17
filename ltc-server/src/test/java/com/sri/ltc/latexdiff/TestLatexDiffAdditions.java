@@ -1,26 +1,40 @@
-/**
- ************************ 80 columns *******************************************
- * TestLatexDiffDeletions
- *
- * Created on 2/8/12.
- *
- * Copyright 2009-2010, SRI International.
+/*
+ * #%L
+ * LaTeX Track Changes (LTC) allows collaborators on a version-controlled LaTeX writing project to view and query changes in the .tex documents.
+ * %%
+ * Copyright (C) 2009 - 2012 SRI International
+ * %%
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as
+ * published by the Free Software Foundation, either version 3 of the 
+ * License, or (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public 
+ * License along with this program.  If not, see
+ * <http://www.gnu.org/licenses/gpl-3.0.html>.
+ * #L%
  */
 package com.sri.ltc.latexdiff;
 
 import com.google.common.collect.Lists;
+import org.junit.Ignore;
 import org.junit.Test;
 
-import java.io.IOException;
 import java.util.EnumSet;
 
 /**
  * @author linda
  */
+@Ignore
 public final class TestLatexDiffAdditions extends TestLatexDiff {
 
     @Test
-    public void additionsAtBeginning() throws IOException {
+    public void additionsAtBeginning() throws Exception {
         changes = getChanges(
                 "\\ipsum  ",
                 "Lorem\\ipsum");
@@ -84,7 +98,7 @@ public final class TestLatexDiffAdditions extends TestLatexDiff {
     }
 
     @Test
-    public void additionsInMiddle() throws IOException {
+    public void additionsInMiddle() throws Exception {
         changes = getChanges(
                 "Lorem  sit amet. ",
                 "Lorem ipsum dolor sit amet. ");
@@ -100,7 +114,7 @@ public final class TestLatexDiffAdditions extends TestLatexDiff {
     }
 
     @Test
-    public void additionsAtEnd() throws IOException {
+    public void additionsAtEnd() throws Exception {
         changes = getChanges(
                 "Lorem",
                 "Lorem ipsum ");

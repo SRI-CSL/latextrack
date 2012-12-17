@@ -1,15 +1,38 @@
+/*
+ * #%L
+ * LaTeX Track Changes (LTC) allows collaborators on a version-controlled LaTeX writing project to view and query changes in the .tex documents.
+ * %%
+ * Copyright (C) 2009 - 2012 SRI International
+ * %%
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as
+ * published by the Free Software Foundation, either version 3 of the 
+ * License, or (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public 
+ * License along with this program.  If not, see
+ * <http://www.gnu.org/licenses/gpl-3.0.html>.
+ * #L%
+ */
 package com.sri.ltc.versioncontrol.git;
 
 import com.sri.ltc.filter.Author;
-import com.sri.ltc.versioncontrol.Commit;
 import com.sri.ltc.versioncontrol.Remotes;
 import com.sri.ltc.versioncontrol.Repository;
 import com.sri.ltc.versioncontrol.TrackedFile;
 import org.eclipse.jgit.api.Git;
-import org.eclipse.jgit.revwalk.RevCommit;
+import org.eclipse.jgit.lib.Ref;
 import org.eclipse.jgit.storage.file.FileRepositoryBuilder;
+import org.eclipse.jgit.transport.BundleWriter;
+import sun.security.pkcs11.wrapper.Constants;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.logging.Logger;
 
@@ -57,6 +80,26 @@ public class GitRepository implements Repository {
     @Override
     public Remotes getRemotes() {
         return new GitRemotes(this);
+    }
+
+    @Override
+    public File getBundle(File outputDirectory) throws IOException {
+        LOGGER.fine("Creating "+outputDirectory+"/bundle.git file");
+
+        File bundle = new File(outputDirectory, "bundle.git");
+
+        BundleWriter bundleWriter = new BundleWriter(repository);
+        for (Ref ref : repository.getAllRefs().values()) {
+            if (!ref.isSymbolic()) {
+                bundleWriter.include(ref);
+            }
+        }
+
+        FileOutputStream fos = new FileOutputStream(bundle);
+        bundleWriter.writeBundle(null, fos);
+        fos.close();
+
+        return bundle;
     }
 
     @Override

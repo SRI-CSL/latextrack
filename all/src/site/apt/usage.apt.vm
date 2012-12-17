@@ -7,6 +7,8 @@
 
 Usage
 
+  The system can be used via the included LTC Editor or with Emacs.
+
   LTC consists of a base system running under Java and the LaTeX editor specific user interface.  We provide a Java
   application called LTC Editor that contains the base system as well as a simple text editor as the user interface.
   The main usage, although, is to run the base system as a server and have an editor-specific LTC implementation
@@ -16,31 +18,26 @@ Usage
   Future implementations for popular LaTeX editors such as TeXShop and TeXWorks are planned or could be contributed by
   the community using the API of the base system.
 
-Quick Start
+Quick Start for Emacs
 
-  To run the base system, execute the downloaded JAR file in a terminal (if you want to see logging output).  Or
+  To run the base system, execute the installed JAR file in a terminal (if you want to see logging output).  Or
   launch the JAR using a double-click to ignore the logging output.
 
-   under Mac OS X, for example, you would need to set the environment variable
-  <<<GIT_BIN_DIR>>> in <<<~/.MacOSX/environment.plist>>> to point to the directory containing the git executable.
++----
+$> java -jar LTC.jar
+[...]
+<date> | INFO: 	Started RPC server on port 7777.
++----
 
-+----
-$> java -jar LTC-${project.version}.jar
-Wed Oct 24 17:00:16 EDT 2012 | CONFIG: 	Default logging configuration complete
-Wed Oct 24 17:00:16 EDT 2012 | CONFIG: 	Logging configured to level CONFIG
-Wed Oct 24 17:00:17 EDT 2012 | CONFIG: 	git version: 1.7.10.2 (Apple Git-33)
-Wed Oct 24 17:00:17 EDT 2012 | CONFIG: 	LTC version: 0.9.7-SNAPSHOT
---log4j: 24 Oct 2012 17:00:17,130 [main] INFO  org.apache.xmlrpc.webserver.XmlRpcServlet - init
-Wed Oct 24 17:00:17 EDT 2012 | INFO: 	Started RPC server on port 7777.
-+----
+  Invoke <<<M-x ltc-mode>>> in Emacs to turn on LTC.
 
 Manual
 
   The user manual contains more details on installation and usage as well as a tutorial chapter.
   It is available in these formats:
 
+  * {{{./html_singlepage/manual/manual.html}HTML all on a single page}}
+
+  * {{{./html_multipage/manual/manual.html}HTML tree with multiple pages}}
+
   * {{{./manual/manual.pdf}PDF}}
-
-  * {{{./html_singlepage/manual/manual.html}HTML on a single page}}
-
-  * {{{./html_multipage/manual/manual.html}HTML on multiple pages}}

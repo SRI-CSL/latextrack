@@ -1,15 +1,54 @@
-(require 'xml-rpc)
-(require 'versions)
-(defconst min-xml-rpc-version "1.6.8.1" "minimum version requirement for xml-rpc mode")
-
+;;; ltc-mode.el --- user interface for LaTeX Track Changes (LTC) 
+;;
+;; Copyright (C) 2009 - 2012 SRI International
+;;
+;; Author: Linda Briesemeister <linda.briesemeister@sri.com>
+;;    Sam Owre <sam.owre@sri.com>
+;; Maintainer: Linda Briesemeister <linda.briesemeister@sri.com>
+;; Created: 20 May 2010
+;; URL: ${url}
+;;
+;; This file is not part of GNU Emacs.
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;;; Commentary:
+;;
+;; LaTeX Track Changes (LTC) allows collaborators on a version-controlled 
+;; LaTeX writing project to view and query changes in the .tex documents.
+;;
 ;; To install:
 ;;   copy or link to this file to a directory in Emacs' load-path (view with C-h v load-path)
 ;;   and add this line to your .emacs or preferences file:
 ;;     (autoload 'ltc-mode "ltc-mode" "" t)
 ;; To run:
-;;   make sure that LTC server is running
+;;   (make sure that LTC server is running)
 ;;   M-x ltc-mode to toggle
 ;;   M-x ltc-update to run update
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;; This program is free software: you can redistribute it and/or modify
+;; it under the terms of the GNU General Public License as
+;; published by the Free Software Foundation, either version 3 of the 
+;; License, or (at your option) any later version.
+
+;; This program is distributed in the hope that it will be useful,
+;; but WITHOUT ANY WARRANTY; without even the implied warranty of
+;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+;; GNU General Public License for more details.
+
+;; You should have received a copy of the GNU General Public 
+;; License along with this program.  If not, see
+;; <http://www.gnu.org/licenses/gpl-3.0.html>.
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;;; Code:
+
+(require 'xml-rpc)
+(require 'versions)
+(defconst min-xml-rpc-version "1.6.8.1" "minimum version requirement for xml-rpc mode")
 
 ;;; ----------------------------------------------------------------------------
 ;;; constants
@@ -28,7 +67,7 @@
 (defgroup ltc nil
   "Latex Track Changes mode."
   :version "${project.version}"
-  :link '(url-link "${temp.url}")
+  :link '(url-link "${url}")
   :tag "LTC"
   :prefix "ltc-"
   :group 'tex)
@@ -98,6 +137,7 @@
 (define-key ltc-prefix-map (kbd "lr") 'ltc-limit-rev)
 (define-key ltc-prefix-map (kbd ">") 'ltc-next-change)
 (define-key ltc-prefix-map (kbd "<") 'ltc-prev-change)
+(define-key ltc-prefix-map (kbd "b") 'ltc-bug-report)
 ;; Bind command `ltc-prefix-map' to `ltc-command-prefix' in `ltc-mode-map':
 (defvar ltc-mode-map (make-sparse-keymap) "LTC mode keymap.")
 (define-key ltc-mode-map ltc-command-prefix 'ltc-prefix-map)
@@ -186,7 +226,14 @@
 		      (concat " [" (shorten 7 ltc-limiting-rev) "]...")))]
     )
    "--"
+   "MOVE CURSOR"
+   ["To previous change" ltc-prev-change]
+   ["To next change" ltc-next-change]
+   "--"
+   ["Bug report..." ltc-bug-report]
+   "--"
    ["Turn LTC off" ltc-mode]
+   "--"
    ))
 
 ;;; ----------------------------------------------------------------------------
@@ -238,17 +285,26 @@
   (remove-hook 'kill-buffer-hook 'ltc-hook-before-kill t) ; remove hook to intercept closing buffer
   ;; close session and obtain text for buffer without track changes
   (if session-id
-      (let ((map (ltc-method-call "close_session" session-id 
-				  (buffer-string) 
-				  (compile-deletions)
-				  (1- (point))))
-	    (old-buffer-modified-p (buffer-modified-p))) ; maintain modified flag
+      (progn
 	(message "Stopping LTC mode for file \"%s\"..." (buffer-file-name))
-	;; replace text in buffer with return value from closing session
-	(erase-buffer)
-	(insert (cdr (assoc-string "text" map)))
-	(goto-char (1+ (cdr (assoc-string "caret" map)))) ; Emacs starts counting from 1!
-	(set-buffer-modified-p old-buffer-modified-p)
+	(condition-case err 
+	    (let ((map (ltc-method-call "close_session" session-id 
+					(buffer-string) 
+					(compile-deletions)
+					(1- (point))))
+		  (old-buffer-modified-p (buffer-modified-p))) ; maintain modified flag
+	      ;; replace text in buffer with return value from closing session
+	      (erase-buffer)
+	      (insert (cdr (assoc-string "text" map)))
+	      (goto-char (1+ (cdr (assoc-string "caret" map)))) ; Emacs starts counting from 1!
+	      (set-buffer-modified-p old-buffer-modified-p))
+	  ('error 
+	   (message "Error while closing session (reverting to text from file): %s" (error-message-string err))
+	   ;; replace buffer with text from file
+	   (erase-buffer)
+	   (insert-file-contents (buffer-file-name))
+	   (set-buffer-modified-p nil)
+	   nil))
 	(setq session-id nil)))
   ;; close any open temp info buffer 
   (when (setq b (get-buffer ltc-info-buffer))
@@ -432,7 +488,22 @@
   (if (> dir 0)
       (not (< index (point-max))) ; index >= (point-max)
     (< index (point-min))) ; index < (point-min)
-)
+  )
+
+;;; --- create bug report
+
+(defun ltc-bug-report (directory msg)
+  "Create a bug report with MSG and use DIRECTORY.  If successful, will print message in mini-buffer with the created file name."
+  (interactive 
+   (if ltc-mode
+       (list
+	(read-directory-name "Directory where to save bug report files (created if not exist): ")
+	(read-string "Explanation: "))
+     '(nil nil))) ; sets directory = nil and msg = nil
+  (when directory
+    (setq file (ltc-method-call "create_bug_report" session-id msg (expand-file-name directory)))
+    (message "Created bug report at %s" file)
+    ))
 
 ;;; --- other interactive functions
 
@@ -695,45 +766,6 @@
 	     (match-string 3 author) ; email
 	   "")))))
 
-;;; old code:
-
-(defun ltc-parse-file (file)
-  (let* ((cmd (concat "java -cp /homes/owre/LTC/build/change-tracking.jar "
-		      "com.sri.latexdiff.Lexer "
-		      file))
-	 (str (shell-command-to-string cmd)))
-    (ltc-parse-list str 0)))
-
-(defvar ltc-parse-regexp
-  "\\([^ ]+\\) \\([^\(]+\\)(\\([^,]+\\),\\([^\)]+\\)) \\([^\n]+\\)\n")
-
-(defun ltc-parse-list (str pos)
-  (let ((plist nil))
-    (while (string-match ltc-parse-regexp str pos)
-      (let ((type (substring str (match-beginning 1) (match-end 1)))
-	    (contents (substring str (match-beginning 2) (- (match-end 2) 2)))
-	    (line (substring str (match-beginning 3) (match-end 3)))
-	    (column (substring str (match-beginning 4) (match-end 4)))
-	    (length (substring str (match-beginning 5) (match-end 5))))
-	(push (list type contents line column length) plist)
-	(setq pos (match-end 0))))
-    (nreverse plist)))
-
-(defface ltc-paragraph
-  '((((class color) (background dark)) 
-     (:foreground "lightgrey" :bold t)) 
-    (((class color) (background light)) 
-     ( :foreground "lightgrey" :bold t)) 
-    (t (:bold t :underline t))) 
-  "Face used to visualize paragraph char mapping. 
-
-See `blank-display-mappings'." 
-  :group 'blank)
-
-;; 2230 = \x8B6
-;(setq buffer-display-table (make-display-table)) 
-;(aset buffer-display-table 10
-;      (vector 32 (make-glyph-code 2230 'ltc-paragraph) 10))
-
 
 (provide 'ltc-mode)
+;;; ltc-mode.el ends here

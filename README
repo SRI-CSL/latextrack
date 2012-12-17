@@ -9,14 +9,6 @@ Requirements
 - Maven 3
 - LaTeX (for building manual)
 
-(We no longer need JGraphT 0.8.3 in the local Maven repository; to remove before building for the first time simply
- remove the directory from your local repository:
-   $> rm -rf ~/.m2/repository/org/jgrapht
- and during the next compile cycle, you should see Maven downloading the library from conjars.org:
-   Downloading: http://conjars.org/repo/jgrapht/jgrapht/0.8.3/jgrapht-0.8.3.pom
-   ...
-)
-
 
 Developing
 ----------
@@ -31,24 +23,58 @@ To create the distributable:
 
 $> mvn clean package
 
-To create the site (include "verify" for link to download the JAR etc.):
-
-$> mvn verify site
-
-If manual has new, externalized TikZ pictures, manually convert .pdf into .png (using Preview) under
-  all/src/site/tex/manual/figures/manual-figure*.pdf
-
-Before deploying, need to log into CSL Unix cluster to manually delete the directory ~linda/public_html/LTC/all!
-
-$> mvn clean package site site:deploy
-
-To skip tests (when running repeatedly):
-
-$> mvn verify site -Dmaven.test.skip=true
-
 To view the contents of a JAR file without expanding it, use Firefox:
-  jar:file:///Users/linda/tmp/LTCjava/LTC-<version>-SNAPSHOT.jar!/
+  jar:file:///Users/linda/git/LTC/all/target/LTC-<version>-SNAPSHOT.jar!/
 and then browse
+
+To perform tests labeled as
+@Category(IntegrationTests.class)
+either run goal "integration-test" or "verify" (which will call "integration-test")
+
+To create the site:
+
+$> mvn site
+
+
+Deploying the site
+------------------
+
+Before deploying the site, create a shell at sourceforge and delete the current content:
+
++----
+$> ssh -t lilalinda,latextrack@shell.sf.net create
+
+Requesting a new shell for "lilalinda" and waiting for it to start.
+queued... creating... starting...
+
+This is an interactive shell created for user lilalinda,latextrack.
+Use the "timeleft" command to see how much time remains before shutdown.
+Use the "shutdown" command to destroy the shell before the time limit.
+For path information and login help, type "sf-help".
+
+-bash-3.2$ rm -rf /home/project-web/latextrack/htdocs/*
++----
+
+When this has finished and you see the prompt, you are ready to regenerate the information and upload it:
+
+$> mvn clean site site:deploy
+
+When this has finished, go back to your shell and shut it down.  You may look at the uploaded files if you wish:
+
++----
+-bash-3.2$ ls -la /home/project-web/latextrack/htdocs/
+[...]
+-bash-3.2$ shutdown
+Requesting that your shell be shut down.
+This request will be processed soon.
+-bash-3.2$
+Broadcast message from root (Wed Dec 12 20:50:46 2012):
+
+The system is going down for system halt NOW!
+Connection to shell-24002 closed by remote host.
+Connection to shell-24002 closed.
+Connection to shell.sf.net closed.
++----
 
 
 Branching Model
@@ -68,7 +94,21 @@ When finishing the bigger feature:
 When you’re feature complete, simply start a release branch — again, based on 'develop' — to bump the version number
 and fix the last bugs before releasing:
   $> git flow release start v1.0
-TODO: more details on release flow (e.g., incrementing version numbers in Maven etc.)
+    [do minor fixes if needed]
+  $> mvn versions:set -DnewVersion=1.0
+  $> mvn versions:commit
+  $> git commit -am "preparing release of v1.0"
+    [in sf.net shell before:]
+        rm -rf /home/project-web/latextrack/htdocs/*
+        rm -rf /home/frs/project/l/la/latextrack/LTC/1.0
+        mkdir /home/frs/project/l/la/latextrack/LTC/1.0
+        <copy README.txt?>
+  $> mvn clean deploy site site:deploy
+  $> git flow release finish v1.0
+    [supply tag message]
+  $> mvn versions:set -DnewVersion=1.1-SNAPSHOT
+  $> mvn versions:commit
+  $> git commit -am "bumping next release number to v1.1-SNAPSHOT"
 
 
 Running
@@ -116,7 +156,17 @@ c) Utilities
 Testing
 -------
 
-$> mvn test
+For unit tests:
+
+  $> mvn clean test
+
+For integration tests (labeled with IntegrationTests category):
+
+  $> mvn integration-test
+
+To skip all tests:
+
+  $> mvn verify -Dmaven.test.skip=true
 
 
 Git Repositories etc.
@@ -150,19 +200,25 @@ $> cd all/src/site/tex/manual
 $> pdflatex manual -shell-escape
 or use TeXShop
 
-* To convert .pdf to .png:
+* To build HTML version by hand:
 
+$> cd all/src/site/tex/manual
+$> htlatex manual "manual,0,png" "" "" "-interaction=nonstopmode --src-specials"
+
+* Converting images using Makefile:
+
+$> cd all/src/site/tex/manual/figures
+$> make
+
+* To convert manually:
+
+$> cd all/src/site/tex/manual/figures
 $> convert -density 300 manual-figure0.pdf manual-figure0.png
 or
 $> for i in figures/manual-figure*.pdf; do convert -density 300 $i `echo $i | sed -e 's/\.pdf/\.png/g'`; done
 or use Preview.app?
 
-* To build HTML version by hand:
-
-$> htlatex manual "manual,0,png" "" "" "-interaction=nonstopmode --src-specials"
-
-* Converting other .tiff files in bulk (use wildcard appropriately) when making new screen shots (e.g., with Grab)
-
+$> cd all/src/site/tex/manual/figures
 $> for file in *.tiff; do convert $file `basename $file .tiff`.png; done
 
 
@@ -187,16 +243,13 @@ or
  $> mvn versions:revert                          => to use backup info and roll back
 
 
-Building Tech Report 2012
--------------------------
+License and Copyright information
+---------------------------------
 
-$> mvn verify site   => generate examples for appendices
-$> cd all/src/tex/techreport2012
-$> pdflatex report2012
-$> pdflatex report2012
-$> bibtex report2012
-$> pdflatex report2012
-$> pdflatex report2012
+We use the Maven plugin to update the project license files using:
+  $> mvn license:update-project-license
+
+The default Maven lifecycle will manage the copyright statements at the beginning of all source files.
 
 
 Programming Emacs mode
@@ -209,3 +262,103 @@ Interactive Emacs Lisp: M-x ielm
 - to obtain buffer object for testing:
     ELISP> (setq buf (get-buffer "independence.tex"))
     #<buffer independence.tex>
+
+
+Creating SVN repository for tutorial
+------------------------------------
+
+1. Create local repository and dump
+
+ a) Create svn repository (in your home)
+
+  $> cd
+  $> svnadmin create svnrepos
+
+  Now edit svnrepos/conf/svnserve.conf and svnrepos/conf/passwd to contain & start server:
+
+  $> grep -v "^#" svnrepos/conf/svnserve.conf
+
+  [general]
+  anon-access = none
+  auth-access = write
+  password-db = passwd
+
+  [sasl]
+  $> grep -v "^#" svnrepos/conf/passwd
+
+  [users]
+  franklin = ltc
+  adams = ltc
+  sherman = ltc
+  jefferson = ltc
+  $> svnserve -d -r /Users/linda/svnrepos
+
+ b) Fill with first commit
+
+  $> cd ~/tmp/Tutorial
+  $> mkdir initial-svn
+  $> cd initial-svn
+  $> cp ../independence1.tex independence.tex
+  $> svn import --username jefferson -m "first version" ~/tmp/Tutorial/initial-svn file:///Users/linda/svnrepos/tutorial-svn
+  Adding         /Users/linda/tmp/Tutorial/initial-svn/independence.tex
+
+  Committed revision 1.
+
+ c) Checkout and create other versions
+
+  $> cd ~/tmp/Tutorial
+  $> svn co --username adams svn://localhost/tutorial-svn
+  Authentication realm: <svn://localhost:3690> 8b541c79-ea44-4304-8055-ab4e1cd7933f
+  Password for 'adams':
+  A    tutorial-svn/independence.tex
+  Checked out revision 1.
+  $> cp ../independence2.tex independence.tex
+  $> svn commit -m "second version" --username adams independence.tex
+  Sending        independence.tex
+  Transmitting file data .
+  Committed revision 2.
+  $> svn up
+  At revision 2.
+
+  ... and repeat for versions 3 through 6.
+
+  $> svn up
+  At revision 6.
+  $> svn log -q
+  ------------------------------------------------------------------------
+  r6 | sherman | 2012-11-13 13:01:00 -0600 (Tue, 13 Nov 2012)
+  ------------------------------------------------------------------------
+  r5 | sherman | 2012-11-13 13:00:35 -0600 (Tue, 13 Nov 2012)
+  ------------------------------------------------------------------------
+  r4 | jefferson | 2012-11-13 12:59:45 -0600 (Tue, 13 Nov 2012)
+  ------------------------------------------------------------------------
+  r3 | franklin | 2012-11-13 12:59:03 -0600 (Tue, 13 Nov 2012)
+  ------------------------------------------------------------------------
+  r2 | adams | 2012-11-13 12:58:04 -0600 (Tue, 13 Nov 2012)
+  ------------------------------------------------------------------------
+  r1 | jefferson | 2012-11-13 12:51:35 -0600 (Tue, 13 Nov 2012)
+  ------------------------------------------------------------------------
+
+ d) Dump repository into file
+
+  $> cd
+  $> svnadmin dump svnrepos > tutorialsvn
+  * Dumped revision 0.
+  * Dumped revision 1.
+  * Dumped revision 2.
+  * Dumped revision 3.
+  * Dumped revision 4.
+  * Dumped revision 5.
+  * Dumped revision 6.
+  $> gzip -v tutorialsvn
+  tutorialsvn:	 77.7% -- replaced with tutorialsvn.gz
+
+2. Replace repository at sf.net (does not work as the non-Classic projects at sf.net don't support this)
+
+[Shell only works in "classic" mode, so setting up a publicly available SVN server]
+
+3. Stop local svnserver
+
+  $> ps axu | grep svn
+  linda           2395   0.0  0.0  2433896    408   ??  Ss   12:53PM   0:00.01 svnserve -d -r /Users/linda/svnrepos
+  $> kill -9 2395

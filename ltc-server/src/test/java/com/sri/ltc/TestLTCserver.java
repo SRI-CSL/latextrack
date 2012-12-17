@@ -1,30 +1,35 @@
-/**
- ************************ 80 columns *******************************************
- * TestLTCserver
- *
- * Created on 11/11/11.
- *
- * Copyright 2009-2010, SRI International.
+/*
+ * #%L
+ * LaTeX Track Changes (LTC) allows collaborators on a version-controlled LaTeX writing project to view and query changes in the .tex documents.
+ * %%
+ * Copyright (C) 2009 - 2012 SRI International
+ * %%
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as
+ * published by the Free Software Foundation, either version 3 of the 
+ * License, or (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public 
+ * License along with this program.  If not, see
+ * <http://www.gnu.org/licenses/gpl-3.0.html>.
+ * #L%
  */
 package com.sri.ltc;
 
-import com.sri.ltc.server.HelloLTC;
+import com.sri.ltc.categories.IntegrationTests;
 import com.sri.ltc.server.LTC;
-import com.sri.ltc.server.LTCserverInterface;
-import org.apache.xmlrpc.XmlRpcException;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
-
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.util.Date;
+import org.junit.*;
+import org.junit.experimental.categories.Category;
 
 /**
  * @author linda
  */
+@Category(IntegrationTests.class)
 public final class TestLTCserver {
 
     private static LTC ltc;
@@ -50,21 +55,6 @@ public final class TestLTCserver {
             LTC.main(new String[] {"-l",level});
             // TODO: assert that no log output if level == INFO
         }
-    }
-
-    @Test
-    public void bugReport() throws MalformedURLException, XmlRpcException, FileNotFoundException {
-        HelloLTC.Client client = new HelloLTC.Client(new URL("http://localhost:" + LTCserverInterface.PORT + "/xmlrpc"));
-        LTCserverInterface server = (LTCserverInterface) client.GetProxy(LTCserverInterface.class);
-
-        // TODO: rewrite the git repo stuff - should be easy to use GitRepository directly
-//        TestGitRepository.createDirs();
-//        TestGitRepository testGitRepository = new TestGitRepository();
-//        testGitRepository.showFoo();
-//        int sessionID = server.init_session(testGitRepository.getFooFile().getPath());
-//        server.set_limited_date(sessionID, new Date().toString());
-//        server.create_bug_report(sessionID, "testing", "target");
-//        TestGitRepository.deleteTempFiles();
     }
 
     @Test

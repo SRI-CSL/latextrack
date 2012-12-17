@@ -8,14 +8,5 @@ ltc-server/src/main/java/com/sri/ltc/latexdiff/Lexer.java
 all/src/site/tex/manual/version.txt
 all/src/site/tex/manual/baseurl.txt
 all/src/site/tex/manual/manual.pdf
-#all/src/site/tex/manual/figures/manual-figure*.dpth
-#all/src/site/tex/manual/figures/manual-figure*.pdf
-#all/src/site/tex/manual/figures/manual-figure*.png
-
-# in report
-all/src/tex/techreport2012/report2012.pdf
-all/src/tex/techreport2012/gen_examples.sh
-all/src/tex/techreport2012/version.txt
-all/src/tex/techreport2012/examples/*.unix
-all/src/tex/techreport2012/examples/*.cml
+all/src/site/tex/manual/figures/LTC-logo.png
 

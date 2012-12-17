@@ -1,18 +1,32 @@
-/**
- ************************ 80 columns *******************************************
- * FileHistory
- *
- * Created on Jul 24, 2010.
- *
- * Copyright 2009-2010, SRI International.
+/*
+ * #%L
+ * LaTeX Track Changes (LTC) allows collaborators on a version-controlled LaTeX writing project to view and query changes in the .tex documents.
+ * %%
+ * Copyright (C) 2009 - 2012 SRI International
+ * %%
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as
+ * published by the Free Software Foundation, either version 3 of the 
+ * License, or (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public 
+ * License along with this program.  If not, see
+ * <http://www.gnu.org/licenses/gpl-3.0.html>.
+ * #L%
  */
-
 package com.sri.ltc.versioncontrol.history;
 
+import com.google.common.collect.Lists;
 import com.sri.ltc.filter.Author;
 import com.sri.ltc.versioncontrol.CommitGraph;
 import com.sri.ltc.versioncontrol.Commit;
 import com.sri.ltc.versioncontrol.TrackedFile;
+import com.sri.ltc.versioncontrol.VersionControlException;
 
 import java.io.IOException;
 import java.text.ParseException;
@@ -30,17 +44,17 @@ public abstract class FileHistory {
     final CommitGraph commitGraph = new CommitGraph();
     final Set<Author> authors = new HashSet<Author>();
 
-    public FileHistory(TrackedFile gitFile) throws IOException, ParseException {
-        if (gitFile == null)
+    protected FileHistory(TrackedFile file) throws IOException, ParseException {
+        if (file == null)
             throw new IllegalArgumentException("Cannot create FileHistory with NULL as git file");
-        this.trackedFile = gitFile;
+        this.trackedFile = file;
     }
 
-    abstract List<Commit> updateCommits() throws Exception;
+    abstract List<Commit> updateCommits() throws ParseException, VersionControlException, IOException;
     abstract void transformGraph();
     abstract void transformList() throws IOException;
 
-    public final List<Object[]> update() throws Exception {
+    public final List<Object[]> update() throws ParseException, IOException, VersionControlException {
         List<Commit> commits = updateCommits();
 
         // translate git commits into graph structure:
@@ -95,19 +109,13 @@ public abstract class FileHistory {
                 return o1.getDate().compareTo(o2.getDate());
             }
         });
-        LOGGER.info("Obtained path from commit graph for \""+ trackedFile.getFile().getName()+"\" with "+commitList.size()+" commits.");
+        LOGGER.fine("Obtained path from commit graph for \""+ trackedFile.getFile().getName()+"\" with "+commitList.size()+" commits.");
 
         // do any specific list transformations before reversing
         transformList();
 
         Collections.reverse(commitList); // start with oldest commit first
         return list;
-    }
-
-    public List<Commit> getLog() throws Exception {
-        List<Commit> commits = trackedFile.getCommits();
-        LOGGER.info("Obtained full history for \""+ trackedFile.getFile().getName()+"\" with "+commits.size()+" commits.");
-        return commits;
     }
 
     public Set<Author> getAuthors() {

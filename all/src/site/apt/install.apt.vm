@@ -1,17 +1,15 @@
     ------
-    Download
+    Installation and Update
     ------
     Linda Briesemeister
     ------
     ------
 
-Download LTC
+Installing and Updating LTC
 
-  The system can be used via the included LTC Editor or with Emacs.
-
-  Use the {{{./downloads/ltc-install.sh}ltc-install.sh}} (right-click and "Save As...") bash script to automatically
-  fetch the latest JAR file to a location of your choice and optionally extract the Emacs Lisp files to your Emacs
-  directory.
+  Use the {{{http://sourceforge.net/projects/latextrack/files/ltc-install.sh/download}ltc-install.sh}} script to
+  automatically fetch the latest JAR file to a location of your choice and optionally extract the Emacs Lisp files to
+  your Emacs directory. To <<update>> from an older version, also use this script.
   You can obtain usage information by invoking the script this way:
 
 +----
@@ -31,27 +29,13 @@ To start LTC server with default options, use the following command:
 
 +----
 
-  Or, download {{{./downloads/LTC-${project.version}.jar}LTC-${project.version}.jar}} manually.
-  To use it with Emacs, the JAR file contains the necessary Emacs Lisp files for <<<ltc-mode>>>.
-  You can extract those files with the <<<jar>>> tool (as explained in the
-  {{{./html_multipage/manual/manualch1.html}installation chapter of the manual}})
-  or you may download the files individually here:
-
-  * {{{./downloads/emacs/xml-rpc.el}xml-rpc.el}}
-
-  * {{{./downloads/emacs/versions.el}versions.el}}
-
-  * {{{./downloads/emacs/ltc-mode.el}ltc-mode.el}}
-
-  []
-
 * System Requirements
 
 *---------------------------+------------------------------------+-----------------------+
 | <<Java>>                  | 1.6 or above                       | <<<$> java -version>>>
 | (JDK if using <<<jar>>>)  |                                    |
 *---------------------------+------------------------------------+-----------------------+
-| <<git>> or <<svn>>        | 1.7.2 or above                     | <<<$> git --version>>>
+| <<git>> or <<svn>>        | 1.7.2 or above,                    | <<<$> git --version>>>,
 |                           | 1.6.3 or above                     | <<<$> svn --version>>>
 *---------------------------+------------------------------------+-----------------------+
 | <<Emacs>>                 | 23 or above; no support for XEmacs |
@@ -63,7 +47,15 @@ To start LTC server with default options, use the following command:
 
 * Examples
 
-  To perform the tutorial in the manual or to start playing with LTC, we provide the following git repositories that contain
+  To perform the tutorial in the manual or to start playing with LTC, we provide the following repositories that contain
   examples.
 
-  * {{{./downloads/examples/independence.bundle}independence.bundle}}
+  * Git: Download {{{http://sourceforge.net/projects/latextrack/files/examples/independence.bundle/download}independence.bundle}} and use as explained in the tutorial.
+
+  * Subversion: In a directory of your choice, do
+
++----
+svn checkout https://spartan.csl.sri.com/svn/public/LTC/tutorial-svn independence
++----
+
+  []

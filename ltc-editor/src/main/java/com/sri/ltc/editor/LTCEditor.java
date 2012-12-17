@@ -1,12 +1,26 @@
-/**
- ************************ 80 columns *******************************************
- * LTCEditor
- *
- * Created on Jul 29, 2010.
- *
- * Copyright 2009-2010, SRI International.
- */
 package com.sri.ltc.editor;
+
+/*
+ * #%L
+ * LaTeX Track Changes (LTC) allows collaborators on a version-controlled LaTeX writing project to view and query changes in the .tex documents.
+ * %%
+ * Copyright (C) 2009 - 2012 SRI International
+ * %%
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as
+ * published by the Free Software Foundation, either version 3 of the 
+ * License, or (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public 
+ * License along with this program.  If not, see
+ * <http://www.gnu.org/licenses/gpl-3.0.html>.
+ * #L%
+ */
 
 import com.sri.ltc.versioncontrol.Remote;
 import com.sri.ltc.logging.LevelOptionHandler;
@@ -91,14 +105,16 @@ public final class LTCEditor extends LTCGui {
                 if (session.isValid()) {
                     if (!session.getCanonicalPath().equals(file.getCanonicalPath())) {
                         if (!close()) {
-                            fileField.setText(session.getCanonicalPath());
+                            fileField.setText(session.getCanonicalPath()); // undo setting of file field
                             return;
                         }
+                        clear();
                         session.startInitAndUpdate(file, dateField.getText(), revField.getText(), textPane.getCaretPosition());
                     } else {
                         session.startUpdate(dateField.getText(), revField.getText(), false, textPane.getText(), textPane.stopFiltering(), textPane.getCaretPosition());
                     }
                 } else {
+                    clear();
                     session.startInitAndUpdate(file, dateField.getText(), revField.getText(), textPane.getCaretPosition());
                 }
                 // update file chooser and preference for next time:
@@ -156,6 +172,7 @@ public final class LTCEditor extends LTCGui {
         commitModel.init(commits, true);
         selfModel.init(authors, self);
         saveButton.setEnabled(false); // start with modified = false
+        setFile(session.getCanonicalPath(), false);
     }
 
     protected void finishUpdate(Map<Integer, Object[]> authors,
@@ -194,6 +211,7 @@ public final class LTCEditor extends LTCGui {
     }
 
     private void clear() {
+        fileField.setText(fileChooser.getCurrentDirectory().getAbsolutePath()+"/");
         try {
             textPane.clearAndGetDocument();
         } catch (BadLocationException e) {
@@ -297,8 +315,7 @@ public final class LTCEditor extends LTCGui {
             public void actionPerformed(ActionEvent e) {
                 if (fileChooser.showOpenDialog(getFrame()) == JFileChooser.APPROVE_OPTION) {
                     File file = fileChooser.getSelectedFile();
-                    fileField.setText(file.getAbsolutePath());
-                    getUpdateButton().doClick();
+                    LTCEditor.this.setFile(file.getAbsolutePath(), true);
                 }
             }
         }), BorderLayout.LINE_END);
@@ -522,9 +539,10 @@ public final class LTCEditor extends LTCGui {
         createLowerRightPane(getLowerRightPane());
     }
 
-    private void setFile(String path) {
+    private void setFile(String path, boolean doUpdate) {
         fileField.setText(path);
-        getUpdateButton().doClick(); // crude way to invoke ENTER on JTextField
+        if (doUpdate)
+            getUpdateButton().doClick(); // crude way to invoke ENTER on JTextField
     }
 
     private static void printUsage(PrintStream out, CmdLineParser parser) {
@@ -591,7 +609,7 @@ public final class LTCEditor extends LTCGui {
         if (options.file != null)
             SwingUtilities.invokeLater(new Runnable() {
                 public void run() {
-                    editor.setFile(options.file.getAbsolutePath());
+                    editor.setFile(options.file.getAbsolutePath(), true);
                 }
             });
     }

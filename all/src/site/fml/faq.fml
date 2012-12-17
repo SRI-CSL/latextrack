@@ -1,4 +1,26 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<!--
+  #%L
+  LaTeX Track Changes (LTC) allows collaborators on a version-controlled LaTeX writing project to view and query changes in the .tex documents.
+  %%
+  Copyright (C) 2009 - 2012 SRI International
+  %%
+  This program is free software: you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as
+  published by the Free Software Foundation, either version 3 of the 
+  License, or (at your option) any later version.
+  
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+  
+  You should have received a copy of the GNU General Public 
+  License along with this program.  If not, see
+  <http://www.gnu.org/licenses/gpl-3.0.html>.
+  #L%
+  -->
+
 <faqs xmlns="http://maven.apache.org/FML/1.0.1"
       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
       xsi:schemaLocation="http://maven.apache.org/FML/1.0.1 http://maven.apache.org/xsd/fml-1.0.1.xsd"
@@ -57,9 +79,9 @@
             <question>I'm not sure if my LTC Server is running.</question>
             <answer>
                 <p>You can test whether your LTC Server is running using our little utility program HelloLTC:</p>
-                <source>$> java -cp $LTC/LTC-0.9-SNAPSHOT.jar com.sri.ltc.server.HelloLTC -p 8765
+                <source>$> java -cp $LTC/LTC.jar com.sri.ltc.server.HelloLTC -p 8765
  *** ERROR: Could not connect to LTC server on port 8765
-$> java -cp $LTC/LTC-0.9-SNAPSHOT.jar com.sri.ltc.server.HelloLTC
+$> java -cp $LTC/LTC.jar com.sri.ltc.server.HelloLTC
 The answer to the question of life is: 42
 (Seeing this means your LTC server on port 7777 is running.)</source>
                 <p>If you don't see the answer to the question of life, your LTC Server is not running on the tested port. If you omit the -p option, the default port is used for testing.</p>
@@ -88,8 +110,8 @@ The answer to the question of life is: 42
             </question>
             <answer>
                 <p>Emacs is not able to find the Emacs Lisp files from the LTC distribution.
-                Check that the load-path in Emacs contains the directory where you extracted or saved the LTC Emacs Lisp
-                files.</p>
+                Check that the load-path in Emacs contains the directory that you used as the second argument for the
+                LTC installation script.</p>
             </answer>
         </faq>
 
@@ -107,12 +129,16 @@ The answer to the question of life is: 42
 
         <faq id="strikethrough-emacs">
             <question>
-                My ltc-mode seems to be working but deletions are only colored without showing strike-through markup.
+                My ltc-mode seems to be working but deletions are missing strike-through markup.
             </question>
             <answer>
-                <p>This is the current behavior of the ltc-mode due to an error in Emacs under Mac OS X where the Courier
-                font in strike-through is not available.  Other operating systems such as Linux do not have this problem.
-                We hope that future releases of Emacs on Mac OS X have fixed this bug.</p>
+                <p>Unfortunately, Emacs under Mac OS X is missing the Courier font in strike-through.
+                Other operating systems such as Linux do not have this problem but the default setting for marking up
+                deletions may not show the strike-through.</p>
+                <p>You can customize Emacs to use a different font face for marking up deletions using command
+                "M-x customize-group RET ltc RET" once LTC mode has been loaded at least once via "M-x ltc-mode"
+                (which may have been unsuccessful).  Then, customize the faces called "Ltc Addition" and "Ltc Deletion"
+                to your liking.</p>
             </answer>
         </faq>
 

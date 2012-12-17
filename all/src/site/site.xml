@@ -1,5 +1,33 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
+<!--
+  #%L
+  LaTeX Track Changes (LTC) allows collaborators on a version-controlled LaTeX writing project to view and query changes in the .tex documents.
+  %%
+  Copyright (C) 2009 - 2012 SRI International
+  %%
+  This program is free software: you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as
+  published by the Free Software Foundation, either version 3 of the 
+  License, or (at your option) any later version.
+  
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+  
+  You should have received a copy of the GNU General Public 
+  License along with this program.  If not, see
+  <http://www.gnu.org/licenses/gpl-3.0.html>.
+  #L%
+  -->
+
 <project name="LaTeX Track Changes">
+
+    <bannerLeft>
+        <name>LTC</name>
+        <src>images/LTC-logo.png</src>
+        <href>index.html</href>
+    </bannerLeft>
 
     <bannerRight>
         <name>SRI</name>
@@ -23,13 +51,23 @@
     <body>
         <menu name="LTC">
             <item name="Introduction" href="index.html"/>
-            <item name="Download" href="download.html"/>
+            <item name="Installation" href="install.html"/>
             <item name="Usage" href="usage.html">
-                <item name="Manual (1 page)" href="html_singlepage/manual/manual.html" collapse="false"/>
-                <item name="Manual (pages)" href="html_multipage/manual/manual.html" collapse="false"/>
+                <item name="Manual (all in window)" href="html_singlepage/manual/manual.html" collapse="false"/>
+                <item name="Manual (browse tree)" href="html_multipage/manual/manual.html" collapse="false"/>
+                <item name="Manual as PDF" href="manual/manual.pdf" collapse="false"/>
             </item>
             <item name="FAQ" href="faq.html" />
+            <item name="License" href="license.html" />
         </menu>
+
+        <menu name="Sourceforge" inherit="top">
+            <item name="Project Page"
+                  href="http://sourceforge.net/projects/latextrack" />
+            <item name="Downloads"
+                  href="http://sourceforge.net/projects/latextrack/files" />
+        </menu>
+
         <menu ref="reports"/>
 
     </body>

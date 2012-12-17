@@ -1,9 +1,28 @@
+/*
+ * #%L
+ * LaTeX Track Changes (LTC) allows collaborators on a version-controlled LaTeX writing project to view and query changes in the .tex documents.
+ * %%
+ * Copyright (C) 2009 - 2012 SRI International
+ * %%
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as
+ * published by the Free Software Foundation, either version 3 of the 
+ * License, or (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public 
+ * License along with this program.  If not, see
+ * <http://www.gnu.org/licenses/gpl-3.0.html>.
+ * #L%
+ */
 package com.sri.ltc.versioncontrol;
 
 import com.sri.ltc.filter.Author;
-import com.sri.ltc.server.LTCserverInterface;
 
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
@@ -32,11 +51,11 @@ public abstract class Commit<RepositoryClass extends Repository, TrackedFileClas
     abstract public Author getAuthor();
     abstract public Date getDate();
 
-    abstract public List<Commit> getParents() throws Exception;
+    abstract public List<Commit> getParents();
 
     // note: this only makes sense if the commit was a single-file commit
     // if the commit was not filtered by file, this method will return null
-    abstract public InputStream getContentStream() throws Exception;
+    abstract public InputStream getContentStream() throws VersionControlException;
 
     // TODO: these two methods should probably go into a utility class of some form
     public static String serializeDate(Date date) {
@@ -47,7 +66,10 @@ public abstract class Commit<RepositoryClass extends Repository, TrackedFileClas
         return FORMATTER.parse(date);
     }
     
-    public Reader getContents() throws Exception {
+    public Reader getContents() throws VersionControlException {
+        InputStream is = getContentStream();
+        if (is == null)
+            throw new NullPointerException("Cannot get content stream");
         return new InputStreamReader(getContentStream());
     }
 

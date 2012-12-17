@@ -1,10 +1,23 @@
-/**
- ************************ 80 columns *******************************************
- * MarkedUpDocument
- *
- * Created on 4/20/12.
- *
- * Copyright 2009-2010, SRI International.
+/*
+ * #%L
+ * LaTeX Track Changes (LTC) allows collaborators on a version-controlled LaTeX writing project to view and query changes in the .tex documents.
+ * %%
+ * Copyright (C) 2009 - 2012 SRI International
+ * %%
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as
+ * published by the Free Software Foundation, either version 3 of the 
+ * License, or (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public 
+ * License along with this program.  If not, see
+ * <http://www.gnu.org/licenses/gpl-3.0.html>.
+ * #L%
  */
 package com.sri.ltc.latexdiff;
 
@@ -27,6 +40,7 @@ public final class MarkedUpDocument extends DefaultStyledDocument {
 
     public enum KEYS {TEXT, POSITION}
 
+    private final static String UNADORNED_STYLE = "unadorned";
     private final static String ADDITION_STYLE = "addition";
     private final static String DELETION_STYLE = "deletion";
     private final static String AUTHOR_INDEX = "author index";
@@ -38,10 +52,14 @@ public final class MarkedUpDocument extends DefaultStyledDocument {
     public MarkedUpDocument() {
         // define styles for additions and deletions
         Style style;
-        style = this.addStyle(ADDITION_STYLE, null);
+
+        style = addStyle(ADDITION_STYLE, null);
         StyleConstants.setUnderline(style, true);
-        style = this.addStyle(DELETION_STYLE, null);
+
+        style = addStyle(DELETION_STYLE, null);
         StyleConstants.setStrikeThrough(style, true);
+
+        style = addStyle(UNADORNED_STYLE, null);
     }
 
     public MarkedUpDocument(String initialText, List<Object[]> deletions, int caretPosition) throws BadLocationException {
@@ -107,7 +125,21 @@ public final class MarkedUpDocument extends DefaultStyledDocument {
     }
 
     public void insertDeletion(int offset, String text, Set<Change.Flag> flags) throws BadLocationException {
-        Style style = getStyle(DELETION_STYLE);
+        Style style;
+        if (flags.contains(Change.Flag.WHITESPACE)) {
+            // we're not interested in marking up spare newlines as deletions - that just confuses the
+            // display. Instead, we will mark it, and other whitespace changes, with a special, "unadorned"
+            // style to distinguish them from other deletions.
+            text = text.replaceAll("[\\r\\n]", " ");
+            // SAB: this is causing other problems, like turning a contiguous block of changes
+            // into an interrupted set of changes. Turning this off until we can figure out a
+            // better approach.
+            //style = getStyle(UNADORNED_STYLE);
+            style = getStyle(DELETION_STYLE);
+        } else {
+            style = getStyle(DELETION_STYLE);
+        }
+        
         style.addAttribute(FLAGS_ATTR, flags);
         insertString(offset, text, style);
     }
@@ -122,7 +154,7 @@ public final class MarkedUpDocument extends DefaultStyledDocument {
         Style style;
         for (int i = start_position; i < end_position; i++) {
             Object styleName = getCharacterElement(i).getAttributes().getAttribute(StyleConstants.NameAttribute);
-            if (!DELETION_STYLE.equals(styleName) && !ADDITION_STYLE.equals(styleName)) {
+            if (!DELETION_STYLE.equals(styleName) && !ADDITION_STYLE.equals(styleName) && (!UNADORNED_STYLE.equals(styleName))) {
                 style = getStyle(ADDITION_STYLE);
                 style.addAttribute(FLAGS_ATTR, flags);
                 setCharacterAttributes(i, 1, style, true);
@@ -158,13 +190,8 @@ public final class MarkedUpDocument extends DefaultStyledDocument {
         return getCaretPosition();
     }
 
-    public Reader getReader() {
-        try {
-            return new StringReader(getText(0, getLength()));
-        } catch (BadLocationException e) {
-            e.printStackTrace();
-        }
-        return null;
+    public Reader getReader() throws BadLocationException {
+        return new StringReader(getText(0, getLength()));
     }
 
     public List<Integer[]> getStyles() {
@@ -218,11 +245,16 @@ public final class MarkedUpDocument extends DefaultStyledDocument {
         }
 
         private Integer[] asList() {
+            // TODO: remove hardcoded values and replace with constants
+            // consider creating an enum and a map to convert that enum to string
             Integer[] values = {start, end, 0, 0};
             if (ADDITION_STYLE.equals(style))
                 values[2] = 1;
             if (DELETION_STYLE.equals(style))
                 values[2] = 2;
+            if (UNADORNED_STYLE.equals(style))
+                values[2] = 3;
+
             if (author != null)
                 values[3] = author;
             return values;

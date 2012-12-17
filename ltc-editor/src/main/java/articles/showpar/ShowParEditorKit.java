@@ -1,3 +1,6 @@
+/*
+ Obtained from http://java-sl.com/showpar.html
+ */
 package articles.showpar;
 
 import javax.swing.text.*;

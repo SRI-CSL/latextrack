@@ -1,3 +1,4 @@
+% !TEX root = manual.tex
 \section{Using Emacs} \label{sec:emacs}
 
 In this section, we explain how to use Emacs as the editor of the .tex-file with LTC.
@@ -11,15 +12,12 @@ In this section, we explain how to use Emacs as the editor of the .tex-file with
 
 \subsection{Starting the LTC Server}
 
-Before you can use \Code{ltc-mode} in Emacs, you must start the LTC server first.  To do so, you call Java with the JAR-file that you installed in directory \Code{$LTC}. 
+Before you can use \Code{ltc-mode} in Emacs, you must start the LTC server first.  To do so, you call Java with the JAR-file that you installed in directory \Code{\$LTC}.  This should produce output similar to the one below. 
 
 \begin{CodeVerbatim}
 $> java -jar $LTC/LTC.jar 
-Fri Oct 26 10:23:58 EDT 2012 | CONFIG: 	Default logging configuration complete
-Fri Oct 26 10:23:58 EDT 2012 | CONFIG: 	Logging configured to level CONFIG
-Fri Oct 26 10:23:59 EDT 2012 | CONFIG: 	LTC version: 0.9.8-SNAPSHOT
---log4j: 26 Oct 2012 10:23:59,188 [main] INFO  org.apache.xmlrpc.webserver.XmlRpcServlet - init
-Fri Oct 26 10:23:59 EDT 2012 | INFO: 	Started RPC server on port 7777.
+[...]
+<current date> | INFO: 	Started RPC server on port 7777.
 \end{CodeVerbatim}
 
 If you need to customize LTC, for example to change the port number, start the base system with option \Code{-p <PORT>}:
@@ -27,7 +25,7 @@ If you need to customize LTC, for example to change the port number, start the b
 \begin{CodeVerbatim}
 $> java -jar $LTC/LTC.jar -p 5555
 [...]
-Fri Oct 26 10:26:24 EDT 2012 | INFO: 	Started RPC server on port 5555.
+<current date> | INFO: 	Started RPC server on port 5555.
 \end{CodeVerbatim}
 
 The log messages from the LTC server are also saved in file \Code{~/.LTC.log}.  This log file is created every time that the server starts, so if you need the contents, please make a copy before starting the server anew.
@@ -62,11 +60,13 @@ An important command is \Code{M-x ltc-update} or the menu item LTC $>$ Update bu
 
 \subsection{Customizing LTC Mode}
 
-port
+To customize LTC mode, you can use the command \Code{M-x customize-group RET ltc RET}.  It will show you a list of options that can be changed.  Once you have changed options, you may want to click ``Save for future sessions'' or abort using ``Exit.''
 
-command prefix
-
-markup of additions and deletions
+\begin{description}
+\item[Port] This denotes the port of the LTC server running on your local machine.  Leave the default value unless there are problems and the port is already in use by another application.
+\item[Ltc Command Prefix] This is a global command prefix for all interactive LTC commands in Emacs.  The Emacs convention for modes is to use \Code{\^C} and another character but you can adjust this to your liking if you like to use shortcuts to the LTC functions.
+\item[Ltc Addition and Deletion faces]  Here you can customize how LTC marks up additions and deletions respectively.  You will not want to set the Foreground or Background color, as this will be overridden by the colors of the authors who made the change.  On Mac OS X, the strike-through fonts may not be available so the default for deletions is also to invert the foreground and background coloring.  On Linux, you may want to turn the color inversion off for a less intrusive scheme as the strike-through font is available there.
+\end{description}
 
 \subsection{Filtering Changes}
 
@@ -100,7 +100,7 @@ To customize the color used to designate changes in the marked up text, click on
 
 \subsection{Misc}
 
-Customize ltc-mode: \Code{M-x customize-group RET ltc RET}
+Customize ltc-mode: 
 
 \Code{M-x describe-face RET <face>} to describe faces \Code{ltc-addition} and \Code{ltc-deletion}
 

@@ -1,13 +1,30 @@
-/**
- ************************ 80 columns *******************************************
- * LTC
- *
- * Created on May 17, 2010.
- *
- * Copyright 2009-2010, SRI International.
+/*
+ * #%L
+ * LaTeX Track Changes (LTC) allows collaborators on a version-controlled LaTeX writing project to view and query changes in the .tex documents.
+ * %%
+ * Copyright (C) 2009 - 2012 SRI International
+ * %%
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as
+ * published by the Free Software Foundation, either version 3 of the 
+ * License, or (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public 
+ * License along with this program.  If not, see
+ * <http://www.gnu.org/licenses/gpl-3.0.html>.
+ * #L%
  */
 package com.sri.ltc.server;
 
+import com.apple.eawt.AboutHandler;
+import com.apple.eawt.AppEvent;
+import com.apple.eawt.QuitHandler;
+import com.apple.eawt.QuitResponse;
 import com.sri.ltc.logging.LevelOptionHandler;
 import com.sri.ltc.logging.LogConfiguration;
 import org.kohsuke.args4j.CmdLineException;
@@ -15,7 +32,9 @@ import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
 
 import javax.servlet.ServletException;
+import javax.swing.*;
 import java.io.*;
+import java.net.URL;
 import java.util.logging.Level;
 import java.util.logging.LogManager;
 import java.util.logging.Logger;
@@ -120,6 +139,43 @@ public final class LTC {
             logger.log(Level.SEVERE, "Cannot configure logging", e);
         }
 
+        // customize for Mac OS X (in the hope that AWT isn't loaded yet)
+        final String NAME = "LTC Server";
+        System.setProperty("apple.laf.useScreenMenuBar", "true");
+        System.setProperty("com.apple.mrj.application.apple.menu.about.name", NAME);
+        System.setProperty("apple.awt.showGrowBox", "true");
+        try {
+            UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+        } catch (Exception e) {
+            logger.log(Level.SEVERE, "setting UI look & feel", e);
+        }
+
+        String osName = System.getProperty("os.name").toLowerCase();
+        boolean IS_MAC = osName.startsWith("mac os x");
+        if (IS_MAC) {
+            URL imageURL = Console.class.getResource("/images/LTC-icon.png");
+            if (imageURL != null) {
+                ImageIcon icon = new ImageIcon(imageURL);
+                com.apple.eawt.Application application = com.apple.eawt.Application.getApplication();
+                application.setDockIconImage(icon.getImage());
+                application.setAboutHandler(new AboutHandler() {
+                    @Override
+                    public void handleAbout(AppEvent.AboutEvent aboutEvent) {
+                        // TODO: copyright?
+
+                    }
+                });
+                application.setQuitHandler(new QuitHandler() {
+                    @Override
+                    public void handleQuitRequestWith(AppEvent.QuitEvent quitEvent, QuitResponse quitResponse) {
+                        // TODO: do anything here?
+                        quitResponse.performQuit();
+                    }
+                });
+                // TODO: enable preferences and set handler?
+            }
+        }
+
         LTC.getInstance(); // start up server (if not already running)
     }
 
@@ -132,8 +188,5 @@ public final class LTC {
 
         @Option(name="-p",usage="port on localhost used for XML-RPC")
         static int port = LTCserverInterface.PORT;
-
-        @Option(name="-g",usage="path to directory with git executable",required=false,metaVar="PATH")
-        String gitDir = null;
     }
 }

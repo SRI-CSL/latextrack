@@ -1,3 +1,24 @@
+~~~
+~~ #%L
+~~ LaTeX Track Changes (LTC) allows collaborators on a version-controlled LaTeX writing project to view and query changes in the .tex documents.
+~~ %%
+~~ Copyright (C) 2009 - 2012 SRI International
+~~ %%
+~~ This program is free software: you can redistribute it and/or modify
+~~ it under the terms of the GNU General Public License as
+~~ published by the Free Software Foundation, either version 3 of the 
+~~ License, or (at your option) any later version.
+~~ 
+~~ This program is distributed in the hope that it will be useful,
+~~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+~~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+~~ GNU General Public License for more details.
+~~ 
+~~ You should have received a copy of the GNU General Public 
+~~ License along with this program.  If not, see
+~~ <http://www.gnu.org/licenses/gpl-3.0.html>.
+~~ #L%
+~~~
     ---
     LaTeX Track Changes
     ---
@@ -8,8 +29,8 @@ LaTeX Track Changes
 
 
    LaTeX Track Changes (LTC) is a system that allows collaborators on a LaTeX writing project to view and query changes
-   in the .tex documents.  To provide a history for LTC, we assume that the writing project is stored in a git version
-   control system.  Other version control systems could be supported in the future.
+   in the .tex documents.  To provide a history for LTC, we assume that the writing project is stored in a git or svn
+   version control system.  Other version control systems could be supported in the future.
 
    In contrast to Microsoft Word, for example, we do not ask the authors to turn the system on or off
    to track changes.  Also, changes do not need to be accepted or rejected.  Instead, whatever the history of the

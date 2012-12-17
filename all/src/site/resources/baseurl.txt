@@ -1,1 +1,1 @@
-\renewcommand{\baseurl}{${temp.url}}
+\renewcommand{\baseurl}{${url}}

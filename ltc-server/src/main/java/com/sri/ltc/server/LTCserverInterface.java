@@ -1,10 +1,23 @@
-/**
- ************************ 80 columns *******************************************
- * LTCserverInterface
- *
- * Created on May 17, 2010.
- *
- * Copyright 2009-2010, SRI International.
+/*
+ * #%L
+ * LaTeX Track Changes (LTC) allows collaborators on a version-controlled LaTeX writing project to view and query changes in the .tex documents.
+ * %%
+ * Copyright (C) 2009 - 2012 SRI International
+ * %%
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as
+ * published by the Free Software Foundation, either version 3 of the 
+ * License, or (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public 
+ * License along with this program.  If not, see
+ * <http://www.gnu.org/licenses/gpl-3.0.html>.
+ * #L%
  */
 package com.sri.ltc.server;
 
@@ -115,8 +128,8 @@ public interface LTCserverInterface {
      * color name.  The value under {@link #KEY_CARET} contains the transformed cursor
      * position into the new text of the one given as an argument to the method.
      * Another entry under {@link #KEY_SHA1} in the returned map is a list of SHA1 keys
-     * that have been used to obtain the changes.  These could be matched to the list
-     * of all commits from {@link #get_commits(int)}.
+     * that have been used to obtain the changes including those that are in between.
+     * These could be matched to the list of all commits from {@link #get_commits(int)}.
      *
      * @param sessionID identifies the session
      * @param isModified whether the text has been modified since the last save operation

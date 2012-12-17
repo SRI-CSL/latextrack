@@ -1,12 +1,26 @@
-/**
- ************************ 80 columns *******************************************
- * LatexPane
- *
- * Created on Jan 11, 2010.
- *
- * Copyright 2009-2010, SRI International.
- */
 package com.sri.ltc.editor;
+
+/*
+ * #%L
+ * LaTeX Track Changes (LTC) allows collaborators on a version-controlled LaTeX writing project to view and query changes in the .tex documents.
+ * %%
+ * Copyright (C) 2009 - 2012 SRI International
+ * %%
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as
+ * published by the Free Software Foundation, either version 3 of the 
+ * License, or (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public 
+ * License along with this program.  If not, see
+ * <http://www.gnu.org/licenses/gpl-3.0.html>.
+ * #L%
+ */
 
 import articles.showpar.ShowParEditorKit;
 import com.google.common.collect.Lists;
@@ -17,8 +31,11 @@ import java.awt.*;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseEvent;
+import java.io.Console;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.prefs.Preferences;
 
 /**
@@ -27,6 +44,7 @@ import java.util.prefs.Preferences;
 @SuppressWarnings("serial")
 public final class LatexPane extends JTextPane {
 
+    private static final Logger LOGGER = Logger.getLogger(LatexPane.class.getName());
     private static String KEY_SHOW_PARAGRAPHS = "showParagraphs";
     protected final static String STYLE_PREFIX = "style no. ";
     private final LatexDocumentFilter documentFilter = new LatexDocumentFilter(this);
@@ -53,10 +71,14 @@ public final class LatexPane extends JTextPane {
         // define styles for additions and deletions
         StyledDocument document = getStyledDocument();
         Style style;
+
         style = document.addStyle(STYLE_PREFIX+1, null); // addition
         StyleConstants.setUnderline(style, true);
+
         style = document.addStyle(STYLE_PREFIX+2, null); // deletion
         StyleConstants.setStrikeThrough(style, true);
+
+        style = document.addStyle(STYLE_PREFIX+3, null); // unadorned
 
         // more initialization
         setCaretPosition(0);
@@ -185,20 +207,29 @@ public final class LatexPane extends JTextPane {
                 Style style;
                 for (Integer[] tuple : styles) {
                     if (tuple != null && tuple.length == 4) {
-                        style = document.getStyle(STYLE_PREFIX+tuple[2]);
-                        StyleConstants.setForeground(style, colors.get(tuple[3]));
-                        document.setCharacterAttributes(tuple[0], tuple[1]-tuple[0],
-                                style,
-                                true);
+                        try {
+                            style = document.getStyle(STYLE_PREFIX+tuple[2]);
+                            StyleConstants.setForeground(style, colors.get(tuple[3]));
+                            document.setCharacterAttributes(tuple[0], tuple[1]-tuple[0],
+                                    style,
+                                    true);
+                        }
+                        catch (Exception e) {
+                            System.out.println("Exception getting style info");
+                        }
                     }
                 }
             }
             // set proper caret position and scroll to it
+            if (caretPosition < 0)
+                caretPosition = 0;
+            if (caretPosition > getDocument().getLength())
+                caretPosition = getDocument().getLength();
             setCaretPosition(caretPosition);
             scrollRectToVisible(modelToView(getCaret().getDot()));
             requestFocusInWindow();
         } catch (BadLocationException e) {
-            e.printStackTrace();
+            LOGGER.log(Level.SEVERE, "while updating text", e);
         }
         startFiltering();
     }
