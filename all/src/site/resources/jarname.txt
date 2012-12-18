@@ -1,1 +1,0 @@
-\renewcommand{\jarname}{${ueber.jar}.jar}
