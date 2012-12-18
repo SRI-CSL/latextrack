@@ -25,6 +25,7 @@ import com.apple.eawt.AboutHandler;
 import com.apple.eawt.AppEvent;
 import com.apple.eawt.QuitHandler;
 import com.apple.eawt.QuitResponse;
+import com.sri.ltc.CommonUtils;
 import com.sri.ltc.logging.LevelOptionHandler;
 import com.sri.ltc.logging.LogConfiguration;
 import org.kohsuke.args4j.CmdLineException;
@@ -76,9 +77,19 @@ public final class LTC {
     // --- end of singleton pattern ---------------------------------------- //
 
     static {
+        // first thing is to configure Mac OS X before AWT gets loaded:
+        final String NAME = "LTC Server";
+        System.setProperty("apple.laf.useScreenMenuBar", "true");
+        System.setProperty("com.apple.mrj.application.apple.menu.about.name", NAME);
+        System.setProperty("apple.awt.showGrowBox", "true");
+
+        // print NOTICE on command line
+        System.out.println(CommonUtils.getNotice()); // output notice
+
+        // default configuration for logging
         try {
             LogManager.getLogManager().readConfiguration(new LogConfiguration().asInputStream());
-            Logger.getLogger(LTC.class.getName()).config("Default logging configuration complete");
+            Logger.getLogger(LTC.class.getName()).fine("Default logging configuration complete");
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -86,7 +97,7 @@ public final class LTC {
     private static final Logger logger = Logger.getLogger(LTC.class.getName());
 
     private void init() {
-        logger.config("LTC version: " + LTCserverImpl.getVersion()); // also initializes git etc.
+        logger.config("LTC version: " + LTCserverImpl.getVersion());
 
         try {
             // set up RPC server - this will enable us to receive XML-RPC calls
@@ -128,6 +139,11 @@ public final class LTC {
             return;
         }
 
+        if (options.displayLicense) {
+            System.out.println("LTC is licensed under:\n\n" + CommonUtils.getLicense());
+            return;
+        }
+
         // configure logging
         try {
             LogConfiguration logConfig = new LogConfiguration();
@@ -139,17 +155,12 @@ public final class LTC {
             logger.log(Level.SEVERE, "Cannot configure logging", e);
         }
 
-        // customize for Mac OS X (in the hope that AWT isn't loaded yet)
-        final String NAME = "LTC Server";
-        System.setProperty("apple.laf.useScreenMenuBar", "true");
-        System.setProperty("com.apple.mrj.application.apple.menu.about.name", NAME);
-        System.setProperty("apple.awt.showGrowBox", "true");
+        // customize for Mac OS X:
         try {
             UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
         } catch (Exception e) {
             logger.log(Level.SEVERE, "setting UI look & feel", e);
         }
-
         String osName = System.getProperty("os.name").toLowerCase();
         boolean IS_MAC = osName.startsWith("mac os x");
         if (IS_MAC) {
@@ -161,8 +172,11 @@ public final class LTC {
                 application.setAboutHandler(new AboutHandler() {
                     @Override
                     public void handleAbout(AppEvent.AboutEvent aboutEvent) {
-                        // TODO: copyright?
-
+                        // display copyright/license information
+                        JOptionPane.showMessageDialog(null,
+                                CommonUtils.getNotice(),
+                                "About LaTeX Track Changes (LTC)",
+                                JOptionPane.PLAIN_MESSAGE);
                     }
                 });
                 application.setQuitHandler(new QuitHandler() {
@@ -185,6 +199,9 @@ public final class LTC {
 
         @Option(name="-h",usage="display usage and exit")
         boolean displayHelp = false;
+
+        @Option(name="-c",usage="display copyright/license information and exit")
+        boolean displayLicense = false;
 
         @Option(name="-p",usage="port on localhost used for XML-RPC")
         static int port = LTCserverInterface.PORT;

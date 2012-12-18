@@ -16,6 +16,8 @@
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+        <maven.build.timestamp.format>yyyy</maven.build.timestamp.format>
+        <current.year>${maven.build.timestamp}</current.year>
     </properties>
 
     <modules>

@@ -1,0 +1,4 @@
+
+LaTeX Track Changes (LTC)  Copyright (C) ${inceptionYear}-${current.year}  SRI International
+This program comes with ABSOLUTELY NO WARRANTY; for details use command line switch -c.
+This is free software, and you are welcome to redistribute it under certain conditions.
