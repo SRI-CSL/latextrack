@@ -43,3 +43,4 @@
   * Create an LTC-plugin for your favorite LaTeX editor.
     You would probably want to create your own open source project independent of this one.
 
+  We might want to adopt some of these practices: {{http://openemr.sourceforge.net/wiki/index.php/Git_for_dummies}}
