@@ -176,7 +176,8 @@ public final class LTC {
                         JOptionPane.showMessageDialog(null,
                                 CommonUtils.getNotice(),
                                 "About LaTeX Track Changes (LTC)",
-                                JOptionPane.PLAIN_MESSAGE);
+                                JOptionPane.PLAIN_MESSAGE,
+                                CommonUtils.getLogo());
                     }
                 });
                 application.setQuitHandler(new QuitHandler() {

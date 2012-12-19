@@ -23,9 +23,11 @@ package com.sri.ltc;
 
 import com.google.common.io.CharStreams;
 
+import javax.swing.*;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.net.URL;
 import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -63,7 +65,7 @@ public class CommonUtils {
             }
     }
 
-    // obtain MANIFEST values
+    // obtain build properties
     private final static Properties BUILD_PROPERTIES = new Properties();
     static {
         InputStream is = ClassLoader.getSystemResourceAsStream("build.properties");
@@ -73,6 +75,17 @@ public class CommonUtils {
             } catch (IOException e) {
                 LOGGER.log(Level.SEVERE, "cannot load build properties", e);
             }
+    }
+
+    // obtain logo image
+    private final static Icon LOGO;
+    static {
+        URL imgUrl = ClassLoader.getSystemResource("images/LTC-logo.png");
+        if (imgUrl == null) {
+            LOGO = null;
+            LOGGER.severe("cannot find logo image");
+        } else
+            LOGO = new ImageIcon(imgUrl);
     }
 
     /**
@@ -106,5 +119,13 @@ public class CommonUtils {
     public static String getBuildInfo() {
         return BUILD_PROPERTIES.getProperty("build.number","<UNKNOWN SHA-1>")+" @ "+
                 BUILD_PROPERTIES.getProperty("build.timestamp","<UNKNOWN TIME>");
+    }
+
+    /**
+     * Obtain LTC logo as an icon.
+     * @return LTC logo or <code>null</code> if not found
+     */
+    public static Icon getLogo() {
+        return LOGO;
     }
 }

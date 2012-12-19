@@ -178,6 +178,24 @@
                             </resources>
                         </configuration>
                     </execution>
+                    <execution>
+                        <id>copy-logo</id>
+                        <phase>generate-resources</phase>
+                        <goals>
+                            <goal>copy-resources</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>${project.build.outputDirectory}/images</outputDirectory>
+                            <resources>
+                                <resource>
+                                    <directory>${project.basedir}/../all/src/site/resources/images</directory>
+                                    <includes>
+                                        <include>LTC-logo.png</include>
+                                    </includes>
+                                </resource>
+                            </resources>
+                        </configuration>
+                    </execution>
                 </executions>
             </plugin>
 
