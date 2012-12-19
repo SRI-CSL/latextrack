@@ -68,7 +68,12 @@
                   href="http://sourceforge.net/projects/latextrack/files" />
         </menu>
 
-        <menu ref="reports"/>
+        <menu name="Developer" inherit="top">
+            <item name="Contribute" href="contribute.html"/>
+            <item name="How to Release" href="release.html"/>
+        </menu>
+
+        <menu ref="reports" inherit="top"/>
 
     </body>
 </project>
