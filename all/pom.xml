@@ -39,7 +39,7 @@
     </issueManagement>
 
     <scm>
-        <connection>scm:git:http://git.code.sf.net/p/latextrack/code</connection>
+        <!--<connection>scm:git:http://git.code.sf.net/p/latextrack/code</connection>-->
         <url>http://sourceforge.net/p/latextrack/code/</url>
     </scm>
 
@@ -77,6 +77,17 @@
         </dependency>
     </dependencies>
 
+    <pluginRepositories>
+        <pluginRepository>
+            <id>sonatype-releases</id>
+            <url>http://oss.sonatype.org/content/repositories/releases</url>
+        </pluginRepository>
+        <pluginRepository>
+            <id>clojars.org</id>
+            <url>http://clojars.org/repo</url>
+        </pluginRepository>
+    </pluginRepositories>
+
     <build>
         <extensions>
             <extension>
@@ -92,25 +103,20 @@
             <!-- ~~~ initialize ~~~ -->
 
             <plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>buildnumber-maven-plugin</artifactId>
-                <version>1.1</version>
+                <groupId>com.code54.mojo</groupId>
+                <artifactId>buildversion-plugin</artifactId>
+                <version>1.0.1</version>
                 <executions>
                     <execution>
                         <id>create-buildnumber</id>
                         <goals>
-                            <goal>create</goal>
+                            <goal>set-properties</goal>
                         </goals>
+                        <configuration>
+                            <tstampFormat>yyyy-MM-dd HH:mm:ss</tstampFormat>
+                        </configuration>
                     </execution>
                 </executions>
-                <configuration>
-                    <doCheck>true</doCheck>
-                    <doUpdate>true</doUpdate>
-                    <shortRevisionLength>10</shortRevisionLength>
-                    <timestampFormat>
-                        {0,date,yyy-MM-dd HH:mm:ss}
-                    </timestampFormat>
-                </configuration>
             </plugin>
 
             <!-- ~~~ process-sources ~~~ -->
@@ -163,7 +169,8 @@
                                 <Specification-Version>${project.version}</Specification-Version>
                                 <Specification-Vendor>${project.organization.name}</Specification-Vendor>
                                 <Implementation-Title>LTC</Implementation-Title>
-                                <Implementation-Version>${buildNumber}</Implementation-Version>
+                                <Implementation-Version>${build-commit-abbrev}</Implementation-Version>
+                                <Implementation-Time>${build-tstamp}</Implementation-Time>
                                 <Implementation-Vendor>${project.organization.name}</Implementation-Vendor>
                             </manifestEntries>
                         </transformer>
