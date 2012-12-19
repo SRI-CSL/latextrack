@@ -38,6 +38,11 @@
         <url>http://sourceforge.net/p/latextrack/tickets/</url>
     </issueManagement>
 
+    <scm>
+        <connection>scm:git:http://git.code.sf.net/p/latextrack/code</connection>
+        <url>http://sourceforge.net/p/latextrack/code/</url>
+    </scm>
+
     <mailingLists>
         <mailingList>
             <name>LTC Support</name>
@@ -83,6 +88,30 @@
 
         <plugins>
             <!-- === Default Lifecycle === -->
+
+            <!-- ~~~ initialize ~~~ -->
+
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>buildnumber-maven-plugin</artifactId>
+                <version>1.1</version>
+                <executions>
+                    <execution>
+                        <id>create-buildnumber</id>
+                        <goals>
+                            <goal>create</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <doCheck>true</doCheck>
+                    <doUpdate>true</doUpdate>
+                    <shortRevisionLength>10</shortRevisionLength>
+                    <timestampFormat>
+                        {0,date,yyy-MM-dd HH:mm:ss}
+                    </timestampFormat>
+                </configuration>
+            </plugin>
 
             <!-- ~~~ process-sources ~~~ -->
 
@@ -134,7 +163,7 @@
                                 <Specification-Version>${project.version}</Specification-Version>
                                 <Specification-Vendor>${project.organization.name}</Specification-Vendor>
                                 <Implementation-Title>LTC</Implementation-Title>
-                                <Implementation-Version>${maven.build.timestamp}</Implementation-Version> <!-- TODO: replace by git scm build nr. -->
+                                <Implementation-Version>${buildNumber}</Implementation-Version>
                                 <Implementation-Vendor>${project.organization.name}</Implementation-Vendor>
                             </manifestEntries>
                         </transformer>
