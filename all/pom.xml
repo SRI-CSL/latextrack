@@ -77,17 +77,6 @@
         </dependency>
     </dependencies>
 
-    <pluginRepositories>
-        <pluginRepository>
-            <id>sonatype-releases</id>
-            <url>http://oss.sonatype.org/content/repositories/releases</url>
-        </pluginRepository>
-        <pluginRepository>
-            <id>clojars.org</id>
-            <url>http://clojars.org/repo</url>
-        </pluginRepository>
-    </pluginRepositories>
-
     <build>
         <extensions>
             <extension>
@@ -99,25 +88,6 @@
 
         <plugins>
             <!-- === Default Lifecycle === -->
-
-            <!-- ~~~ initialize ~~~ -->
-
-            <plugin>
-                <groupId>com.code54.mojo</groupId>
-                <artifactId>buildversion-plugin</artifactId>
-                <version>1.0.1</version>
-                <executions>
-                    <execution>
-                        <id>create-buildnumber</id>
-                        <goals>
-                            <goal>set-properties</goal>
-                        </goals>
-                        <configuration>
-                            <tstampFormat>yyyy-MM-dd HH:mm:ss</tstampFormat>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
 
             <!-- ~~~ process-sources ~~~ -->
 

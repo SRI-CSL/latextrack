@@ -604,7 +604,7 @@ public final class LTCEditor extends LTCGui {
         }
 
         final LTCEditor editor = new LTCEditor();
-        LOGGER.info("Using LTC version: "+LTCserverImpl.getVersion());
+        LOGGER.info("Using LTC version: "+CommonUtils.getVersion());
 
         if (options.resetDefaults) {
             try {

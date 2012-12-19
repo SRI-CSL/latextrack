@@ -26,6 +26,7 @@ import com.google.common.io.CharStreams;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -62,6 +63,18 @@ public class CommonUtils {
             }
     }
 
+    // obtain MANIFEST values
+    private final static Properties BUILD_PROPERTIES = new Properties();
+    static {
+        InputStream is = ClassLoader.getSystemResourceAsStream("build.properties");
+        if (is != null)
+            try {
+                BUILD_PROPERTIES.load(is);
+            } catch (IOException e) {
+                LOGGER.log(Level.SEVERE, "cannot load build properties", e);
+            }
+    }
+
     /**
      * Obtain copyright notice and disclaimer as a String.
      * @return Copyright notice and disclaimer
@@ -70,7 +83,28 @@ public class CommonUtils {
         return NOTICE;
     }
 
+    /**
+     * Obtain license as a String.
+     * @return License text
+     */
     public static String getLicense() {
         return LICENSE;
+    }
+
+    /**
+     * Obtain build properties such as version number, git SHA1 and time stamp.
+     * @return Build properties
+     */
+    public static Properties getBuildProperties() {
+        return BUILD_PROPERTIES;
+    }
+
+    public static String getVersion() {
+        return BUILD_PROPERTIES.getProperty("build.version","UNKNOWN");
+    }
+
+    public static String getBuildInfo() {
+        return BUILD_PROPERTIES.getProperty("build.number","<UNKNOWN SHA-1>")+" @ "+
+                BUILD_PROPERTIES.getProperty("build.timestamp","<UNKNOWN TIME>");
     }
 }

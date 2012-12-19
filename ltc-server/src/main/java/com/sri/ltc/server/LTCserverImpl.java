@@ -63,11 +63,6 @@ public final class LTCserverImpl implements LTCserverInterface {
             Color.blue, Color.red, Color.green, Color.magenta, Color.orange, Color.cyan));
     private final static String KEY_COLOR = "author-color:";
     private final ProgressReceiver progressReceiver;
-    private static String version = "<UNKNOWN>";
-
-    public static String getVersion() {
-        return version;
-    }
 
     public LTCserverImpl() {
         this.progressReceiver = null;
@@ -83,19 +78,6 @@ public final class LTCserverImpl implements LTCserverInterface {
     }
 
     private final static Logger LOGGER = Logger.getLogger(LTCserverImpl.class.getName());
-    static {
-        // obtain version information from Maven meta-information
-        try {
-            InputStream inputStream = LTCserverImpl.class.getClassLoader().getResourceAsStream("META-INF/maven/com.sri.ltc/ltc-server/pom.properties");
-            if (inputStream != null) {
-                Properties pomProperties = new Properties();
-                pomProperties.load(inputStream);
-                version = pomProperties.getProperty("version", version);
-            }
-        } catch (IOException e) {
-            LOGGER.log(Level.SEVERE, "Cannot obtain version information", e);
-        }
-    }
 
     private void logAndThrow(int code, String message) throws XmlRpcException {
         XmlRpcException e = new XmlRpcException(code, message);
@@ -772,15 +754,6 @@ public final class LTCserverImpl implements LTCserverInterface {
     }
 
     private void addAuthorLimit(Document document, Element parent, String elementName, Set<Author> authorsList) {
-        Element element = document.createElement(elementName);
-        parent.appendChild(element);
-
-        for (Author author : authorsList) {
-            addAuthor(document, element, "author", author);
-        }
-    }
-
-    private void addShowOptions(Document document, Element parent, String elementName, Set<Author> authorsList) {
         Element element = document.createElement(elementName);
         parent.appendChild(element);
 

@@ -97,7 +97,7 @@ public final class LTC {
     private static final Logger logger = Logger.getLogger(LTC.class.getName());
 
     private void init() {
-        logger.config("LTC version: " + LTCserverImpl.getVersion());
+        logger.config("LTC version: " + CommonUtils.getVersion() + " (" + CommonUtils.getBuildInfo() + ")");
 
         try {
             // set up RPC server - this will enable us to receive XML-RPC calls
