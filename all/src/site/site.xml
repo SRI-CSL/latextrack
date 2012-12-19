@@ -58,6 +58,7 @@
                 <item name="Manual as PDF" href="manual/manual.pdf" collapse="false"/>
             </item>
             <item name="FAQ" href="faq.html" />
+            <item name="Changes" href="changes-report.html"/>
             <item name="License" href="license.html" />
         </menu>
 
@@ -69,11 +70,10 @@
         </menu>
 
         <menu name="Developer" inherit="top">
-            <item name="Contribute" href="contribute.html"/>
+            <item name="How to Contribute" href="contribute.html"/>
             <item name="How to Release" href="release.html"/>
         </menu>
 
         <menu ref="reports" inherit="top"/>
-
     </body>
 </project>

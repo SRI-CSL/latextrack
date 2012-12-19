@@ -64,7 +64,15 @@ $> git commit -am "preparing release of v1.0"
 
   Finally, you can do more minor fixes and commit them to the release branch.
 
-  [TODO: edit CHANGELOG and commit?]
+* Update Change Log
+
+  Please edit file <<<all/src/changes/changes.xml>>> (if not already done) to reflect the latest changes
+  in this version.  If you are fixing bugs, make sure to mark them 'closed' in the bug tracker as well.
+  Commit your edits.
+
++---
+$> git commit -am "updated change log"
++---
 
 * Publish Release Branch (optional)
 
