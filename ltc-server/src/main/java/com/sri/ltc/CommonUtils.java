@@ -24,9 +24,7 @@ package com.sri.ltc;
 import com.google.common.io.CharStreams;
 
 import javax.swing.*;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.net.URL;
 import java.util.Properties;
 import java.util.logging.Level;
@@ -40,6 +38,13 @@ import java.util.logging.Logger;
 public class CommonUtils {
 
     private static final Logger LOGGER = Logger.getLogger(CommonUtils.class.getName());
+
+    public final static FilenameFilter LOG_FILE_FILTER = new FilenameFilter() {
+        @Override
+        public boolean accept(File file, String s) {
+            return file.isDirectory() && s.matches("\\.LTC.*\\.log");
+        }
+    };
 
     // create notice
     private static String NOTICE = "";

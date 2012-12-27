@@ -621,27 +621,21 @@ public final class LTCserverImpl implements LTCserverInterface {
         // create zip
         File zipFile = new File(outputDirectory, "report.zip");
         LOGGER.fine("Server: zipping up bug report as \""+zipFile.getAbsolutePath()+"\"");
-        byte[] buf = new byte[1024];
-        FileInputStream fis;
-        int len;
         try {
             ZipOutputStream zos = new ZipOutputStream(new FileOutputStream(zipFile, false));
 
             // add "report.xml"
-            zos.putNextEntry(new ZipEntry(xmlFile.getName())); // don't store parent directories
-            fis = new FileInputStream(xmlFile);
-            while ((len = fis.read(buf)) >= 0)
-                zos.write(buf, 0, len);
-            zos.closeEntry();
+            copyToZip(zos, xmlFile);
+
+            // add log file(s), if they exist
+            File[] logFiles = new File(System.getProperty("user.home")).listFiles(CommonUtils.LOG_FILE_FILTER);
+            if (logFiles != null)
+                for (File logFile : logFiles)
+                    copyToZip(zos, logFile);
 
             // add bundle file (if exists)
-            if (bundle != null) {
-                zos.putNextEntry(new ZipEntry(bundle.getName())); // don't store parent directories
-                fis = new FileInputStream(bundle);
-                while ((len = fis.read(buf)) >= 0)
-                    zos.write(buf, 0, len);
-                zos.closeEntry();
-            }
+            if (bundle != null)
+                copyToZip(zos, bundle);
 
             zos.close();
         } catch (FileNotFoundException e) {
@@ -651,6 +645,16 @@ public final class LTCserverImpl implements LTCserverInterface {
         }
 
         return zipFile.getAbsolutePath();
+    }
+
+    private void copyToZip(ZipOutputStream zos, File file) throws IOException {
+        zos.putNextEntry(new ZipEntry(file.getName()));
+        FileInputStream fis = new FileInputStream(file);
+        byte[] buf = new byte[1024];
+        int len;
+        while ((len = fis.read(buf)) >= 0)
+            zos.write(buf, 0, len);
+        zos.closeEntry();
     }
 
     private String getColorKey(Author author) {
