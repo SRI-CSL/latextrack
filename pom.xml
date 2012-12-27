@@ -16,8 +16,6 @@
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-        <maven.build.timestamp.format>yyyy</maven.build.timestamp.format>
-        <current.year>${maven.build.timestamp}</current.year>
     </properties>
 
     <modules>
@@ -178,6 +176,32 @@
                         </goals>
                         <configuration>
                             <tstampFormat>yyyy-MM-dd HH:mm:ss z</tstampFormat>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>com.github.goldin</groupId>
+                <artifactId>timestamp-maven-plugin</artifactId>
+                <version>0.2.5</version>
+                <executions>
+                    <execution>
+                        <id>set-timestamps</id>
+                        <goals>
+                            <goal>timestamp</goal>
+                        </goals>
+                        <phase>validate</phase>
+                        <configuration>
+                            <timestamps>
+                                <timestamp>
+                                    <property>current.year</property>
+                                    <pattern>yyyy</pattern>
+                                </timestamp>
+                                <timestamp>
+                                    <property>compile.time</property>
+                                    <pattern>yyyy-MM-dd HH:mm:ss z</pattern>
+                                </timestamp>
+                            </timestamps>
                         </configuration>
                     </execution>
                 </executions>

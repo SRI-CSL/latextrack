@@ -117,8 +117,8 @@ public class CommonUtils {
     }
 
     public static String getBuildInfo() {
-        return BUILD_PROPERTIES.getProperty("build.number","<UNKNOWN SHA-1>")+" @ "+
-                BUILD_PROPERTIES.getProperty("build.timestamp","<UNKNOWN TIME>");
+        return BUILD_PROPERTIES.getProperty("build.commit.number","<UNKNOWN SHA-1>")+" @ "+
+                BUILD_PROPERTIES.getProperty("build.commit.time","<UNKNOWN TIME>");
     }
 
     /**
