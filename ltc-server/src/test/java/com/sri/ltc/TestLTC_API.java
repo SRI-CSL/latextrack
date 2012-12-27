@@ -163,6 +163,23 @@ public final class TestLTC_API {
             nodes = root.getElementsByTagName("active-revisions");
             assertTrue("only one list of active revisions", nodes.getLength() == 1);
 
+            // contains "build-properties" element with at least one entry with a key attribute
+            nodes = root.getElementsByTagName("build-properties");
+            assertTrue("only one set of build properties", nodes.getLength() == 1);
+            children = nodes.item(0).getChildNodes();
+            boolean entryFound = false;
+            for (int i = 0; i < children.getLength(); i++) {
+                grandchildren = children.item(i).getChildNodes();
+                if (grandchildren instanceof Element) {
+                    Element element = (Element) grandchildren;
+                    if ("entry".equals(element.getNodeName())) {
+                        entryFound = true;
+                        break;
+                    }
+                }
+            }
+            assertTrue("at least one entry found", entryFound);
+
             // contains "show-options" element with at least one "show-option" sub-element
             nodes = root.getElementsByTagName("show-options");
             assertTrue("only one list of options to show", nodes.getLength() == 1);

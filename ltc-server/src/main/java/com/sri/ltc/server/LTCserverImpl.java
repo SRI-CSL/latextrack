@@ -21,6 +21,8 @@
  */
 package com.sri.ltc.server;
 
+import com.google.common.collect.Maps;
+import com.sri.ltc.CommonUtils;
 import com.sri.ltc.ProgressReceiver;
 import com.sri.ltc.filter.Author;
 import com.sri.ltc.filter.Filtering;
@@ -737,9 +739,14 @@ public final class LTCserverImpl implements LTCserverInterface {
     }
     // --- end API implementation
 
-    private void addSimpleTextNode(Document document, Element parent, String elementName, String elementText) {
+    private void addSimpleTextNode(Document document, Element parent, String elementName, String elementText,
+                                   Map<String,String> attributes) {
         Element element = document.createElement(elementName);
         parent.appendChild(element);
+
+        if (attributes != null)
+            for (Map.Entry<String,String> e : attributes.entrySet())
+                element.setAttribute(e.getKey(), e.getValue());
 
         org.w3c.dom.Text text = document.createTextNode(elementText);
         element.appendChild(text);
@@ -749,8 +756,8 @@ public final class LTCserverImpl implements LTCserverInterface {
         Element authorElement = document.createElement(elementName);
         parent.appendChild(authorElement);
 
-        addSimpleTextNode(document, authorElement, "name", author.name);
-        addSimpleTextNode(document, authorElement, "email", author.email);
+        addSimpleTextNode(document, authorElement, "name", author.name, null);
+        addSimpleTextNode(document, authorElement, "email", author.email, null);
     }
 
     private void addAuthorLimit(Document document, Element parent, String elementName, Set<Author> authorsList) {
@@ -783,17 +790,30 @@ public final class LTCserverImpl implements LTCserverInterface {
         Element rootElement = document.createElement("bug-report");
         document.appendChild(rootElement);
 
-        addSimpleTextNode(document, rootElement, "user-message", message);
+        addSimpleTextNode(document, rootElement, "user-message", message, null);
         // TODO: this is probably not relative any more! need to check
-        addSimpleTextNode(document, rootElement, "relative-file-path", session.getTrackedFile().getFile().getPath());
+        addSimpleTextNode(document, rootElement, "relative-file-path", session.getTrackedFile().getFile().getPath(), null);
+
+        // version information
+        {
+            Element element = document.createElement("build-properties");
+            rootElement.appendChild(element);
+
+            Properties properties = CommonUtils.getBuildProperties();
+            Map<String,String> attributes = new HashMap<String, String>();
+            for (String name : properties.stringPropertyNames()) {
+                attributes.put("key", name);
+                addSimpleTextNode(document, element, "entry", properties.getProperty(name), attributes);
+            }
+        }
 
         // filters
         {
             Element element = document.createElement("filters");
             rootElement.appendChild(element);
 
-            addSimpleTextNode(document, element, "revision", session.getLimitRev());
-            addSimpleTextNode(document, element, "date", session.getLimitDate());
+            addSimpleTextNode(document, element, "revision", session.getLimitRev(), null);
+            addSimpleTextNode(document, element, "date", session.getLimitDate(), null);
             addAuthorLimit(document, element, "authors", session.getLimitedAuthors());
         }
 
@@ -814,7 +834,7 @@ public final class LTCserverImpl implements LTCserverInterface {
 
             assert history != null;
             for (Commit commit : history.getCommitsList()) {
-                addSimpleTextNode(document, element, "sha", commit.getId());
+                addSimpleTextNode(document, element, "sha", commit.getId(), null);
             }
         }
 
@@ -827,14 +847,14 @@ public final class LTCserverImpl implements LTCserverInterface {
                 Element optionElement = document.createElement("show-option");
                 element.appendChild(optionElement);
 
-                addSimpleTextNode(document, optionElement, "key", show.name());
-                addSimpleTextNode(document, optionElement, "value", Boolean.toString(get_show(show.name())));
+                addSimpleTextNode(document, optionElement, "key", show.name(), null);
+                addSimpleTextNode(document, optionElement, "value", Boolean.toString(get_show(show.name())), null);
             }
         }
 
         // bundle name (if any):
         if (bundle != null)
-            addSimpleTextNode(document, rootElement, "bundle-name", bundle.getName());
+            addSimpleTextNode(document, rootElement, "bundle-name", bundle.getName(), null);
 
         // create XML file:
 
