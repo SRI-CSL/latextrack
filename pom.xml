@@ -10,7 +10,7 @@
 
     <groupId>com.sri.ltc</groupId>
     <artifactId>LTC</artifactId>
-    <version>0.9.10</version>
+    <version>0.9.11</version>
     <packaging>pom</packaging>
     <inceptionYear>2009</inceptionYear>
     <properties>
@@ -82,7 +82,6 @@
         </contributor>
         <contributor>
             <name>Cher Cai</name>
-            <email>cher dot cai AT sri dot com</email>
             <organization>SRI International</organization>
             <organizationUrl>http://www.sri.com</organizationUrl>
             <roles>
@@ -91,7 +90,6 @@
         </contributor>
         <contributor>
             <name>Mickey Cook</name>
-            <email>mickey dot cook AT sri dot com</email>
             <organization>SRI International</organization>
             <organizationUrl>http://www.sri.com</organizationUrl>
             <roles>
@@ -121,6 +119,17 @@
             <scope>test</scope>
         </dependency>
     </dependencies>
+
+    <pluginRepositories>
+        <pluginRepository>
+            <id>sonatype-releases</id>
+            <url>http://oss.sonatype.org/content/repositories/releases</url>
+        </pluginRepository>
+        <pluginRepository>
+            <id>clojars.org</id>
+            <url>http://clojars.org/repo</url>
+        </pluginRepository>
+    </pluginRepositories>
 
     <build>
         <pluginManagement>
@@ -155,6 +164,48 @@
         </pluginManagement>
 
         <plugins>
+            <plugin>
+                <groupId>com.code54.mojo</groupId>
+                <artifactId>buildversion-plugin</artifactId>
+                <version>1.0.1</version>
+                <executions>
+                    <execution>
+                        <id>create-buildnumber</id>
+                        <goals>
+                            <goal>set-properties</goal>
+                        </goals>
+                        <configuration>
+                            <tstampFormat>yyyy-MM-dd HH:mm:ss z</tstampFormat>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>com.github.goldin</groupId>
+                <artifactId>timestamp-maven-plugin</artifactId>
+                <version>0.2.5</version>
+                <executions>
+                    <execution>
+                        <id>set-timestamps</id>
+                        <goals>
+                            <goal>timestamp</goal>
+                        </goals>
+                        <phase>validate</phase>
+                        <configuration>
+                            <timestamps>
+                                <timestamp>
+                                    <property>current.year</property>
+                                    <pattern>yyyy</pattern>
+                                </timestamp>
+                                <timestamp>
+                                    <property>compile.time</property>
+                                    <pattern>yyyy-MM-dd HH:mm:ss z</pattern>
+                                </timestamp>
+                            </timestamps>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
             <plugin>
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>2.5.1</version>

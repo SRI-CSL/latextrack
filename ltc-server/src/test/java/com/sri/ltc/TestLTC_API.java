@@ -78,15 +78,19 @@ public final class TestLTC_API {
         int sessionID = API.init_session(file2.getFile().getPath());
 
         // first case: existing directory for bug report
-        checkReport(API.create_bug_report(sessionID, "something is wrong", folder.getRoot().getPath()),
-                "something is wrong");
+        checkReport(API.create_bug_report(sessionID, "something is wrong", true, folder.getRoot().getPath()),
+                "something is wrong", true);
 
         // second case: non-existing directory for bug report
-        checkReport(API.create_bug_report(sessionID, "even more is wrong", folder.getRoot().getPath() + "/bla"),
-                "even more is wrong");
+        checkReport(API.create_bug_report(sessionID, "even more is wrong", true, folder.getRoot().getPath() + "/bla"),
+                "even more is wrong", true);
+
+        // third case: don't include source repository
+        checkReport(API.create_bug_report(sessionID, "stuff is wrong but not including sources", false, folder.getRoot().getPath()),
+                "stuff is wrong but not including sources", false);
     }
 
-    private void checkReport(String reportPath, String message) {
+    private void checkReport(String reportPath, String message, boolean bundleIncluded) {
         // check file stuff
         File file = new File(reportPath);
         assertEquals("file name is report.zip", "report.zip", file.getName());
@@ -103,11 +107,13 @@ public final class TestLTC_API {
             assertTrue("ZIP contains \"report.xml\"", xmlEntry != null);
             String bundleName = checkXML(zipFile.getInputStream(xmlEntry), message);
 
-            // check that it contains the bundle file, if indicated by "report.xml":
-            if (bundleName != null) {
+            // check that it contains the bundle file, if indicated by the argument and "report.xml":
+            if (bundleIncluded) {
+                assertTrue("bundle is included", bundleName != null);
                 ZipEntry bundleEntry = zipFile.getEntry(bundleName);
                 assertTrue("ZIP contains bundle", bundleEntry != null);
-            }
+            } else
+                assertTrue("bundle not included", bundleName == null);
         } catch (IOException e) {
             fail("file is not a ZIP: "+e.getMessage());
         } finally {
@@ -162,6 +168,23 @@ public final class TestLTC_API {
             // contains "active-revisions" element
             nodes = root.getElementsByTagName("active-revisions");
             assertTrue("only one list of active revisions", nodes.getLength() == 1);
+
+            // contains "build-properties" element with at least one entry with a key attribute
+            nodes = root.getElementsByTagName("build-properties");
+            assertTrue("only one set of build properties", nodes.getLength() == 1);
+            children = nodes.item(0).getChildNodes();
+            boolean entryFound = false;
+            for (int i = 0; i < children.getLength(); i++) {
+                grandchildren = children.item(i).getChildNodes();
+                if (grandchildren instanceof Element) {
+                    Element element = (Element) grandchildren;
+                    if ("entry".equals(element.getNodeName())) {
+                        entryFound = true;
+                        break;
+                    }
+                }
+            }
+            assertTrue("at least one entry found", entryFound);
 
             // contains "show-options" element with at least one "show-option" sub-element
             nodes = root.getElementsByTagName("show-options");

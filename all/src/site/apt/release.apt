@@ -1,0 +1,150 @@
+~~~
+~~ #%L
+~~ LaTeX Track Changes (LTC) allows collaborators on a version-controlled LaTeX writing project to view and query changes in the .tex documents.
+~~ %%
+~~ Copyright (C) 2009 - 2012 SRI International
+~~ %%
+~~ This program is free software: you can redistribute it and/or modify
+~~ it under the terms of the GNU General Public License as
+~~ published by the Free Software Foundation, either version 3 of the 
+~~ License, or (at your option) any later version.
+~~ 
+~~ This program is distributed in the hope that it will be useful,
+~~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+~~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+~~ GNU General Public License for more details.
+~~ 
+~~ You should have received a copy of the GNU General Public 
+~~ License along with this program.  If not, see
+~~ <http://www.gnu.org/licenses/gpl-3.0.html>.
+~~ #L%
+~~~
+    ------
+    How to Release LTC
+    ------
+    Linda Briesemeister
+    ------
+    ------
+
+Requirements
+
+  You have to be an administrator for this project.  If not, you may not perform any releases.
+
+Preparation
+
+  Prepare all the bug fixes etc. on either the <<<'develop'>>> or <<<'feature/XXX'>>> branches.
+  Switch to the <<<'develop'>>> branch.
+
+  The example uses the release of version 1.0 with the next one being 1.1-SNAPSHOT.  Adjust these numbers as needed.
+
+Start Release
+
+* Start Release Branch
+
+  Do the following command to start the release branch.
+
++---
+$> git flow release start v1.0
++---
+
+  Optionally, check dependencies and plugin versions.  Decide whether to actually update them or not.
+
++---
+$> mvn versions:display-dependency-updates  => to show, which dependencies have updates
+$> mvn versions:use-latest-versions         => to update all dependencies
++---
+
+  Now set the new version to be released (commonly by removing <<<-SNAPSHOT>>> from the version name).
+
++---
+$> mvn versions:set -DnewVersion=1.0
+$> mvn versions:commit
+$> git commit -am "preparing release of v1.0"
++---
+
+  Finally, you can do more minor fixes and commit them to the release branch.
+
+* Update Change Log
+
+  Please edit file <<<all/src/changes/changes.xml>>> (if not already done) to reflect the latest changes
+  in this version.  If you are fixing bugs, make sure to mark them 'closed' in the bug tracker as well.
+  Commit your edits.
+
++---
+$> git commit -am "updated change log"
++---
+
+* Publish Release Branch (optional)
+
+  If needed, publish the release branch for others to help hardening the release.
+
++---
+$> git flow release publish v1.0
++---
+
+Clean Up Destination
+
+  You will want to clean up the destination files on the sourceforge servers.
+  To do so, start a shell at sf.net and do the following (replacing with your user name).
+
++---
+$> ssh -t lilalinda,latextrack@shell.sf.net create
+
+Requesting a new shell for "lilalinda" and waiting for it to start.
+queued... creating... starting...
+
+This is an interactive shell created for user lilalinda,latextrack.
+Use the "timeleft" command to see how much time remains before shutdown.
+Use the "shutdown" command to destroy the shell before the time limit.
+For path information and login help, type "sf-help".
+
+-bash-3.2$ rm -rf /home/project-web/latextrack/htdocs/*
+-bash-3.2$ rm -rf /home/frs/project/l/la/latextrack/LTC/1.0
+-bash-3.2$ mkdir /home/frs/project/l/la/latextrack/LTC/1.0
+<LATER: copy README.txt?>
++---
+
+Deploy JAR and Site
+
+  Next, we run the Maven build system to deploy the JAR file and site files to sourceforge.
+
++---
+$> mvn clean deploy site site:deploy
++---
+
+Finish Release Branch
+
+  After the upload, finish the release branch and push it to the remote master.
+
++---
+$> git flow release finish v1.0
+      [accept default commit message and then supply tag message]
+$> git push origin master
++---
+
+  Then, checkout the <<<'develop'>>> branch, bump the version number and propagate this to the remote branch.
+
++---
+$> git checkout develop
+$> mvn versions:set -DnewVersion=1.1-SNAPSHOT
+$> mvn versions:commit
+$> git commit -am "bumping next release number to v1.1-SNAPSHOT"
+$> git push origin develop
++---
+
+Shutdown Shell
+
+  Finally, close the shell at sf.net.
+
++---
+-bash-3.2$ shutdown
+Requesting that your shell be shut down.
+This request will be processed soon.
+-bash-3.2$
+Broadcast message from root (Wed Dec 12 20:50:46 2012):
+
+The system is going down for system halt NOW!
+Connection to shell-24002 closed by remote host.
+Connection to shell-24002 closed.
+Connection to shell.sf.net closed.
++---

@@ -585,7 +585,7 @@ public final class TestAccumulate {
         String text = (String) map.get(LTCserverInterface.KEY_TEXT);
         List<Integer[]> styles = (List<Integer[]>) map.get(LTCserverInterface.KEY_STYLES);
 
-        System.out.format("\n<html><head></head><body>\n");
+        System.out.format("\n<html><head>\n");
 
         int start = 0;
 

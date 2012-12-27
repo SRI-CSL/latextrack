@@ -22,6 +22,11 @@ package com.sri.ltc.editor;
  * #L%
  */
 
+import com.apple.eawt.AboutHandler;
+import com.apple.eawt.AppEvent;
+import com.apple.eawt.QuitHandler;
+import com.apple.eawt.QuitResponse;
+import com.sri.ltc.CommonUtils;
 import com.sri.ltc.versioncontrol.Remote;
 import com.sri.ltc.logging.LevelOptionHandler;
 import com.sri.ltc.logging.LogConfiguration;
@@ -43,9 +48,11 @@ import java.awt.datatransfer.UnsupportedFlavorException;
 import java.awt.event.*;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
+import java.io.Console;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
+import java.net.URL;
 import java.util.*;
 import java.util.List;
 import java.util.logging.Level;
@@ -64,6 +71,16 @@ import static java.awt.datatransfer.DataFlavor.stringFlavor;
 public final class LTCEditor extends LTCGui {
 
     // static initializations
+    static {
+        // first thing is to configure Mac OS X before AWT gets loaded:
+        final String NAME = "LTC Editor";
+        System.setProperty("apple.laf.useScreenMenuBar", "true");
+        System.setProperty("com.apple.mrj.application.apple.menu.about.name", NAME);
+        System.setProperty("apple.awt.showGrowBox", "true");
+
+        // print NOTICE on command line
+        System.out.println(CommonUtils.getNotice()); // output notice
+    }
     private final Preferences preferences = Preferences.userRoot().node(this.getClass().getCanonicalName().replaceAll("\\.","/"));
     private final static String KEY_LAST_DIR = "last directory";
     private final static String KEY_LAST_DIVIDER_H = "last H divider location";
@@ -568,6 +585,11 @@ public final class LTCEditor extends LTCGui {
             System.exit(1);
         }
 
+        if (options.displayLicense) {
+            System.out.println("LTC is licensed under:\n\n" + CommonUtils.getLicense());
+            return;
+        }
+
         // configure logging
         try {
             LogConfiguration logConfig = new LogConfiguration();
@@ -582,7 +604,7 @@ public final class LTCEditor extends LTCGui {
         }
 
         final LTCEditor editor = new LTCEditor();
-        LOGGER.info("Using LTC version: "+LTCserverImpl.getVersion());
+        LOGGER.info("Using LTC version: "+CommonUtils.getVersion());
 
         if (options.resetDefaults) {
             try {
@@ -593,7 +615,41 @@ public final class LTCEditor extends LTCGui {
             }
         }
 
-        //Schedule a job for the event dispatch thread:
+        // customize for Mac OS X:
+        try {
+            UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+        } catch (Exception e) {
+            LOGGER.log(Level.SEVERE, "setting UI look & feel", e);
+        }
+        String osName = System.getProperty("os.name").toLowerCase();
+        boolean IS_MAC = osName.startsWith("mac os x");
+        if (IS_MAC) {
+            URL imageURL = Console.class.getResource("/images/LTC-editor-icon.png");
+            if (imageURL != null) {
+                ImageIcon icon = new ImageIcon(imageURL);
+                com.apple.eawt.Application application = com.apple.eawt.Application.getApplication();
+                application.setDockIconImage(icon.getImage());
+                application.setAboutHandler(new AboutHandler() {
+                    @Override
+                    public void handleAbout(AppEvent.AboutEvent aboutEvent) {
+                        // display copyright/license information
+                        JOptionPane.showMessageDialog(null,
+                                CommonUtils.getNotice(),
+                                "About LaTeX Track Changes (LTC)",
+                                JOptionPane.PLAIN_MESSAGE);
+                    }
+                });
+                application.setQuitHandler(new QuitHandler() {
+                    @Override
+                    public void handleQuitRequestWith(AppEvent.QuitEvent quitEvent, QuitResponse quitResponse) {
+                        // TODO: do anything here?
+                        quitResponse.performQuit();
+                    }
+                });
+                // TODO: enable preferences and set handler?
+            }
+        }
+
         //creating and showing this application's GUI.
         try {
             SwingUtilities.invokeAndWait(new Runnable() {
@@ -620,6 +676,9 @@ public final class LTCEditor extends LTCGui {
 
         @Option(name="-h", usage="display usage and exit")
         boolean displayHelp = false;
+
+        @Option(name="-c",usage="display copyright/license information and exit")
+        boolean displayLicense = false;
 
         @Option(name = "-r", usage = "reset to default settings")
         boolean resetDefaults = false;

@@ -7,7 +7,7 @@
     <parent>
         <groupId>com.sri.ltc</groupId>
         <artifactId>LTC</artifactId>
-        <version>0.9.10</version>
+        <version>0.9.11</version>
     </parent>
 
     <groupId>com.sri.ltc</groupId>
@@ -47,6 +47,7 @@
                     </execution>
                 </executions>
             </plugin>
+
             <!-- check headers for copyright -->
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
