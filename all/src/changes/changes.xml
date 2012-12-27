@@ -27,6 +27,19 @@
         <author email="lilalinda at users.sourceforge.net">Linda Briesemeister</author>
     </properties>
     <body>
+        <release version="0.9.11" date="2012-12-27">
+            <action dev="lilalinda" type="add">
+                Adding build information to About dialog, JAR manifest, and bug report.
+            </action>
+            <action dev="lilalinda" type="update">
+                Bug report generation now obeys parameter whether to include the source repository.
+            </action>
+            <action dev="lilalinda" type="update">
+                Emacs mode asks user now whether to include the source repository in bug report;
+                it also provides a new command to set an author color without using a mouse-click.
+            </action>
+        </release>
+
         <release version="0.9.10" date="2012-12-18" description="first beta-release at sourceforge">
             <action dev="sbreiba" type="add">
                 Bug report creation now includes bundles (git) or zip file with file versions (svn).
