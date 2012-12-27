@@ -137,6 +137,7 @@
 (define-key ltc-prefix-map (kbd "lr") 'ltc-limit-rev)
 (define-key ltc-prefix-map (kbd ">") 'ltc-next-change)
 (define-key ltc-prefix-map (kbd "<") 'ltc-prev-change)
+(define-key ltc-prefix-map (kbd "c") 'ltc-set-color)
 (define-key ltc-prefix-map (kbd "b") 'ltc-bug-report)
 ;; Bind command `ltc-prefix-map' to `ltc-command-prefix' in `ltc-mode-map':
 (defvar ltc-mode-map (make-sparse-keymap) "LTC mode keymap.")
@@ -229,6 +230,8 @@
    "MOVE CURSOR"
    ["To previous change" ltc-prev-change]
    ["To next change" ltc-next-change]
+   "--"
+   ["Set author color..." ltc-set-color]
    "--"
    ["Bug report..." ltc-bug-report]
    "--"
@@ -610,7 +613,7 @@
     "<commit graph is empty>"))
 
 (defun ltc-select-color (event)
-  "Select color for indicated author in mouse event."
+  "Select color for indicated author in mouse event.  Updates automatically."
   (interactive "e")
   (let* ((window (posn-window (event-end event)))
 	 (pos (posn-point (event-end event)))
@@ -618,25 +621,42 @@
 	 (old-color (car action))
 	 )
     (select-window parent-window)
-    (when ltc-mode
-      ;; open color list and then prompt user for input
-      (list-colors-display)
-      (condition-case nil
-	  (let* ((new-color 
-		  (read-color (format "Color for %s (name or #RGB): " (author-to-string (cdr action))) t))
-		 (new-color-short 
-		  (concat "#" (substring new-color 1 3) (substring new-color 5 7) (substring new-color 9 11)))
-		 )
-	    (if (not (string= old-color new-color-short))
-		(ltc-method-call "set_color" (cadr action) (caddr action) new-color-short))
-	    )	
-	(error nil)) ; no handlers
-      ;; remove *Colors* buffer if still visible
-      (when (setq b (get-buffer "*Colors*"))
-	(delete-windows-on b t)
-	(kill-buffer b))
-      (ltc-update) ; not only applies new color (if any) but also resizes temp info buffer
-      )))
+    (select-color (cadr action) (caddr action) old-color)))
+
+(defun ltc-set-color (author) 
+  "Select and set color for given AUTHOR.  Updates automatically unless user aborts by not chosing a valid author."
+  (interactive
+   (if ltc-mode
+       (list (completing-read "Author, for whom to set color (abort with empty value or C-g): " 
+			      (mapcar 'author-to-string (mapcar 'caddr (cdr commit-graph)))
+			      nil t))
+     '(nil))) ; sets author = nil
+  (if (and author (string< "" author))
+      (let ((author-list (string-to-author author)))
+	(select-color (nth 0 author-list) (nth 1 author-list) nil))))
+
+(defun select-color (name email old-color)
+  "Select and set color for author with given NAME and EMAIL.  If given OLD-COLOR is not nil, 
+it will only set the new, chosen color if it is different than the old one."
+  (when ltc-mode
+    ;; open color list and then prompt user for input
+    (list-colors-display)
+    (condition-case nil
+	(let* ((new-color 
+		(read-color (format "Color for %s (name or #RGB; abort with empty input): " (author-to-string (list name email))) t))
+	       (new-color-short 
+		(concat "#" (substring new-color 1 3) (substring new-color 5 7) (substring new-color 9 11)))
+	       )
+	  (if (not (string= old-color new-color-short))
+	      (ltc-method-call "set_color" name email new-color-short))
+	  )	
+      (error nil)) ; no handlers
+    ;; remove *Colors* buffer if still visible
+    (when (setq b (get-buffer "*Colors*"))
+      (delete-windows-on b t)
+      (kill-buffer b))
+    (ltc-update) ; not only applies new color (if any) but also resizes temp info buffer
+    ))
 
 ;;; --- functions to handle online editing
 

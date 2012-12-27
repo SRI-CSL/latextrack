@@ -33,7 +33,7 @@ either run goal "integration-test" or "verify" (which will call "integration-tes
 
 To create the site:
 
-$> mvn site
+$> mvn verify site
 
 
 Deploying the site
@@ -57,7 +57,7 @@ For path information and login help, type "sf-help".
 
 When this has finished and you see the prompt, you are ready to regenerate the information and upload it:
 
-$> mvn clean site site:deploy
+$> mvn clean verify site site:deploy
 
 When this has finished, go back to your shell and shut it down.  You may look at the uploaded files if you wish:
 
