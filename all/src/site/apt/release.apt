@@ -114,11 +114,12 @@ $> mvn clean deploy site site:deploy
 
 Finish Release Branch
 
-  After the upload, finish the release branch and push it to the remote master.
+  After the upload, finish the release branch and push it to the remote master. During the finishing
+  of the release, you can accept the default commit messages about merging and you want to supply a
+  tag message.
 
 +---
 $> git flow release finish v1.0
-      [accept default commit message and then supply tag message]
 $> git push origin master
 +---
 
@@ -148,3 +149,8 @@ Connection to shell-24002 closed by remote host.
 Connection to shell-24002 closed.
 Connection to shell.sf.net closed.
 +---
+
+Announcement
+
+  Once the release is performed, check the status of the project web page and consider announcing it via
+  the mailing list.
