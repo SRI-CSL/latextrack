@@ -495,16 +495,17 @@
 
 ;;; --- create bug report
 
-(defun ltc-bug-report (directory msg)
+(defun ltc-bug-report (directory msg includeSrc)
   "Create a bug report with MSG and use DIRECTORY.  If successful, will print message in mini-buffer with the created file name."
   (interactive 
    (if ltc-mode
        (list
 	(read-directory-name "Directory where to save bug report files (created if not exist): ")
-	(read-string "Explanation: "))
-     '(nil nil))) ; sets directory = nil and msg = nil
+	(read-string "Explanation: ")
+	(y-or-n-p "Include repository? ")) 
+     '(nil nil nil))) ; sets directory = nil and msg = nil and includeSrc = nil
   (when directory
-    (setq file (ltc-method-call "create_bug_report" session-id msg (expand-file-name directory)))
+    (setq file (ltc-method-call "create_bug_report" session-id msg includeSrc (expand-file-name directory)))
     (message "Created bug report at %s" file)
     ))
 

@@ -21,7 +21,6 @@
  */
 package com.sri.ltc.server;
 
-import com.google.common.collect.Maps;
 import com.sri.ltc.CommonUtils;
 import com.sri.ltc.ProgressReceiver;
 import com.sri.ltc.filter.Author;
@@ -598,7 +597,7 @@ public final class LTCserverImpl implements LTCserverInterface {
     }
 
     @Override
-    public String create_bug_report(int sessionID, String message, String outputDirectory) throws XmlRpcException {
+    public String create_bug_report(int sessionID, String message, boolean includeRepository, String outputDirectory) throws XmlRpcException {
         LOGGER.fine("Server: creating bug report in directory \""+outputDirectory+"\"");
 
         File outputDirectoryFile = new File(outputDirectory);
@@ -608,11 +607,12 @@ public final class LTCserverImpl implements LTCserverInterface {
 
         // bundle repository
         File bundle = null;
-        try {
-            bundle = getSession(sessionID).getTrackedFile().getRepository().getBundle(new File(outputDirectory));
-        } catch (IOException e) {
-            logAndThrow(4, "IOException while creating repository bundle: " + e.getMessage());
-        }
+        if (includeRepository)
+            try {
+                bundle = getSession(sessionID).getTrackedFile().getRepository().getBundle(new File(outputDirectory));
+            } catch (IOException e) {
+                logAndThrow(4, "IOException while creating repository bundle: " + e.getMessage());
+            }
 
         // create an XML with current settings etc.
         File xmlFile = new File(outputDirectory, "report.xml");
