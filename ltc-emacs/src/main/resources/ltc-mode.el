@@ -369,7 +369,13 @@
 		     (compile-deletions))
     (clear-visited-file-modtime) ; prevent Emacs from complaining about modtime diff's as we are writing file from Java
     (set-buffer-modified-p nil) ; reset modification flag
-    ;; TODO: update commit graph with "on disk"?
+    ;; manipulate commit graph: if at least one entry replace first SHA1 with "on disk"
+    (when commit-graph 
+      (let ((head (car commit-graph)))
+	(when head
+	  (setcar head on_disk)
+	  (setcar commit-graph head)
+	  (update-info-buffer))))
     t)) ; prevents actual saving in Emacs as we have already written the file
 
 (defun ltc-hook-before-kill ()
@@ -755,7 +761,7 @@ it will only set the new, chosen color if it is different than the old one."
 		    ))))
 	    (buffer-string) ; return the contents of the temp buffer
 	    ))
-    (insert insstring) ; this moves point to end of insertion ; TODO: DOES THIS NOT TRIGGER INSERTION HOOKS??
+    (insert insstring) ; this moves point to end of insertion
     (if (eq 'backspace last-input-char) (goto-char beg)) ; if last key was BACKSPACE, move point to beginning
     ))
 
