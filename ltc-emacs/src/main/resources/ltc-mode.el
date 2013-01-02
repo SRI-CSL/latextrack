@@ -255,7 +255,7 @@
 		 (message "Using `xml-rpc' package version: %s" xml-rpc-version)
 		 (and (version< xml-rpc-version min-xml-rpc-version)
 		      (error "`ltc-mode' requires `xml-rpc' package v%s or later" min-xml-rpc-version))
-		 ;; init session with file name and buffer contents if modified (or "" if not)
+		 ;; init session with file name
 		 (setq session-id (ltc-method-call "init_session" (buffer-file-name))))
 	     ;; handling any initialization errors
 	     ('error 
@@ -352,20 +352,7 @@
 	(ltc-add-edit-hooks) ; add (local) hooks to capture user's edits
 	;; update commit graph in temp info buffer
 	(init-commit-graph (cdr (assoc-string "sha1" map)))
-	(with-output-to-temp-buffer ltc-info-buffer
-	  (let ((old-buffer (current-buffer))
-		(old-window (get-buffer-window (current-buffer)))
-	 	(temp-buffer (get-buffer-create ltc-info-buffer))
-		(temp-output (pretty-print-commit-graph)))
-	    (set-buffer temp-buffer)
-	    (set (make-variable-buffer-local 'parent-window) old-window)
-	    (insert temp-output)
-	    (set-buffer old-buffer)
-	    ))
-	;; TODO: hide cursor (using Cursor Parameters)?
-	;; adjust height of temp info buffer
-	(with-selected-window (get-buffer-window ltc-info-buffer)
-	  (shrink-window (- (window-height) 7)))
+	(update-info-buffer)
 	(set-buffer-modified-p old-buffer-modified-p) ; restore modification flag
 	))
   )
@@ -502,7 +489,7 @@
        (list
 	(read-directory-name "Directory where to save bug report files (created if not exist): ")
 	(read-string "Explanation: ")
-	(y-or-n-p "Include repository? ")) 
+	(y-or-n-p "Include repository? "))x1 
      '(nil nil nil))) ; sets directory = nil and msg = nil and includeSrc = nil
   (when directory
     (setq file (ltc-method-call "create_bug_report" session-id msg includeSrc (expand-file-name directory)))
@@ -571,6 +558,25 @@
     (setq commit-graph nil) ; LTC session not valid
     ))
 
+(defun update-info-buffer ()
+  "Update output in info buffer from current commit graph."
+  (when (string< "" ltc-info-buffer)
+    (with-output-to-temp-buffer ltc-info-buffer
+      (let ((old-buffer (current-buffer))
+	    (old-window (get-buffer-window (current-buffer)))
+	    (temp-buffer (get-buffer-create ltc-info-buffer))
+	    (temp-output (pretty-print-commit-graph)))
+	(set-buffer temp-buffer)
+	(set (make-variable-buffer-local 'parent-window) old-window)
+	(insert temp-output)
+	(set-buffer old-buffer)
+	))
+    ;; TODO: hide cursor (using Cursor Parameters)?
+    ;; adjust height of temp info buffer
+    (with-selected-window (get-buffer-window ltc-info-buffer)
+      (shrink-window (- (window-height) 7)))
+    ))
+
 (defun pretty-print-commit-graph ()
   "Create string representation with text properties from current commit graph."
   (if commit-graph
@@ -612,6 +618,8 @@
 		   "\n")
 	)
     "<commit graph is empty>"))
+
+;;; --- set author color functions
 
 (defun ltc-select-color (event)
   "Select color for indicated author in mouse event.  Updates automatically."
@@ -704,12 +712,19 @@ it will only set the new, chosen color if it is different than the old one."
     ;; color text and use addition face
     (add-text-properties beg end (list 'face 
 				       (list 'ltc-addition (list :foreground (car (last self))))))
-    ;; TODO: if first change (buffer-modified) then update commit graph
     ))
 
 (defun ltc-hook-before-change (beg end)
   "Hook to capture user's deletions while LTC mode is running."
   ;(message " --- LTC: before change with beg=%d and end=%d" beg end)
+  ;; if first change (buffer-modified-p == nil) then update commit graph
+  (when (and (not (buffer-modified-p)) commit-graph)
+    ;; manipulate commit graph: if at least one entry and the first element is "" then replace first SHA1 with "modified"
+    (let ((head (car commit-graph)))
+      (when (and head (string= "" (car head)))
+	(setcar head modified)
+	(setcar commit-graph head)
+	(update-info-buffer))))
   (when (and self (not (= beg end)))
     (setq self-color (caddr self))
     ;; use idiom to manipulate deletion string in temp buffer before returning to current buffer
@@ -742,7 +757,6 @@ it will only set the new, chosen color if it is different than the old one."
 	    ))
     (insert insstring) ; this moves point to end of insertion ; TODO: DOES THIS NOT TRIGGER INSERTION HOOKS??
     (if (eq 'backspace last-input-char) (goto-char beg)) ; if last key was BACKSPACE, move point to beginning
-    ;; TODO: if first change (buffer-modified) then update commit graph
     ))
 
 ;;; --- accessing API of base system
