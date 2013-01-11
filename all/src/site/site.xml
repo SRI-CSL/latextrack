@@ -49,6 +49,10 @@
     </poweredBy>
 
     <body>
+        <head>
+            <link rel="shortcut icon" href="favicon.ico" />
+        </head>
+
         <menu name="LTC">
             <item name="Introduction" href="index.html"/>
             <item name="Installation" href="install.html"/>
