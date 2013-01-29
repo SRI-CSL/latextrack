@@ -414,6 +414,16 @@
     (message "Limiting Authors: %S" ltc-limiting-authors)
     (ltc-update)))
 
+(defun ltc-select-date (event)
+  "Select date for limiting in mouse event.  Updates automatically."
+  (interactive "e")
+  (let* ((window (posn-window (event-end event)))
+	 (pos (posn-point (event-end event)))
+	 (date (get-text-property pos 'action)) ; obtain action parameters from text properties
+	 )
+    (select-window parent-window)
+    (set-limiting-date date)))
+
 (defun ltc-limit-date (date)
   "Set or reset limiting DATE for commit graph.  If empty string, no limit is used.  Updates automatically unless user chooses to quit input."
   (interactive
@@ -423,8 +433,23 @@
 			      nil nil))
      '(nil))) ; sets date = nil
   (when date
+    (set-limiting-date date)))
+
+(defun set-limiting-date (date)   
+  "Set limiting DATE and update."
+  (when ltc-mode
     (setq ltc-limiting-date (ltc-method-call "set_limited_date" session-id date))
     (ltc-update)))
+
+(defun ltc-select-rev (event)
+  "Select revision for limiting in mouse event.  Updates automatically."
+  (interactive "e")
+  (let* ((window (posn-window (event-end event)))
+	 (pos (posn-point (event-end event)))
+	 (rev (get-text-property pos 'action)) ; obtain action parameters from text properties
+	 )
+    (select-window parent-window)
+    (set-limiting-rev rev)))
 
 (defun ltc-limit-rev (rev)
   "Set or reset limiting REV for commit graph.  If empty string, no limit is used.  Offers currently known sha1s from commit graph for completion.  Updates automatically unless user chooses to quit input."
@@ -435,6 +460,11 @@
 			      nil nil))
      '(nil))) ; sets rev = nil
   (when rev
+    (set-limiting-rev rev)))
+
+(defun set-limiting-rev (rev)   
+  "Set limiting REV and update."
+  (when ltc-mode
     (setq ltc-limiting-rev (ltc-method-call "set_limited_rev" session-id rev))
     (ltc-update)))
 
@@ -586,8 +616,13 @@
 (defun pretty-print-commit-graph ()
   "Create string representation with text properties from current commit graph."
   (if commit-graph
-      (let ((map (make-sparse-keymap)))
-	(define-key map (kbd "<mouse-1>") 'ltc-select-color)
+      (let ((rev-map (make-sparse-keymap))
+	    (date-map (make-sparse-keymap))
+	    (author-map (make-sparse-keymap))
+	    )
+	(define-key rev-map (kbd "<mouse-1>") 'ltc-select-rev)
+	(define-key date-map (kbd "<mouse-1>") 'ltc-select-date)
+	(define-key author-map (kbd "<mouse-1>") 'ltc-select-color)
 	;; first loop: calculate longest author string for padding to next column
 	(setq msg-column (+ 2 (apply 'max (mapcar 'length (mapcar (lambda (commit)
 								    (author-to-string (nth 2 commit)))
@@ -597,21 +632,34 @@
 			       (let* ((is-active (nth 4 commit))
 				      (author (author-to-string (nth 2 commit)))
 				      (disabledcolor "#7f7f7f")
-				      (facevalue (if is-active nil (list :foreground disabledcolor))))
+				      (facevalue (if is-active nil (list :foreground disabledcolor)))
+				      (sha1 (shorten 8 (car commit))))
 				 (concat
 				  (propertize 
-				   (format " %c %8s  %25s  " 
-					   (if is-active ?* ?\s) ; whether active
-					   (shorten 8 (car commit)) ; short SHA1
-					   (nth 1 commit) ; date
-					   )
+				   (format " %c " (if is-active ?* ?\s)) ; whether active
 				   'face facevalue)
+				  (propertize 
+				   (format "%8s" sha1) ; short SHA1
+				   'mouse-face 'highlight
+				   'help-echo (if is-active "mouse-1: limit by this start revision")
+				   'keymap rev-map
+				   'action sha1
+				   'face facevalue)
+				  "  "
+				  (propertize
+				   (format "%25s" (nth 1 commit)) ; date
+				   'mouse-face 'highlight
+				   'help-echo (if is-active "mouse-1: limit by this start date")
+				   'keymap date-map
+				   'action (nth 1 commit)
+				   'face facevalue)
+				  "  "
 				  (propertize 
 				   (format (concat "%-" (number-to-string msg-column) "s") 
 					   author)
 				   'mouse-face 'highlight
 				   'help-echo (if is-active "mouse-1: change color")
-				   'keymap map
+				   'keymap author-map
 				   'action (if is-active (cons "textColor" (nth 2 commit)))
 				   'face (list :foreground (if is-active (car (last commit)) disabledcolor)))
 				  (propertize 
