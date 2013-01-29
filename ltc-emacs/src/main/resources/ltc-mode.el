@@ -215,13 +215,13 @@
 					   (mapcar 'car ltc-limiting-authors) " ")
 				"]...")
 		      "..."))]
-    ["Until date..." ltc-limit-date
-     :label (concat "Until date" 
+    ["Start at date..." ltc-limit-date
+     :label (concat "Start at date" 
       		    (if (or (not ltc-limiting-date) (string= "" ltc-limiting-date))
       			"..."
       		      (concat " [" ltc-limiting-date "]...")))]
-    ["Until revision..." ltc-limit-rev 
-     :label (concat "Until revision" 
+    ["Start at revision..." ltc-limit-rev 
+     :label (concat "Start at revision" 
 		    (if (or (not ltc-limiting-rev) (string= "" ltc-limiting-rev))
 			"..."
 		      (concat " [" (shorten 7 ltc-limiting-rev) "]...")))]
