@@ -28,22 +28,20 @@
 LaTeX Track Changes
 
 
-   LaTeX Track Changes (LTC) is a system that allows collaborators on a LaTeX writing project to view and query changes
-   in the .tex documents.  To provide a history for LTC, we assume that the writing project is stored in a git or svn
-   version control system.  Other version control systems could be supported in the future.
+  The LaTeX Track Changes (LTC) system allows collaborators on a LaTeX writing project to view changes in .tex files.
+  Author changes are presented in color in an Emacs buffer or in a stand-alone Java application.  The history of changes
+  is stored by managing the writing project in the git or svn version control system, which also facilitates
+  collaboration by enabling concurrent and distributed document updating.
 
-   In contrast to Microsoft Word, for example, we do not ask the authors to turn the system on or off
-   to track changes.  Also, changes do not need to be accepted or rejected.  Instead, whatever the history of the
-   document in question is, the author can use LTC to view any changes that have been made to date.  In order to
-   prevent confusing built-up of changes over time, we devised a filtering system to show only those changes of
-   interest.
+   In contrast to Microsoft Word, for example, changes do not need to be manually accepted or rejected. Instead, the
+   full history of document changes is always available, but the author can use LTC to filter how recent a set of
+   changes are displayed at a given moment, such as showing changes made since the author last worked on the document.
 
-   Our current version provides a stand-alone Java application to view changes and edit text, as well as an Emacs
-   minor mode.  Plugins for LTC to support other popular LaTeX editors such as TeXShop are planned or could be
-   implemented by the community using our open API.
+   Our current version provides a stand-alone Java application to view changes and edit text, as well as an Emacs minor
+   mode. Plugins for LTC to support other popular LaTeX editors such as TeXShop are planned or could be implemented by
+   the community using our open API.
 
 Acknowledgements
 
-   The LaTeX Track Changes project came to life after an idea of Peter Karp. Many writing projects such as scientific
-   papers or proposals among multiple authors require some sort of tracking of what each author changes. To promote the
-   use of LaTeX in such a collaborative setting, we started this project to fill this gap.
+   The LaTeX Track Changes project was conceived by Peter Karp. Linda Briesemeister led the implementation.  Grit Denker
+   and Skip Breidbach also contributed to its development.
