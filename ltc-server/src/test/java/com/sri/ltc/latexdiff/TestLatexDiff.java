@@ -54,7 +54,7 @@ public class TestLatexDiff {
         Change change = changes.get(index);
         assertTrue("change is addition", change instanceof Addition);
         assertTrue("start is at "+start_position, change.start_position == start_position);
-        assertEquals("addition flags", flags, change.getFlags());
+        assertEquals("addition flags", flags, change.flags);
     }
 
     protected void assertDeletion(int index, int start_position, int length, List<IndexFlagsPair<String>> flags) {
@@ -62,7 +62,18 @@ public class TestLatexDiff {
         Change change = changes.get(index);
         assertTrue("change is deletion", change instanceof Deletion);
         assertEquals("start position", start_position, change.start_position);
-        assertEquals("deletion flags", flags, change.getFlags());
+        assertEquals("deletion flags", flags, change.flags);
+    }
+
+    private void assertOnlyWhitespace() {
+        for (Change change : changes) {
+            if (change instanceof Addition)
+                for (IndexFlagsPair<Integer> pair : ((Addition) change).flags)
+                    assertTrue("addition contains WHITESPACE flag", pair.flags.contains(Flag.WHITESPACE));
+            if (change instanceof Deletion)
+                for (IndexFlagsPair<String> pair : ((Deletion) change).flags)
+                    assertTrue("deletion contains WHITESPACE flag", pair.flags.contains(Flag.WHITESPACE));
+        }
     }
 
     @Test(expected = NullPointerException.class)
@@ -73,33 +84,21 @@ public class TestLatexDiff {
     @Test
     public void whitespace() throws Exception {
         changes = getChanges("", " \n   \t");
-        // changes are only one WHITESPACE
-        assertEquals("one change", 1, changes.size());
-        assertEquals("change has one flag item", 1, changes.get(0).flags.size());
-        IndexFlagsPair<Integer> pair = (IndexFlagsPair<Integer>) changes.get(0).flags.get(0);
-        assertEquals("flag set is [WHITESPACE]", Sets.immutableEnumSet(Flag.WHITESPACE), pair.flags);
-        assertEquals("index of flag set is 6", new Integer(6), pair.index);
+        assertOnlyWhitespace(); // changes are only one WHITESPACE
         changes = getChanges(
                 "   Lorem ipsum \n dolor sit amet. ",
                 "Lorem ipsum dolor sit amet.");
-        // TODO: continue here and use post-processing?
-        assertTrue("Changes is empty", changes.isEmpty());
+        assertOnlyWhitespace();
         changes = getChanges("   \n ", " \t  ");
-        assertTrue("Changes is empty", changes.isEmpty());
+        assertOnlyWhitespace();
         changes = getChanges(
                 "   Lorem ipsum \n \ndolor sit amet. ",
                 "Lorem ipsum dolor sit amet.");
-        assertDeletion(0, 11, 4,
-                Lists.newArrayList(new IndexFlagsPair<String>(
-                        " \n \n",
-                        EnumSet.of(Flag.DELETION))));
+        assertOnlyWhitespace();
         changes = getChanges(
                 "Lorem ipsum dolor sit amet.",
                 "   Lorem ipsum \n \ndolor sit amet. ");
-        assertAddition(0, 14, 18,
-                Lists.newArrayList(new IndexFlagsPair<Integer>(
-                        18,
-                        EnumSet.noneOf(Flag.class))));
+        assertOnlyWhitespace();
     }
 
     @Test

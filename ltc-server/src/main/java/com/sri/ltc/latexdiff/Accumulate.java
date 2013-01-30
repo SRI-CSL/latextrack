@@ -137,7 +137,7 @@ public final class Accumulate {
             for (Change change : changes) {
 
                 if (change instanceof Deletion) {
-                    for (IndexFlagsPair<String> pair : ((Deletion) change).getFlags()) {
+                    for (IndexFlagsPair<String> pair : ((Deletion) change).flags) {
                         document.insertDeletion(
                                 change.start_position + current_offset,
                                 pair.index,
@@ -152,7 +152,7 @@ public final class Accumulate {
 
                 if (change instanceof Addition) {
                     int start_position = change.start_position + current_offset;
-                    for (IndexFlagsPair<Integer> pair : ((Addition) change).getFlags()) {
+                    for (IndexFlagsPair<Integer> pair : ((Addition) change).flags) {
                         document.markupAddition(
                                 start_position,
                                 pair.index + current_offset,
