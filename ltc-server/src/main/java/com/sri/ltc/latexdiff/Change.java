@@ -88,10 +88,6 @@ public abstract class Change<T> implements Comparable<Change> {
         }
     }
 
-    public ImmutableList<IndexFlagsPair<T>> getFlags() {
-        return flags;
-    }
-
     public int compareTo(Change o) {
         int result = start_position - o.start_position;
         if (result == 0) // if start position is the same, use class information: Addition smaller than Deletion

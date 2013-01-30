@@ -22,6 +22,7 @@
 package com.sri.ltc;
 
 import com.google.common.io.CharStreams;
+import com.sri.ltc.xplatform.AppInterface;
 
 import javax.swing.*;
 import java.io.*;
@@ -35,7 +36,7 @@ import java.util.logging.Logger;
  *
  * @author linda
  */
-public class CommonUtils {
+public final class CommonUtils {
 
     private static final Logger LOGGER = Logger.getLogger(CommonUtils.class.getName());
 
@@ -133,4 +134,28 @@ public class CommonUtils {
     public static Icon getLogo() {
         return LOGO;
     }
+
+    /**
+     * Whether or not we are running on Mac OS X.
+     * @return true if we are running on Mac OS X
+     */
+    public static boolean isMacOSX() {
+        return System.getProperty("os.name").toLowerCase().startsWith("mac os x");
+    }
+
+    public static void customizeApp(String image) {
+        Class myClass = null;
+        String myClassName = "com.sri.ltc.xplatform.UnknownApp";
+        if (CommonUtils.isMacOSX())
+            myClassName = "com.sri.ltc.xplatform.MacOSXApp";
+        try {
+            myClass = Class.forName(myClassName);
+            AppInterface appInterface = (AppInterface) myClass.getConstructor(String.class).newInstance(image);
+            appInterface.customize();
+        } catch (Exception e) {
+            // ignore
+            LOGGER.log(Level.SEVERE, "Customizing LTC application: " + e.getMessage(), e);
+        }
+    }
+
 }

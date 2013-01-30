@@ -13,14 +13,14 @@ Installing and Updating LTC
   You can obtain usage information by invoking the script this way:
 
 +----
-$> sh ltc-install.sh -h
+$> bash ltc-install.sh -h
 +----
 
   For example, if you want to use Emacs and the directory <<<~/Library/Preferences/Emacs>>> as the place where you
   store mode files for Emacs, you may want to call the script via (where <<<~/tmp/LTC>>> is the installation location):
 
 +----
-$> sh ltc-install.sh ~/tmp/LTC ~/Library/Preferences/Emacs
+$> bash ltc-install.sh ~/tmp/LTC ~/Library/Preferences/Emacs
 ...
 Done with installing LTC in ~/tmp/LTC
 To start LTC server with default options, use the following command:

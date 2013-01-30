@@ -10,7 +10,7 @@
 
     <groupId>com.sri.ltc</groupId>
     <artifactId>LTC</artifactId>
-    <version>0.9.11</version>
+    <version>0.9.12</version>
     <packaging>pom</packaging>
     <inceptionYear>2009</inceptionYear>
     <properties>
@@ -57,7 +57,7 @@
             <name>Peter Karp</name>
             <email>pkarp at AI dot sri dot com</email>
             <organization>SRI International</organization>
-            <organizationUrl>http://www.sri.com</organizationUrl>
+            <organizationUrl>http://www.ai.sri.com/pkarp/</organizationUrl>
             <roles>
                 <role>Project Founder</role>
             </roles>

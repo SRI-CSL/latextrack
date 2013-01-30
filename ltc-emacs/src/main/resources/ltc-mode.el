@@ -215,13 +215,13 @@
 					   (mapcar 'car ltc-limiting-authors) " ")
 				"]...")
 		      "..."))]
-    ["Until date..." ltc-limit-date
-     :label (concat "Until date" 
+    ["Start at date..." ltc-limit-date
+     :label (concat "Start at date" 
       		    (if (or (not ltc-limiting-date) (string= "" ltc-limiting-date))
       			"..."
       		      (concat " [" ltc-limiting-date "]...")))]
-    ["Until revision..." ltc-limit-rev 
-     :label (concat "Until revision" 
+    ["Start at revision..." ltc-limit-rev 
+     :label (concat "Start at revision" 
 		    (if (or (not ltc-limiting-rev) (string= "" ltc-limiting-rev))
 			"..."
 		      (concat " [" (shorten 7 ltc-limiting-rev) "]...")))]
@@ -255,7 +255,7 @@
 		 (message "Using `xml-rpc' package version: %s" xml-rpc-version)
 		 (and (version< xml-rpc-version min-xml-rpc-version)
 		      (error "`ltc-mode' requires `xml-rpc' package v%s or later" min-xml-rpc-version))
-		 ;; init session with file name and buffer contents if modified (or "" if not)
+		 ;; init session with file name
 		 (setq session-id (ltc-method-call "init_session" (buffer-file-name))))
 	     ;; handling any initialization errors
 	     ('error 
@@ -352,20 +352,7 @@
 	(ltc-add-edit-hooks) ; add (local) hooks to capture user's edits
 	;; update commit graph in temp info buffer
 	(init-commit-graph (cdr (assoc-string "sha1" map)))
-	(with-output-to-temp-buffer ltc-info-buffer
-	  (let ((old-buffer (current-buffer))
-		(old-window (get-buffer-window (current-buffer)))
-	 	(temp-buffer (get-buffer-create ltc-info-buffer))
-		(temp-output (pretty-print-commit-graph)))
-	    (set-buffer temp-buffer)
-	    (set (make-variable-buffer-local 'parent-window) old-window)
-	    (insert temp-output)
-	    (set-buffer old-buffer)
-	    ))
-	;; TODO: hide cursor (using Cursor Parameters)?
-	;; adjust height of temp info buffer
-	(with-selected-window (get-buffer-window ltc-info-buffer)
-	  (shrink-window (- (window-height) 7)))
+	(update-info-buffer)
 	(set-buffer-modified-p old-buffer-modified-p) ; restore modification flag
 	))
   )
@@ -382,7 +369,13 @@
 		     (compile-deletions))
     (clear-visited-file-modtime) ; prevent Emacs from complaining about modtime diff's as we are writing file from Java
     (set-buffer-modified-p nil) ; reset modification flag
-    ;; TODO: update commit graph with "on disk"?
+    ;; manipulate commit graph: if at least one entry replace first SHA1 with "on disk"
+    (when commit-graph 
+      (let ((head (car commit-graph)))
+	(when head
+	  (setcar head on_disk)
+	  (setcar commit-graph head)
+	  (update-info-buffer))))
     t)) ; prevents actual saving in Emacs as we have already written the file
 
 (defun ltc-hook-before-kill ()
@@ -421,27 +414,63 @@
     (message "Limiting Authors: %S" ltc-limiting-authors)
     (ltc-update)))
 
+(defun ltc-select-date (event)
+  "Select date for limiting in mouse event.  Updates automatically."
+  (interactive "e")
+  (let* ((window (posn-window (event-end event)))
+	 (pos (posn-point (event-end event)))
+	 (date (get-text-property pos 'action)) ; obtain action parameters from text properties
+	 )
+    (select-window parent-window)
+    (set-limiting-date date)))
+
 (defun ltc-limit-date (date)
   "Set or reset limiting DATE for commit graph.  If empty string, no limit is used.  Updates automatically unless user chooses to quit input."
   (interactive
    (if ltc-mode
-       (list (completing-read "Limit by date: " 
-			      (cons "" (mapcar 'cadr (cdr commit-graph)))
-			      nil nil))
+       (let ((dates (mapcar 'cadr (cdr commit-graph))))
+	 (list (completing-read (concat "Limit by date (eg. \""
+					(substring (car dates) 0 2)
+					"\" and TAB completion; empty to reset): ") 
+				(cons "" dates)
+				nil nil)))
      '(nil))) ; sets date = nil
   (when date
+    (set-limiting-date date)))
+
+(defun set-limiting-date (date)   
+  "Set limiting DATE and update."
+  (when ltc-mode
     (setq ltc-limiting-date (ltc-method-call "set_limited_date" session-id date))
     (ltc-update)))
+
+(defun ltc-select-rev (event)
+  "Select revision for limiting in mouse event.  Updates automatically."
+  (interactive "e")
+  (let* ((window (posn-window (event-end event)))
+	 (pos (posn-point (event-end event)))
+	 (rev (get-text-property pos 'action)) ; obtain action parameters from text properties
+	 )
+    (select-window parent-window)
+    (set-limiting-rev rev)))
 
 (defun ltc-limit-rev (rev)
   "Set or reset limiting REV for commit graph.  If empty string, no limit is used.  Offers currently known sha1s from commit graph for completion.  Updates automatically unless user chooses to quit input."
   (interactive
    (if ltc-mode
-       (list (completing-read "Limit by revision: " 
-			      (cons "" (mapcar (apply-partially 'shorten 7) (mapcar 'car (cdr commit-graph))))
-			      nil nil))
+       (let ((revs (mapcar (apply-partially 'shorten 7) (mapcar 'car (cdr commit-graph)))))
+	 (list (completing-read (concat "Limit by revision (eg. \""
+					(substring (car revs) 0 2)
+					"\" and TAB completion; empty to reset): ")
+				(cons "" revs)
+				nil nil)))
      '(nil))) ; sets rev = nil
   (when rev
+    (set-limiting-rev rev)))
+
+(defun set-limiting-rev (rev)   
+  "Set limiting REV and update."
+  (when ltc-mode
     (setq ltc-limiting-rev (ltc-method-call "set_limited_rev" session-id rev))
     (ltc-update)))
 
@@ -502,7 +531,7 @@
        (list
 	(read-directory-name "Directory where to save bug report files (created if not exist): ")
 	(read-string "Explanation: ")
-	(y-or-n-p "Include repository? ")) 
+	(y-or-n-p "Include repository? "))x1 
      '(nil nil nil))) ; sets directory = nil and msg = nil and includeSrc = nil
   (when directory
     (setq file (ltc-method-call "create_bug_report" session-id msg includeSrc (expand-file-name directory)))
@@ -571,11 +600,35 @@
     (setq commit-graph nil) ; LTC session not valid
     ))
 
+(defun update-info-buffer ()
+  "Update output in info buffer from current commit graph."
+  (when (string< "" ltc-info-buffer)
+    (with-output-to-temp-buffer ltc-info-buffer
+      (let ((old-buffer (current-buffer))
+	    (old-window (get-buffer-window (current-buffer)))
+	    (temp-buffer (get-buffer-create ltc-info-buffer))
+	    (temp-output (pretty-print-commit-graph)))
+	(set-buffer temp-buffer)
+	(set (make-variable-buffer-local 'parent-window) old-window)
+	(insert temp-output)
+	(set-buffer old-buffer)
+	))
+    ;; TODO: hide cursor (using Cursor Parameters)?
+    ;; adjust height of temp info buffer
+    (with-selected-window (get-buffer-window ltc-info-buffer)
+      (shrink-window (- (window-height) 7)))
+    ))
+
 (defun pretty-print-commit-graph ()
   "Create string representation with text properties from current commit graph."
   (if commit-graph
-      (let ((map (make-sparse-keymap)))
-	(define-key map (kbd "<mouse-1>") 'ltc-select-color)
+      (let ((rev-map (make-sparse-keymap))
+	    (date-map (make-sparse-keymap))
+	    (author-map (make-sparse-keymap))
+	    )
+	(define-key rev-map (kbd "<mouse-1>") 'ltc-select-rev)
+	(define-key date-map (kbd "<mouse-1>") 'ltc-select-date)
+	(define-key author-map (kbd "<mouse-1>") 'ltc-select-color)
 	;; first loop: calculate longest author string for padding to next column
 	(setq msg-column (+ 2 (apply 'max (mapcar 'length (mapcar (lambda (commit)
 								    (author-to-string (nth 2 commit)))
@@ -585,21 +638,34 @@
 			       (let* ((is-active (nth 4 commit))
 				      (author (author-to-string (nth 2 commit)))
 				      (disabledcolor "#7f7f7f")
-				      (facevalue (if is-active nil (list :foreground disabledcolor))))
+				      (facevalue (if is-active nil (list :foreground disabledcolor)))
+				      (sha1 (shorten 8 (car commit))))
 				 (concat
 				  (propertize 
-				   (format " %c %8s  %25s  " 
-					   (if is-active ?* ?\s) ; whether active
-					   (shorten 8 (car commit)) ; short SHA1
-					   (nth 1 commit) ; date
-					   )
+				   (format " %c " (if is-active ?* ?\s)) ; whether active
 				   'face facevalue)
+				  (propertize 
+				   (format "%8s" sha1) ; short SHA1
+				   'mouse-face 'highlight
+				   'help-echo (if is-active "mouse-1: limit by this start revision")
+				   'keymap rev-map
+				   'action sha1
+				   'face facevalue)
+				  "  "
+				  (propertize
+				   (format "%25s" (nth 1 commit)) ; date
+				   'mouse-face 'highlight
+				   'help-echo (if is-active "mouse-1: limit by this start date")
+				   'keymap date-map
+				   'action (nth 1 commit)
+				   'face facevalue)
+				  "  "
 				  (propertize 
 				   (format (concat "%-" (number-to-string msg-column) "s") 
 					   author)
 				   'mouse-face 'highlight
 				   'help-echo (if is-active "mouse-1: change color")
-				   'keymap map
+				   'keymap author-map
 				   'action (if is-active (cons "textColor" (nth 2 commit)))
 				   'face (list :foreground (if is-active (car (last commit)) disabledcolor)))
 				  (propertize 
@@ -612,6 +678,8 @@
 		   "\n")
 	)
     "<commit graph is empty>"))
+
+;;; --- set author color functions
 
 (defun ltc-select-color (event)
   "Select color for indicated author in mouse event.  Updates automatically."
@@ -704,12 +772,19 @@ it will only set the new, chosen color if it is different than the old one."
     ;; color text and use addition face
     (add-text-properties beg end (list 'face 
 				       (list 'ltc-addition (list :foreground (car (last self))))))
-    ;; TODO: if first change (buffer-modified) then update commit graph
     ))
 
 (defun ltc-hook-before-change (beg end)
   "Hook to capture user's deletions while LTC mode is running."
   ;(message " --- LTC: before change with beg=%d and end=%d" beg end)
+  ;; if first change (buffer-modified-p == nil) then update commit graph
+  (when (and (not (buffer-modified-p)) commit-graph)
+    ;; manipulate commit graph: if at least one entry and the first element is "" then replace first SHA1 with "modified"
+    (let ((head (car commit-graph)))
+      (when (and head (string= "" (car head)))
+	(setcar head modified)
+	(setcar commit-graph head)
+	(update-info-buffer))))
   (when (and self (not (= beg end)))
     (setq self-color (caddr self))
     ;; use idiom to manipulate deletion string in temp buffer before returning to current buffer
@@ -740,9 +815,8 @@ it will only set the new, chosen color if it is different than the old one."
 		    ))))
 	    (buffer-string) ; return the contents of the temp buffer
 	    ))
-    (insert insstring) ; this moves point to end of insertion ; TODO: DOES THIS NOT TRIGGER INSERTION HOOKS??
+    (insert insstring) ; this moves point to end of insertion
     (if (eq 'backspace last-input-char) (goto-char beg)) ; if last key was BACKSPACE, move point to beginning
-    ;; TODO: if first change (buffer-modified) then update commit graph
     ))
 
 ;;; --- accessing API of base system

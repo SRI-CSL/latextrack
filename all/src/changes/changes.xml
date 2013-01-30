@@ -27,6 +27,24 @@
         <author email="lilalinda at users.sourceforge.net">Linda Briesemeister</author>
     </properties>
     <body>
+        <release version="0.9.12" date="2013-01-30">
+            <action dev="lilalinda" type="fix" issue="7" due-to="Tomer">
+                LTC Server and Editor now runs under Linux again.
+            </action>
+            <action dev="lilalinda" type="update">
+                Emacs mode updates "modified" and "on disk" flags in history as soon as edit and save operations
+                happen; revisions and dates are now click-able in history buffer of Emacs mode to use these for
+                limiting history; improved menu labels and prompts for user; install script now includes hint how to
+                reload the Emacs mode file if Emacs was running while updating
+            </action>
+            <action dev="lilalinda" due-to="Peter" type="update">
+                Better text for home page and link to Peter's web site.
+            </action>
+            <action dev="lilalinda" due-to="Cher" issue="5" type="update">
+                Finalized logo and icon files.
+            </action>
+        </release>
+
         <release version="0.9.11" date="2012-12-27">
             <action dev="lilalinda" type="add">
                 Adding build information to About dialog, JAR manifest, and bug report.

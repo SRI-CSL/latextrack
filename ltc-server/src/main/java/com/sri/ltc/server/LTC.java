@@ -21,10 +21,6 @@
  */
 package com.sri.ltc.server;
 
-import com.apple.eawt.AboutHandler;
-import com.apple.eawt.AppEvent;
-import com.apple.eawt.QuitHandler;
-import com.apple.eawt.QuitResponse;
 import com.sri.ltc.CommonUtils;
 import com.sri.ltc.logging.LevelOptionHandler;
 import com.sri.ltc.logging.LogConfiguration;
@@ -35,7 +31,6 @@ import org.kohsuke.args4j.Option;
 import javax.servlet.ServletException;
 import javax.swing.*;
 import java.io.*;
-import java.net.URL;
 import java.util.logging.Level;
 import java.util.logging.LogManager;
 import java.util.logging.Logger;
@@ -79,9 +74,11 @@ public final class LTC {
     static {
         // first thing is to configure Mac OS X before AWT gets loaded:
         final String NAME = "LTC Server";
-        System.setProperty("apple.laf.useScreenMenuBar", "true");
-        System.setProperty("com.apple.mrj.application.apple.menu.about.name", NAME);
-        System.setProperty("apple.awt.showGrowBox", "true");
+        if (CommonUtils.isMacOSX()) {
+            System.setProperty("apple.laf.useScreenMenuBar", "true");
+            System.setProperty("com.apple.mrj.application.apple.menu.about.name", NAME);
+            System.setProperty("apple.awt.showGrowBox", "true");
+        }
 
         // print NOTICE on command line
         System.out.println(CommonUtils.getNotice()); // output notice
@@ -155,41 +152,14 @@ public final class LTC {
             logger.log(Level.SEVERE, "Cannot configure logging", e);
         }
 
-        // customize for Mac OS X:
         try {
             UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
         } catch (Exception e) {
             logger.log(Level.SEVERE, "setting UI look & feel", e);
         }
-        String osName = System.getProperty("os.name").toLowerCase();
-        boolean IS_MAC = osName.startsWith("mac os x");
-        if (IS_MAC) {
-            URL imageURL = Console.class.getResource("/images/LTC-icon.png");
-            if (imageURL != null) {
-                ImageIcon icon = new ImageIcon(imageURL);
-                com.apple.eawt.Application application = com.apple.eawt.Application.getApplication();
-                application.setDockIconImage(icon.getImage());
-                application.setAboutHandler(new AboutHandler() {
-                    @Override
-                    public void handleAbout(AppEvent.AboutEvent aboutEvent) {
-                        // display copyright/license information
-                        JOptionPane.showMessageDialog(null,
-                                CommonUtils.getNotice(),
-                                "About LaTeX Track Changes (LTC)",
-                                JOptionPane.PLAIN_MESSAGE,
-                                CommonUtils.getLogo());
-                    }
-                });
-                application.setQuitHandler(new QuitHandler() {
-                    @Override
-                    public void handleQuitRequestWith(AppEvent.QuitEvent quitEvent, QuitResponse quitResponse) {
-                        // TODO: do anything here?
-                        quitResponse.performQuit();
-                    }
-                });
-                // TODO: enable preferences and set handler?
-            }
-        }
+
+        // customize for operating system:
+        CommonUtils.customizeApp("/images/LTC-icon.png");
 
         LTC.getInstance(); // start up server (if not already running)
     }
