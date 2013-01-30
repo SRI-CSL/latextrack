@@ -35,6 +35,12 @@ Preparation
   Prepare all the bug fixes etc. on either the <<<'develop'>>> or <<<'feature/XXX'>>> branches.
   Switch to the <<<'develop'>>> branch.
 
++---
+$> git status
+# On branch develop
+nothing to commit, working directory clean
++---
+
   The example uses the release of version 1.0 with the next one being 1.1-SNAPSHOT.  Adjust these numbers as needed.
 
 Start Release

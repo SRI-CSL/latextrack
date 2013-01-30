@@ -24,7 +24,6 @@ package com.sri.ltc.server;
 import com.sri.ltc.CommonUtils;
 import com.sri.ltc.logging.LevelOptionHandler;
 import com.sri.ltc.logging.LogConfiguration;
-import com.sri.ltc.xplatform.AppInterface;
 import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
@@ -75,7 +74,7 @@ public final class LTC {
     static {
         // first thing is to configure Mac OS X before AWT gets loaded:
         final String NAME = "LTC Server";
-        if (isMacOSX()) {
+        if (CommonUtils.isMacOSX()) {
             System.setProperty("apple.laf.useScreenMenuBar", "true");
             System.setProperty("com.apple.mrj.application.apple.menu.about.name", NAME);
             System.setProperty("apple.awt.showGrowBox", "true");
@@ -110,10 +109,6 @@ public final class LTC {
         } catch (IOException e) {
             logger.log(Level.SEVERE, "Cannot start RPC server", e);
         }
-    }
-
-    private static boolean isMacOSX() {
-        return System.getProperty("os.name").toLowerCase().startsWith("mac os x");
     }
 
     private static void printUsage(PrintStream out, CmdLineParser parser) {
@@ -164,18 +159,7 @@ public final class LTC {
         }
 
         // customize for operating system:
-        Class myClass = null;
-        String myClassName = "com.sri.ltc.xplatform.UnknownApp";
-        if (isMacOSX())
-            myClassName = "com.sri.ltc.xplatform.MacOSXApp";
-        try {
-            myClass = Class.forName(myClassName);
-            AppInterface appInterface = (AppInterface) myClass.newInstance();
-            appInterface.customize();
-        } catch (Exception e) {
-            // ignore
-            logger.log(Level.SEVERE, "Customizing LTC application: " + e.getMessage(), e);
-        }
+        CommonUtils.customizeApp("/images/LTC-icon.png");
 
         LTC.getInstance(); // start up server (if not already running)
     }
