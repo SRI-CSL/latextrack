@@ -34,16 +34,24 @@ import java.net.URL;
  */
 public final class MacOSXApp implements AppInterface {
 
+    private final String image;
+
+    public MacOSXApp(String image) {
+        this.image = image;
+    }
+
     @Override
     public void customize() {
         AppInterface.LOGGER.fine("Customizing Mac OS X application");
 
         com.apple.eawt.Application application = com.apple.eawt.Application.getApplication();
 
-        URL imageURL = Console.class.getResource("/images/LTC-icon.png");
-        if (imageURL != null) {
-            ImageIcon icon = new ImageIcon(imageURL);
-            application.setDockIconImage(icon.getImage());
+        if (image != null) {
+            URL imageURL = Console.class.getResource(image);
+            if (imageURL != null) {
+                ImageIcon icon = new ImageIcon(imageURL);
+                application.setDockIconImage(icon.getImage());
+            }
         }
 
         application.setAboutHandler(null);
@@ -59,7 +67,6 @@ public final class MacOSXApp implements AppInterface {
             }
         });
 
-//        application.setQuitHandler(null);
         application.setQuitHandler(new com.apple.eawt.QuitHandler() {
             @Override
             public void handleQuitRequestWith(com.apple.eawt.AppEvent.QuitEvent quitEvent,
