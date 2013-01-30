@@ -428,9 +428,12 @@
   "Set or reset limiting DATE for commit graph.  If empty string, no limit is used.  Updates automatically unless user chooses to quit input."
   (interactive
    (if ltc-mode
-       (list (completing-read "Limit by date: " 
-			      (cons "" (mapcar 'cadr (cdr commit-graph)))
-			      nil nil))
+       (let ((dates (mapcar 'cadr (cdr commit-graph))))
+	 (list (completing-read (concat "Limit by date (eg. \""
+					(substring (car dates) 0 2)
+					"\" and TAB completion; empty to reset): ") 
+				(cons "" dates)
+				nil nil)))
      '(nil))) ; sets date = nil
   (when date
     (set-limiting-date date)))
@@ -455,9 +458,12 @@
   "Set or reset limiting REV for commit graph.  If empty string, no limit is used.  Offers currently known sha1s from commit graph for completion.  Updates automatically unless user chooses to quit input."
   (interactive
    (if ltc-mode
-       (list (completing-read "Limit by revision: " 
-			      (cons "" (mapcar (apply-partially 'shorten 7) (mapcar 'car (cdr commit-graph))))
-			      nil nil))
+       (let ((revs (mapcar (apply-partially 'shorten 7) (mapcar 'car (cdr commit-graph)))))
+	 (list (completing-read (concat "Limit by revision (eg. \""
+					(substring (car revs) 0 2)
+					"\" and TAB completion; empty to reset): ")
+				(cons "" revs)
+				nil nil)))
      '(nil))) ; sets rev = nil
   (when rev
     (set-limiting-rev rev)))
