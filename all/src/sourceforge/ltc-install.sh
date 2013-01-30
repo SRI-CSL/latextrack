@@ -177,12 +177,13 @@ fi
 ################################################################################
 # copy or download JAR file
 
+echo
 case $FETCH_TYPE in
     0)
 	cp -pv "$DOWNLOAD_DIR/$JAR_FILE" "$JAVA_DIR"
 	;;
     1)
-	printf "downloading LTC-<version>.jar via wget:\n"
+	printf "Downloading LTC-<version>.jar via wget:\n\n"
 	wget --trust-server-names -N -P $JAVA_DIR $DOWNLOAD_URL
 	if [ $? -gt 0 ]; then
 	    usage "Something went wrong during downloading with 'wget' -- exiting."; exit 5
@@ -190,7 +191,7 @@ case $FETCH_TYPE in
 	findlatest $JAVA_DIR
 	;;
     2) 
-	printf "downloading LTC-<version>.jar via curl:\n"
+	printf "Downloading LTC-<version>.jar via curl:\n\n"
 	JAR_FILE=`curl -LIs $DOWNLOAD_URL | grep -e "^Content-Disposition: attachment; filename=" | sed "s/^Content-Disposition: attachment; filename=\"\(LTC-.*\.jar\)\"/\1/"`
 	if [ -z "$JAR_FILE" ]; then
 	    usage "Couldn't obtain latest JAR_FILE name with 'curl' -- exiting."; exit 6
@@ -208,12 +209,14 @@ esac
 if [ -n "$EMACS_DIR" ]; then
     DIR=`pwd`
     cd "$EMACS_DIR"
-    echo "inflating Emacs Lisp files in ${EMACS_DIR}:"
+    echo "Inflating Emacs Lisp files in ${EMACS_DIR}:"
     jar xvf "$JAVA_DIR/$JAR_FILE" xml-rpc.el versions.el ltc-mode.el
     if [ $? -gt 0 ]; then
 	usage "Something went wrong when extracting Emacs Lisp files -- exiting."; exit 3
     fi    
     cd "$DIR"
+    printf "\nIf Emacs is running, you should now reload the new emacs file with the command:\n\n"
+    printf "  \e[34mM-x load-file <RET> %s/ltc-mode.el\e[0m\n\n" $EMACS_DIR
 fi
 
 ################################################################################
@@ -226,5 +229,5 @@ ln -v -s $JAR_FILE $JAVA_DIR/LTC.jar
 # message
 
 echo "Done with installing LTC in ${JAVA_DIR}"
-printf "To start LTC server with default options, use the following command:\n\n  java -jar %s/LTC.jar\n\n" $JAVA_DIR
+printf "To start LTC server with default options, use the following command:\n\n  \e[31mjava -jar %s/LTC.jar\e[0m\n\n" $JAVA_DIR
 
