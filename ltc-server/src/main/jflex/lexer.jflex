@@ -126,6 +126,12 @@ space       = [ \t\f]
   /* match single punctuation characters */
 
 <YYINITIAL,PREAMBLE_SEEN,IN_COMMENT>
+  [+\-]{0,1} [0-9] ([A-Za-z0-9] | [,\.][0-9])+ 
+                     { return Lists.newArrayList(
+                         new Lexeme(LexemeType.NUMERAL, yytext(), yychar, preambleSeen, yystate() == IN_COMMENT)); }
+  /* numerals start with an optional minus or plus and one digit, then almost anything goes */ 
+
+<YYINITIAL,PREAMBLE_SEEN,IN_COMMENT>
   {symbol}           { return Lists.newArrayList(
                          new Lexeme(LexemeType.SYMBOL, yytext(), yychar, preambleSeen, yystate() == IN_COMMENT)); }
   /* match single symbol characters */

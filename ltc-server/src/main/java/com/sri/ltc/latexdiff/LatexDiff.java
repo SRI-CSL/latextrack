@@ -42,6 +42,9 @@ public final class LatexDiff {
     private static final Set<LexemeType> SPACE = Sets.newHashSet(
             LexemeType.PARAGRAPH,
             LexemeType.WHITESPACE);
+    private static final Set<LexemeType> WORDS = Sets.newHashSet(
+            LexemeType.WORD,
+            LexemeType.NUMERAL);
 
     // variables to contain parts for diff'ing
     private List<List<Lexeme>> lexemLists = new ArrayList<List<Lexeme>>();
@@ -326,10 +329,10 @@ public final class LatexDiff {
                     // white space at end of deletion in old text AND
                     // white space in front of position in new text
                     int text_end_position = (ex0 != ey0 && sx1 != sy1) ? ex0 : ey0;
-                    // add one space after deletion if replacement without bordering space and next lexeme is a WORD:
+                    // add one space after deletion if replacement without bordering space and next lexeme is a WORD or NUMERAL:
                     // (starred cases in replacement position table)
                     boolean addSpace = (hunk.inserted > 0 &&
-                            LexemeType.WORD.equals(list1.get(hunk.line1).type) &&
+                            WORDS.contains(list1.get(hunk.line1).type) &&
                             ex0 == ey0 && sx1 == sy1);
 
                     // build list of flags:

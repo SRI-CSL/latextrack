@@ -31,6 +31,7 @@ public enum LexemeType {
     PUNCTUATION (true),
     SYMBOL (true),
     WORD (true),
+    NUMERAL (true),
     PARAGRAPH (false),
     WHITESPACE (false),
     END_OF_FILE (false),
