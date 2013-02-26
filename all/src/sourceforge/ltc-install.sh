@@ -21,7 +21,7 @@
 # <http://www.gnu.org/licenses/gpl-3.0.html>.
 # #L%
 ###
-# install LTC in given directory and optionally extract Emacs lisp files
+# install LTC from web or file in given directory and optionally extract Emacs lisp files
 
 ################################################################################
 # variables with default values
@@ -55,7 +55,7 @@ If successfully downloaded or copied, the script creates a symbolic link pointin
 to the latest version in
   <JAVA DIR>/LTC.jar
 
-Optionally give an Emacs directory where to extract the Emacs lisp files.
+Optionally give an Emacs directory <EMACS DIR> where to extract the Emacs lisp files.
 
 OPTIONS:
    -h        Show this message
@@ -109,7 +109,7 @@ do
             usage; exit 1
             ;;
 	d)
-	    DOWNLOAD_DIR=$OPTARG
+	    DOWNLOAD_DIR=$( cd $OPTARG ; pwd -P )  # make absolute
 	    ;;
     esac
     shift $((OPTIND-1)); OPTIND=1 
@@ -120,37 +120,23 @@ if [ $# -lt 1 ]; then
     usage "need at least 1 argument"; exit 1
 fi
 
-# test java directory
-JAVA_DIR=$1
+# make absolut and test java directory
+JAVA_DIR=$( cd $1 ; pwd -P )
 testdir "$JAVA_DIR" "Java" "w"
-# make JAVA_DIR absolute if it doesn't start with '/' or '~'
-case ${JAVA_DIR:0:1} in
-    /|~) ;; # keep
-    *) 
-	JAVA_DIR=`pwd`/$JAVA_DIR
-	;;
-esac
 
 # test Emacs directory (if given)
 if [ $# -gt 1 ]; then
-    EMACS_DIR=$2
+    EMACS_DIR=$( cd $2 ; pwd -P )
     testdir "$EMACS_DIR" "Emacs" "w"
-    type -P jar &>/dev/null
+    which unzip &>/dev/null
     if [ $? -gt 0 ]; then
-	usage "Cannot find executable of 'jar' to extract Emacs Lisp files"; exit 1
+	usage "Cannot find executable of 'unzip' to extract Emacs Lisp files"; exit 1
     fi
 fi
 
 # test download directory (if given) or determine method for download
 if [ -n "$DOWNLOAD_DIR" ]; then
     testdir "$DOWNLOAD_DIR" "Download" "r"
-    # make DOWNLOAD_DIR absolute if it doesn't start with '/' or '~'
-    case ${DOWNLOAD_DIR:0:1} in
-	/|~) ;; # keep
-	*) 
-	    DOWNLOAD_DIR=`pwd`/$DOWNLOAD_DIR
-	    ;;
-    esac
     # find latest LTC-<version>.jar file there: set JAR_FILE
     findlatest $DOWNLOAD_DIR 
     FETCH_TYPE=0  # indicates using download directory
@@ -207,14 +193,12 @@ esac
 # (optionally) extract Emacs Lisp files
 
 if [ -n "$EMACS_DIR" ]; then
-    DIR=`pwd`
-    cd "$EMACS_DIR"
     echo "Inflating Emacs Lisp files in ${EMACS_DIR}:"
-    jar xvf "$JAVA_DIR/$JAR_FILE" xml-rpc.el versions.el ltc-mode.el
+    unzip -o "$JAVA_DIR/$JAR_FILE" xml-rpc.el versions.el ltc-mode.el -d "$EMACS_DIR"
     if [ $? -gt 0 ]; then
 	usage "Something went wrong when extracting Emacs Lisp files -- exiting."; exit 3
-    fi    
-    cd "$DIR"
+    fi
+    [[ "$EMACS_DIR" =~ ^"$HOME"(/|$) ]] && EMACS_DIR="~${EMACS_DIR#$HOME}"
     printf "\nIf Emacs is running, you should now reload the new emacs file with the command:\n\n"
     printf "  \e[34mM-x load-file <RET> %s/ltc-mode.el\e[0m\n\n" $EMACS_DIR
 fi
@@ -228,6 +212,8 @@ ln -v -s $JAR_FILE $JAVA_DIR/LTC.jar
 ################################################################################
 # message
 
+[[ "$JAVA_DIR" =~ ^"$HOME"(/|$) ]] && JAVA_DIR="~${JAVA_DIR#$HOME}"
 echo "Done with installing LTC in ${JAVA_DIR}"
-printf "To start LTC server with default options, use the following command:\n\n  \e[31mjava -jar %s/LTC.jar\e[0m\n\n" $JAVA_DIR
+printf "To start LTC server with default options, use the following command:\n\n"
+printf "  \e[31mjava -jar %s/LTC.jar\e[0m\n\n" $JAVA_DIR
 

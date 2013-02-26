@@ -33,7 +33,6 @@ To start LTC server with default options, use the following command:
 
 *---------------------------+------------------------------------+-----------------------+
 | <<Java>>                  | 1.6 or above                       | <<<$> java -version>>>
-| (JDK if using <<<jar>>>)  |                                    |
 *---------------------------+------------------------------------+-----------------------+
 | <<git>> or <<svn>>        | 1.7.2 or above,                    | <<<$> git --version>>>,
 |                           | 1.6.3 or above                     | <<<$> svn --version>>>
@@ -43,7 +42,7 @@ To start LTC server with default options, use the following command:
 *---------------------------+------------------------------------+-----------------------+
 
   We have tested the system on Mac OS X and Linux.  It is designed to run on Unix platforms.  Windows is not supported
-  although it may run with a Unix-like shell under Windows.
+  although it may run with a Unix-like shell such as Cygwin under Windows.
 
 * Examples
 

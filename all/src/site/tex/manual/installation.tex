@@ -110,9 +110,9 @@ svn, version 1.6.18 (r1303927)
 To use the supplied \Code{ltc-mode} in Emacs, you will have to put the relevant mode files into a directory where Emacs can load them. There are two alternatives of letting Emacs know where to find Emacs Lisp files:
 \begin{enumerate}
 \item Use a location that is already included in the \Code{load-path}. To view the contents of this path in your Emacs, execute the command \Code{C-h v load-path}.  On Mac OS X systems with Aquamacs, this could be for example \Code{\char`\~/Library/Preferences/Emacs}.
-\item Add a new directory where you will extract the Emacs Lisp files to the \Code{load-path}. Assuming the Emacs Lisp files will be installed in directory \Code{\char`\~/LTC/emacs/}, add the following line to your \Code{.emacs} or other Emacs configuration file:
+\item Add a new directory where you will extract the Emacs Lisp files to the \Code{load-path}. Assuming the Emacs Lisp files will be installed in directory \Code{\char`\~/.emacs.d/}, add the following line to your \Code{.emacs} or other Emacs configuration file:
   \begin{CodeVerbatim}
-(add-to-list 'load-path "~/LTC/emacs")
+(add-to-list 'load-path "~/.emacs.d")
   \end{CodeVerbatim}
 \end{enumerate}
 
@@ -126,7 +126,7 @@ In order to enable the LTC mode in Emacs, add the following line to your \Code{.
 (autoload 'ltc-mode "ltc-mode" "" t)
 \end{CodeVerbatim}
 
-We recommend to avoid adding a hook from \Code{latex-mode} to \Code{ltc-mode} (usually done with \Code{add-hook}) as our mode requires the \Code{latex-mode} to be fully executed before it works. The hooks are not guaranteed to be executed in particular order, so it is best to manually invoke LTC mode.
+We recommend to avoid adding a hook from \Code{latex-mode} to \Code{ltc-mode} (usually done with \Code{add-hook}) as our mode requires the \Code{latex-mode} to be fully executed before it works. The hooks are not guaranteed to be executed in particular order, so it is best to manually invoke LTC mode after you have opened a \Code{.tex} file.
 
 \begin{figure}[t]
 \centering
