@@ -565,7 +565,8 @@ public interface LTCserverInterface {
      * @param sessionID identifies the session
      * @param message any user-entered comments describing the bug
      * @param includeRepository whether to include a bundle of the source repository
-     * @param outputDirectory the path that the zip file should be created in  @return the name of the zip file created
+     * @param outputDirectory the path that the zip file should be created in (cannot be empty or NULL)
+     * @return the name of the zip file created
      */
     public String create_bug_report(int sessionID, String message, boolean includeRepository, String outputDirectory) throws XmlRpcException;
 
