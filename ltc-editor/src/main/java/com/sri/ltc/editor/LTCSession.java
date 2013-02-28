@@ -25,7 +25,6 @@ package com.sri.ltc.editor;
 import com.sri.ltc.filter.Author;
 import com.sri.ltc.server.LTCserverInterface;
 import org.apache.xmlrpc.XmlRpcException;
-import sun.plugin2.message.RemoteCAContextIdMessage;
 
 import javax.swing.*;
 import java.io.File;
