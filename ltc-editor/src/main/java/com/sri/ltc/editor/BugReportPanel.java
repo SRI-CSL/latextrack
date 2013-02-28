@@ -1,9 +1,10 @@
 package com.sri.ltc.editor;
 
 import javax.swing.*;
+import javax.swing.event.AncestorEvent;
+import javax.swing.event.AncestorListener;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
-import javax.swing.filechooser.FileFilter;
 import java.awt.*;
 import java.awt.event.*;
 import java.io.File;
@@ -39,11 +40,12 @@ final public class BugReportPanel extends JPanel {
 
     // persistent preferences:
     private final Preferences preferences = Preferences.userRoot().node(this.getClass().getCanonicalName().replaceAll("\\.","/"));
+    private final static String KEY_LAST_PARENT_DIR = "parent of last directory of bug report";
     private final static String KEY_LAST_DIR = "last directory of bug report";
     private final static String KEY_LAST_REPO = "last setting whether to include source repository";
 
     private final JFileChooser fileChooser = new JFileChooser();
-    private final JTextField directoryField = new JTextField(30); // TODO: if empty, disable "CREATE" button
+    private final JTextField directoryField = new JTextField(30);
     private final JTextArea commentArea = new JTextArea(5, 20);
     private final JCheckBox includeRepo = new JCheckBox("include repository");
 
@@ -52,19 +54,18 @@ final public class BugReportPanel extends JPanel {
 
         // ~~~ components
 
-// TODO:       fileChooser.setCurrentDirectory(new File(
-//                preferences.get(KEY_LAST_DIR, System.getProperty("user.dir"))));
+        fileChooser.setCurrentDirectory(new File(
+                preferences.get(KEY_LAST_PARENT_DIR, System.getProperty("user.dir"))));
         fileChooser.setDialogTitle("Choose Directory To Store Report");
         fileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
 
-        // TODO: restore last directory from prefs and register listener to save any edits to preferences
-        // directoryField.
+        directoryField.setText(preferences.get(KEY_LAST_DIR, ""));
 
-        includeRepo.setSelected(false); // TODO: read from preferences
+        includeRepo.setSelected(preferences.getBoolean(KEY_LAST_REPO, false));
         includeRepo.addItemListener(new ItemListener() {
             @Override
             public void itemStateChanged(ItemEvent itemEvent) {
-                // TODO: save to preferences
+                preferences.putBoolean(KEY_LAST_REPO, includeRepo.isSelected());
             }
         });
 
@@ -80,7 +81,6 @@ final public class BugReportPanel extends JPanel {
                 if (fileChooser.showDialog(BugReportPanel.this, "Choose") == JFileChooser.APPROVE_OPTION) {
                     File file = fileChooser.getSelectedFile();
                     directoryField.setText(file.getAbsolutePath());
-                    // TODO: save parent dir to preferences
                 }
             }
         }));
@@ -95,27 +95,44 @@ final public class BugReportPanel extends JPanel {
 
         // ~~~ listeners
         directoryField.getDocument().addDocumentListener(new DocumentListener() {
-            private synchronized void triggerValid() {
-                boolean isValid = !directoryField.getText().isEmpty(); // TODO: propagate to property of panel?
+            private synchronized void newDirectory() {
+                String directory = directoryField.getText();
+                // save value to preferences
+                preferences.put(KEY_LAST_DIR, directory);
+                // determine parent dir (if exists) and save to preferences
+                File newParentDirectory = new File(directory).getParentFile();
+                if (newParentDirectory != null && newParentDirectory.isDirectory())
+                    preferences.put(KEY_LAST_PARENT_DIR, newParentDirectory.getAbsolutePath());
+                else
+                    preferences.put(KEY_LAST_PARENT_DIR, System.getProperty("user.dir"));
             }
             @Override
             public void insertUpdate(DocumentEvent documentEvent) {
-                triggerValid();
+                newDirectory();
             }
             @Override
             public void removeUpdate(DocumentEvent documentEvent) {
-                triggerValid();
+                newDirectory();
             }
             @Override
             public void changedUpdate(DocumentEvent documentEvent) {
-                triggerValid();
+                newDirectory();
             }
         });
-        addComponentListener(new ComponentAdapter() {
+        addAncestorListener(new AncestorListener() {
             @Override
-            public void componentShown(ComponentEvent componentEvent) {
-                System.out.println(" === panel shown"); // TODO: does not work!!! delete text area text and select focus
+            public void ancestorAdded(AncestorEvent ancestorEvent) {
+                // dialog is realized and made visible
+                // decide focus on state of directory field:
+                if ("".equals(directoryField.getText()))
+                    directoryField.requestFocusInWindow();
+                else
+                    commentArea.requestFocusInWindow();
             }
+            @Override
+            public void ancestorRemoved(AncestorEvent ancestorEvent) { }
+            @Override
+            public void ancestorMoved(AncestorEvent ancestorEvent) { }
         });
     }
 
@@ -124,6 +141,4 @@ final public class BugReportPanel extends JPanel {
                 commentArea.getText(),
                 includeRepo.isSelected());
     }
-
-
 }

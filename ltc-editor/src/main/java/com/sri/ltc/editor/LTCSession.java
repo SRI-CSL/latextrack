@@ -410,7 +410,6 @@ public class LTCSession {
     }
 
     public void createBugReport(final String message, final boolean includeRepository, final String outputDirectory ) {
-
         (new LTCWorker<String,Void>(editor.getFrame(), ID,
                 "Bug Report...", "<html>Creating bug report in<br>"+outputDirectory+"</html>", false) {
             @Override

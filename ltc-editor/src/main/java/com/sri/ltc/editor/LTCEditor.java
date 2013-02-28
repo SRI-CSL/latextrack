@@ -148,7 +148,6 @@ public final class LTCEditor extends LTCGui {
         @Override
         public void actionPerformed(ActionEvent actionEvent) {
             if (session.isValid()) {
-                // TODO: implement
                 // 1) open dialog to obtain DIRECTORY, optional COMMENT, and whether to INCLUDE REPO
                 final Object[] options = {"Create", "Cancel"};
                 final JOptionPane optionPane = new JOptionPane(
@@ -163,9 +162,13 @@ public final class LTCEditor extends LTCGui {
                 // 2) if user clicked "Create", call session and pop up final location upon finishing
                 if (options[0].equals(optionPane.getValue())) {
                     BugReportPanel.Data data = bugReportPanel.getData();
-                    session.createBugReport(data.comment, data.repository, data.directory);
-                    // TODO: implement
-                    System.out.println(" --- panel says: " + data);
+                    if (data.directory == null || "".equals(data.directory))
+                        JOptionPane.showMessageDialog(getFrame(),
+                                "Cannot create bug report in empty directory",
+                                "Error Creating Bug Report",
+                                JOptionPane.ERROR_MESSAGE);
+                    else
+                        session.createBugReport(data.comment, data.repository, data.directory);
                 }
             }
         }
