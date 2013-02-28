@@ -24,11 +24,13 @@ package com.sri.ltc.editor;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.sri.ltc.CommonUtils;
 import com.sri.ltc.filter.Filtering;
 import com.sri.ltc.latexdiff.Accumulate;
 import com.sri.ltc.latexdiff.Change;
 import com.sri.ltc.latexdiff.FileReaderWrapper;
 import com.sri.ltc.latexdiff.ReaderWrapper;
+import com.sri.ltc.logging.LogConfiguration;
 import com.sri.ltc.server.LTCserverInterface;
 import org.kohsuke.args4j.*;
 
@@ -42,10 +44,12 @@ import java.awt.event.ActionEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.io.File;
+import java.io.IOException;
 import java.io.PrintStream;
 import java.util.Enumeration;
 import java.util.Map;
 import java.util.logging.Level;
+import java.util.logging.LogManager;
 import java.util.prefs.BackingStoreException;
 import java.util.prefs.Preferences;
 
@@ -56,6 +60,10 @@ import java.util.prefs.Preferences;
  */
 public final class LTCFileViewer extends LTCGui implements ListSelectionListener {
 
+    static {
+        // first thing is to configure Mac OS X before AWT gets loaded:
+        System.setProperty("com.apple.mrj.application.apple.menu.about.name", "LTC File Viewer");
+    }
     private final Preferences preferences = Preferences.userRoot().node(this.getClass().getCanonicalName().replaceAll("\\.", "/"));
     private final static String KEY_LAST_DIR = "last directory";
     private final static String KEY_LAST_FILE = "last file";
@@ -264,7 +272,7 @@ public final class LTCFileViewer extends LTCGui implements ListSelectionListener
     }
 
     private static void printUsage(PrintStream out, CmdLineParser parser) {
-        out.println("usage: java -cp ... com.sri.ltc.editor.LTCEditor [options...] [FILES] \nwith");
+        out.println("usage: java -cp ... "+LTCFileViewer.class.getCanonicalName()+" [options...] [FILES] \nwith");
         parser.printUsage(out);
     }
 
@@ -285,6 +293,21 @@ public final class LTCFileViewer extends LTCGui implements ListSelectionListener
             System.exit(1);
         }
 
+        if (options.displayLicense) {
+            System.out.println("LTC is licensed under:\n\n" + CommonUtils.getLicense());
+            return;
+        }
+
+        // configure logging
+        try {
+            LogConfiguration logConfig = new LogConfiguration();
+            logConfig.setProperty("java.util.logging.FileHandler.pattern","%h/.LTCFileViewer.log");
+            LogManager.getLogManager().readConfiguration(logConfig.asInputStream());
+            LOGGER.config("Logging output written to file " + logConfig.getProperty("java.util.logging.FileHandler.pattern"));
+        } catch (IOException e) {
+            LOGGER.log(Level.SEVERE, "Cannot configure logging", e);
+        }
+
         final LTCFileViewer viewer = new LTCFileViewer();
 
         if (options.resetDefaults) {
@@ -295,6 +318,15 @@ public final class LTCFileViewer extends LTCGui implements ListSelectionListener
                 LOGGER.log(Level.SEVERE, e.getMessage(), e);
             }
         }
+
+        try {
+            UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+        } catch (Exception e) {
+            LOGGER.log(Level.SEVERE, "setting UI look & feel", e);
+        }
+
+        // customize for operating system:
+        CommonUtils.customizeApp("/images/LTC-editor-icon.png");
 
         //Schedule a job for the event dispatch thread:
         //creating and showing this application's GUI.
@@ -320,6 +352,9 @@ public final class LTCFileViewer extends LTCGui implements ListSelectionListener
     static class LTCFileViewerOptions {
         @Option(name = "-h", usage = "display usage and exit")
         boolean displayHelp = false;
+
+        @Option(name="-c",usage="display copyright/license information and exit")
+        boolean displayLicense = false;
 
         @Option(name = "-r", usage = "reset to default settings")
         boolean resetDefaults = false;

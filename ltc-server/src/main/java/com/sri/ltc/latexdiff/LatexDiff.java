@@ -24,6 +24,7 @@ package com.sri.ltc.latexdiff;
 import com.bmsi.gnudiff.Diff;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
+import com.sri.ltc.CommonUtils;
 import com.sri.ltc.logging.LevelOptionHandler;
 import org.kohsuke.args4j.Argument;
 import org.kohsuke.args4j.CmdLineException;
@@ -473,7 +474,7 @@ public final class LatexDiff {
     }
 
     private static void printUsage(PrintStream out, CmdLineParser parser) {
-        out.println("usage: java -cp ... com.sri.ltc.latexdiff.LatexDiff [options] FILE1 FILE2 \nwith");
+        out.println("usage: java -cp ... "+LatexDiff.class.getCanonicalName()+" [options] FILE1 FILE2 \nwith");
         parser.printUsage(out);
     }
 
@@ -493,6 +494,11 @@ public final class LatexDiff {
         if (options.displayHelp) {
             printUsage(System.out, parser);
             System.exit(1);
+        }
+
+        if (options.displayLicense) {
+            System.out.println("LTC is licensed under:\n\n" + CommonUtils.getLicense());
+            return;
         }
 
         try {
@@ -529,6 +535,9 @@ public final class LatexDiff {
     private static class LatexDiffOptions {
         @Option(name = "-h", usage = "display usage and exit")
         boolean displayHelp = false;
+
+        @Option(name="-c",usage="display copyright/license information and exit")
+        boolean displayLicense = false;
 
         @Option(name = "-x", usage = "output as XML (default is Unix style)")
         boolean asXML = false;

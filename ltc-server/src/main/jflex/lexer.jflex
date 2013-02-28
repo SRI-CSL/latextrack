@@ -25,6 +25,11 @@
 package com.sri.ltc.latexdiff;
 
 import com.google.common.collect.Lists;
+import com.sri.ltc.CommonUtils;
+import org.kohsuke.args4j.Argument;
+import org.kohsuke.args4j.CmdLineException;
+import org.kohsuke.args4j.CmdLineParser;
+import org.kohsuke.args4j.Option;
 
 import java.io.*;
 import java.util.List;
@@ -55,17 +60,47 @@ import java.util.regex.Pattern;
         return lexemes;
     }
 
-    /* Main function to run analysis stand-alone. */
+    /* Main functions to run analysis stand-alone. */
+
+    private static void printUsage(PrintStream out, CmdLineParser parser) {
+        out.println("usage: java -cp ... "+Lexer.class.getCanonicalName()+" [options...] [FILE] \nwith");
+        parser.printUsage(out);
+    }
+
     public static void main(String argv[]) {
+        // parse arguments
+        final LexerOptions options = new LexerOptions();
+        CmdLineParser parser = new CmdLineParser(options);
+        try {
+            parser.parseArgument(argv);
+        } catch (CmdLineException e) {
+            System.out.println(CommonUtils.getNotice()); // output NOTICE on command line
+            System.err.println(e.getMessage());
+            printUsage(System.err, parser);
+            return;
+        }
+
+        if (options.displayHelp) {
+            System.out.println(CommonUtils.getNotice()); // output NOTICE on command line
+            printUsage(System.out, parser);
+            System.exit(1);
+        }
+
+        if (options.displayLicense) {
+            System.out.println(CommonUtils.getNotice()); // output NOTICE on command line
+            System.out.println("LTC is licensed under:\n\n" + CommonUtils.getLicense());
+            return;
+        }
+
         Reader reader;
         List<Lexeme> lexemes;
 
         // Obtain reader from argument or STDIN
-        if (argv.length < 1)
+        if (options.file == null)
             reader = new InputStreamReader(System.in);
         else
             try {
-                reader = new FileReader(argv[0]);
+                reader = new FileReader(options.file);
             } catch (FileNotFoundException e) {
                 e.printStackTrace();
                 return;
@@ -84,6 +119,18 @@ import java.util.regex.Pattern;
             return;
         }
     }
+
+    static class LexerOptions {
+        @Option(name="-h",usage="display usage and exit")
+        boolean displayHelp = false;
+
+        @Option(name="-c",usage="display copyright/license information and exit")
+        boolean displayLicense = false;
+
+        @Argument(required=false, metaVar="FILE", usage="file to analyze")
+        File file;
+    }
+
 %}
 
 EOL         = [\r\n] | \r\n

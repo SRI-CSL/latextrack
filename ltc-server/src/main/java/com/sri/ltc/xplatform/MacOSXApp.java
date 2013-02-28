@@ -60,7 +60,9 @@ public final class MacOSXApp implements AppInterface {
             public void handleAbout(AppEvent.AboutEvent aboutEvent) {
                 // display copyright/license information
                 JOptionPane.showMessageDialog(null,
-                        CommonUtils.getNotice(),
+                        "LTC version "+CommonUtils.getVersion()+"\n"+
+                                "Build number "+CommonUtils.getBuildInfo()+"\n\n"+
+                                CommonUtils.getNotice(),
                         "About LaTeX Track Changes (LTC)",
                         JOptionPane.PLAIN_MESSAGE,
                         CommonUtils.getLogo());

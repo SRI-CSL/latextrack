@@ -67,15 +67,7 @@ public final class LTCEditor extends LTCGui {
     // static initializations
     static {
         // first thing is to configure Mac OS X before AWT gets loaded:
-        final String NAME = "LTC Editor";
-        if (CommonUtils.isMacOSX()) {
-            System.setProperty("apple.laf.useScreenMenuBar", "true");
-            System.setProperty("com.apple.mrj.application.apple.menu.about.name", NAME);
-            System.setProperty("apple.awt.showGrowBox", "true");
-        }
-
-        // print NOTICE on command line
-        System.out.println(CommonUtils.getNotice()); // output notice
+        System.setProperty("com.apple.mrj.application.apple.menu.about.name", "LTC Editor");
     }
     private final Preferences preferences = Preferences.userRoot().node(this.getClass().getCanonicalName().replaceAll("\\.","/"));
     private final static String KEY_LAST_DIR = "last directory";
@@ -604,7 +596,7 @@ public final class LTCEditor extends LTCGui {
     }
 
     private static void printUsage(PrintStream out, CmdLineParser parser) {
-        out.println("usage: java -cp ... com.sri.ltc.editor.LTCEditor [options...] [FILE] \nwith");
+        out.println("usage: java -cp ... "+LTCEditor.class.getCanonicalName()+" [options...] [FILE] \nwith");
         parser.printUsage(out);
     }
 
@@ -645,7 +637,6 @@ public final class LTCEditor extends LTCGui {
         }
 
         final LTCEditor editor = new LTCEditor();
-        LOGGER.info("Using LTC version: "+CommonUtils.getVersion());
 
         if (options.resetDefaults) {
             try {
