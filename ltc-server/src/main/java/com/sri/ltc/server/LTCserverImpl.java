@@ -600,6 +600,9 @@ public final class LTCserverImpl implements LTCserverInterface {
     public String create_bug_report(int sessionID, String message, boolean includeRepository, String outputDirectory) throws XmlRpcException {
         LOGGER.fine("Server: creating bug report in directory \""+outputDirectory+"\"");
 
+        if (outputDirectory == null || outputDirectory.isEmpty())
+            logAndThrow(5, "Cannot create bug report with empty or NULL output directory");
+
         File outputDirectoryFile = new File(outputDirectory);
         if (outputDirectoryFile.mkdirs()) {
             LOGGER.fine("Created report directory " + outputDirectory);
