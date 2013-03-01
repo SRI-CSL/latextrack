@@ -84,14 +84,16 @@ public final class LatexDiff {
         }
         scanner.yyclose();
 
-        // remove paragraphs in the preamble if there is one:
+        // turn paragraphs in the preamble into white space
         if (list.get(list.size() - 1).preambleSeen) { // EOF Lexeme has seen preamble
-            for (Iterator<Lexeme> i = list.iterator(); i.hasNext(); ) {
+            for (ListIterator<Lexeme> i = list.listIterator(); i.hasNext(); ) {
                 Lexeme lexeme = i.next();
                 if (lexeme.preambleSeen)
                     break; // done with preamble
                 if (LexemeType.PARAGRAPH.equals(lexeme.type))
-                    i.remove();
+                    // replace with white space that has same characteristics
+                    i.set(new Lexeme(LexemeType.WHITESPACE,
+                            lexeme.contents, lexeme.pos, lexeme.preambleSeen, lexeme.inComment, lexeme.removed));
             }
         }
         return list;

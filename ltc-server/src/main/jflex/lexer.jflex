@@ -46,19 +46,11 @@ import java.util.regex.Pattern;
 %type List<Lexeme>
 %char
 %unicode
-%xstate PREAMBLE_SEEN, IN_COMMENT, EOF
+%xstate PREAMBLE_SEEN, EOF
 
 %{
     private final static Pattern pattern = Pattern.compile(".*(\r\n|\r|\n).*"); // newlines
-    private int prior_state = 0;
     private boolean preambleSeen = false;
-
-    private List<Lexeme> processNewline(Lexeme newlineLexeme) {
-        List<Lexeme> lexemes = Lists.newArrayList(newlineLexeme);
-        if (newlineLexeme.inComment)
-            yybegin(prior_state);
-        return lexemes;
-    }
 
     /* Main functions to run analysis stand-alone. */
 
@@ -141,14 +133,14 @@ space       = [ \t\f]
 %%
 /* -----------------Lexical Rules Section------------------------------------ */ 
 
-<YYINITIAL,PREAMBLE_SEEN,IN_COMMENT>
+<YYINITIAL,PREAMBLE_SEEN>
   \\[A-Za-z]+        { return Lists.newArrayList(
-                         new Lexeme(LexemeType.COMMAND, yytext(), yychar, preambleSeen, yystate() == IN_COMMENT)); }
+                         new Lexeme(LexemeType.COMMAND, yytext(), yychar, preambleSeen, false)); }
   /* commands that are more than one letter long */
 
-<YYINITIAL,PREAMBLE_SEEN,IN_COMMENT>
+<YYINITIAL,PREAMBLE_SEEN>
   \\[^ \t\r\n\f]     { return Lists.newArrayList(
-                         new Lexeme(LexemeType.COMMAND, yytext(), yychar, preambleSeen, yystate() == IN_COMMENT)); }
+                         new Lexeme(LexemeType.COMMAND, yytext(), yychar, preambleSeen, false)); }
   /* commands that are one non-whitespace character after backslash */
 
 \\begin\{document\}  { preambleSeen = true;
@@ -160,54 +152,47 @@ space       = [ \t\f]
                          new Lexeme(LexemeType.SYMBOL, "}", yychar+15, true, false)); }
   /* set flag that first preamble (not in comment!) has been seen */
 
-<YYINITIAL,PREAMBLE_SEEN >
-  %+                 { prior_state = yystate(); // remember prior state
-                       yybegin(IN_COMMENT);
-                       return Lists.newArrayList(
-                         new Lexeme(LexemeType.COMMENT_BEGIN, yytext(), yychar, preambleSeen, true)); }
-  /* if not escaped, first (in YYINITIAL) %'s indicates comment begin */
-
-<YYINITIAL,PREAMBLE_SEEN,IN_COMMENT>
+<YYINITIAL,PREAMBLE_SEEN>
   {punctuation}      { return Lists.newArrayList(
-                         new Lexeme(LexemeType.PUNCTUATION, yytext(), yychar, preambleSeen, yystate() == IN_COMMENT)); }
+                         new Lexeme(LexemeType.PUNCTUATION, yytext(), yychar, preambleSeen, false)); }
   /* match single punctuation characters */
 
-<YYINITIAL,PREAMBLE_SEEN,IN_COMMENT>
+<YYINITIAL,PREAMBLE_SEEN>
   [+\-]{0,1} [0-9] ([A-Za-z0-9] | [,\.][0-9])+ 
                      { return Lists.newArrayList(
-                         new Lexeme(LexemeType.NUMERAL, yytext(), yychar, preambleSeen, yystate() == IN_COMMENT)); }
+                         new Lexeme(LexemeType.NUMERAL, yytext(), yychar, preambleSeen, false)); }
   /* numerals start with an optional minus or plus and one digit, then almost anything goes */ 
 
-<YYINITIAL,PREAMBLE_SEEN,IN_COMMENT>
+<YYINITIAL,PREAMBLE_SEEN>
   {symbol}           { return Lists.newArrayList(
-                         new Lexeme(LexemeType.SYMBOL, yytext(), yychar, preambleSeen, yystate() == IN_COMMENT)); }
+                         new Lexeme(LexemeType.SYMBOL, yytext(), yychar, preambleSeen, false)); }
   /* match single symbol characters */
 
-<YYINITIAL,PREAMBLE_SEEN,IN_COMMENT>
+<YYINITIAL,PREAMBLE_SEEN>
   [A-Za-z0-9\-]+     { return Lists.newArrayList(
-                         new Lexeme(LexemeType.WORD, yytext(), yychar, preambleSeen, yystate() == IN_COMMENT)); }
+                         new Lexeme(LexemeType.WORD, yytext(), yychar, preambleSeen, false)); }
   /* words are letters, digits and hyphen */ 
 
-<YYINITIAL,PREAMBLE_SEEN,IN_COMMENT> {
-  {space}*\n({space}*{EOL})+ |
-  {space}*\r{space}*\r({space}*{EOL})* |
-  {space}*\r\n({space}*{EOL})+ 
-                     { return processNewline(
-                         new Lexeme(LexemeType.PARAGRAPH, yytext(), yychar, preambleSeen, yystate() == IN_COMMENT)); }
+<YYINITIAL,PREAMBLE_SEEN> {
+  \n({space}*{EOL})+ |
+  \r{space}*\r({space}*{EOL})* |
+  \r\n({space}*{EOL})+ 
+                     { return Lists.newArrayList(
+                         new Lexeme(LexemeType.PARAGRAPH, yytext(), yychar, preambleSeen, false)); }
 }
-  /* paragraphs are 2 or more end-of-lines and possibly white space without line breaks in between */
+  /* paragraphs are 2 or more end-of-lines and possibly white space in between */
 
-<YYINITIAL,PREAMBLE_SEEN,IN_COMMENT> 
-  {space}*{EOL}      { return processNewline(
-                         new Lexeme(LexemeType.WHITESPACE, yytext(), yychar, preambleSeen, yystate() == IN_COMMENT)); }
-  /* other, non-paragraph line breaks */
-
-<YYINITIAL,PREAMBLE_SEEN,IN_COMMENT> 
+<YYINITIAL,PREAMBLE_SEEN> 
   {space}+           { return Lists.newArrayList(
-                         new Lexeme(LexemeType.WHITESPACE, yytext(), yychar, preambleSeen, yystate() == IN_COMMENT)); }
-  /* gobble-up any white space not in front of newlines */
+                         new Lexeme(LexemeType.WHITESPACE, yytext(), yychar, preambleSeen, false)); }
+  /* gobble-up any white space */
 
-<YYINITIAL,PREAMBLE_SEEN,IN_COMMENT> 
+<YYINITIAL,PREAMBLE_SEEN> 
+  {EOL}+             { return Lists.newArrayList(
+                         new Lexeme(LexemeType.WHITESPACE, yytext(), yychar, preambleSeen, false)); }
+  /* gobble-up any end-of-line characters TODO: make this a NEWLINE lexeme? */
+
+<YYINITIAL,PREAMBLE_SEEN> 
   <<EOF>>            { yybegin(EOF);
                        return Lists.newArrayList(
                          new Lexeme(LexemeType.END_OF_FILE, "", yychar, preambleSeen, false)); }
