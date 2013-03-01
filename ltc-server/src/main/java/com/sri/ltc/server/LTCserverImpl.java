@@ -146,6 +146,8 @@ public final class LTCserverImpl implements LTCserverInterface {
             logAndThrow(8,"ParseException during tracked file creation: "+e.getMessage()+" (@"+e.getErrorOffset()+")");
         } catch (VersionControlException e) {
             logAndThrow(10,"VersionControlException during tracked file creation: "+e.getMessage());
+        } catch (IllegalStateException e) {
+            logAndThrow(11,"Tracked file already active under another session: "+e.getMessage());
         }
 
         return -1;
@@ -153,7 +155,7 @@ public final class LTCserverImpl implements LTCserverInterface {
 
     @SuppressWarnings("unchecked")
     public Map close_session(int sessionID, String currentText, List deletions, int caretPosition) throws XmlRpcException {
-        Session session = SessionManager.removeSession(sessionID);
+        Session session = SessionManager.finishSession(sessionID);
         if (session == null)
             logAndThrow(1,"Cannot close session with given ID");
 

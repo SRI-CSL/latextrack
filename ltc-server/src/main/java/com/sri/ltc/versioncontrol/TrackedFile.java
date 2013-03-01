@@ -21,6 +21,7 @@
  */
 package com.sri.ltc.versioncontrol;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.io.File;
 import java.io.IOException;
@@ -28,8 +29,9 @@ import java.util.Date;
 import java.util.List;
 
 public abstract class TrackedFile<RepositoryClass extends Repository> {
-    private RepositoryClass repository;
-    private File file;
+
+    private final RepositoryClass repository;
+    private final File file;
 
     public enum Status {
         Added,
@@ -41,7 +43,6 @@ public abstract class TrackedFile<RepositoryClass extends Repository> {
         NotTracked,
         Removed,
         Unchanged,
-
         Unknown
     }
     
@@ -58,28 +59,35 @@ public abstract class TrackedFile<RepositoryClass extends Repository> {
 
     abstract public Commit commit(String message) throws Exception;
 
-    public Class getRepositoryClass() {
-        return repository.getClass();
-    }
-    
-    protected TrackedFile(RepositoryClass repository, File file) {
-        setRepository(repository);
-        setFile(file);
+    protected TrackedFile(RepositoryClass repository,@Nonnull File file) {
+        if (file == null)
+            throw new IllegalArgumentException("Cannot create tracked file with NULL file");
+        this.repository = repository;
+        this.file = file;
     }
 
     public File getFile() {
         return file;
     }
 
-    public void setFile(File file) {
-        this.file = file;
-    }
-
     public RepositoryClass getRepository() {
         return repository;
     }
 
-    protected void setRepository(RepositoryClass repository) {
-        this.repository = repository;
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof TrackedFile)) return false;
+
+        TrackedFile that = (TrackedFile) o;
+
+        if (!file.equals(that.file)) return false;
+
+        return true;
+    }
+
+    @Override
+    public int hashCode() {
+        return file.hashCode();
     }
 }

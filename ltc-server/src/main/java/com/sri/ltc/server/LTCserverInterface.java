@@ -56,9 +56,11 @@ public interface LTCserverInterface {
      *   <li>with error code = 3 if the parent of the given file is not a git repository.
      *   <li>with error code = 4 if the given file is not being tracked under git.
      *   <li>with error code = 5 if an IOException occurred while traversing the file hierarchy.
-     *   <li>with error code = 6 if a JavaGitException occurred during git file creation.
-     *   <li>with error code = 7 if an IOException occurred during git file creation.
-     *   <li>with error code = 8 if a ParseException occurred during git file creation.
+     *   <li>with error code = 6 if a JavaGitException occurred during tracked file creation.
+     *   <li>with error code = 7 if an IOException occurred during tracked file creation.
+     *   <li>with error code = 8 if a ParseException occurred during session creation.
+     *   <li>with error code = 10 if a VersionControlException occurred during session creation.
+     *   <li>with error code = 11 if the indicated path denotes an already active tracked file
      * </ul>
      */
     public int init_session(String path) throws XmlRpcException;
