@@ -338,7 +338,7 @@ public final class LTCserverImpl implements LTCserverInterface {
             map = session.getAccumulate().perform(
                     readers.toArray(new ReaderWrapper[readers.size()]),
                     indices.toArray(new Integer[indices.size()]),
-                    Change.buildFlags(
+                    Change.buildFlagsToHide(
                             filter.getShowingStatus(LTCserverInterface.Show.DELETIONS),
                             filter.getShowingStatus(LTCserverInterface.Show.SMALL),
                             filter.getShowingStatus(LTCserverInterface.Show.PREAMBLE),

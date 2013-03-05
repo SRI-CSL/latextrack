@@ -41,7 +41,6 @@ public abstract class Change<T> implements Comparable<Change> {
         SMALL('S'),
         PREAMBLE('P'),
         COMMENT('%'),
-        WHITESPACE('b'),
         COMMAND('C');
         private final char indicator;
         private Flag(char indicator) {
@@ -51,7 +50,7 @@ public abstract class Change<T> implements Comparable<Change> {
             return indicator;
         }
     };
-    public final static Set<Flag> buildFlags(
+    public final static Set<Flag> buildFlagsToHide(
             boolean showDeletions,
             boolean showSmallChanges,
             boolean showPreambleChanges,

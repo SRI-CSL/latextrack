@@ -71,7 +71,7 @@ public final class LatexDiff {
      */
     public List<Lexeme> analyze(ReaderWrapper wrapper) throws Exception {
         List<Lexeme> list = new ArrayList<Lexeme>(Arrays.asList(new Lexeme[]{
-                new Lexeme(LexemeType.START_OF_FILE, "", 0, false, false)}));
+                new Lexeme(LexemeType.START_OF_FILE, "", 0, false)}));
         Lexer scanner = new Lexer(wrapper.createReader());
         List<Lexeme> lexemes;
 
@@ -103,24 +103,13 @@ public final class LatexDiff {
         return characters;
     }
 
-    private EnumSet<Change.Flag> buildFlags(boolean isDeletion, boolean isSmall, boolean inPreamble, boolean inComment, boolean isCommand, boolean isWhiteSpace) {
+    private EnumSet<Change.Flag> buildFlags(boolean isDeletion, boolean isSmall, Lexeme lexeme, boolean preamblePresent) {
         EnumSet<Change.Flag> flags = EnumSet.noneOf(Change.Flag.class);
         if (isDeletion) flags.add(Change.Flag.DELETION);
         if (isSmall) flags.add(Change.Flag.SMALL);
-        if (inPreamble) flags.add(Change.Flag.PREAMBLE);
-        if (inComment) flags.add(Change.Flag.COMMENT);
-        if (isCommand) flags.add(Change.Flag.COMMAND);
-        if (isWhiteSpace) flags.add(Change.Flag.WHITESPACE);
+        if (preamblePresent && !lexeme.preambleSeen) flags.add(Change.Flag.PREAMBLE);
+        if (LexemeType.COMMAND.equals(lexeme.type)) flags.add(Change.Flag.COMMAND);
         return flags;
-    }
-
-    private EnumSet<Change.Flag> buildFlags(boolean isDeletion, boolean isSmall, boolean inComment, Lexeme lexeme, boolean preamblePresent) {
-        return buildFlags(isDeletion,
-                isSmall,
-                preamblePresent && !lexeme.preambleSeen,
-                inComment,
-                LexemeType.COMMAND.equals(lexeme.type),
-                LexemeType.WHITESPACE.equals(lexeme.type));
     }
 
     @SuppressWarnings("unchecked")
@@ -154,7 +143,7 @@ public final class LatexDiff {
                         start_position,
                         Arrays.asList(new IndexFlagsPair<Integer>(
                                 start_position + hunk.inserted,
-                                buildFlags(false, true, lexeme1.inComment, lexeme1, preamblePresent)))));
+                                buildFlags(false, true, lexeme1, preamblePresent)))));
             }
 
             // Deletions
@@ -163,7 +152,7 @@ public final class LatexDiff {
                         start_position,
                         Arrays.asList(new IndexFlagsPair<String>(
                                 text0.substring(hunk.line0, hunk.line0 + hunk.deleted),
-                                buildFlags(true, true, lexeme1.inComment, lexeme1, preamblePresent)))));
+                                buildFlags(true, true, lexeme1, preamblePresent)))));
             }
         }
 
@@ -374,7 +363,7 @@ public final class LatexDiff {
     } // end of mergeDiffResult()
 
     // calculate pairs of indices that indicate successive lexemes in given input list
-    // with the same settings for PREAMBLE, COMMENT, and COMMAND.
+    // with the same settings for PREAMBLE and COMMAND.
     // also evaluates the difference between inner regions:
     // if the intersection is neither the left nor the right set of flags, add additional region of length = 0
     private List<IndexPair> getIndices(List<Lexeme> list, boolean preamblePresent, int offset, boolean isDeletion) {
@@ -383,14 +372,10 @@ public final class LatexDiff {
         SortedSet<IndexPair> result = new TreeSet<IndexPair>();
         // go through list and collect pairs of indices for regions with the same flags:
         int lastIndex = 0;
-        Set<Change.Flag> lastFlags = buildFlags(isDeletion,
-                false,
-                list.get(0).inComment,
+        Set<Change.Flag> lastFlags = buildFlags(isDeletion, false,
                 list.get(0), preamblePresent);
         for (int i = 1; i < list.size(); i++) {
-            Set<Change.Flag> currentFlags = buildFlags(isDeletion,
-                    false,
-                    list.get(i).inComment,
+            Set<Change.Flag> currentFlags = buildFlags(isDeletion, false,
                     list.get(i), preamblePresent);
             if (!lastFlags.equals(currentFlags)) {
                 // evaluate difference to next region:
@@ -450,8 +435,7 @@ public final class LatexDiff {
             diffInputs[i] = new String[lexemes.size()];
             int j = 0;
             for (Lexeme lexeme : lexemes) {
-                // do we need to also consider preamble state here? e.g. + (lexeme.preambleSeen ? " P" : "");
-                diffInputs[i][j] = lexeme.type + " " + lexeme.displayContents() + (lexeme.inComment ? " C" : "");
+                diffInputs[i][j] = lexeme.type + " " + lexeme.displayContents();
                 j++;
             }
         }

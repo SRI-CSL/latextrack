@@ -40,7 +40,6 @@ public final class MarkedUpDocument extends DefaultStyledDocument {
 
     public enum KEYS {TEXT, POSITION}
 
-    private final static String UNADORNED_STYLE = "unadorned";
     private final static String ADDITION_STYLE = "addition";
     private final static String DELETION_STYLE = "deletion";
     private final static String AUTHOR_INDEX = "author index";
@@ -58,8 +57,6 @@ public final class MarkedUpDocument extends DefaultStyledDocument {
 
         style = addStyle(DELETION_STYLE, null);
         StyleConstants.setStrikeThrough(style, true);
-
-        style = addStyle(UNADORNED_STYLE, null);
     }
 
     public MarkedUpDocument(String initialText, List<Object[]> deletions, int caretPosition) throws BadLocationException {
@@ -125,37 +122,23 @@ public final class MarkedUpDocument extends DefaultStyledDocument {
     }
 
     public void insertDeletion(int offset, String text, Set<Change.Flag> flags) throws BadLocationException {
-        Style style;
-        if (flags.contains(Change.Flag.WHITESPACE)) {
-            // we're not interested in marking up spare newlines as deletions - that just confuses the
-            // display. Instead, we will mark it, and other whitespace changes, with a special, "unadorned"
-            // style to distinguish them from other deletions.
-            text = text.replaceAll("[\\r\\n]", " ");
-            // SAB: this is causing other problems, like turning a contiguous block of changes
-            // into an interrupted set of changes. Turning this off until we can figure out a
-            // better approach.
-            //style = getStyle(UNADORNED_STYLE);
-            style = getStyle(DELETION_STYLE);
-        } else {
-            style = getStyle(DELETION_STYLE);
-        }
-        
+        Style style = getStyle(DELETION_STYLE);
         style.addAttribute(FLAGS_ATTR, flags);
         insertString(offset, text, style);
     }
 
     /**
-     * markup everything between start_position and end_position except currently marked ADDITIONS and DELETIONS
+     * Markup everything between start_position and end_position except currently marked ADDITIONS and DELETIONS.
      *
-     * @param start_position
-     * @param end_position
-     * @param flags
+     * @param start_position index of start position in text
+     * @param end_position index of end position (exclusive) in text
+     * @param flags set of flags to be used for this text
      */
     public void markupAddition(int start_position, int end_position, Set<Change.Flag> flags) {
         Style style;
         for (int i = start_position; i < end_position; i++) {
             Object styleName = getCharacterElement(i).getAttributes().getAttribute(StyleConstants.NameAttribute);
-            if (!DELETION_STYLE.equals(styleName) && !ADDITION_STYLE.equals(styleName) && (!UNADORNED_STYLE.equals(styleName))) {
+            if (!DELETION_STYLE.equals(styleName) && !ADDITION_STYLE.equals(styleName)) {
                 style = getStyle(ADDITION_STYLE);
                 style.addAttribute(FLAGS_ATTR, flags);
                 setCharacterAttributes(i, 1, style, true);
@@ -186,6 +169,7 @@ public final class MarkedUpDocument extends DefaultStyledDocument {
             for (int i = 0; i < getLength(); i++) {
                 Set<Change.Flag> flags = (Set<Change.Flag>) getCharacterElement(i).getAttributes().getAttribute(FLAGS_ATTR);
                 if (flags != null) {
+                    // TODO: handle comments!
                     Set<Change.Flag> intersection = Sets.intersection(flags, flagsToHide);
                     if (!intersection.isEmpty()) { // matching flags
                         if (flags.contains((Change.Flag.DELETION))) { // change was a deletion, so remove character
@@ -263,13 +247,12 @@ public final class MarkedUpDocument extends DefaultStyledDocument {
             // TODO: remove hardcoded values and replace with constants
             // consider creating an enum and a map to convert that enum to string
             Integer[] values = {start, end, 0, 0};
+            // set 3rd value:
             if (ADDITION_STYLE.equals(style))
                 values[2] = 1;
             if (DELETION_STYLE.equals(style))
                 values[2] = 2;
-            if (UNADORNED_STYLE.equals(style))
-                values[2] = 3;
-
+            // set 4th value:
             if (author != null)
                 values[3] = author;
             return values;
