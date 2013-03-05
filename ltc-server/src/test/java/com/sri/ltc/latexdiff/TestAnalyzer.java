@@ -33,7 +33,6 @@ import static org.junit.Assert.assertTrue;
 /**
  * @author linda
  */
-@Ignore
 public final class TestAnalyzer {
 
     private static final LatexDiff latexDiff = new LatexDiff();
@@ -54,15 +53,15 @@ public final class TestAnalyzer {
     public void analyzeSimple() throws Exception {
         // exercise simple analyses
         lexemes = analyze(new StringReaderWrapper("Lorem ipsum dolor sit amet. "));
-        assertLexemes(13);
-        assertEquals(LexemeType.PUNCTUATION, lexemes.get(10).type);
+        assertLexemes(8);
+        assertEquals(LexemeType.PUNCTUATION, lexemes.get(6).type);
         lexemes = analyze(new StringReaderWrapper("   \\textbf{Lorem} ipsum dolor sit amet. "));
-        assertLexemes(17);
-        assertEquals(LexemeType.COMMAND, lexemes.get(2).type);
+        assertLexemes(11);
+        assertEquals(LexemeType.COMMAND, lexemes.get(1).type);
         lexemes = analyze(new StringReaderWrapper(
                 "  \n \n \\textbf{Lorem} ipsum \n dolor sit amet. \n "
         ));
-        assertLexemes(20);
+        assertLexemes(12);
         assertEquals(LexemeType.PARAGRAPH, lexemes.get(1).type);
     }
 
@@ -72,35 +71,38 @@ public final class TestAnalyzer {
         lexemes = analyze(new StringReaderWrapper(
                 " \n\n \\begin{document}  \n \nLorem ipsum \n dolor sit amet. \n "
         ));
-        assertLexemes(21);
+        assertLexemes(13);
         // preamble ended with second lexeme, as paragraphs removed
-        assertEquals(false, lexemes.get(1).preambleSeen);
-        assertEquals(true, lexemes.get(2).preambleSeen);
+        assertEquals(false, lexemes.get(0).preambleSeen);
+        assertEquals(true, lexemes.get(1).preambleSeen);
         assertEquals(true, lexemes.get(lexemes.size()-1).preambleSeen);
-        assertEquals("1st lexeme starts at", 4, lexemes.get(2).pos);
+        assertEquals("2nd lexeme starts at", 4, lexemes.get(1).pos);
     }
 
     @Test
     public void analyzeComments() throws Exception {
-        // starting with comments etc.
+        // kind of moot, as we are not detecting comments in analyze phase!
         lexemes = analyze(new StringReaderWrapper(
                 " \\begin{document}  \n \nLorem ipsum %%%  HERE IS A COMMENT WITH SPACE AND MORE %...\n dolor sit amet. \n "
         ));
-        assertLexemes(44);
-//        assertEquals(LexemeType.COMMENT_BEGIN, lexemes.get(11).type);
-        assertEquals(LexemeType.SYMBOL, lexemes.get(29).type); // second % is not beginning a comment
-        assertTrue("last lexeme in comment", lexemes.get(33).inComment);
-        assertTrue("first lexeme after comment", !lexemes.get(34).inComment);
+        assertLexemes(28);
+        assertEquals(LexemeType.SYMBOL, lexemes.get(8).type);
         lexemes = analyze(new StringReaderWrapper(
                 "  %HERE IS A COMMENT WITH SPACE AND MORE %...\n dolor sit amet. \n "
         ));
-        assertLexemes(34);
-//        assertEquals(LexemeType.COMMENT_BEGIN, lexemes.get(2).type);
-        assertEquals(2, lexemes.get(2).pos);
-        assertEquals(LexemeType.SYMBOL, lexemes.get(19).type);
-        assertEquals(LexemeType.WORD, lexemes.get(25).type);
+        assertLexemes(19);
+        assertEquals(2, lexemes.get(1).pos);
+        assertEquals(LexemeType.SYMBOL, lexemes.get(10).type);
+        assertEquals(LexemeType.WORD, lexemes.get(16).type);
         lexemes = analyze(new StringReaderWrapper("\\cite{ABC}"));
         assertLexemes(6);
+    }
+
+    @Test
+    public void analyzeWhiteSpace() throws Exception {
+        lexemes = analyze(new StringReaderWrapper("howdy \n  dowdy \n \r\n \n  man"));
+        assertLexemes(6);
+        assertEquals("4th lexeme is paragraph", LexemeType.PARAGRAPH, lexemes.get(3).type);
     }
 
     @Test
@@ -112,7 +114,7 @@ public final class TestAnalyzer {
         document.markupAddition(17, 18, EnumSet.of(Change.Flag.SMALL));
         document.markupAddition(20, 25, EnumSet.noneOf(Change.Flag.class));
         lexemes = analyze(new DocumentReaderWrapper(document));
-        assertLexemes(11);
-        assertEquals("8th lexeme starts at", 25, lexemes.get(7).pos);
+        assertLexemes(7);
+        assertEquals("5th lexeme starts at", 25, lexemes.get(4).pos);
     }
 }

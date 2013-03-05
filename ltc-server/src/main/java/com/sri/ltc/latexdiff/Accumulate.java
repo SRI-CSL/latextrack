@@ -36,13 +36,11 @@ import java.util.List;
  */
 public final class Accumulate {
 
+    private final static LatexDiff latexDiff = new LatexDiff();
+
     // in order to keep track of progress
     private final PropertyChangeSupport pcs = new PropertyChangeSupport(this);
     public final static String PROGRESS_PROPERTY = "float_progress";
-
-    private final static LatexDiff latexDiff = new LatexDiff();
-
-    private final MarkedUpDocument document = new MarkedUpDocument();
 
     public void addPropertyChangeListener(PropertyChangeListener listener) {
         pcs.addPropertyChangeListener(listener);
@@ -59,7 +57,7 @@ public final class Accumulate {
      * to compare but the author indices is empty, this function assigns author indices [1..(n-1)] for n = length of text
      * array.
      * <p>
-     * A number of boolean OLDflags indicates whether to show or hide deletions, small changes, changes in preamble,
+     * A number of boolean flags indicates whether to show or hide deletions, small changes, changes in preamble,
      * comments, and commands.
      * <p>
      * The returned map contains 3 entries for keys {@link LTCserverInterface.KEY_TEXT},
@@ -107,10 +105,10 @@ public final class Accumulate {
             colors[i] = Color.getHSBColor((float) i / (float) n, 0.85f, 1.0f);
 
         // merge everything into one styled document: init document with latest text
-        document.remove(0, document.getLength());
+        final MarkedUpDocument document = new MarkedUpDocument();
         document.insertString(0, LatexDiff.copyText(priorText[priorText.length - 1].createReader()), null);
 
-        float progress = 0f; // track progress through the 2 loops below
+        float progress = 0f; // track progress through the loops below
 
         // go from latest to earliest version: start with comparing current document with second latest
         float outer_step_increment = 0.9f/(float) (priorText.length - 1); // calculate increment of progress for each outer loop
@@ -133,6 +131,7 @@ public final class Accumulate {
                 progress = updateProgress(progress, outer_step_increment);
                 continue; // skip to next version if no changes
             }
+
             float inner_step_increment = outer_step_increment/(float) changes.size(); // increment of progress for each inner loop
             for (Change change : changes) {
 
@@ -166,6 +165,7 @@ public final class Accumulate {
             }
         }
 
+        // after changes are accumulated, apply the filters
         caretPosition = document.applyFiltering(flagsToHide, caretPosition);
         progress = updateProgress(0.9f, 0.05f);
 

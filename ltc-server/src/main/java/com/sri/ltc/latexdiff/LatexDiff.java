@@ -75,25 +75,23 @@ public final class LatexDiff {
         Lexer scanner = new Lexer(wrapper.createReader());
         List<Lexeme> lexemes;
 
-        while ((lexemes = scanner.yylex()) != null) {
-            for (Lexeme lexeme : lexemes) {
-                lexeme = wrapper.removeAdditions(lexeme); // remove any additions
-                if (lexeme != null)
-                    list.add(lexeme);
-            }
-        }
+        while ((lexemes = scanner.yylex()) != null)
+            for (Lexeme lexeme : lexemes)
+                if (!LexemeType.WHITESPACE.equals(lexeme.type)) { // ignore whitespace
+                    lexeme = wrapper.removeAdditions(lexeme); // remove any additions
+                    if (lexeme != null)
+                        list.add(lexeme);
+                }
         scanner.yyclose();
 
-        // turn paragraphs in the preamble into white space
+        // remove paragraphs in the preamble if there is one:
         if (list.get(list.size() - 1).preambleSeen) { // EOF Lexeme has seen preamble
             for (ListIterator<Lexeme> i = list.listIterator(); i.hasNext(); ) {
                 Lexeme lexeme = i.next();
                 if (lexeme.preambleSeen)
                     break; // done with preamble
                 if (LexemeType.PARAGRAPH.equals(lexeme.type))
-                    // replace with white space that has same characteristics
-                    i.set(new Lexeme(LexemeType.WHITESPACE,
-                            lexeme.contents, lexeme.pos, lexeme.preambleSeen, lexeme.inComment, lexeme.removed));
+                    i.remove();
             }
         }
         return list;

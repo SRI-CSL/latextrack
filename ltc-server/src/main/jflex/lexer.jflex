@@ -133,69 +133,70 @@ space       = [ \t\f]
 %%
 /* -----------------Lexical Rules Section------------------------------------ */ 
 
+<YYINITIAL>
+  \\begin\{document\} { preambleSeen = true;
+		        yybegin(PREAMBLE_SEEN);
+                        return Lists.newArrayList(
+                          new Lexeme(LexemeType.COMMAND, "\\begin", yychar, true, false),
+                          new Lexeme(LexemeType.SYMBOL, "{", yychar+6, true, false),
+                          new Lexeme(LexemeType.WORD, "document", yychar+7, true, false),
+                          new Lexeme(LexemeType.SYMBOL, "}", yychar+15, true, false)); }
+  /* set flag that first preamble has been seen */
+
 <YYINITIAL,PREAMBLE_SEEN>
-  \\[A-Za-z]+        { return Lists.newArrayList(
-                         new Lexeme(LexemeType.COMMAND, yytext(), yychar, preambleSeen, false)); }
+  \\[A-Za-z]+         { return Lists.newArrayList(
+                          new Lexeme(LexemeType.COMMAND, yytext(), yychar, preambleSeen, false)); }
   /* commands that are more than one letter long */
 
 <YYINITIAL,PREAMBLE_SEEN>
-  \\[^ \t\r\n\f]     { return Lists.newArrayList(
-                         new Lexeme(LexemeType.COMMAND, yytext(), yychar, preambleSeen, false)); }
+  \\[^ \t\r\n\f]      { return Lists.newArrayList(
+                          new Lexeme(LexemeType.COMMAND, yytext(), yychar, preambleSeen, false)); }
   /* commands that are one non-whitespace character after backslash */
 
-\\begin\{document\}  { preambleSeen = true;
-		       yybegin(PREAMBLE_SEEN);
-                       return Lists.newArrayList(
-                         new Lexeme(LexemeType.COMMAND, "\\begin", yychar, true, false),
-                         new Lexeme(LexemeType.SYMBOL, "{", yychar+6, true, false),
-                         new Lexeme(LexemeType.WORD, "document", yychar+7, true, false),
-                         new Lexeme(LexemeType.SYMBOL, "}", yychar+15, true, false)); }
-  /* set flag that first preamble (not in comment!) has been seen */
-
 <YYINITIAL,PREAMBLE_SEEN>
-  {punctuation}      { return Lists.newArrayList(
-                         new Lexeme(LexemeType.PUNCTUATION, yytext(), yychar, preambleSeen, false)); }
+  {punctuation}       { return Lists.newArrayList(
+                          new Lexeme(LexemeType.PUNCTUATION, yytext(), yychar, preambleSeen, false)); }
   /* match single punctuation characters */
 
 <YYINITIAL,PREAMBLE_SEEN>
   [+\-]{0,1} [0-9] ([A-Za-z0-9] | [,\.][0-9])+ 
-                     { return Lists.newArrayList(
-                         new Lexeme(LexemeType.NUMERAL, yytext(), yychar, preambleSeen, false)); }
+                      { return Lists.newArrayList(
+                          new Lexeme(LexemeType.NUMERAL, yytext(), yychar, preambleSeen, false)); }
   /* numerals start with an optional minus or plus and one digit, then almost anything goes */ 
 
 <YYINITIAL,PREAMBLE_SEEN>
-  {symbol}           { return Lists.newArrayList(
-                         new Lexeme(LexemeType.SYMBOL, yytext(), yychar, preambleSeen, false)); }
+  {symbol}            { return Lists.newArrayList(
+                          new Lexeme(LexemeType.SYMBOL, yytext(), yychar, preambleSeen, false)); }
   /* match single symbol characters */
 
 <YYINITIAL,PREAMBLE_SEEN>
-  [A-Za-z0-9\-]+     { return Lists.newArrayList(
-                         new Lexeme(LexemeType.WORD, yytext(), yychar, preambleSeen, false)); }
+  [A-Za-z0-9\-]+      { return Lists.newArrayList(
+                          new Lexeme(LexemeType.WORD, yytext(), yychar, preambleSeen, false)); }
   /* words are letters, digits and hyphen */ 
 
 <YYINITIAL,PREAMBLE_SEEN> {
   \n({space}*{EOL})+ |
   \r{space}*\r({space}*{EOL})* |
   \r\n({space}*{EOL})+ 
-                     { return Lists.newArrayList(
-                         new Lexeme(LexemeType.PARAGRAPH, yytext(), yychar, preambleSeen, false)); }
+                      { return Lists.newArrayList(
+                          new Lexeme(LexemeType.PARAGRAPH, yytext(), yychar, preambleSeen, false)); }
 }
   /* paragraphs are 2 or more end-of-lines and possibly white space in between */
 
 <YYINITIAL,PREAMBLE_SEEN> 
-  {space}+           { return Lists.newArrayList(
-                         new Lexeme(LexemeType.WHITESPACE, yytext(), yychar, preambleSeen, false)); }
+  {space}+            { return Lists.newArrayList(
+                          new Lexeme(LexemeType.WHITESPACE, yytext(), yychar, preambleSeen, false)); }
   /* gobble-up any white space */
 
 <YYINITIAL,PREAMBLE_SEEN> 
-  {EOL}+             { return Lists.newArrayList(
-                         new Lexeme(LexemeType.WHITESPACE, yytext(), yychar, preambleSeen, false)); }
+  {EOL}+              { return Lists.newArrayList(
+                          new Lexeme(LexemeType.WHITESPACE, yytext(), yychar, preambleSeen, false)); }
   /* gobble-up any end-of-line characters TODO: make this a NEWLINE lexeme? */
 
 <YYINITIAL,PREAMBLE_SEEN> 
-  <<EOF>>            { yybegin(EOF);
-                       return Lists.newArrayList(
-                         new Lexeme(LexemeType.END_OF_FILE, "", yychar, preambleSeen, false)); }
+  <<EOF>>             { yybegin(EOF);
+                        return Lists.newArrayList(
+                          new Lexeme(LexemeType.END_OF_FILE, "", yychar, preambleSeen, false)); }
   /* mark end-of-file so that there is always one matching lexeme to determine end position of deletions */ 
 
 .                    { RuntimeException e = new RuntimeException("Cannot parse at position "+yychar+": "+yytext());

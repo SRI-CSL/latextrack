@@ -27,7 +27,6 @@ package com.sri.ltc.latexdiff;
 public enum LexemeType {
 
     COMMAND (true),
-//    COMMENT_BEGIN (true),
     PUNCTUATION (true),
     SYMBOL (true),
     WORD (true),

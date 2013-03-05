@@ -146,6 +146,7 @@ public final class MarkedUpDocument extends DefaultStyledDocument {
 
     /**
      * markup everything between start_position and end_position except currently marked ADDITIONS and DELETIONS
+     *
      * @param start_position
      * @param end_position
      * @param flags
@@ -169,6 +170,15 @@ public final class MarkedUpDocument extends DefaultStyledDocument {
         return ADDITION_STYLE.equals(styleName);
     }
 
+    /**
+     * Apply the flags to hide to filter text markup.  If deletions are to be hidden, this will remove any text
+     * that is marked up as a deletion, therefore the caret position needs to be tracked as well.
+     *
+     * @param flagsToHide set of flags denoting which features to hide
+     * @param caretPosition current caret position
+     * @return caret position after filters were applied
+     * @throws BadLocationException if during the filtering process an unknown text position is encountered
+     */
     @SuppressWarnings("unchecked")
     public int applyFiltering(Set<Change.Flag> flagsToHide, int caretPosition) throws BadLocationException {
         caret = createPosition(caretPosition);
@@ -194,6 +204,11 @@ public final class MarkedUpDocument extends DefaultStyledDocument {
         return new StringReader(getText(0, getLength()));
     }
 
+    /**
+     * Transform this marked up document into the list of 4-tuples that denote the style of a text section.
+     *
+     * @return List of 4-tuples (Integer array) with start and end indices, type of markup and author key.
+     */
     public List<Integer[]> getStyles() {
         List<Integer[]> list = new ArrayList<Integer[]>();
         Chunk c = traverse(getDefaultRootElement(), null, list);
@@ -291,67 +306,4 @@ public final class MarkedUpDocument extends DefaultStyledDocument {
                     " color=\""+color+"\" />";
         }
     }
-
-//    public final class DocumentReader extends Reader {
-//
-//        private final MarkedUpDocument document;
-//        private int next = 0; // position in document
-//        private boolean open = true; // flag when reader has been closed
-//
-//        public DocumentReader(MarkedUpDocument document) {
-//            this.document = document;
-//        }
-//
-//        /**
-//         * Closes the stream and releases any system resources associated with
-//         * it.  Once the stream has been closed, further read(), ready(),
-//         * mark(), reset(), or skip() invocations will throw an IOException.
-//         * Closing a previously closed stream has no effect.
-//         *
-//         * @throws java.io.IOException If an I/O error occurs
-//         */
-//        @Override
-//        public void close() throws IOException {
-//            open = false;
-//        }
-//
-//        /**
-//         * Reads characters into a portion of an array.  This method will block
-//         * until some input is available, an I/O error occurs, or the end of the
-//         * stream is reached.
-//         *
-//         * @param cbuf Destination buffer
-//         * @param off  Offset at which to start storing characters
-//         * @param len  Maximum number of characters to read
-//         * @return The number of characters read, or -1 if the end of the
-//         *         stream has been reached
-//         * @throws java.io.IOException If an I/O error occurs
-//         */
-//        @Override
-//        public int read(char[] cbuf, int off, int len) throws IOException {
-//            synchronized (lock) {
-//                if (!open)
-//                    throw new IOException("Document reader stream is closed");
-//                if ((off < 0) || (off > cbuf.length) ||
-//                        (len < 0) || ((off + len) > cbuf.length) || ((off + len) < 0)) {
-//                    throw new IndexOutOfBoundsException();
-//                } else if (len == 0) {
-//                    return 0;
-//                }
-//                return ;
-//            }
-//        }
-//
-//        /**
-//         * Tells whether this stream supports the mark() operation. The default
-//         * implementation always returns false. Subclasses should override this
-//         * method.
-//         *
-//         * @return true if and only if this stream supports the mark operation.
-//         */
-//        @Override
-//        public boolean markSupported() {
-//            return false;
-//        }
-//    }
 }
