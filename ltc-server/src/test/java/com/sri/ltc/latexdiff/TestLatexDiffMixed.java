@@ -31,7 +31,6 @@ import java.util.EnumSet;
  * Testing changes with mixed type lexemes.
  * @author linda
  */
-@Ignore
 public final class TestLatexDiffMixed extends TestLatexDiff {
 
     @Test
@@ -42,42 +41,30 @@ public final class TestLatexDiffMixed extends TestLatexDiff {
                         "%consectetur adipiscing elit.  ");
         assertAddition(0, 27, Lists.newArrayList(new IndexFlagsPair<Integer>(
                 59,
-                EnumSet.of(Change.Flag.COMMENT))));
+                EnumSet.noneOf(Change.Flag.class))));
         changes = getChanges(
                 "Lorem ipsum dolor sit amet,",
                 "Lorem ipsum dolor sit amet, "+
                         "%consectetur adipiscing elit. \n\n"+
-                        "  Suspendisse sed sollicitudin orci.  ");
+                        "  Suspendisse sed sollicitudin orci.  "); // case M or O
         assertAddition(0, 27, Lists.newArrayList(
-                new IndexFlagsPair<Integer>(
-                        57,
-                        EnumSet.of(Change.Flag.COMMENT)),
                 new IndexFlagsPair<Integer>(
                         98,
                         EnumSet.noneOf(Change.Flag.class))));
         changes = getChanges(
                 "Lorem ipsum dolor sit amet  ",
                 "Lorem ipsum dolor sit amet, "+
-                        "%consectetur adipiscing elit. \n");
+                        "%consectetur adipiscing elit. \n"); // case J or L
         assertAddition(0, 26, Lists.newArrayList(
                 new IndexFlagsPair<Integer>(
-                        28,
-                        EnumSet.noneOf(Change.Flag.class)),
-                new IndexFlagsPair<Integer>(
                         59,
-                        EnumSet.of(Change.Flag.COMMENT))));
+                        EnumSet.noneOf(Change.Flag.class))));
         changes = getChanges(
                 "Lorem ipsum dolor sit amet \n",
                 "Lorem ipsum dolor sit amet, \n\n"+
                         "%consectetur adipiscing elit. \n"+
                         "  Suspendisse sed sollicitudin orci.  ");
         assertAddition(0, 26, Lists.newArrayList(
-                new IndexFlagsPair<Integer>(
-                        30,
-                        EnumSet.noneOf(Change.Flag.class)),
-                new IndexFlagsPair<Integer>(
-                        59,
-                        EnumSet.of(Change.Flag.COMMENT)),
                 new IndexFlagsPair<Integer>(
                         99,
                         EnumSet.noneOf(Change.Flag.class))));

@@ -40,9 +40,6 @@ import java.util.logging.Level;
  */
 public final class LatexDiff {
 
-    private static final Set<LexemeType> SPACE = Sets.newHashSet(
-            LexemeType.PARAGRAPH,
-            LexemeType.WHITESPACE);
     private static final Set<LexemeType> WORDS = Sets.newHashSet(
             LexemeType.WORD,
             LexemeType.NUMERAL);
@@ -160,17 +157,14 @@ public final class LatexDiff {
     }
 
     private boolean isSmallChange(Lexeme lexeme0, Lexeme lexeme1) {
-        // small changes := lexemes are not both SPACE
-        //   and and are of the same type
+        // small changes := lexemes are not both PARAGRAPHS
+        //   and are of the same type
         //   and have a Levenshtein distance less than 3 and less than the length of shorter lexeme
 
         // TODO: consider using Damerau-Levenshtein and limit to 1 instead!
         // see (http://spider.my/static/contrib/Levenshtein.java)
 
-        // SAB: without the isComment override that used to be in the buildFlags calls,
-        // this causes strange side-effects, like marking whitespace changes as comments
-        // when it is not.
-//        if (SPACE.contains(lexeme0.type) && SPACE.contains(lexeme1.type)) return false;
+        if (LexemeType.PARAGRAPH.equals(lexeme0.type)) return false;
         if (!lexeme0.type.equals(lexeme1.type)) return false;
 
         int distance = Levenshtein.getLevenshteinDistance(lexeme0.contents, lexeme1.contents);
@@ -180,17 +174,6 @@ public final class LatexDiff {
         if (distance >= shorterLength) return false;
 
         return true;
-    }
-
-    private List<Lexeme> removeParagraphs(List<Lexeme> lexemes) {
-        List<Lexeme> newList = Lists.newArrayList();
-        for (Lexeme lexeme : lexemes) {
-            if (lexeme.type != LexemeType.PARAGRAPH) {
-                newList.add(lexeme);
-            }
-        }
-
-        return newList;
     }
 
     // for positioning details refer to tables in specification/tech report
@@ -278,84 +261,73 @@ public final class LatexDiff {
             // Additions
             if (hunk.inserted > 0) {
                 // build list of flags:
-                List<Lexeme> lexemesAffected = list1.subList(hunk.line1, hunk.line1 + hunk.inserted);
-                lexemesAffected = removeParagraphs(lexemesAffected);
-
-                if (lexemesAffected.size() > 0) {
-                    List<IndexFlagsPair<Integer>> flags = new ArrayList<IndexFlagsPair<Integer>>();
-                    List<IndexPair> indices = getIndices(lexemesAffected, preamblePresent, hunk.line1, false);
-                    for (IndexPair indexPair : indices) {
-                        if (indexPair.left.equals(indexPair.right)) { // extra pair to indicate change in flags
-                            int ix = calcPosition(list1, indexPair.left - 1, true);
-                            int iy = calcPosition(list1, indexPair.right, false);
-                            if (iy > ix) // only if there is actually space in between
-                                flags.add(new IndexFlagsPair<Integer>(iy, indexPair.flags));
-                        } else { // regular index pair with lexemes:
-                            if (indexPair.addRearSpace)
-                                flags.add(new IndexFlagsPair<Integer>(
-                                        calcPosition(list1, indexPair.right, false), // pos of next lexeme
-                                        indexPair.flags));
-                            else
-                                flags.add(new IndexFlagsPair<Integer>(
-                                        calcPosition(list1, indexPair.right - 1, true), // end of last lexeme in this region
-                                        indexPair.flags));
-                        }
+                List<IndexFlagsPair<Integer>> flags = new ArrayList<IndexFlagsPair<Integer>>();
+                List<IndexPair> indices = getIndices(list1.subList(hunk.line1, hunk.line1 + hunk.inserted), preamblePresent, hunk.line1, false);
+                for (IndexPair indexPair : indices) {
+                    if (indexPair.left.equals(indexPair.right)) { // extra pair to indicate change in flags
+                        int ix = calcPosition(list1, indexPair.left - 1, true);
+                        int iy = calcPosition(list1, indexPair.right, false);
+                        if (iy > ix) // only if there is actually space in between
+                            flags.add(new IndexFlagsPair<Integer>(iy, indexPair.flags));
+                    } else { // regular index pair with lexemes:
+                        if (indexPair.addRearSpace)
+                            flags.add(new IndexFlagsPair<Integer>(
+                                    calcPosition(list1, indexPair.right, false), // pos of next lexeme
+                                    indexPair.flags));
+                        else
+                            flags.add(new IndexFlagsPair<Integer>(
+                                    calcPosition(list1, indexPair.right - 1, true), // end of last lexeme in this region
+                                    indexPair.flags));
                     }
-
-                    result.add(new Addition(start_position, flags));
                 }
+                result.add(new Addition(start_position, flags));
             }
 
             // Deletions
             if (hunk.deleted > 0) {
-                List<Lexeme> lexemesAffected = list0.subList(hunk.line0, hunk.line0 + hunk.deleted);
-                lexemesAffected = removeParagraphs(lexemesAffected);
+                int text_start = calcPosition(list0, hunk.line0 - 1, true); // start with end of prior lexeme
+                int text_end;
+                // calculating end position:
+                // if last pair, then depends on whether
+                // white space at end of deletion in old text AND
+                // white space in front of position in new text
+                int text_end_position = (ex0 != ey0 && sx1 != sy1) ? ex0 : ey0;
+                // add one space after deletion if replacement without bordering space and next lexeme is a WORD or NUMERAL:
+                // (starred cases in replacement position table)
+                boolean addSpace = (hunk.inserted > 0 &&
+                        WORDS.contains(list1.get(hunk.line1).type) &&
+                        ex0 == ey0 && sx1 == sy1);
 
-                if (lexemesAffected.size() > 0) {
-                    int text_start = calcPosition(list0, hunk.line0 - 1, true); // start with end of prior lexeme
-                    int text_end;
-                    // calculating end position:
-                    // if last pair, then depends on whether
-                    // white space at end of deletion in old text AND
-                    // white space in front of position in new text
-                    int text_end_position = (ex0 != ey0 && sx1 != sy1) ? ex0 : ey0;
-                    // add one space after deletion if replacement without bordering space and next lexeme is a WORD or NUMERAL:
-                    // (starred cases in replacement position table)
-                    boolean addSpace = (hunk.inserted > 0 &&
-                            WORDS.contains(list1.get(hunk.line1).type) &&
-                            ex0 == ey0 && sx1 == sy1);
+                // build list of flags:
+                List<IndexFlagsPair<String>> flags = new ArrayList<IndexFlagsPair<String>>();
+                List<IndexPair> indices = getIndices(list0.subList(hunk.line0, hunk.line0 + hunk.deleted), preamblePresent, hunk.line0, true);
 
-                    // build list of flags:
-                    List<IndexFlagsPair<String>> flags = new ArrayList<IndexFlagsPair<String>>();
-                    List<IndexPair> indices = getIndices(lexemesAffected, preamblePresent, hunk.line0, true);
-
-                    for (IndexPair indexPair : indices) {
-                        if (indexPair.left.equals(indexPair.right)) { // extra pair to indicate change in flags
-                            int ix = calcPosition(list0, indexPair.left - 1, true);
-                            text_end = calcPosition(list0, indexPair.right, false);
-                            if (text_end > ix) // only if there is actually space in between
-                                flags.add(new IndexFlagsPair<String>(
-                                        contents0.substring(ix, text_end),
-                                        indexPair.flags));
-                        } else { // regular index pair with lexemes:
-                            // calc text:
-                            if (indexPair.addRearSpace)
-                                text_end = indexPair.right == hunk.line0 + hunk.deleted ?
-                                        text_end_position : // last region, so use calculated end position
-                                        calcPosition(list0, indexPair.right, false); // pos of next lexeme
-                            else
-                                text_end = calcPosition(list0, indexPair.right - 1, true); // end of last lexeme in this region
-                            String text = contents0.substring(text_start, text_end) +
-                                    ((addSpace && indexPair.right == hunk.line0 + hunk.deleted) ?
-                                            " " : // last pair and we need to add 1 space
-                                            "");
-                            flags.add(new IndexFlagsPair<String>(text, indexPair.flags));
-                        }
-                        text_start = text_end;
+                for (IndexPair indexPair : indices) {
+                    if (indexPair.left.equals(indexPair.right)) { // extra pair to indicate change in flags
+                        int ix = calcPosition(list0, indexPair.left - 1, true);
+                        text_end = calcPosition(list0, indexPair.right, false);
+                        if (text_end > ix) // only if there is actually space in between
+                            flags.add(new IndexFlagsPair<String>(
+                                    contents0.substring(ix, text_end),
+                                    indexPair.flags));
+                    } else { // regular index pair with lexemes:
+                        // calc text:
+                        if (indexPair.addRearSpace)
+                            text_end = indexPair.right == hunk.line0 + hunk.deleted ?
+                                    text_end_position : // last region, so use calculated end position
+                                    calcPosition(list0, indexPair.right, false); // pos of next lexeme
+                        else
+                            text_end = calcPosition(list0, indexPair.right - 1, true); // end of last lexeme in this region
+                        String text = contents0.substring(text_start, text_end) +
+                                ((addSpace && indexPair.right == hunk.line0 + hunk.deleted) ?
+                                        " " : // last pair and we need to add 1 space
+                                        "");
+                        flags.add(new IndexFlagsPair<String>(text, indexPair.flags));
                     }
-
-                    result.add(new Deletion(start_position, flags));
+                    text_start = text_end;
                 }
+
+                result.add(new Deletion(start_position, flags));
             }
         }
 

@@ -30,7 +30,6 @@ import java.util.EnumSet;
 /**
  * @author linda
  */
-@Ignore
 public final class TestLatexDiffDeletions extends TestLatexDiff {
 
     @Test

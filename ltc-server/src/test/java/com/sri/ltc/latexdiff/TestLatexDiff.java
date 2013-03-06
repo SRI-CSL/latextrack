@@ -78,13 +78,16 @@ public class TestLatexDiff {
         changes = getChanges("   \n ", " \t  ");
         assertTrue("Changes is empty", changes.isEmpty());
         changes = getChanges(
-                "   Lorem ipsum \n \ndolor sit amet. ",
-                "Lorem ipsum dolor sit amet.");
+                "   Lorem ipsum \n \ndolor sit amet. \\begin{document}",
+                "Lorem ipsum dolor sit amet. \n\\begin{document}");
         assertTrue("Changes is empty", changes.isEmpty());
         changes = getChanges(
-                "Lorem ipsum dolor sit amet.",
-                "   Lorem ipsum \n \ndolor sit amet. ");
+                "Lorem ipsum dolor sit amet. \n \\begin{document}",
+                "   Lorem ipsum \n \ndolor sit amet.\\begin{document}");
         assertTrue("Changes is empty", changes.isEmpty());
+        changes = getChanges("\nold\n", "\nnew\n");
+        assertAddition(0, 0, Lists.newArrayList(new IndexFlagsPair<Integer>(5, EnumSet.noneOf(Flag.class))));
+        assertDeletion(1, 0, Lists.newArrayList(new IndexFlagsPair<String>("\nold", EnumSet.of(Flag.DELETION))));
     }
 
     @Test
