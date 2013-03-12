@@ -33,6 +33,12 @@ import java.util.List;
 
 /**
  * Document with mark ups concerning additions and deletions, as well as status flags.
+ * <p>
+ * TODO: more details/diagram of meta information for each character!
+ * <p>
+ * After using a MarkedUpDocument for accumulating changes, a set of filters can be
+ * applied using {@link #applyFiltering(java.util.Set, int)} exactly once, otherwise
+ * a runtime exception is thrown.
  *
  * @author linda
  */
@@ -45,6 +51,8 @@ public final class MarkedUpDocument extends DefaultStyledDocument {
     private final static String AUTHOR_INDEX = "author index";
     private final static String FLAGS_ATTR = "flag attribute";
     private static final long serialVersionUID = -6945312419206148753L;
+
+    private Boolean applyFilteringCalled = false;
 
     private Position caret = getStartPosition();
 
@@ -121,6 +129,14 @@ public final class MarkedUpDocument extends DefaultStyledDocument {
         style.addAttribute(AUTHOR_INDEX, authorIndex);
     }
 
+    /**
+     * Insert given text at given offset position and mark up as a DELETION and set given flags.
+     *
+     * @param offset position in the text where to insert deletion
+     * @param text String with the text of the deletion
+     * @param flags set of flags to be added to deletion
+     * @throws BadLocationException if the given position is does not exist in the document
+     */
     public void insertDeletion(int offset, String text, Set<Change.Flag> flags) throws BadLocationException {
         Style style = getStyle(DELETION_STYLE);
         style.addAttribute(FLAGS_ATTR, flags);
@@ -128,7 +144,7 @@ public final class MarkedUpDocument extends DefaultStyledDocument {
     }
 
     /**
-     * Markup everything between start_position and end_position except currently marked ADDITIONS and DELETIONS.
+     * Mark up everything between start_position and end_position except currently marked ADDITIONS and DELETIONS.
      *
      * @param start_position index of start position in text
      * @param end_position index of end position (exclusive) in text
@@ -146,30 +162,78 @@ public final class MarkedUpDocument extends DefaultStyledDocument {
         }
     }
 
-    public boolean isAddition(int pos) throws BadLocationException {
+    /**
+     * Test whether given position in document is marked up as an addition.
+     *
+     * @param pos Index of character to be tested
+     * @return true if the given position is valid and marked up as an addition or false otherwise
+     */
+    public boolean isAddition(int pos) {
         if (pos < 0 || pos >= getLength())
-            throw new BadLocationException("Cannot determine whether character is addition", pos);
+            return false;
         Object styleName = getCharacterElement(pos).getAttributes().getAttribute(StyleConstants.NameAttribute);
         return ADDITION_STYLE.equals(styleName);
     }
 
     /**
+     * Test whether given position in document is marked up as a deletion.
+     *
+     * @param pos Index of character to be tested
+     * @return true if the given position is valid and marked up as a deletion or false otherwise
+     */
+    // returns true, if the given position is valid and denotes a character with the DELETION flag set
+    public boolean isDeletion(int pos) {
+        if (pos < 0 || pos >= getLength())
+            return false;
+        Object styleName = getCharacterElement(pos).getAttributes().getAttribute(StyleConstants.NameAttribute);
+        return DELETION_STYLE.equals(styleName);
+    }
+
+    /**
      * Apply the flags to hide to filter text markup.  If deletions are to be hidden, this will remove any text
      * that is marked up as a deletion, therefore the caret position needs to be tracked as well.
+     * <p>
+     * This method should only be called once for a MarkedUpDocument, otherwise it will throw a RuntimeException.
      *
      * @param flagsToHide set of flags denoting which features to hide
      * @param caretPosition current caret position
      * @return caret position after filters were applied
      * @throws BadLocationException if during the filtering process an unknown text position is encountered
+     * @throws IllegalStateException if called twice for this document
      */
     @SuppressWarnings("unchecked")
-    public int applyFiltering(Set<Change.Flag> flagsToHide, int caretPosition) throws BadLocationException {
+    protected int applyFiltering(Set<Change.Flag> flagsToHide, int caretPosition) throws BadLocationException {
+        // test whether this is the first time calling this method
+        synchronized (applyFilteringCalled) {
+            if (applyFilteringCalled)
+                throw new IllegalStateException("Cannot call applyFiltering twice on this document.");
+            applyFilteringCalled = true;
+        }
+
         caret = createPosition(caretPosition);
-        if (!flagsToHide.isEmpty())
+        if (!flagsToHide.isEmpty()) {
+            // detect comments in current document:
+            // everything after a non-deletion % that is not preceeded by a backslash
+            // until the next, non-deletion end-of-line character
+            boolean inComment = false;
+
+            // go through text and filter anything that should be hidden
             for (int i = 0; i < getLength(); i++) {
-                Set<Change.Flag> flags = (Set<Change.Flag>) getCharacterElement(i).getAttributes().getAttribute(FLAGS_ATTR);
-                if (flags != null) {
-                    // TODO: handle comments!
+                String c = getText(i, 1);
+
+                // are we entering a comment?
+                if (!inComment && !isDeletion(i))
+                    if ("%".equals(c) && (i == 0 || !"\\".equals(getText(i - 1, 1))))
+                        inComment = true;
+
+                Set<Change.Flag> currentFlags = (Set<Change.Flag>) getCharacterElement(i).getAttributes().getAttribute(FLAGS_ATTR);
+
+                // now filter by flags to be hidden
+                if (currentFlags != null) {
+                    Set<Change.Flag> flags = new HashSet<Change.Flag>(currentFlags); // make copy to be able to add to flags
+                    if (inComment)
+                        flags.add(Change.Flag.COMMENT);
+
                     Set<Change.Flag> intersection = Sets.intersection(flags, flagsToHide);
                     if (!intersection.isEmpty()) { // matching flags
                         if (flags.contains((Change.Flag.DELETION))) { // change was a deletion, so remove character
@@ -180,7 +244,13 @@ public final class MarkedUpDocument extends DefaultStyledDocument {
                         }
                     }
                 }
+
+                // are we leaving a comment?
+                if (inComment)
+                    if (c.matches("[\n\r]") && (currentFlags == null || !currentFlags.contains(Change.Flag.DELETION)))
+                        inComment = false;
             }
+        }
         return getCaretPosition();
     }
 
