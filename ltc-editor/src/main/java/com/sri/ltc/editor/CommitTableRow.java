@@ -46,7 +46,7 @@ public final class CommitTableRow {
     }; // reference values to determine initial column widths
 
     CommitGraphRow graph = new CommitGraphRow(this);
-    final String sha1;
+    final String ID;
     final Date date;
     final Author author;
     final String message;
@@ -59,14 +59,14 @@ public final class CommitTableRow {
             throw new IllegalArgumentException("Cannot create commit table row from NULL array");
         if (array.length < 6)
             throw new IllegalArgumentException("Cannot create commit table row from less than 6 objects in array");
-        this.sha1 = array[0].toString();
+        this.ID = array[0].toString();
         this.message = array[1].toString(); // TODO: limit to first newline (if any)
         this.date = Commit.deSerializeDate(array[4].toString());
         this.author = new Author(array[2].toString(), array[3].toString(), null);
     }
 
-    public CommitTableRow(String sha1) {
-        this.sha1 = sha1;
+    public CommitTableRow(String ID) {
+        this.ID = ID;
         this.date = null;
         this.author = null;
         this.message = "";
@@ -85,7 +85,7 @@ public final class CommitTableRow {
             case 0:
                 return graph;
             case 1:
-                return sha1;
+                return ID;
             case 2:
                 return date;
             case 3:
@@ -120,13 +120,13 @@ public final class CommitTableRow {
 
         CommitTableRow that = (CommitTableRow) o;
 
-        if (sha1 != null ? !sha1.equals(that.sha1) : that.sha1 != null) return false;
+        if (ID != null ? !ID.equals(that.ID) : that.ID != null) return false;
 
         return true;
     }
 
     @Override
     public int hashCode() {
-        return sha1 != null ? sha1.hashCode() : 0;
+        return ID != null ? ID.hashCode() : 0;
     }
 }

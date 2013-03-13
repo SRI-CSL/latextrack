@@ -321,7 +321,7 @@ public final class TestAccumulate {
         assertMap("Lorem ipsum \ndolor sit amet, consectetur adipiscing elit. \n " +
                 "% ADDING MORE:\n" +
                 "Praesent tempor hendrerit eros, non scelerisque est fermentum nec. ", 3, 0);
-        // TODO: once we fix the white-space in front of comment issue by tracking SHA1 keys in character attributes,
+        // TODO: once we fix the white-space in front of comment issue by tracking revision keys in character attributes,
         // we need to remove the 2nd tuple entry in all these!!
         assertStyle(
                 new int[] {1, 1, 1},
@@ -494,6 +494,16 @@ public final class TestAccumulate {
         assertStyle(
                 new int[]{1, 1, 1, 1},
                 new int[][]{{0, 7}, {7, 9}, {15, 23}, {23, 34}},
+                new int[]{2, 1, 1, 2}
+        );
+        map = perform(0,
+                "oldest",
+                "pretty % oldest comment",
+                " % oldest comment with space");
+        assertMap("pretty % oldest comment with space", 4, 6);
+        assertStyle(
+                new int[]{2, 1, 1, 1},
+                new int[][]{{0, 6}, {6, 9}, {15, 23}, {23, 34}},
                 new int[]{2, 1, 1, 2}
         );
     }

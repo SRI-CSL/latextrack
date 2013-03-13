@@ -143,15 +143,21 @@ public final class LimitedHistory extends FileHistory {
 
     public final List<ReaderWrapper> getReadersList() throws IOException, ParseException {
         List<ReaderWrapper> readers = new ArrayList<ReaderWrapper>();
-        for (Commit commit : commitList) {
+        for (Commit commit : commitList)
             // obtain string for readers
             readers.add(new CommitReaderWrapper(commit));
-        }
         return readers;
     }
 
+    public final List<String> getIDs() {
+        List<String> ids = new ArrayList<String>();
+        for (Commit commit : commitList)
+            ids.add(commit.getId());
+        return ids;
+    }
+
     /**
-     * Get the IDs (SHA1s) from the expanded list of commits before
+     * Get the IDs from the expanded list of commits before
      * consecutive authors were collapsed.
      *
      * @return List of Strings containing all IDs on the commit path used

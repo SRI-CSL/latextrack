@@ -180,9 +180,10 @@ public class LTCSession {
                         editor.finishUpdate(
                                 (Map<Integer,Object[]>) map.get(LTCserverInterface.KEY_AUTHORS),
                                 (String) map.get(LTCserverInterface.KEY_TEXT),
-                                (java.util.List<Integer[]>) map.get(LTCserverInterface.KEY_STYLES),
+                                (List<Integer[]>) map.get(LTCserverInterface.KEY_STYLES),
                                 (Integer) map.get(LTCserverInterface.KEY_CARET),
-                                new HashSet<String>((List<String>) map.get(LTCserverInterface.KEY_SHA1)),
+                                new HashSet<String>((List<String>) map.get(LTCserverInterface.KEY_EXPANDED_REVS)),
+                                (List<String>) map.get(LTCserverInterface.KEY_REVS),
                                 commits, remotes);
                     } catch (InterruptedException e) {
                         LOGGER.log(Level.SEVERE, e.getMessage(), e);

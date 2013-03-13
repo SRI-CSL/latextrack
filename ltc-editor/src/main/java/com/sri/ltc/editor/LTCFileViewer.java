@@ -231,6 +231,7 @@ public final class LTCFileViewer extends LTCGui implements ListSelectionListener
                         Map map = accumulate.perform(
                                 readers.toArray(new ReaderWrapper[readers.size()]),
                                 null, // this will cause style indices to use order of readers
+                                // this will cause revision indices to use the order of readers
                                 Change.buildFlagsToHide(
                                         filter.getShowingStatus(LTCserverInterface.Show.DELETIONS),
                                         filter.getShowingStatus(LTCserverInterface.Show.SMALL),

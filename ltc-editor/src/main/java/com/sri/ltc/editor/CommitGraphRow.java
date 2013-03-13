@@ -50,7 +50,7 @@ public final class CommitGraphRow {
 
     @Override
     public String toString() {
-        return row.sha1.substring(0,6)+" @ row "+circleColumn;
+        return row.ID.substring(0,6)+" @ row "+circleColumn;
     }
 
     public Icon toIcon(int height, Color foreground) {

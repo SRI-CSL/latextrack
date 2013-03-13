@@ -214,19 +214,20 @@ public final class LTCEditor extends LTCGui {
                                 String text,
                                 List<Integer[]> styles,
                                 int caretPosition,
-                                Set<String> sha1s,
+                                Set<String> IDs,
+                                List<String> orderedIDs,
                                 List<Object[]> commits,
                                 List<Object[]> remotes) {
         // update list of authors
         finishAuthors(new ArrayList<Object[]>(authors.values()));
-        // update and markup text
+        // update and markup text // TODO: add revision names to tooltips?
         Map<Integer,Color> colors = new HashMap<Integer,Color>();
         for (Map.Entry<Integer,Object[]> entry : authors.entrySet())
             colors.put(entry.getKey(), Color.decode((String) entry.getValue()[2]));
         textPane.updateFromMaps(text, styles, colors, caretPosition);
         // update list of commits
         commitModel.init(commits, false);
-        commitModel.update(sha1s);
+        commitModel.update(IDs);
         // update list of remotes
         remoteModel.update(remotes);
     }
