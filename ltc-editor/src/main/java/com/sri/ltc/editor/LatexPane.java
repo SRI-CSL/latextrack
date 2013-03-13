@@ -206,17 +206,12 @@ public final class LatexPane extends JTextPane {
             if (styles != null) {
                 Style style;
                 for (Integer[] tuple : styles) {
-                    if (tuple != null && tuple.length == 4) {
-                        try {
-                            style = document.getStyle(STYLE_PREFIX+tuple[2]);
-                            StyleConstants.setForeground(style, colors.get(tuple[3]));
-                            document.setCharacterAttributes(tuple[0], tuple[1]-tuple[0],
-                                    style,
-                                    true);
-                        }
-                        catch (Exception e) {
-                            System.out.println("Exception getting style info");
-                        }
+                    if (tuple != null && tuple.length >= 5) {
+                        style = document.getStyle(STYLE_PREFIX+tuple[2]);
+                        StyleConstants.setForeground(style, colors.get(tuple[3]));
+                        document.setCharacterAttributes(tuple[0], tuple[1]-tuple[0],
+                                style,
+                                true);
                     }
                 }
             }
