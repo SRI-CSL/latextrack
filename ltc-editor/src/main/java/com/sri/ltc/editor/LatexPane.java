@@ -31,7 +31,6 @@ import java.awt.*;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseEvent;
-import java.io.Console;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
@@ -45,8 +44,10 @@ import java.util.prefs.Preferences;
 public final class LatexPane extends JTextPane {
 
     private static final Logger LOGGER = Logger.getLogger(LatexPane.class.getName());
-    private static String KEY_SHOW_PARAGRAPHS = "showParagraphs";
+    private static final String KEY_SHOW_PARAGRAPHS = "showParagraphs";
+    private static final String REVISION_ATTR = "revision attribute";
     protected final static String STYLE_PREFIX = "style no. ";
+
     private final LatexDocumentFilter documentFilter = new LatexDocumentFilter(this);
     protected int last_key_pressed = -1;
     private final boolean editable;
@@ -78,8 +79,6 @@ public final class LatexPane extends JTextPane {
         style = document.addStyle(STYLE_PREFIX+2, null); // deletion
         StyleConstants.setStrikeThrough(style, true);
 
-        style = document.addStyle(STYLE_PREFIX+3, null); // unadorned
-
         // more initialization
         setCaretPosition(0);
         setMargin(new Insets(5,5,5,5));
@@ -104,7 +103,9 @@ public final class LatexPane extends JTextPane {
         Element root = getDocument().getDefaultRootElement();
         int line = root.getElementIndex(offset);
         int col = offset - root.getElement(line).getStartOffset();
-        return "("+(line+1)+","+(col+1)+")@"+offset;
+        Object revision = getStyledDocument().getCharacterElement(offset).getAttributes().getAttribute(REVISION_ATTR);
+        return "("+(line+1)+","+(col+1)+")@"+offset+
+                (revision==null?"":" rev: "+revision.toString().substring(0, Math.min(8, revision.toString().length())));
     }
 
     @Override
@@ -198,7 +199,8 @@ public final class LatexPane extends JTextPane {
         return document;
     }
 
-    public void updateFromMaps(String text, List<Integer[]> styles, Map<Integer, Color> colors, int caretPosition) {
+    public void updateFromMaps(String text, List<Integer[]> styles, Map<Integer, Color> colors,
+                               int caretPosition, List<String> orderedIDs) {
         try {
             StyledDocument document = clearAndGetDocument();
             if (text != null)
@@ -209,6 +211,8 @@ public final class LatexPane extends JTextPane {
                     if (tuple != null && tuple.length >= 5) {
                         style = document.getStyle(STYLE_PREFIX+tuple[2]);
                         StyleConstants.setForeground(style, colors.get(tuple[3]));
+                        style.addAttribute(REVISION_ATTR,
+                                orderedIDs==null ? tuple[4] : orderedIDs.get(tuple[4]));
                         document.setCharacterAttributes(tuple[0], tuple[1]-tuple[0],
                                 style,
                                 true);

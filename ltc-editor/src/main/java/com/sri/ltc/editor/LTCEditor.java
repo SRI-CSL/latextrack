@@ -220,11 +220,11 @@ public final class LTCEditor extends LTCGui {
                                 List<Object[]> remotes) {
         // update list of authors
         finishAuthors(new ArrayList<Object[]>(authors.values()));
-        // update and markup text // TODO: add revision names to tooltips?
+        // update and markup text
         Map<Integer,Color> colors = new HashMap<Integer,Color>();
         for (Map.Entry<Integer,Object[]> entry : authors.entrySet())
             colors.put(entry.getKey(), Color.decode((String) entry.getValue()[2]));
-        textPane.updateFromMaps(text, styles, colors, caretPosition);
+        textPane.updateFromMaps(text, styles, colors, caretPosition, orderedIDs);
         // update list of commits
         commitModel.init(commits, false);
         commitModel.update(IDs);

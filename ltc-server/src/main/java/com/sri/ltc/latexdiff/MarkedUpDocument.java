@@ -30,11 +30,10 @@ import java.io.Reader;
 import java.io.StringReader;
 import java.util.*;
 import java.util.List;
+import java.util.regex.Pattern;
 
 /**
  * Document with mark ups concerning additions and deletions, as well as status flags.
- * <p>
- * TODO: more details/diagram of meta information for each character!
  * <p>
  * After using a MarkedUpDocument for accumulating changes, a set of filters can be
  * applied using {@link #applyFiltering(java.util.Set, int)} exactly once, otherwise
@@ -52,6 +51,8 @@ public final class MarkedUpDocument extends DefaultStyledDocument {
     private final static String REVISION_INDEX = "revision name";
     private final static String FLAGS_ATTR = "flag attribute";
     private static final long serialVersionUID = -6945312419206148753L;
+    // a white space at end and then consecutive white space before but not more than 1 newline in whole pattern:
+    private static final Pattern LEADING_WHITE = Pattern.compile("([ \t]+\n)|([ \t]*\n{0,1}[ \t]*[ \t])$");
 
     private Boolean applyFilteringCalled = false;
 
@@ -226,8 +227,11 @@ public final class MarkedUpDocument extends DefaultStyledDocument {
 
                 // are we entering a comment?
                 if (!inComment && !isDeletion(i))
-                    if ("%".equals(c) && (i == 0 || !"\\".equals(getText(i - 1, 1))))
+                    if ("%".equals(c) && (i == 0 || !"\\".equals(getText(i - 1, 1)))) {
                         inComment = true;
+                        // TODO: remove any whitespace with the same ID in front of this?
+                        String leadingText = getText(0, i==0 ? 0 : i-1); // empty for first iteration!
+                    }
 
                 Set<Change.Flag> currentFlags = (Set<Change.Flag>) getCharacterElement(i).getAttributes().getAttribute(FLAGS_ATTR);
 
@@ -264,7 +268,7 @@ public final class MarkedUpDocument extends DefaultStyledDocument {
     /**
      * Transform this marked up document into the list of 4-tuples that denote the style of a text section.
      *
-     * @return List of 4-tuples (Integer array) with start and end indices, type of markup and author key.
+     * @return List of 5-tuples (Integer array) with start and end indices, type of markup, author and revision indices.
      */
     public List<Integer[]> getStyles() {
         List<Integer[]> list = new ArrayList<Integer[]>();

@@ -333,6 +333,7 @@
 				    (cons (string-to-number (nth 0 four-tuple)) (nth 3 four-tuple)))
 				  (cdr (assoc-string "authors" map))))
 	     (styles (cdr (assoc-string "styles" map)))
+	     (revisions (cdr (assoc-string "revs" map)))
 	     )
 	(message "LTC updates received") ; TODO: change cursor back (or later?)
 	(ltc-remove-edit-hooks) ; remove (local) hooks to capture user's edits temporarily
@@ -343,11 +344,15 @@
 	;; apply styles to new buffer
 	(if (and styles (car styles))  ; sometimes STYLES = '(nil)
 	    (mapc (lambda (style) 
-		    (put-text-property (1+ (car style)) (1+ (nth 1 style)) 'face 
-				       (list 
-					(if (= '1 (nth 2 style)) 'ltc-addition 'ltc-deletion) 
-					(list
-					 :foreground (cdr (assoc (nth 3 style) color-table)))))
+		    (set-text-properties (1+ (car style)) (1+ (nth 1 style)) ; Emacs starts counting from 1!
+					 (list
+					  'face 
+					  (list 
+					   (if (= '1 (nth 2 style)) 'ltc-addition 'ltc-deletion) 
+					   (list
+					    :foreground (cdr (assoc (nth 3 style) color-table))))
+					  'help-echo
+					  (concat "rev: " (shorten 8 (nth (nth 4 style) revisions)))))
 		    ) styles))
 	(ltc-add-edit-hooks) ; add (local) hooks to capture user's edits
 	;; update commit graph in temp info buffer
