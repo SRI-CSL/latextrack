@@ -51,8 +51,9 @@ public final class MarkedUpDocument extends DefaultStyledDocument {
     private final static String REVISION_INDEX = "revision name";
     private final static String FLAGS_ATTR = "flag attribute";
     private static final long serialVersionUID = -6945312419206148753L;
-    // a white space at end and then consecutive white space before but not more than 1 newline in whole pattern:
-    private static final Pattern LEADING_WHITE = Pattern.compile("([ \t]+\n)|([ \t]*\n{0,1}[ \t]*[ \t])$");
+    // any non-empty, consecutive white space or newline at beginning
+    // to match anything irrelevant marked up in front of suppressed COMMENTS:
+    public static final Pattern LEADING_WHITE = Pattern.compile("\\A([ \\t\\n]+).*\\Z", Pattern.DOTALL);
 
     private Boolean applyFilteringCalled = false;
 
@@ -229,8 +230,19 @@ public final class MarkedUpDocument extends DefaultStyledDocument {
                 if (!inComment && !isDeletion(i))
                     if ("%".equals(c) && (i == 0 || !"\\".equals(getText(i - 1, 1)))) {
                         inComment = true;
-                        // TODO: remove any whitespace with the same ID in front of this?
-                        String leadingText = getText(0, i==0 ? 0 : i-1); // empty for first iteration!
+                        // TODO: remove any leading whitespace with the same ID in front of this?
+//                        if (flagsToHide.contains(Change.Flag.COMMENT)) {
+//                            String leadingText = new StringBuilder(getText(0, i)).reverse().toString(); // reverse of leading text
+//                            Matcher matcher = LEADING_WHITE.matcher(leadingText);
+//                            if (matcher.matches()) { // there is leading white space before comment
+//                                System.out.println(" ~~ investigating from "+(i-matcher.end(1))+" to "+i+":\n"+
+//                                        getText(i-matcher.end(1),matcher.end(1)));
+//                                // go from i-1 backwards to i-matcher.end(1) and test for ID
+//                                for (int j=i-1; j >= i-matcher.end(1); j--) {
+//
+//                                }
+//                            }
+//                        }
                     }
 
                 Set<Change.Flag> currentFlags = (Set<Change.Flag>) getCharacterElement(i).getAttributes().getAttribute(FLAGS_ATTR);

@@ -480,6 +480,11 @@ public final class TestAccumulate {
     public void testAttributionOfChange() throws Exception {
         map = perform(0, EnumSet.of(Change.Flag.COMMENT),
                 "oldest",
+                "pretty \n  \n% oldest comment",
+                "% oldest comment with space");
+        assertMap("pretty \n  \n% oldest comment with space", 1, 11);
+        map = perform(0, EnumSet.of(Change.Flag.COMMENT),
+                "oldest",
                 "% oldest comment",
                 " % oldest comment with space");
         assertMap(" % oldest comment with space", 1, 0);
@@ -498,16 +503,27 @@ public final class TestAccumulate {
                 new int[][]{{0, 7}},
                 new int[]{2},
                 new int[]{2});
-        map = perform(0, EnumSet.of(Change.Flag.COMMENT),
+        map = perform(2, EnumSet.of(Change.Flag.COMMENT),
                 "oldest",
                 "pretty % oldest comment",
-                " % oldest comment with space");
-        assertMap("pretty % oldest comment with space", 2, 6);
+                " \n% oldest comment with space");
+        assertMap("pretty \n% oldest comment with space", 2, 8);
         assertStyle(
                 new int[]{2, 1},
-                new int[][]{{0, 6}, {6, 7}},
+                new int[][]{{0, 6}, {6, 8}},
                 new int[]{2, 1},
                 new int[]{2, 1});
+        map = perform(0, EnumSet.of(Change.Flag.COMMENT),
+                "oldest",
+                "pretty \n  % oldest comment",
+                "% oldest comment with space");
+        assertMap("pretty \n  % oldest comment with space", 1, 10);
+        assertStyle(
+                new int[]{2},
+                new int[][]{{0, 10}},
+                new int[]{2},
+                new int[]{2}
+        );
     }
 
     @Test
