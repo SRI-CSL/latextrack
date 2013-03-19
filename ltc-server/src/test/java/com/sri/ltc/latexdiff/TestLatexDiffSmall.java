@@ -22,7 +22,6 @@
 package com.sri.ltc.latexdiff;
 
 import com.google.common.collect.Lists;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import java.util.EnumSet;

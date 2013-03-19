@@ -31,7 +31,6 @@ import static com.sri.ltc.latexdiff.Change.*;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-
 /**
  * @author linda
  */

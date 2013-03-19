@@ -21,7 +21,6 @@
  */
 package com.sri.ltc.latexdiff;
 
-import org.junit.Ignore;
 import org.junit.Test;
 
 import java.util.EnumSet;
