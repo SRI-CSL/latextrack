@@ -30,11 +30,10 @@ import java.io.Reader;
 import java.io.StringReader;
 import java.util.*;
 import java.util.List;
+import java.util.regex.Pattern;
 
 /**
  * Document with mark ups concerning additions and deletions, as well as status flags.
- * <p>
- * TODO: more details/diagram of meta information for each character!
  * <p>
  * After using a MarkedUpDocument for accumulating changes, a set of filters can be
  * applied using {@link #applyFiltering(java.util.Set, int)} exactly once, otherwise
@@ -49,8 +48,12 @@ public final class MarkedUpDocument extends DefaultStyledDocument {
     private final static String ADDITION_STYLE = "addition";
     private final static String DELETION_STYLE = "deletion";
     private final static String AUTHOR_INDEX = "author index";
+    private final static String REVISION_INDEX = "revision name";
     private final static String FLAGS_ATTR = "flag attribute";
     private static final long serialVersionUID = -6945312419206148753L;
+    // any non-empty, consecutive white space or newline at beginning
+    // to match anything irrelevant marked up in front of suppressed COMMENTS:
+    public static final Pattern LEADING_WHITE = Pattern.compile("\\A([ \\t\\n]+).*\\Z", Pattern.DOTALL);
 
     private Boolean applyFilteringCalled = false;
 
@@ -118,15 +121,17 @@ public final class MarkedUpDocument extends DefaultStyledDocument {
         }
     }
 
-    public void updateAuthor(int authorIndex, Color authorColor) {
-        // prepare styles with color and author index
+    public void updateStyles(int authorIndex, Color authorColor, Integer revisionIndex) {
+        // prepare styles with color and author index and revision name
         Style style;
         style = getStyle(DELETION_STYLE);
         StyleConstants.setForeground(style, authorColor);
         style.addAttribute(AUTHOR_INDEX, authorIndex);
+        style.addAttribute(REVISION_INDEX, revisionIndex);
         style = getStyle(ADDITION_STYLE);
         StyleConstants.setForeground(style, authorColor);
         style.addAttribute(AUTHOR_INDEX, authorIndex);
+        style.addAttribute(REVISION_INDEX, revisionIndex);
     }
 
     /**
@@ -223,8 +228,22 @@ public final class MarkedUpDocument extends DefaultStyledDocument {
 
                 // are we entering a comment?
                 if (!inComment && !isDeletion(i))
-                    if ("%".equals(c) && (i == 0 || !"\\".equals(getText(i - 1, 1))))
+                    if ("%".equals(c) && (i == 0 || !"\\".equals(getText(i - 1, 1)))) {
                         inComment = true;
+                        // TODO: remove any leading whitespace with the same ID in front of this?
+//                        if (flagsToHide.contains(Change.Flag.COMMENT)) {
+//                            String leadingText = new StringBuilder(getText(0, i)).reverse().toString(); // reverse of leading text
+//                            Matcher matcher = LEADING_WHITE.matcher(leadingText);
+//                            if (matcher.matches()) { // there is leading white space before comment
+//                                System.out.println(" ~~ investigating from "+(i-matcher.end(1))+" to "+i+":\n"+
+//                                        getText(i-matcher.end(1),matcher.end(1)));
+//                                // go from i-1 backwards to i-matcher.end(1) and test for ID
+//                                for (int j=i-1; j >= i-matcher.end(1); j--) {
+//
+//                                }
+//                            }
+//                        }
+                    }
 
                 Set<Change.Flag> currentFlags = (Set<Change.Flag>) getCharacterElement(i).getAttributes().getAttribute(FLAGS_ATTR);
 
@@ -261,7 +280,7 @@ public final class MarkedUpDocument extends DefaultStyledDocument {
     /**
      * Transform this marked up document into the list of 4-tuples that denote the style of a text section.
      *
-     * @return List of 4-tuples (Integer array) with start and end indices, type of markup and author key.
+     * @return List of 5-tuples (Integer array) with start and end indices, type of markup, author and revision indices.
      */
     public List<Integer[]> getStyles() {
         List<Integer[]> list = new ArrayList<Integer[]>();
@@ -280,7 +299,8 @@ public final class MarkedUpDocument extends DefaultStyledDocument {
             chunk = new Chunk(element.getStartOffset(),
                     (String) leaf.getAttribute(StyleConstants.NameAttribute),
                     (Color) leaf.getAttribute(StyleConstants.Foreground),
-                    (Integer) leaf.getAttribute(AUTHOR_INDEX));
+                    (Integer) leaf.getAttribute(AUTHOR_INDEX),
+                    (Integer) leaf.getAttribute(REVISION_INDEX));
             if (chunk.equals(last))
                 return last;
             else {
@@ -305,18 +325,20 @@ public final class MarkedUpDocument extends DefaultStyledDocument {
         final String style;
         final Color color;
         final Integer author;
+        final Integer revIndex;
 
-        private Chunk(int start, String style, Color color, Integer author) {
+        private Chunk(int start, String style, Color color, Integer author, Integer revIndex) {
             this.start = start;
             this.style = style;
             this.color = color;
             this.author = author;
+            this.revIndex = revIndex;
         }
 
         private Integer[] asList() {
             // TODO: remove hardcoded values and replace with constants
             // consider creating an enum and a map to convert that enum to string
-            Integer[] values = {start, end, 0, 0};
+            Integer[] values = {start, end, 0, 0, 0};
             // set 3rd value:
             if (ADDITION_STYLE.equals(style))
                 values[2] = 1;
@@ -325,6 +347,9 @@ public final class MarkedUpDocument extends DefaultStyledDocument {
             // set 4th value:
             if (author != null)
                 values[3] = author;
+            // set 5th value
+            if (revIndex != null)
+                values[4] = revIndex;
             return values;
         }
 
@@ -337,6 +362,7 @@ public final class MarkedUpDocument extends DefaultStyledDocument {
 
             if (author != null ? !author.equals(chunk.author) : chunk.author != null) return false;
             if (color != null ? !color.equals(chunk.color) : chunk.color != null) return false;
+            if (revIndex != null ? !revIndex.equals(chunk.revIndex) : chunk.revIndex != null) return false;
             if (style != null ? !style.equals(chunk.style) : chunk.style != null) return false;
 
             return true;
@@ -347,6 +373,7 @@ public final class MarkedUpDocument extends DefaultStyledDocument {
             int result = style != null ? style.hashCode() : 0;
             result = 31 * result + (color != null ? color.hashCode() : 0);
             result = 31 * result + (author != null ? author.hashCode() : 0);
+            result = 31 * result + (revIndex != null ? revIndex.hashCode() : 0);
             return result;
         }
 
@@ -356,7 +383,8 @@ public final class MarkedUpDocument extends DefaultStyledDocument {
                     " end="+end+
                     " style=\""+style+"\""+
                     " author="+author+
-                    " color=\""+color+"\" />";
+                    " color=\""+color+"\""+
+                    " revIndex="+revIndex+" />";
         }
     }
 }

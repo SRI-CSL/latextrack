@@ -54,8 +54,8 @@
 ;;; constants
 ;;;
 
-(defconst on_disk "on disk" "SHA1 used for files with modifications on disk.")
-(defconst modified "modified" "SHA1 used for files with modifications in buffer.")
+(defconst on_disk "on disk" "revision ID used for files with modifications on disk.")
+(defconst modified "modified" "revision ID used for files with modifications in buffer.")
 (defconst edit-insert "INSERT" "edit key for insertions")
 (defconst edit-remove "REMOVE" "edit key for removals")
 (defconst edit-delete "DELETE" "edit key for deletions")
@@ -121,7 +121,7 @@
 
 (defvar commit-graph nil 
   "Commit graph structure containing one element per commit: 
-(sha1 date (author-name author email) message isActive (list-of-parents) (list-of-children))")
+(id date (author-name author email) message isActive (list-of-parents) (list-of-children))")
 (make-variable-buffer-local 'commit-graph)
 
 (defvar self nil "3-tuple of current author when session is initialized.")
@@ -333,6 +333,7 @@
 				    (cons (string-to-number (nth 0 four-tuple)) (nth 3 four-tuple)))
 				  (cdr (assoc-string "authors" map))))
 	     (styles (cdr (assoc-string "styles" map)))
+	     (revisions (cdr (assoc-string "revs" map)))
 	     )
 	(message "LTC updates received") ; TODO: change cursor back (or later?)
 	(ltc-remove-edit-hooks) ; remove (local) hooks to capture user's edits temporarily
@@ -343,15 +344,19 @@
 	;; apply styles to new buffer
 	(if (and styles (car styles))  ; sometimes STYLES = '(nil)
 	    (mapc (lambda (style) 
-		    (put-text-property (1+ (car style)) (1+ (nth 1 style)) 'face 
-				       (list 
-					(if (= '1 (nth 2 style)) 'ltc-addition 'ltc-deletion) 
-					(list
-					 :foreground (cdr (assoc (nth 3 style) color-table)))))
+		    (set-text-properties (1+ (car style)) (1+ (nth 1 style)) ; Emacs starts counting from 1!
+					 (list
+					  'face 
+					  (list 
+					   (if (= '1 (nth 2 style)) 'ltc-addition 'ltc-deletion) 
+					   (list
+					    :foreground (cdr (assoc (nth 3 style) color-table))))
+					  'help-echo
+					  (concat "rev: " (shorten 8 (nth (nth 4 style) revisions)))))
 		    ) styles))
 	(ltc-add-edit-hooks) ; add (local) hooks to capture user's edits
 	;; update commit graph in temp info buffer
-	(init-commit-graph (cdr (assoc-string "sha1" map)))
+	(init-commit-graph (cdr (assoc-string "expanded_revs" map)))
 	(update-info-buffer)
 	(set-buffer-modified-p old-buffer-modified-p) ; restore modification flag
 	))
@@ -369,7 +374,7 @@
 		     (compile-deletions))
     (clear-visited-file-modtime) ; prevent Emacs from complaining about modtime diff's as we are writing file from Java
     (set-buffer-modified-p nil) ; reset modification flag
-    ;; manipulate commit graph: if at least one entry replace first SHA1 with "on disk"
+    ;; manipulate commit graph: if at least one entry replace first ID with "on disk"
     (when commit-graph 
       (let ((head (car commit-graph)))
 	(when head
@@ -455,7 +460,7 @@
     (set-limiting-rev rev)))
 
 (defun ltc-limit-rev (rev)
-  "Set or reset limiting REV for commit graph.  If empty string, no limit is used.  Offers currently known sha1s from commit graph for completion.  Updates automatically unless user chooses to quit input."
+  "Set or reset limiting REV for commit graph.  If empty string, no limit is used.  Offers currently known IDs from commit graph for completion.  Updates automatically unless user chooses to quit input."
   (interactive
    (if ltc-mode
        (let ((revs (mapcar (apply-partially 'shorten 7) (mapcar 'car (cdr commit-graph)))))
@@ -557,8 +562,8 @@
 
 ;;; --- info buffer functions
 
-(defun init-commit-graph (&optional sha1s)
-  "Init commit graph from git.  If a list of SHA1S is given (optional), those will be used to determine the activation state.  In this case, the first entry of the list is left untouched if it exists.  The author in the first entry in the list will be the current self."
+(defun init-commit-graph (&optional ids)
+  "Init commit graph from git.  If a list of IDS is given (optional), those will be used to determine the activation state.  In this case, the first entry of the list is left untouched if it exists.  The author in the first entry in the list will be the current self."
   (if ltc-mode
     ;; build commit graph from LTC session
     (let ((commits (ltc-method-call "get_commits" session-id)) ; list of 6-tuple strings
@@ -566,13 +571,13 @@
 			   (ltc-method-call "get_authors" session-id)))
 	  (self (ltc-method-call "get_self" session-id)))
       ;; init graph with first item for self:
-      ;; - if optional SHA1S given, look at last item and keep it if MODIFIED or ON_DISK, else 
-      ;; - if prior graph not empty, keep first sha1, otherwise "" 
+      ;; - if optional IDS given, look at last item and keep it if MODIFIED or ON_DISK, else 
+      ;; - if prior graph not empty, keep first ID, otherwise "" 
       (setq commit-graph (list
-			  ;; determine sha1 of first item:
-			  (if sha1s
-			      (concat "" (car (member (car (last sha1s)) (list modified on_disk))))
-			    (if commit-graph (caar commit-graph) "")) ; keep first sha1 if prior graph exists
+			  ;; determine ID of first item:
+			  (if ids
+			      (concat "" (car (member (car (last ids)) (list modified on_disk))))
+			    (if commit-graph (caar commit-graph) "")) ; keep first ID if prior graph exists
 			  ;; set rest of first item to empty and self:
 			  "" (list (car self) (nth 1 self)) "" t nil nil (nth 2 self)))
       ;; build up list from first entry and current commits
@@ -580,15 +585,15 @@
 	    (cons
 	     commit-graph
 	     (mapcar (lambda (raw-commit)
-		       (let ((sha1 (car raw-commit))
+		       (let ((id (car raw-commit))
 			     (author (list (nth 2 raw-commit) (nth 3 raw-commit)))
 			     (parents (nth 5 raw-commit)))
 			 (list 
-			  sha1 ; SHA1
+			  id ; SHA1 or revision
 			  (nth 4 raw-commit) ; date
 			  author ; (author-name author-email)
 			  (nth 1 raw-commit) ; message
-			  (or (not sha1s) (not (not (member sha1 sha1s)))) ; isActive: if no SHA1S, then t, otherwise look up 
+			  (or (not ids) (not (not (member id ids)))) ; isActive: if no IDS, then t, otherwise look up 
 			  (if parents (split-string parents) nil) ; list of parents
 			  nil ; list of children (initially empty)
 			  (cdr (assoc author authors)) ; color of author
@@ -639,17 +644,17 @@
 				      (author (author-to-string (nth 2 commit)))
 				      (disabledcolor "#7f7f7f")
 				      (facevalue (if is-active nil (list :foreground disabledcolor)))
-				      (sha1 (shorten 8 (car commit))))
+				      (id (shorten 8 (car commit))))
 				 (concat
 				  (propertize 
 				   (format " %c " (if is-active ?* ?\s)) ; whether active
 				   'face facevalue)
 				  (propertize 
-				   (format "%8s" sha1) ; short SHA1
+				   (format "%8s" id) ; short SHA1 or revision
 				   'mouse-face 'highlight
 				   'help-echo (if is-active "mouse-1: limit by this start revision")
 				   'keymap rev-map
-				   'action sha1
+				   'action id
 				   'face facevalue)
 				  "  "
 				  (propertize
@@ -779,7 +784,7 @@ it will only set the new, chosen color if it is different than the old one."
   ;(message " --- LTC: before change with beg=%d and end=%d" beg end)
   ;; if first change (buffer-modified-p == nil) then update commit graph
   (when (and (not (buffer-modified-p)) commit-graph)
-    ;; manipulate commit graph: if at least one entry and the first element is "" then replace first SHA1 with "modified"
+    ;; manipulate commit graph: if at least one entry and the first element is "" then replace first ID with "modified"
     (let ((head (car commit-graph)))
       (when (and head (string= "" (car head)))
 	(setcar head modified)

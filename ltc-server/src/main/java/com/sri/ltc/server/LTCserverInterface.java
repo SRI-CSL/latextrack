@@ -39,10 +39,11 @@ public interface LTCserverInterface {
     public final static String KEY_STYLES = "styles";
     public final static String KEY_AUTHORS = "authors";
     public final static String KEY_CARET = "caret";
-    public final static String KEY_SHA1 = "sha1";
+    public final static String KEY_EXPANDED_REVS = "expanded_revs";
+    public final static String KEY_REVS = "revs";
     public static enum Show {SMALL, DELETIONS, PREAMBLE, COMMANDS, COMMENTS};
-    public final static String ON_DISK = "on disk"; // special SHA1 for version on disk (if file modified and not committed)
-    public final static String MODIFIED = "modified"; // special SHA1 for text modified in editor
+    public final static String ON_DISK = "on disk"; // special name for version on disk (if file modified and not committed)
+    public final static String MODIFIED = "modified"; // special name for text modified in editor
 
     /**
      * Initialize a new track changes session with the base system.
@@ -121,17 +122,26 @@ public interface LTCserverInterface {
      * <p>
      * The return value contains the text including the changes (for example, deletions)
      * under the key {@link #KEY_TEXT} and the list of styles to be used under the key
-     * {@link #KEY_STYLES}.  Each style is a 4-tuple of numbers that denote start and
-     * end position as well as style (1 - addition, 2 - deletion) and an author index.
+     * {@link #KEY_STYLES}.  Each style is a 5-tuple of numbers that denote start and
+     * end position as well as style (1 - addition, 2 - deletion), an author index and
+     * an index into the list of revisions as returned under key {@link #KEY_REVS}.
      * Start denotes the first character affected by this style, whereas the end position
-     * is the first position of the next chunk (to be excluded).  Furthermore, the return
-     * value under {@link #KEY_AUTHORS} also contains a map of numbers to authors and their
-     * color, which are given as an array of 3 Strings containing name, email address, and
-     * color name.  The value under {@link #KEY_CARET} contains the transformed cursor
+     * is the first position of the next chunk (to be excluded).
+     * <p>
+     * Furthermore, the return value under {@link #KEY_AUTHORS} also contains a map of
+     * numbers to authors and their color, which are given as an array of 3 Strings
+     * containing name, email address, and color name.
+     * <p>
+     * The value under {@link #KEY_CARET} contains the transformed cursor
      * position into the new text of the one given as an argument to the method.
-     * Another entry under {@link #KEY_SHA1} in the returned map is a list of SHA1 keys
-     * that have been used to obtain the changes including those that are in between.
-     * These could be matched to the list of all commits from {@link #get_commits(int)}.
+     * <p>
+     * Another entry under {@link #KEY_EXPANDED_REVS} in the returned map is a list of revision
+     * names that have been used to obtain the changes including those that are in between
+     * by the same author.
+     * <p>
+     * Finally, an entry under {@link #KEY_REVS} in the returned map is a list of revision
+     * names that have been used to obtain the changes but not including those with same
+     * authors in between.
      *
      * @param sessionID identifies the session
      * @param isModified whether the text has been modified since the last save operation
@@ -139,7 +149,7 @@ public interface LTCserverInterface {
      * @param deletions list of pairs with start and end position of deletions in <code>currentText</code> if any
      * @param caretPosition current cursor position to be transformed into new one
      * @return Map that contains the text with changes, list of styles to be applied to
-     * this text, map of indices to authors, updated caret position and list of SHA1 keys
+     * this text, map of indices to authors, updated caret position and lists of revision names
      * @throws XmlRpcException <ul>
      *   <li>with error code = 1 if the given identifier does not denote a known session.
      *   <li>with error code = 2 if an IOException occurred during change accumulation:.
@@ -191,8 +201,8 @@ public interface LTCserverInterface {
     /**
      * Obtain the complete commit history of the file indicated by the session ID.
      * The returned list contains for each commit a 6-tuple string that denote
-     * SHA1, message, author name, author email, date of the commit, and a list of
-     * SHA1's of parent commits separated by space.  The list of parent SHA1's can be empty.
+     * revision ID, message, author name, author email, date of the commit, and a list of
+     * revision IDs of parent commits separated by space.  The list of parent ID's can be empty.
      * 
      * @param sessionID identifies the session
      * @return list of string 6-tuples that denote all commits known for the file in session 
@@ -343,9 +353,9 @@ public interface LTCserverInterface {
 
     /**
      * Set a revision to limit the commit graph for the given session.
-     * The revision can be a unique substring at the beginning of any valid SHA1 hash.
+     * The revision can be a unique substring at the beginning of any valid revision ID.
      * If the given string for rev is empty, then no limit is applied.
-     * Otherwise, if <code>git</code> does not know the given revision, all
+     * Otherwise, if the revision control does not know the given revision, all
      * revisions are included (unless limited by other filters).
      *
      * @param sessionID identifies the session

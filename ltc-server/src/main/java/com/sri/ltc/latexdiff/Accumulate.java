@@ -28,6 +28,7 @@ import java.awt.*;
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
 import java.util.*;
 import java.util.List;
 
@@ -72,15 +73,18 @@ public final class Accumulate {
      * from the given array or assigned by index of the text array.
      *
      *
+     *
+     *
      * @param priorText an array of text wrappers denoting the oldest to the newest version
-     * @param authorIndices an array of author indices for each version of priorText;
-     *                      must be of the same length as priorText or empty or <code>null</code>
+     * @param authorIndices an array of author indices for each version of <code>priorText</code>;
+     *                      must be of the same length as <code>priorText</code> or empty or <code>null</code>
      * @param flagsToHide a set of {@link com.sri.ltc.latexdiff.Change.Flag}, which are to be hidden in accumulated markup
-     * @param caretPosition the caret position to be transformed by the accumulation
-     * @return Map with 3 entries pointing to the text, the updated caret position, and the list of styles to mark-up
+     * @param caretPosition the caret position to be transformed by the accumulation   @return Map with 3 entries pointing to the text, the updated caret position, and the list of styles to mark-up
      * the changes in the text
      * @throws IOException if given readers cannot load text
      * @throws BadLocationException if a location in the underlying document does not exist
+     * @throws IllegalStateException if the given array <code>authorIndices</code> is not empty,
+     *                               but its length does not match the one of <code>priorText</code>
      */
     @SuppressWarnings("unchecked")
     public Map perform(ReaderWrapper[] priorText,
@@ -97,9 +101,18 @@ public final class Accumulate {
         if (priorText == null || priorText.length == 0)
             return map;
 
-        // generate color palette
-        int n = Math.max(priorText.length+1,
-                (authorIndices == null || authorIndices.length == 0)?0:new TreeSet<Integer>(Arrays.asList(authorIndices)).last()+1);
+        // test author array and initialize if needed
+        if (authorIndices == null || authorIndices.length == 0) {
+            // init with ascending numbers
+            authorIndices = new Integer[priorText.length];
+            for (int i=0; i < priorText.length; i++)
+                authorIndices[i] = i;
+        }
+        if (authorIndices.length != priorText.length)
+            throw new IllegalStateException("author indices is not empty but also not the right size");
+
+        // generate color palette for the largest author index +1, as the indices may start with 0
+        int n = new TreeSet<Integer>(Arrays.asList(authorIndices)).last()+1;
         Color[] colors = new Color[n];
         for(int i = 0; i < n; i++)
             colors[i] = Color.getHSBColor((float) i / (float) n, 0.85f, 1.0f);
@@ -119,10 +132,9 @@ public final class Accumulate {
                     priorText[index - 1],
                     new DocumentReaderWrapper(document)); // removes additions from current text but maintains positions
 
-            // prepare styles with color and author index
-            int authorIndex = (authorIndices == null || authorIndices.length != priorText.length)?
-                    index:authorIndices[index];
-            document.updateAuthor(authorIndex, colors[authorIndex]);
+            // prepare styles with color and author index and revision number
+            int authorIndex = authorIndices[index];
+            document.updateStyles(authorIndex, colors[authorIndex], index);
 
             int current_offset = 0;
 
