@@ -7,7 +7,7 @@
     <parent>
         <groupId>com.sri.ltc</groupId>
         <artifactId>LTC</artifactId>
-        <version>0.9.13</version>
+        <version>1.0-SNAPSHOT</version>
     </parent>
 
     <groupId>com.sri.ltc</groupId>
