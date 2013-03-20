@@ -27,7 +27,7 @@
         <author email="lilalinda at users.sourceforge.net">Linda Briesemeister</author>
     </properties>
     <body>
-        <release version="0.9.13" date="2013">
+        <release version="0.9.13" date="2013-03-19">
             <action dev="lilalinda" type="fix" issue="3">
                 LTC Editor now has a button (with shortcut CMD/CTRL-R) to open a dialog to create a bug report.
             </action>
@@ -41,7 +41,14 @@
                 to applications under Mac OS X.  When we move to improved deployment (Ubuntu and Mac OS X), we can address
                 these things more -- until then issue has been labeled as 'wont-fix'.
             </action>
-
+            <action dev="lilalinda" type="fix" issue="8" due-to="Peter">
+                Fixing markup of replacement sentences -- instead of marking up alternating words as replacements, the
+                longest subsequence of words is consecutively marked up.
+            </action>
+            <action dev="lilalinda" type="fix" issue="20">
+                Adding revision ID to change markup so that LTC Editor and Emacs mode now display the revision ID with
+                each change when the user hovers over a marked up character.
+            </action>
         </release>
 
         <release version="0.9.12" date="2013-01-30">
