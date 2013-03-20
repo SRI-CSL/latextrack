@@ -27,7 +27,7 @@
         <author email="lilalinda at users.sourceforge.net">Linda Briesemeister</author>
     </properties>
     <body>
-        <release version="0.9.13" date="2013">
+        <release version="0.9.13" date="2013-03-19">
             <action dev="lilalinda" type="fix" issue="3">
                 LTC Editor now has a button (with shortcut CMD/CTRL-R) to open a dialog to create a bug report.
             </action>
