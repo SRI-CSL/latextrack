@@ -146,6 +146,8 @@ public final class LTCserverImpl implements LTCserverInterface {
             logAndThrow(8,"ParseException during tracked file creation: "+e.getMessage()+" (@"+e.getErrorOffset()+")");
         } catch (VersionControlException e) {
             logAndThrow(10,"VersionControlException during tracked file creation: "+e.getMessage());
+        } catch (IllegalStateException e) {
+            logAndThrow(11,"Tracked file already active under another session: "+e.getMessage());
         }
 
         return -1;
@@ -153,7 +155,7 @@ public final class LTCserverImpl implements LTCserverInterface {
 
     @SuppressWarnings("unchecked")
     public Map close_session(int sessionID, String currentText, List deletions, int caretPosition) throws XmlRpcException {
-        Session session = SessionManager.removeSession(sessionID);
+        Session session = SessionManager.finishSession(sessionID);
         if (session == null)
             logAndThrow(1,"Cannot close session with given ID");
 
@@ -241,16 +243,18 @@ public final class LTCserverImpl implements LTCserverInterface {
         // obtain file history from GIT, disk, and session (obeying any filters):
         List<ReaderWrapper> readers = null;
         List<Author> authors = null;
-        List<String> sha1 = new ArrayList<String>();
+        List<String> expanded_revisions = new ArrayList<String>();
+        List<String> revisions = new ArrayList<String>();
         try {
-            // create history with limits and obtain SHA1s, authors, and readers:
+            // create history with limits and obtain revision IDs, authors, and readers:
             LimitedHistory history = new LimitedHistory(session.getTrackedFile(),
                     session.getLimitedAuthors(),
                     session.getLimitDate(),
                     session.getLimitRev());
             updateProgress(12);
             // TODO: temporarily fixing Peter's complaint that we should color everything in between:
-            sha1 = history.getIDsFromExpanded();
+            expanded_revisions = history.getIDsFromExpanded();
+            revisions = history.getIDs(); // these are just the IDs used in the accumulation
             authors = history.getAuthorsList();
             updateProgress(15);
             readers = history.getReadersList();
@@ -270,7 +274,8 @@ public final class LTCserverImpl implements LTCserverInterface {
                         // add self as author
                         authors.add(self);
                     readers.add(fileReader);
-                    sha1.add(LTCserverInterface.ON_DISK);
+                    expanded_revisions.add(LTCserverInterface.ON_DISK);
+                    revisions.add(LTCserverInterface.ON_DISK);
             }
             // add current text from editor, if modified since last save:
             if (isModified) {
@@ -283,15 +288,20 @@ public final class LTCserverImpl implements LTCserverInterface {
                     authors.add(self);
                 readers.add(currentTextReader);
                 // replace ON_DISK if present, otherwise append MODIFIED
-                if (sha1.size() > 0 && LTCserverInterface.ON_DISK.equals(sha1.get(sha1.size()-1)))
-                    sha1.remove(sha1.size()-1);
-                sha1.add(LTCserverInterface.MODIFIED);
+                if (expanded_revisions.size() > 0 && revisions.size() > 0
+                        && LTCserverInterface.ON_DISK.equals(expanded_revisions.get(expanded_revisions.size()-1))) {
+                    expanded_revisions.remove(expanded_revisions.size()-1);
+                    revisions.remove(revisions.size()-1);
+                }
+                expanded_revisions.add(LTCserverInterface.MODIFIED);
+                revisions.add(LTCserverInterface.MODIFIED);
             }
             // if no readers, then use text from file and self as author
             if (readers.size() == 0 && authors.size() == 0) {
                 authors.add(self);
                 readers.add(new FileReaderWrapper(session.getTrackedFile().getFile().getCanonicalPath()));
-                sha1.add("");
+                expanded_revisions.add("");
+                revisions.add("");
             }
             updateProgress(47);
         } catch (IOException e) {
@@ -336,7 +346,7 @@ public final class LTCserverImpl implements LTCserverInterface {
             map = session.getAccumulate().perform(
                     readers.toArray(new ReaderWrapper[readers.size()]),
                     indices.toArray(new Integer[indices.size()]),
-                    Change.buildFlags(
+                    Change.buildFlagsToHide(
                             filter.getShowingStatus(LTCserverInterface.Show.DELETIONS),
                             filter.getShowingStatus(LTCserverInterface.Show.SMALL),
                             filter.getShowingStatus(LTCserverInterface.Show.PREAMBLE),
@@ -344,7 +354,8 @@ public final class LTCserverImpl implements LTCserverInterface {
                             filter.getShowingStatus(LTCserverInterface.Show.COMMANDS)),
                     caretPosition);
             map.put(LTCserverInterface.KEY_AUTHORS, mappedAuthors); // add current author map
-            map.put(LTCserverInterface.KEY_SHA1, sha1); // add list of SHA1s used
+            map.put(LTCserverInterface.KEY_EXPANDED_REVS, expanded_revisions); // add list of expanded revisions
+            map.put(LTCserverInterface.KEY_REVS, revisions); // add list of revisions used in accumulation
             session.getAccumulate().removePropertyChangeListener(listener);
         } catch (Exception e) {
             logAndThrow(2,"Exception during change accumulation: "+e.getMessage());
@@ -599,6 +610,9 @@ public final class LTCserverImpl implements LTCserverInterface {
     @Override
     public String create_bug_report(int sessionID, String message, boolean includeRepository, String outputDirectory) throws XmlRpcException {
         LOGGER.fine("Server: creating bug report in directory \""+outputDirectory+"\"");
+
+        if (outputDirectory == null || outputDirectory.isEmpty())
+            logAndThrow(5, "Cannot create bug report with empty or NULL output directory");
 
         File outputDirectoryFile = new File(outputDirectory);
         if (outputDirectoryFile.mkdirs()) {

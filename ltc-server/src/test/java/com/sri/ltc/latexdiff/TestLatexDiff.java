@@ -22,8 +22,6 @@
 package com.sri.ltc.latexdiff;
 
 import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import java.util.EnumSet;
@@ -33,11 +31,9 @@ import static com.sri.ltc.latexdiff.Change.*;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-
 /**
  * @author linda
  */
-@Ignore
 public class TestLatexDiff {
 
     private static final LatexDiff latexDiff = new LatexDiff();
@@ -49,31 +45,20 @@ public class TestLatexDiff {
                 new StringReaderWrapper(text2));
     }
 
-    protected void assertAddition(int index, int start_position, int end_position, List<IndexFlagsPair<Integer>> flags) {
+    protected void assertAddition(int index, int start_position, List<IndexFlagsPair<Integer>> flags) {
         assertTrue("at least "+(index+1)+" changes", changes.size() >= index+1);
         Change change = changes.get(index);
         assertTrue("change is addition", change instanceof Addition);
-        assertTrue("start is at "+start_position, change.start_position == start_position);
+        assertTrue("start is at " + start_position, change.start_position == start_position);
         assertEquals("addition flags", flags, change.flags);
     }
 
-    protected void assertDeletion(int index, int start_position, int length, List<IndexFlagsPair<String>> flags) {
+    protected void assertDeletion(int index, int start_position, List<IndexFlagsPair<String>> flags) {
         assertTrue("at least "+(index+1)+" changes", changes.size() >= index+1);
         Change change = changes.get(index);
         assertTrue("change is deletion", change instanceof Deletion);
         assertEquals("start position", start_position, change.start_position);
         assertEquals("deletion flags", flags, change.flags);
-    }
-
-    private void assertOnlyWhitespace() {
-        for (Change change : changes) {
-            if (change instanceof Addition)
-                for (IndexFlagsPair<Integer> pair : ((Addition) change).flags)
-                    assertTrue("addition contains WHITESPACE flag", pair.flags.contains(Flag.WHITESPACE));
-            if (change instanceof Deletion)
-                for (IndexFlagsPair<String> pair : ((Deletion) change).flags)
-                    assertTrue("deletion contains WHITESPACE flag", pair.flags.contains(Flag.WHITESPACE));
-        }
     }
 
     @Test(expected = NullPointerException.class)
@@ -84,21 +69,24 @@ public class TestLatexDiff {
     @Test
     public void whitespace() throws Exception {
         changes = getChanges("", " \n   \t");
-        assertOnlyWhitespace(); // changes are only one WHITESPACE
+        assertTrue("Changes is empty", changes.isEmpty());
         changes = getChanges(
                 "   Lorem ipsum \n dolor sit amet. ",
                 "Lorem ipsum dolor sit amet.");
-        assertOnlyWhitespace();
+        assertTrue("Changes is empty", changes.isEmpty());
         changes = getChanges("   \n ", " \t  ");
-        assertOnlyWhitespace();
+        assertTrue("Changes is empty", changes.isEmpty());
         changes = getChanges(
-                "   Lorem ipsum \n \ndolor sit amet. ",
-                "Lorem ipsum dolor sit amet.");
-        assertOnlyWhitespace();
+                "   Lorem ipsum \n \ndolor sit amet. \\begin{document}",
+                "Lorem ipsum dolor sit amet. \n\\begin{document}");
+        assertTrue("Changes is empty", changes.isEmpty());
         changes = getChanges(
-                "Lorem ipsum dolor sit amet.",
-                "   Lorem ipsum \n \ndolor sit amet. ");
-        assertOnlyWhitespace();
+                "Lorem ipsum dolor sit amet. \n \\begin{document}",
+                "   Lorem ipsum \n \ndolor sit amet.\\begin{document}");
+        assertTrue("Changes is empty", changes.isEmpty());
+        changes = getChanges("\nold\n", "\nnew\n");
+        assertAddition(0, 0, Lists.newArrayList(new IndexFlagsPair<Integer>(5, EnumSet.noneOf(Flag.class))));
+        assertDeletion(1, 0, Lists.newArrayList(new IndexFlagsPair<String>("\nold", EnumSet.of(Flag.DELETION))));
     }
 
     @Test
@@ -107,12 +95,12 @@ public class TestLatexDiff {
                 " \nLorem ipsum %%%  HERE IS A COMMMENT WITH SPACE...\n dolor sit amet. \n ",
                 "Lorem ipsum \n%%%  HERE IS A COMMENT WITH SPACE AND MORE %...\n dolor sit amet."
         );
-        assertDeletion(0, 32, 1, Lists.newArrayList(new IndexFlagsPair<String>(
+        assertDeletion(0, 32, Lists.newArrayList(new IndexFlagsPair<String>(
                 "M",
-                EnumSet.of(Flag.DELETION, Flag.COMMENT, Flag.SMALL))));
-        assertAddition(1, 46, 57, Lists.newArrayList(new IndexFlagsPair<Integer>(
+                EnumSet.of(Flag.DELETION, Flag.SMALL))));
+        assertAddition(1, 46, Lists.newArrayList(new IndexFlagsPair<Integer>(
                 57,
-                EnumSet.of(Flag.COMMENT))));
+                EnumSet.noneOf(Flag.class))));
     }
 
     @Test
@@ -121,7 +109,7 @@ public class TestLatexDiff {
                 " \n\n \\begin{document}  \n \nLorem ipsum \n dolor sit amet. \n ",
                 " \n\\usepackage{lipsum}\n \\begin{document}  \n \nLorem ipsum \n dolor sit amet. \n "
         );
-        assertAddition(0, 0, 13,
+        assertAddition(0, 0,
                 Lists.newArrayList(
                         new IndexFlagsPair<Integer>(13, EnumSet.of(Flag.COMMAND, Flag.PREAMBLE)),
                         new IndexFlagsPair<Integer>(23, EnumSet.of(Flag.PREAMBLE))));
@@ -129,18 +117,18 @@ public class TestLatexDiff {
                 " \n\\usepackage{lipsum}\n \\begin{document}  \n \nLorem ipsum \n dolor sit amet. \n ",
                 " \n\n \\begin{document}  \n \nLorem ipsum \n dolor sit amet. \n "
         );
-        assertDeletion(0, 0, 13, Lists.newArrayList(
+        assertDeletion(0, 0, Lists.newArrayList(
                 new IndexFlagsPair<String>(" \n\\usepackage", EnumSet.of(Flag.DELETION, Flag.COMMAND, Flag.PREAMBLE)),
                 new IndexFlagsPair<String>("{lipsum}", EnumSet.of(Flag.DELETION, Flag.PREAMBLE))));
         changes = getChanges(
                 " \n\\usepackage{lipsum}\n \\begin{document}  \n \nLorem ipsum \n dolor sit amet. \n ",
                 " \n\n % start doc\n\n\\begin{document}  \n \nLorem ipsum \n dolor sit amet. \n "
         );
-        assertAddition(0, 0, 17,
+        assertAddition(0, 0,
                 Lists.newArrayList(new IndexFlagsPair<Integer>(
                         17,
-                        EnumSet.of(Flag.PREAMBLE, Flag.COMMENT))));
-        assertDeletion(1, 0, 13, Lists.newArrayList(
+                        EnumSet.of(Flag.PREAMBLE))));
+        assertDeletion(1, 0, Lists.newArrayList(
                 new IndexFlagsPair<String>(" \n\\usepackage", EnumSet.of(Flag.DELETION, Flag.COMMAND, Flag.PREAMBLE)),
                 new IndexFlagsPair<String>("{lipsum}", EnumSet.of(Flag.DELETION, Flag.PREAMBLE))));
     }
@@ -151,17 +139,14 @@ public class TestLatexDiff {
                 "% Need life\n",
                 "% Need \nLife"
         );
-
-
-        assertAddition(0, 6, 4,
+        assertAddition(0, 8,
                 Lists.newArrayList(new IndexFlagsPair<Integer>(
-                        12,
-                        EnumSet.noneOf(Flag.class)))
+                        9,
+                        EnumSet.of(Flag.SMALL)))
         );
-
-        assertDeletion(1, 6, 6,
+        assertDeletion(1, 8,
                 Lists.newArrayList(
-                    new IndexFlagsPair<String>(" life", EnumSet.of(Flag.DELETION, Flag.COMMENT))
+                    new IndexFlagsPair<String>("l", EnumSet.of(Flag.DELETION, Flag.SMALL))
                 )
          );
     }

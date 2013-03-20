@@ -67,15 +67,7 @@ public final class LTCEditor extends LTCGui {
     // static initializations
     static {
         // first thing is to configure Mac OS X before AWT gets loaded:
-        final String NAME = "LTC Editor";
-        if (CommonUtils.isMacOSX()) {
-            System.setProperty("apple.laf.useScreenMenuBar", "true");
-            System.setProperty("com.apple.mrj.application.apple.menu.about.name", NAME);
-            System.setProperty("apple.awt.showGrowBox", "true");
-        }
-
-        // print NOTICE on command line
-        System.out.println(CommonUtils.getNotice()); // output notice
+        System.setProperty("com.apple.mrj.application.apple.menu.about.name", "LTC Editor");
     }
     private final Preferences preferences = Preferences.userRoot().node(this.getClass().getCanonicalName().replaceAll("\\.","/"));
     private final static String KEY_LAST_DIR = "last directory";
@@ -139,6 +131,36 @@ public final class LTCEditor extends LTCGui {
             }
         }
     };
+    private final BugReportPanel bugReportPanel = new BugReportPanel();
+    private final Action bugReportAction = new AbstractAction("Bug Report...") {
+        @Override
+        public void actionPerformed(ActionEvent actionEvent) {
+            if (session.isValid()) {
+                // 1) open dialog to obtain DIRECTORY, optional COMMENT, and whether to INCLUDE REPO
+                final Object[] options = {"Create", "Cancel"};
+                final JOptionPane optionPane = new JOptionPane(
+                        bugReportPanel,
+                        JOptionPane.PLAIN_MESSAGE,
+                        JOptionPane.OK_CANCEL_OPTION,
+                        null,
+                        options, options[0]);
+                final JDialog dialog = optionPane.createDialog(getFrame(), "Create Bug Report");
+                dialog.pack();
+                dialog.setVisible(true);
+                // 2) if user clicked "Create", call session and pop up final location upon finishing
+                if (options[0].equals(optionPane.getValue())) {
+                    BugReportPanel.Data data = bugReportPanel.getData();
+                    if (data.directory == null || "".equals(data.directory))
+                        JOptionPane.showMessageDialog(getFrame(),
+                                "Cannot create bug report in empty directory",
+                                "Error Creating Bug Report",
+                                JOptionPane.ERROR_MESSAGE);
+                    else
+                        session.createBugReport(data.comment, data.repository, data.directory);
+                }
+            }
+        }
+    };
     private final JTextField dateField = new JTextField();
     private final JTextField revField = new JTextField();
     private final JTextField commitMsgField = new JTextField();
@@ -192,7 +214,8 @@ public final class LTCEditor extends LTCGui {
                                 String text,
                                 List<Integer[]> styles,
                                 int caretPosition,
-                                Set<String> sha1s,
+                                Set<String> IDs,
+                                List<String> orderedIDs,
                                 List<Object[]> commits,
                                 List<Object[]> remotes) {
         // update list of authors
@@ -201,10 +224,10 @@ public final class LTCEditor extends LTCGui {
         Map<Integer,Color> colors = new HashMap<Integer,Color>();
         for (Map.Entry<Integer,Object[]> entry : authors.entrySet())
             colors.put(entry.getKey(), Color.decode((String) entry.getValue()[2]));
-        textPane.updateFromMaps(text, styles, colors, caretPosition);
+        textPane.updateFromMaps(text, styles, colors, caretPosition, orderedIDs);
         // update list of commits
         commitModel.init(commits, false);
-        commitModel.update(sha1s);
+        commitModel.update(IDs);
         // update list of remotes
         remoteModel.update(remotes);
     }
@@ -418,6 +441,7 @@ public final class LTCEditor extends LTCGui {
 
         c.weightx = 0.8;
         c.weighty = 0.0;
+        c.gridy = 1;
         filteringPane.add(datePane, c);
 
         c.gridy = 2;
@@ -428,7 +452,21 @@ public final class LTCEditor extends LTCGui {
         c.fill = GridBagConstraints.NONE;
         filteringPane.add(getUpdateButton(), c);
 
-        return filteringPane;
+        // pane to include filtering and bug report button
+        JPanel leftPane = new JPanel(new BorderLayout()); // no gaps
+        leftPane.add(filteringPane, BorderLayout.CENTER);
+        // configuring key binding to CMD-R / CTRL-R for bug report button:
+        bugReportAction.putValue(Action.ACCELERATOR_KEY,
+                KeyStroke.getKeyStroke(KeyEvent.VK_R, Toolkit.getDefaultToolkit().getMenuShortcutKeyMask()));
+        JButton bugReportButton = new JButton(bugReportAction);
+        bugReportButton.getActionMap().put("createBugReport", bugReportAction);
+        bugReportButton.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(
+                (KeyStroke) bugReportAction.getValue(Action.ACCELERATOR_KEY),
+                "createBugReport");
+
+        leftPane.add(bugReportButton, BorderLayout.PAGE_END);
+
+        return leftPane;
     }
 
     @SuppressWarnings("unchecked")
@@ -559,7 +597,7 @@ public final class LTCEditor extends LTCGui {
     }
 
     private static void printUsage(PrintStream out, CmdLineParser parser) {
-        out.println("usage: java -cp ... com.sri.ltc.editor.LTCEditor [options...] [FILE] \nwith");
+        out.println("usage: java -cp ... "+LTCEditor.class.getCanonicalName()+" [options...] [FILE] \nwith");
         parser.printUsage(out);
     }
 
@@ -600,7 +638,6 @@ public final class LTCEditor extends LTCGui {
         }
 
         final LTCEditor editor = new LTCEditor();
-        LOGGER.info("Using LTC version: "+CommonUtils.getVersion());
 
         if (options.resetDefaults) {
             try {

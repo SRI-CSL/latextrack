@@ -74,11 +74,9 @@ public final class LTC {
     static {
         // first thing is to configure Mac OS X before AWT gets loaded:
         final String NAME = "LTC Server";
-        if (CommonUtils.isMacOSX()) {
-            System.setProperty("apple.laf.useScreenMenuBar", "true");
-            System.setProperty("com.apple.mrj.application.apple.menu.about.name", NAME);
-            System.setProperty("apple.awt.showGrowBox", "true");
-        }
+        System.setProperty("apple.laf.useScreenMenuBar", "true");
+        System.setProperty("com.apple.mrj.application.apple.menu.about.name", NAME);
+        System.setProperty("apple.awt.showGrowBox", "true");
 
         // print NOTICE on command line
         System.out.println(CommonUtils.getNotice()); // output notice
@@ -112,7 +110,7 @@ public final class LTC {
     }
 
     private static void printUsage(PrintStream out, CmdLineParser parser) {
-        out.println("usage: java -cp ... com.sri.ltc.server.LTC [options...]");
+        out.println("usage: java -cp ... "+LTC.class.getCanonicalName()+" [options...]");
         out.println("   or: java -jar LTC-<...>.jar [options...]");
         out.println("with");
         parser.printUsage(out);

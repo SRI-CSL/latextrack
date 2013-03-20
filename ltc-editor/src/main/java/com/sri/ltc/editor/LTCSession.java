@@ -180,9 +180,10 @@ public class LTCSession {
                         editor.finishUpdate(
                                 (Map<Integer,Object[]>) map.get(LTCserverInterface.KEY_AUTHORS),
                                 (String) map.get(LTCserverInterface.KEY_TEXT),
-                                (java.util.List<Integer[]>) map.get(LTCserverInterface.KEY_STYLES),
+                                (List<Integer[]>) map.get(LTCserverInterface.KEY_STYLES),
                                 (Integer) map.get(LTCserverInterface.KEY_CARET),
-                                new HashSet<String>((List<String>) map.get(LTCserverInterface.KEY_SHA1)),
+                                new HashSet<String>((List<String>) map.get(LTCserverInterface.KEY_EXPANDED_REVS)),
+                                (List<String>) map.get(LTCserverInterface.KEY_REVS),
                                 commits, remotes);
                     } catch (InterruptedException e) {
                         LOGGER.log(Level.SEVERE, e.getMessage(), e);
@@ -406,6 +407,31 @@ public class LTCSession {
                     }
             }
         });
+    }
+
+    public void createBugReport(final String message, final boolean includeRepository, final String outputDirectory ) {
+        (new LTCWorker<String,Void>(editor.getFrame(), ID,
+                "Bug Report...", "<html>Creating bug report in<br>"+outputDirectory+"</html>", false) {
+            @Override
+            protected String callLTCinBackground() throws XmlRpcException {
+                return LTC.create_bug_report(sessionID, message, includeRepository, outputDirectory);
+            }
+
+            @Override
+            protected void done() {
+                try {
+                    String file = get();
+                    JOptionPane.showMessageDialog(editor.getFrame(),
+                            "The bug report has been filed under\n"+file,
+                            "Bug Report Created",
+                            JOptionPane.INFORMATION_MESSAGE);
+                } catch (InterruptedException e) {
+                    LOGGER.log(Level.SEVERE, e.getMessage(), e);
+                } catch (ExecutionException e) {
+                    LOGGER.log(Level.SEVERE, e.getMessage(), e);
+                }
+            }
+        }).execute();
     }
 
     private void executeWorkerAndWait(final SwingWorker worker) {

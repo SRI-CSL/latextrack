@@ -55,7 +55,7 @@ public final class Session {
         if (trackedFile == null)
             throw new IllegalArgumentException("cannot create session with NULL as tracked file");
         this.trackedFile = trackedFile;
-        // initializations based on git file:
+        // initializations based on tracked file:
         completeHistory = new CompleteHistory(trackedFile);
         addAuthors(completeHistory.getAuthors());
         addAuthors(Collections.singleton(trackedFile.getRepository().getSelf()));
@@ -65,9 +65,10 @@ public final class Session {
     public TrackedFile getTrackedFile() {
         return trackedFile;
     }
-    
+
+    // NEED THIS METHOD IN ORDER TO HAVE "synchronized" KEYWORD
     private static synchronized int generateID() {
-        return nextID++;
+        return nextID++; // could wrap...
     }
 
     public Accumulate getAccumulate() {

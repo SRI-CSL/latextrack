@@ -24,6 +24,7 @@ package com.sri.ltc.latexdiff;
 import com.bmsi.gnudiff.Diff;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
+import com.sri.ltc.CommonUtils;
 import com.sri.ltc.logging.LevelOptionHandler;
 import org.kohsuke.args4j.Argument;
 import org.kohsuke.args4j.CmdLineException;
@@ -39,9 +40,9 @@ import java.util.logging.Level;
  */
 public final class LatexDiff {
 
-    private static final Set<LexemeType> SPACE = Sets.newHashSet(
-            LexemeType.PARAGRAPH,
-            LexemeType.WHITESPACE);
+    private static final Set<LexemeType> WORDS = Sets.newHashSet(
+            LexemeType.WORD,
+            LexemeType.NUMERAL);
 
     // variables to contain parts for diff'ing
     private List<List<Lexeme>> lexemLists = new ArrayList<List<Lexeme>>();
@@ -67,22 +68,22 @@ public final class LatexDiff {
      */
     public List<Lexeme> analyze(ReaderWrapper wrapper) throws Exception {
         List<Lexeme> list = new ArrayList<Lexeme>(Arrays.asList(new Lexeme[]{
-                new Lexeme(LexemeType.START_OF_FILE, "", 0, false, false)}));
+                new Lexeme(LexemeType.START_OF_FILE, "", 0, false)}));
         Lexer scanner = new Lexer(wrapper.createReader());
         List<Lexeme> lexemes;
 
-        while ((lexemes = scanner.yylex()) != null) {
-            for (Lexeme lexeme : lexemes) {
-                lexeme = wrapper.removeAdditions(lexeme); // remove any additions
-                if (lexeme != null)
-                    list.add(lexeme);
-            }
-        }
+        while ((lexemes = scanner.yylex()) != null)
+            for (Lexeme lexeme : lexemes)
+                if (!LexemeType.WHITESPACE.equals(lexeme.type)) { // ignore whitespace
+                    lexeme = wrapper.removeAdditions(lexeme); // remove any additions
+                    if (lexeme != null)
+                        list.add(lexeme);
+                }
         scanner.yyclose();
 
         // remove paragraphs in the preamble if there is one:
         if (list.get(list.size() - 1).preambleSeen) { // EOF Lexeme has seen preamble
-            for (Iterator<Lexeme> i = list.iterator(); i.hasNext(); ) {
+            for (ListIterator<Lexeme> i = list.listIterator(); i.hasNext(); ) {
                 Lexeme lexeme = i.next();
                 if (lexeme.preambleSeen)
                     break; // done with preamble
@@ -99,24 +100,13 @@ public final class LatexDiff {
         return characters;
     }
 
-    private EnumSet<Change.Flag> buildFlags(boolean isDeletion, boolean isSmall, boolean inPreamble, boolean inComment, boolean isCommand, boolean isWhiteSpace) {
+    private EnumSet<Change.Flag> buildFlags(boolean isDeletion, boolean isSmall, Lexeme lexeme, boolean preamblePresent) {
         EnumSet<Change.Flag> flags = EnumSet.noneOf(Change.Flag.class);
         if (isDeletion) flags.add(Change.Flag.DELETION);
         if (isSmall) flags.add(Change.Flag.SMALL);
-        if (inPreamble) flags.add(Change.Flag.PREAMBLE);
-        if (inComment) flags.add(Change.Flag.COMMENT);
-        if (isCommand) flags.add(Change.Flag.COMMAND);
-        if (isWhiteSpace) flags.add(Change.Flag.WHITESPACE);
+        if (preamblePresent && !lexeme.preambleSeen) flags.add(Change.Flag.PREAMBLE);
+        if (LexemeType.COMMAND.equals(lexeme.type)) flags.add(Change.Flag.COMMAND);
         return flags;
-    }
-
-    private EnumSet<Change.Flag> buildFlags(boolean isDeletion, boolean isSmall, boolean inComment, Lexeme lexeme, boolean preamblePresent) {
-        return buildFlags(isDeletion,
-                isSmall,
-                preamblePresent && !lexeme.preambleSeen,
-                inComment,
-                LexemeType.COMMAND.equals(lexeme.type),
-                LexemeType.WHITESPACE.equals(lexeme.type));
     }
 
     @SuppressWarnings("unchecked")
@@ -150,7 +140,7 @@ public final class LatexDiff {
                         start_position,
                         Arrays.asList(new IndexFlagsPair<Integer>(
                                 start_position + hunk.inserted,
-                                buildFlags(false, true, lexeme1.inComment, lexeme1, preamblePresent)))));
+                                buildFlags(false, true, lexeme1, preamblePresent)))));
             }
 
             // Deletions
@@ -159,7 +149,7 @@ public final class LatexDiff {
                         start_position,
                         Arrays.asList(new IndexFlagsPair<String>(
                                 text0.substring(hunk.line0, hunk.line0 + hunk.deleted),
-                                buildFlags(true, true, lexeme1.inComment, lexeme1, preamblePresent)))));
+                                buildFlags(true, true, lexeme1, preamblePresent)))));
             }
         }
 
@@ -167,17 +157,14 @@ public final class LatexDiff {
     }
 
     private boolean isSmallChange(Lexeme lexeme0, Lexeme lexeme1) {
-        // small changes := lexemes are not both SPACE
-        //   and and are of the same type
+        // small changes := lexemes are not both PARAGRAPHS
+        //   and are of the same type
         //   and have a Levenshtein distance less than 3 and less than the length of shorter lexeme
 
         // TODO: consider using Damerau-Levenshtein and limit to 1 instead!
         // see (http://spider.my/static/contrib/Levenshtein.java)
 
-        // SAB: without the isComment override that used to be in the buildFlags calls,
-        // this causes strange side-effects, like marking whitespace changes as comments
-        // when it is not.
-//        if (SPACE.contains(lexeme0.type) && SPACE.contains(lexeme1.type)) return false;
+        if (LexemeType.PARAGRAPH.equals(lexeme0.type)) return false;
         if (!lexeme0.type.equals(lexeme1.type)) return false;
 
         int distance = Levenshtein.getLevenshteinDistance(lexeme0.contents, lexeme1.contents);
@@ -187,17 +174,6 @@ public final class LatexDiff {
         if (distance >= shorterLength) return false;
 
         return true;
-    }
-
-    private List<Lexeme> removeParagraphs(List<Lexeme> lexemes) {
-        List<Lexeme> newList = Lists.newArrayList();
-        for (Lexeme lexeme : lexemes) {
-            if (lexeme.type != LexemeType.PARAGRAPH) {
-                newList.add(lexeme);
-            }
-        }
-
-        return newList;
     }
 
     // for positioning details refer to tables in specification/tech report
@@ -285,84 +261,73 @@ public final class LatexDiff {
             // Additions
             if (hunk.inserted > 0) {
                 // build list of flags:
-                List<Lexeme> lexemesAffected = list1.subList(hunk.line1, hunk.line1 + hunk.inserted);
-                lexemesAffected = removeParagraphs(lexemesAffected);
-
-                if (lexemesAffected.size() > 0) {
-                    List<IndexFlagsPair<Integer>> flags = new ArrayList<IndexFlagsPair<Integer>>();
-                    List<IndexPair> indices = getIndices(lexemesAffected, preamblePresent, hunk.line1, false);
-                    for (IndexPair indexPair : indices) {
-                        if (indexPair.left.equals(indexPair.right)) { // extra pair to indicate change in flags
-                            int ix = calcPosition(list1, indexPair.left - 1, true);
-                            int iy = calcPosition(list1, indexPair.right, false);
-                            if (iy > ix) // only if there is actually space in between
-                                flags.add(new IndexFlagsPair<Integer>(iy, indexPair.flags));
-                        } else { // regular index pair with lexemes:
-                            if (indexPair.addRearSpace)
-                                flags.add(new IndexFlagsPair<Integer>(
-                                        calcPosition(list1, indexPair.right, false), // pos of next lexeme
-                                        indexPair.flags));
-                            else
-                                flags.add(new IndexFlagsPair<Integer>(
-                                        calcPosition(list1, indexPair.right - 1, true), // end of last lexeme in this region
-                                        indexPair.flags));
-                        }
+                List<IndexFlagsPair<Integer>> flags = new ArrayList<IndexFlagsPair<Integer>>();
+                List<IndexPair> indices = getIndices(list1.subList(hunk.line1, hunk.line1 + hunk.inserted), preamblePresent, hunk.line1, false);
+                for (IndexPair indexPair : indices) {
+                    if (indexPair.left.equals(indexPair.right)) { // extra pair to indicate change in flags
+                        int ix = calcPosition(list1, indexPair.left - 1, true);
+                        int iy = calcPosition(list1, indexPair.right, false);
+                        if (iy > ix) // only if there is actually space in between
+                            flags.add(new IndexFlagsPair<Integer>(iy, indexPair.flags));
+                    } else { // regular index pair with lexemes:
+                        if (indexPair.addRearSpace)
+                            flags.add(new IndexFlagsPair<Integer>(
+                                    calcPosition(list1, indexPair.right, false), // pos of next lexeme
+                                    indexPair.flags));
+                        else
+                            flags.add(new IndexFlagsPair<Integer>(
+                                    calcPosition(list1, indexPair.right - 1, true), // end of last lexeme in this region
+                                    indexPair.flags));
                     }
-
-                    result.add(new Addition(start_position, flags));
                 }
+                result.add(new Addition(start_position, flags));
             }
 
             // Deletions
             if (hunk.deleted > 0) {
-                List<Lexeme> lexemesAffected = list0.subList(hunk.line0, hunk.line0 + hunk.deleted);
-                lexemesAffected = removeParagraphs(lexemesAffected);
+                int text_start = calcPosition(list0, hunk.line0 - 1, true); // start with end of prior lexeme
+                int text_end;
+                // calculating end position:
+                // if last pair, then depends on whether
+                // white space at end of deletion in old text AND
+                // white space in front of position in new text
+                int text_end_position = (ex0 != ey0 && sx1 != sy1) ? ex0 : ey0;
+                // add one space after deletion if replacement without bordering space and next lexeme is a WORD or NUMERAL:
+                // (starred cases in replacement position table)
+                boolean addSpace = (hunk.inserted > 0 &&
+                        WORDS.contains(list1.get(hunk.line1).type) &&
+                        ex0 == ey0 && sx1 == sy1);
 
-                if (lexemesAffected.size() > 0) {
-                    int text_start = calcPosition(list0, hunk.line0 - 1, true); // start with end of prior lexeme
-                    int text_end;
-                    // calculating end position:
-                    // if last pair, then depends on whether
-                    // white space at end of deletion in old text AND
-                    // white space in front of position in new text
-                    int text_end_position = (ex0 != ey0 && sx1 != sy1) ? ex0 : ey0;
-                    // add one space after deletion if replacement without bordering space and next lexeme is a WORD:
-                    // (starred cases in replacement position table)
-                    boolean addSpace = (hunk.inserted > 0 &&
-                            LexemeType.WORD.equals(list1.get(hunk.line1).type) &&
-                            ex0 == ey0 && sx1 == sy1);
+                // build list of flags:
+                List<IndexFlagsPair<String>> flags = new ArrayList<IndexFlagsPair<String>>();
+                List<IndexPair> indices = getIndices(list0.subList(hunk.line0, hunk.line0 + hunk.deleted), preamblePresent, hunk.line0, true);
 
-                    // build list of flags:
-                    List<IndexFlagsPair<String>> flags = new ArrayList<IndexFlagsPair<String>>();
-                    List<IndexPair> indices = getIndices(lexemesAffected, preamblePresent, hunk.line0, true);
-
-                    for (IndexPair indexPair : indices) {
-                        if (indexPair.left.equals(indexPair.right)) { // extra pair to indicate change in flags
-                            int ix = calcPosition(list0, indexPair.left - 1, true);
-                            text_end = calcPosition(list0, indexPair.right, false);
-                            if (text_end > ix) // only if there is actually space in between
-                                flags.add(new IndexFlagsPair<String>(
-                                        contents0.substring(ix, text_end),
-                                        indexPair.flags));
-                        } else { // regular index pair with lexemes:
-                            // calc text:
-                            if (indexPair.addRearSpace)
-                                text_end = indexPair.right == hunk.line0 + hunk.deleted ?
-                                        text_end_position : // last region, so use calculated end position
-                                        calcPosition(list0, indexPair.right, false); // pos of next lexeme
-                            else
-                                text_end = calcPosition(list0, indexPair.right - 1, true); // end of last lexeme in this region
-                            String text = contents0.substring(text_start, text_end) +
-                                    ((addSpace && indexPair.right == hunk.line0 + hunk.deleted) ?
-                                            " " : // last pair and we need to add 1 space
-                                            "");
-                            flags.add(new IndexFlagsPair<String>(text, indexPair.flags));
-                        }
-                        text_start = text_end;
+                for (IndexPair indexPair : indices) {
+                    if (indexPair.left.equals(indexPair.right)) { // extra pair to indicate change in flags
+                        int ix = calcPosition(list0, indexPair.left - 1, true);
+                        text_end = calcPosition(list0, indexPair.right, false);
+                        if (text_end > ix) // only if there is actually space in between
+                            flags.add(new IndexFlagsPair<String>(
+                                    contents0.substring(ix, text_end),
+                                    indexPair.flags));
+                    } else { // regular index pair with lexemes:
+                        // calc text:
+                        if (indexPair.addRearSpace)
+                            text_end = indexPair.right == hunk.line0 + hunk.deleted ?
+                                    text_end_position : // last region, so use calculated end position
+                                    calcPosition(list0, indexPair.right, false); // pos of next lexeme
+                        else
+                            text_end = calcPosition(list0, indexPair.right - 1, true); // end of last lexeme in this region
+                        String text = contents0.substring(text_start, text_end) +
+                                ((addSpace && indexPair.right == hunk.line0 + hunk.deleted) ?
+                                        " " : // last pair and we need to add 1 space
+                                        "");
+                        flags.add(new IndexFlagsPair<String>(text, indexPair.flags));
                     }
-
-                    result.add(new Deletion(start_position, flags));
+                    text_start = text_end;
                 }
+
+                result.add(new Deletion(start_position, flags));
             }
         }
 
@@ -370,7 +335,7 @@ public final class LatexDiff {
     } // end of mergeDiffResult()
 
     // calculate pairs of indices that indicate successive lexemes in given input list
-    // with the same settings for PREAMBLE, COMMENT, and COMMAND.
+    // with the same settings for PREAMBLE and COMMAND.
     // also evaluates the difference between inner regions:
     // if the intersection is neither the left nor the right set of flags, add additional region of length = 0
     private List<IndexPair> getIndices(List<Lexeme> list, boolean preamblePresent, int offset, boolean isDeletion) {
@@ -379,14 +344,10 @@ public final class LatexDiff {
         SortedSet<IndexPair> result = new TreeSet<IndexPair>();
         // go through list and collect pairs of indices for regions with the same flags:
         int lastIndex = 0;
-        Set<Change.Flag> lastFlags = buildFlags(isDeletion,
-                false,
-                list.get(0).inComment,
+        Set<Change.Flag> lastFlags = buildFlags(isDeletion, false,
                 list.get(0), preamblePresent);
         for (int i = 1; i < list.size(); i++) {
-            Set<Change.Flag> currentFlags = buildFlags(isDeletion,
-                    false,
-                    list.get(i).inComment,
+            Set<Change.Flag> currentFlags = buildFlags(isDeletion, false,
                     list.get(i), preamblePresent);
             if (!lastFlags.equals(currentFlags)) {
                 // evaluate difference to next region:
@@ -446,8 +407,7 @@ public final class LatexDiff {
             diffInputs[i] = new String[lexemes.size()];
             int j = 0;
             for (Lexeme lexeme : lexemes) {
-                // do we need to also consider preamble state here? e.g. + (lexeme.preambleSeen ? " P" : "");
-                diffInputs[i][j] = lexeme.type + " " + lexeme.displayContents() + (lexeme.inComment ? " C" : "");
+                diffInputs[i][j] = lexeme.type + " " + lexeme.displayContents();
                 j++;
             }
         }
@@ -470,7 +430,7 @@ public final class LatexDiff {
     }
 
     private static void printUsage(PrintStream out, CmdLineParser parser) {
-        out.println("usage: java -cp ... com.sri.ltc.latexdiff.LatexDiff [options] FILE1 FILE2 \nwith");
+        out.println("usage: java -cp ... "+LatexDiff.class.getCanonicalName()+" [options] FILE1 FILE2 \nwith");
         parser.printUsage(out);
     }
 
@@ -490,6 +450,11 @@ public final class LatexDiff {
         if (options.displayHelp) {
             printUsage(System.out, parser);
             System.exit(1);
+        }
+
+        if (options.displayLicense) {
+            System.out.println("LTC is licensed under:\n\n" + CommonUtils.getLicense());
+            return;
         }
 
         try {
@@ -526,6 +491,9 @@ public final class LatexDiff {
     private static class LatexDiffOptions {
         @Option(name = "-h", usage = "display usage and exit")
         boolean displayHelp = false;
+
+        @Option(name="-c",usage="display copyright/license information and exit")
+        boolean displayLicense = false;
 
         @Option(name = "-x", usage = "output as XML (default is Unix style)")
         boolean asXML = false;

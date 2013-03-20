@@ -100,8 +100,8 @@ public final class CommitTableModel extends AbstractTableModel {
             for (Object[] c : rawCommits) {
                 CommitTableRow node = commitMap.get(c[0].toString());
                 String[] tokens = c[5].toString().split("\\s+");
-                for (String sha1 : tokens) {
-                    CommitTableRow parent = commitMap.get(sha1);
+                for (String ID : tokens) {
+                    CommitTableRow parent = commitMap.get(ID);
                     if (parent != null) {
                         node.parents.add(parent);
                         parent.children.add(node);
@@ -139,17 +139,17 @@ public final class CommitTableModel extends AbstractTableModel {
         }
     }
 
-    public void update(Set<String> sha1) {
+    public void update(Set<String> IDs) {
         synchronized (commits) {
             firstCell = null;
-            if (sha1.contains(LTCserverInterface.ON_DISK)) {
+            if (IDs.contains(LTCserverInterface.ON_DISK)) {
                 initFirstCell(LTCserverInterface.ON_DISK);
             }
-            if (sha1.contains(LTCserverInterface.MODIFIED)) {
+            if (IDs.contains(LTCserverInterface.MODIFIED)) {
                 initFirstCell(LTCserverInterface.MODIFIED);
             }
             for (CommitTableRow row : commits)
-                row.setActive(sha1.contains(row.sha1));
+                row.setActive(IDs.contains(row.ID));
         }
         fireTableDataChanged();
     }
@@ -169,10 +169,10 @@ public final class CommitTableModel extends AbstractTableModel {
     }
     
     // return true if something changed
-    private void initFirstCell(String sha1) {
-        boolean updated = firstCell != null && !firstCell.sha1.equals(sha1);
+    private void initFirstCell(String ID) {
+        boolean updated = firstCell != null && !firstCell.ID.equals(ID);
         if (firstCell == null || updated)
-            firstCell = new CommitTableRow(sha1);
+            firstCell = new CommitTableRow(ID);
         if (updated)
             fireTableRowsUpdated(0, 0);
         else
@@ -184,14 +184,14 @@ public final class CommitTableModel extends AbstractTableModel {
     }
 
     public void removeOnDisk() {
-        if (firstCell != null && firstCell.sha1.equals(LTCserverInterface.ON_DISK)) {
+        if (firstCell != null && firstCell.ID.equals(LTCserverInterface.ON_DISK)) {
             firstCell = null;
             fireTableRowsDeleted(0, 0);
         }
     }
 
-    public void updateFirst(String sha1) {
-        initFirstCell(sha1);
+    public void updateFirst(String ID) {
+        initFirstCell(ID);
     }
 
     public void clear(boolean clearFirstCell) {

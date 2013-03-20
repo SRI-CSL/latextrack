@@ -49,15 +49,11 @@ public final class DocumentReaderWrapper extends AbstractReaderWrapper<MarkedUpD
         StringBuilder newContents = new StringBuilder();
         List<Integer> removed = new ArrayList<Integer>(); // collect removed character positions
 
-        try {
-            for (int i = 0; i < lexeme.length; i++)
-                if (getWrapped().isAddition(lexeme.pos+i))
-                    removed.add(i);
-                else
-                    newContents.append(lexeme.contents.charAt(i));
-        } catch (BadLocationException e) {
-            e.printStackTrace();
-        }
+        for (int i = 0; i < lexeme.length; i++)
+            if (getWrapped().isAddition(lexeme.pos+i))
+                removed.add(i);
+            else
+                newContents.append(lexeme.contents.charAt(i));
         if (removed.isEmpty())
             return lexeme;
         else {
@@ -68,7 +64,8 @@ public final class DocumentReaderWrapper extends AbstractReaderWrapper<MarkedUpD
                         lexeme.type,
                         newContents.toString(),
                         lexeme.pos,
-                        lexeme.preambleSeen, lexeme.inComment, removed.toArray(new Integer[removed.size()])
+                        lexeme.preambleSeen,
+                        removed.toArray(new Integer[removed.size()])
                 );
         }
     }

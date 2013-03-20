@@ -21,6 +21,8 @@
  */
 package com.sri.ltc.server;
 
+import com.sri.ltc.CommonUtils;
+import com.sri.ltc.logging.LogConfiguration;
 import org.apache.xmlrpc.XmlRpcException;
 import org.apache.xmlrpc.client.XmlRpcClient;
 import org.apache.xmlrpc.client.XmlRpcClientConfigImpl;
@@ -29,10 +31,12 @@ import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
 
+import java.io.IOException;
 import java.io.PrintStream;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.logging.Level;
+import java.util.logging.LogManager;
 import java.util.logging.Logger;
 
 /**
@@ -43,9 +47,23 @@ import java.util.logging.Logger;
 public class HelloLTC {
 
     private final static Logger LOGGER = Logger.getLogger(HelloLTC.class.getName());
+    static {
+        // first thing is to configure Mac OS X before AWT gets loaded:
+        System.setProperty("apple.laf.useScreenMenuBar", "true");
+        System.setProperty("com.apple.mrj.application.apple.menu.about.name", "Hello LTC");
+        // print NOTICE on command line
+        System.out.println(CommonUtils.getNotice()); // output notice
+        // default configuration for logging
+        try {
+            LogManager.getLogManager().readConfiguration(new LogConfiguration().asInputStream());
+            LOGGER.fine("Default logging configuration complete");
+        } catch (IOException e) {
+            LOGGER.log(Level.SEVERE, "Couldn't configure logging", e);
+        }
+    }
 
     private static void printUsage(PrintStream out, CmdLineParser parser) {
-        out.println("usage: java -cp ... com.sri.ltc.server.HelloLTC [options...] \nwith");
+        out.println("usage: java -cp ... "+HelloLTC.class.getCanonicalName()+" [options...] \nwith");
         parser.printUsage(out);
     }
 
@@ -63,6 +81,11 @@ public class HelloLTC {
 
         if (options.displayHelp) {
             printUsage(System.out, parser);
+            return;
+        }
+
+        if (options.displayLicense) {
+            System.out.println("LTC is licensed under:\n\n" + CommonUtils.getLicense());
             return;
         }
 
@@ -84,6 +107,9 @@ public class HelloLTC {
     static class MyOptions {
         @Option(name="-h",usage="display usage and exit")
         boolean displayHelp = false;
+
+        @Option(name="-c",usage="display copyright/license information and exit")
+        boolean displayLicense = false;
 
         @Option(name="-p",usage="port on localhost used for XML-RPC")
         static int port = LTCserverInterface.PORT;

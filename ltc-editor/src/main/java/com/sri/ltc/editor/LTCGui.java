@@ -22,6 +22,8 @@ package com.sri.ltc.editor;
  * #L%
  */
 
+import com.sri.ltc.CommonUtils;
+import com.sri.ltc.logging.LogConfiguration;
 import com.sri.ltc.server.LTCserverInterface;
 import com.wordpress.tips4java.TextLineNumber;
 
@@ -30,6 +32,8 @@ import java.awt.*;
 import java.awt.event.*;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
+import java.io.IOException;
+import java.util.logging.LogManager;
 import java.util.logging.Logger;
 import java.util.prefs.Preferences;
 
@@ -44,12 +48,22 @@ import java.util.prefs.Preferences;
 @SuppressWarnings("serial")
 public abstract class LTCGui {
 
-    private final JFrame frame;
-    private final JPanel contentPane;
-    private final JPanel lowerRightPane = new JPanel(new BorderLayout());
-    private final JButton updateButton = new JButton("Update");
-
     // static initializations
+    static {
+        // first thing is to configure Mac OS X before AWT gets loaded:
+        System.setProperty("apple.laf.useScreenMenuBar", "true");
+        System.setProperty("com.apple.mrj.application.apple.menu.about.name", "LTC GUI");
+        System.setProperty("apple.awt.showGrowBox", "true");
+        // print NOTICE on command line
+        System.out.println(CommonUtils.getNotice()); // output notice
+        // default configuration for logging
+        try {
+            LogManager.getLogManager().readConfiguration(new LogConfiguration().asInputStream());
+            Logger.getLogger(LTCGui.class.getName()).fine("Default logging configuration complete");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
     private final static int DEFAULT_HEIGHT = 650;
     private final Preferences preferences = Preferences.userRoot().node(this.getClass().getCanonicalName().replaceAll("\\.","/"));
     private final static String KEY_LAST_DIVIDER_V = "last V divider location";
@@ -58,6 +72,11 @@ public abstract class LTCGui {
     private final static String KEY_LAST_X = "last X of window";
     private final static String KEY_LAST_Y = "last Y of window";
     static final Logger LOGGER = Logger.getLogger(LTCGui.class.getName());
+
+    private final JFrame frame;
+    private final JPanel contentPane;
+    private final JPanel lowerRightPane = new JPanel(new BorderLayout());
+    private final JButton updateButton = new JButton("Update");
 
     final LatexPane textPane;
 
@@ -138,6 +157,8 @@ public abstract class LTCGui {
     }
 
     public LTCGui(boolean editable, String title) {
+        LOGGER.info("Using LTC version: "+CommonUtils.getVersion());
+
         textPane = new LatexPane(editable);
         contentPane = createContentPane();
         frame = new JFrame(title);
@@ -149,21 +170,21 @@ public abstract class LTCGui {
                         preferences.getInt(KEY_LAST_Y, 0),
                         preferences.getInt(KEY_LAST_WIDTH, 1000),
                         preferences.getInt(KEY_LAST_HEIGHT, DEFAULT_HEIGHT));
-                LOGGER.config("Get window opened: " + frame.getSize() + " at " + frame.getLocation());
+                LOGGER.fine("Get window opened: " + frame.getSize() + " at " + frame.getLocation());
                 // after this resizing and moving events can now be recorded:
                 frame.addComponentListener(new ComponentAdapter() {
                     @Override
                     public void componentMoved(ComponentEvent componentEvent) {
                         preferences.putInt(KEY_LAST_X, frame.getX());
                         preferences.putInt(KEY_LAST_Y, frame.getY());
-                        LOGGER.config("Put window position: " + frame.getLocation());
+                        LOGGER.fine("Put window position: " + frame.getLocation());
                     }
 
                     @Override
                     public void componentResized(ComponentEvent componentEvent) {
                         preferences.putInt(KEY_LAST_WIDTH, frame.getWidth());
                         preferences.putInt(KEY_LAST_HEIGHT, frame.getHeight());
-                        LOGGER.config("Put window size: " + frame.getSize());
+                        LOGGER.fine("Put window size: " + frame.getSize());
                     }
                 });
             }
@@ -175,7 +196,7 @@ public abstract class LTCGui {
                 preferences.putInt(KEY_LAST_HEIGHT, frame.getHeight());
                 preferences.putInt(KEY_LAST_X, frame.getX());
                 preferences.putInt(KEY_LAST_Y, frame.getY());
-                LOGGER.config("Put window closing: " + frame.getSize() + " at " + frame.getLocation());
+                LOGGER.fine("Put window closing: " + frame.getSize() + " at " + frame.getLocation());
             }
         });
     }

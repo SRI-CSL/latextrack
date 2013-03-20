@@ -24,14 +24,12 @@ package com.sri.ltc;
 import com.sri.ltc.filter.Author;
 import com.sri.ltc.server.HelloLTC;
 import com.sri.ltc.server.LTCserverInterface;
-import com.sri.ltc.versioncontrol.Commit;
 import org.apache.xmlrpc.XmlRpcException;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.URL;
-import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -134,9 +132,12 @@ public class RpcClient {
                             for (Map.Entry<String,Object[]> e :
                                     ((Map<String,Object[]>) map.get(LTCserverInterface.KEY_AUTHORS)).entrySet())
                                 System.out.println("  "+e.getKey()+" -> "+ Author.fromList(e.getValue())+" ("+e.getValue()[2]+")");
-                            System.out.println("sha1 keys = ");
-                            for (Object sha1 : (Object[]) map.get(LTCserverInterface.KEY_SHA1))
-                                System.out.println("  "+sha1.toString());
+                            System.out.println("extended revisions = ");
+                            for (Object rev : (Object[]) map.get(LTCserverInterface.KEY_REVS))
+                                System.out.println("  "+rev.toString());
+                            System.out.println("revisions = ");
+                            for (Object rev : (Object[]) map.get(LTCserverInterface.KEY_EXPANDED_REVS))
+                                System.out.println("  "+rev.toString());
                             break;
                         case 'S':
                             if (tokens.length > 2)

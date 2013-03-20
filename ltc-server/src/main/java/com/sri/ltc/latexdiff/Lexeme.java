@@ -30,10 +30,9 @@ public final class Lexeme {
     final String contents;
     final int pos, length;
     final boolean preambleSeen;
-    final boolean inComment;
     final Integer[] removed;
 
-    public Lexeme(LexemeType type, String contents, int pos, boolean preambleSeen, boolean inComment, Integer... removed) {
+    public Lexeme(LexemeType type, String contents, int pos, boolean preambleSeen, Integer... removed) {
         if (type == null)
             throw new IllegalArgumentException("Cannot create Lexeme of type NULL");
         this.type = type;
@@ -43,7 +42,6 @@ public final class Lexeme {
         this.length = contents.length();
         this.pos = pos;
         this.preambleSeen = preambleSeen;
-        this.inComment = inComment;
         this.removed = removed;
     }
 
@@ -56,8 +54,6 @@ public final class Lexeme {
         StringBuilder result = new StringBuilder(type+" "+displayContents()+"  @ "+pos+" ("+length+")");
         if (preambleSeen)
             result.append(" P");
-        if (inComment)
-            result.append(" C");
         if (removed != null && removed.length > 0) {
             result.append(" [");
             for (int i = 0; i < removed.length; i++)
