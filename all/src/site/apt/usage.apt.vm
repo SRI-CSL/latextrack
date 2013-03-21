@@ -29,11 +29,11 @@ $> java -jar LTC.jar
 <date> | INFO: 	Started RPC server on port 7777.
 +----
 
-  Invoke <<<M-x ltc-mode>>> in Emacs to turn on LTC.
+  Invoke <<<M-x ltc-mode>>> in Emacs on a version-controlled <<<.tex>>> file to turn on LTC.
 
 Manual
 
-  The user manual contains more details on installation and usage as well as a tutorial chapter.
+  The user manual contains more details on installation, configuration and usage as well as a tutorial chapter.
   It is available in these formats:
 
   * {{{./html_singlepage/manual/manual.html}HTML all on a single page}}

@@ -7,7 +7,7 @@
 \usepackage{tikz} % for portable graphics
 %\usepackage{amsmath} % align and other math constructs
 %\usepackage{amssymb} % math symbols
-%\usepackage{booktabs} % tables in publication quality
+\usepackage{booktabs} % tables in publication quality
 \usepackage{fancyvrb,courier} % for more elaborate verbatim envs 
                               % (and bold-face fonts)
 \usepackage[parfill]{parskip} % paragraphs begin with empty line rather than indent
@@ -15,11 +15,13 @@
 \usepackage{color}
 \usepackage[%pdftex, % driver
   hyperfootnotes=false, % if using "footnotes" package
-  colorlinks=false, % don't color links
+  colorlinks=true, 
   bookmarks=true,bookmarksnumbered=true, % show numbered bookmarks
   pdfsubject={},pdftitle={},pdfauthor={Linda Briesemeister} % document info
 ]{hyperref} % more hyperlinks in PDF
 \usepackage{ifpdf} % to detect whether pdflatex or htlatex is runnning
+\usepackage{caption}[2013/02/03]
+\usepackage{fancyhdr}
 
 %% pgf/tikz customization
 \usepgflibrary{shapes.arrows}
@@ -81,6 +83,27 @@
   \newcommand{\mygraphics}[2]{\includegraphics{#2}}
 \fi
 
+%% captions customization
+\captionsetup{font=small,format=hang,justification=RaggedRight}
+
+%% fancy headers and footers
+% clear default layout:
+\fancyhead{}
+\fancyfoot{}
+% remove lines:
+\renewcommand{\headrulewidth}{0.2pt} 
+\renewcommand{\footrulewidth}{0pt}
+% custom header: chapter on left, section on right for odd; even reversed
+\fancyhead[LE,RO]{\nouppercase\rightmark}\fancyhead[LO,RE]{\nouppercase\leftmark}% custom footer: version -- copyright -- page number for odd; even reversed
+\fancyfoot[LO,RE]{\small{LTC v\version}}
+\fancyfoot[C]{\small{\textcopyright~SRI International}}
+\fancyfoot[RO,LE]{\small{\thepage}}
+% for the first page of each chapter adjust 'plain' style:
+\fancypagestyle{plain}{%  \fancyhf{} % clear all header and footer fields  \fancyfoot[LO,RE]{\small{LTC v\version}}
+  \fancyfoot[C]{\small{\textcopyright~SRI International}}
+  \fancyfoot[RO,LE]{\small{\thepage}}
+}
+
 % ----- title information
 \title{The \LaTeX{} Track Changes Manual \\ {\large v\version}}
 \author{%
@@ -96,6 +119,7 @@ SRI International
 %{\pagestyle{empty}\cleardoublepage} % empty page after title (since we are using 'twopage' option)
 
 \chapter*{Acknowledgements and Disclaimer}
+\thispagestyle{empty}
 
 This project would not exist without Peter Karp, who had the original idea to bring track changes to the LaTeX world.  My colleagues Grit Denker and Tomer Altman have also been involved in furthering this project.  Recently, Skip Breidbach has joined the development effort.  Finally, we thank everyone who tested the prototype and gave us feedback and SRI International to provide the funding to pursue this project.
 
@@ -110,12 +134,14 @@ Public License for more details.
 
 See Appendix~\ref{ch:license} or \href{http://www.gnu.org/licenses/}{http://www.gnu.org/licenses/} for the complete license.
 
+\thispagestyle{empty}
 \tableofcontents
+\thispagestyle{empty}
 
+\pagestyle{fancy}
 \input{installation}
 
-\input{tutorial-git}
-\input{tutorial-svn}
+\input{tutorials}
 
 \input{usage}
 
@@ -123,7 +149,7 @@ See Appendix~\ref{ch:license} or \href{http://www.gnu.org/licenses/}{http://www.
 
 \appendix
 \chapter{License} \label{ch:license}
-\VerbatimInput{../../../../LICENSE}
+\VerbatimInput[fontsize=\footnotesize]{../../../../LICENSE}
 
 % ----- references 
 %

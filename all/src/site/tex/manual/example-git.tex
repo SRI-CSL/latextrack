@@ -1,0 +1,41 @@
+% !TEX root = manual.tex
+\section{Creating the Example Git Repository} \label{sec:example-git}
+
+The git-based tutorials use an example git repository called ``independence.bundle,'' which can be downloaded from 
+\url{http://sourceforge.net/projects/latextrack/files/examples/}.
+First, save the bundled repository into a directory of your choice.  We call this directory \Code{\$TUTORIAL}.  Then, clone from this bundle to obtain a valid git working tree.
+\begin{CodeVerbatim}
+$> cd $TUTORIAL
+$> git clone independence.bundle independence
+Cloning into independence...
+$> cd independence/
+$> git status
+# On branch master
+nothing to commit (working directory clean)
+$> git log --oneline
+d3f904c sixth version
+203e0ce fifth version
+36eeab0 fourth version
+fa2be39 third version
+bac2f51 second version
+d6d1cf8 first version
+\end{CodeVerbatim}
+
+Now we impersonate John Adams to work on this writing project for the Declaration of Independence.
+
+\begin{CodeVerbatim}
+$> git config --add user.name "John Adams"
+$> git config --add user.email "adams@usa.gov"
+$> git config --list | grep dams
+user.name=John Adams
+user.email=adams@usa.gov
+\end{CodeVerbatim}
+
+Another way to investigate the current git repository are graphical tools such as gitk (comes with git distribution) or GitX under Mac OS X.  Note that GitX is not required to run LTC.  Figure~\ref{fig:gitx-screen} for using GitX on the just created repository.
+\begin{figure}[t]
+\centering
+\mygraphics{width=\textwidth,height=.5\textheight,keepaspectratio}{figures/gitx-screen}
+\caption{Investigating example git repository with a graphical tool such as GitX} \label{fig:gitx-screen}
+\end{figure}
+
+The other point to note here is the way that gitx displays the changes in the file \Code{independence.tex} when using the graphical git interface.  It shows the lines in the file that have changed (much like a standard Unix diff would) -- however, when looking at changes in LaTeX source code, the granularity of the line-based difference is much too coarse.  An author would most likely only care about the change in words of line 15 or even characters such as removing the mistaken `d' in the word ``Roger'' on line seven.

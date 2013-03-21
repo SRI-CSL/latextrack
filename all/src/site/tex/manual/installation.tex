@@ -7,7 +7,7 @@ We have tested the system on Mac OS X and Linux. It is designed to run on Unix p
 
 Further requirements for running LTC are as follows.
 \begin{description}
-\item[Java] 1.6 or above.  If using the \Code{jar} tool to extract Emacs Lisp files, you will need the JDK, otherwise the JRE should suffice.
+\item[Java] 1.6 or above.  The Java Runtime Environment (JRE) should suffice.
 \item[Version Control System]  One of the version control systems below:
   \begin{description}
   \item[git] 1.7.2 or above.
@@ -22,7 +22,7 @@ Currently, we provide a shell script \Code{ltc-install.sh} to perform LTC instal
 
 In the future, we may provide installers for the target platforms.
 
-Let us assume for the remainder of this manual, that you have used a directory called \Code{\$LTC} as the installation location. Then, you would install LTC using the script in the following way.  Note that you will need a second argument to install LTC for Emacs as explained in more detail below (Section~\ref{sec:config-emacs}).  It doesn't hurt to run the script twice, as it will replace LTC with the latest version.
+Let us assume for the remainder of this manual, that you have used a directory called \Code{\$LTC} as the installation location. Then, you would install LTC using the script in the following way.  Note that you will need a second argument to install LTC for Emacs.  In this case, you can jump to Section~\ref{sec:config-emacs} below for details on the installation of LTC.
 
 \begin{CodeVerbatim}
 $> bash ltc-install.sh -h
@@ -52,9 +52,9 @@ Note that the system decides automatically whether your LaTeX file is under git 
 
 \subsection{General Git Configuration}
 
-The current version of LTC supports git as an underlying version control system, which manages the history of the LaTeX files of interest. If you are already using git for other things, you may skip the following few steps as your git is probably already configured. However, we do recommend to add the common LaTeX build products with wildcards to the list of ignored files as outlined at the end of this section, which may not be configured if git has not been used to manage repositories with LaTeX files.
+If you are already using git for other things, you may skip the following few steps as your git is probably already configured. However, we do recommend to add the common LaTeX build products with wildcards to the list of ignored files as outlined at the end of this section, which may not be configured if git has not been used to manage repositories with LaTeX files.
 
-First, test that the git installation is found. Otherwise, you may want to add the git binary directory to the \Code{PATH} environment variable.  
+You may want to check the version of your git installation:
 \begin{CodeVerbatim}
 $> git --version
 git version 1.7.2
@@ -67,7 +67,7 @@ $> git config --global user.email doe@inter.net
 \end{CodeVerbatim}
 
 Typically, you don't want to track automatic backups and build products of your LaTeX project, so create a file \Code{\char`\~/.gitignore\_global} (or any name and location of your choice) and add the following lines as contents. 
-\begin{CodeVerbatim}
+\begin{CodeVerbatim}[samepage=true,frame=lines]
 *~
 *.out
 *.aux
@@ -82,17 +82,19 @@ Typically, you don't want to track automatic backups and build products of your 
 *.lol
 *.lot
 \end{CodeVerbatim}
-Then, issue the git config command below (with a possibly adjusted file name and location).
 
+Then, issue the git config command below (with a possibly adjusted file name and location).
 \begin{CodeVerbatim}
 $> git config --global core.excludesfile ~/.gitignore_global
 \end{CodeVerbatim}
 
-To learn how to set up a writing project under a git repository for using it with LTC refer to Section~\ref{sec:git-use}.
+To learn how to set up a new writing project under a git repository for using it with LTC refer to Section~\ref{sec:git-use}.
 
 \subsection{General Subversion Configuration}
 
-First, test that the svn installation is found. Otherwise, you may want to add the svn binary directory to the \Code{PATH} environment variable.  
+If you are already using svn for other things, you may skip the following steps. However, we do recommend to add the common LaTeX build products with wildcards to the list of ignored files as outlined below, which may not be configured if svn has not been used to manage repositories with LaTeX files.
+
+You may want to check the version of your subversion installation:
 \begin{CodeVerbatim}
 $> svn --version
 svn, version 1.6.18 (r1303927)
@@ -101,7 +103,15 @@ svn, version 1.6.18 (r1303927)
 ...
 \end{CodeVerbatim}
 
-[TODO: write more about subversion configuration here!]
+Subversion uses only your Unix user name but not your email address to attribute changes.  Hence, we do not need to configure these.
+
+Typically, you don't want to track build products of your LaTeX project, so you may want to edit your file \Code{\char`\~/.subversion/config} to change the line with \Code{globale-ignores} in your favorite text editor.  You will want to add these patterns to the existing line:
+\begin{CodeVerbatim}[samepage=true,frame=lines]
+global-ignores = <current values> \
+  *.out *.aux *.bbl *.blg *.bst *.dvi *.idx *.lof *.log *.toc *.lol *.lot
+\end{CodeVerbatim}
+
+To learn how to set up a new writing project under a subversion repository for using it with LTC refer to Section~\ref{sec:svn-use}.
 
 %\subsection{LTC Server}
 
@@ -109,32 +119,32 @@ svn, version 1.6.18 (r1303927)
 
 To use the supplied \Code{ltc-mode} in Emacs, you will have to put the relevant mode files into a directory where Emacs can load them. There are two alternatives of letting Emacs know where to find Emacs Lisp files:
 \begin{enumerate}
-\item Use a location that is already included in the \Code{load-path}. To view the contents of this path in your Emacs, execute the command \Code{C-h v load-path}.  On Mac OS X systems with Aquamacs, this could be for example \Code{\char`\~/Library/Preferences/Emacs}.
+\item Use a location that is already included in the \Code{load-path}. To view the contents of this path in your Emacs, execute the command \Code{C-h v load-path}.  On Mac OS X systems with Aquamacs, this could be for example \Code{\char`\~/Library/Preferences/Emacs/}.
 \item Add a new directory where you will extract the Emacs Lisp files to the \Code{load-path}. Assuming the Emacs Lisp files will be installed in directory \Code{\char`\~/.emacs.d/}, add the following line to your \Code{.emacs} or other Emacs configuration file:
-  \begin{CodeVerbatim}
+  \begin{CodeVerbatim}[frame=lines]
 (add-to-list 'load-path "~/.emacs.d")
   \end{CodeVerbatim}
 \end{enumerate}
 
-Now based on which method of the above you choose, supply the directory \Code{\$EMACS\_DIR} as the second argument to the install script:
+Now based on which method of the above you choose, supply the chosen directory as \Code{\$EMACS\_DIR} in the second argument to the install script:
 \begin{CodeVerbatim}
 $> bash ltc-install.sh $LTC $EMACS_DIR
 \end{CodeVerbatim}
 
-In order to enable the LTC mode in Emacs, add the following line to your \Code{.emacs} or other Emacs configuration file (for example, \Code{\char`\~/Library/Preferences/Emacs/Preferences.el} is the default for Aquamacs under Mac OS X) :
-\begin{CodeVerbatim}
+In order to enable the LTC mode in Emacs, add the following line to your Emacs configuration file (for example, \Code{\char`\~/Library/Preferences/Emacs/Preferences.el} is the default for Aquamacs under Mac OS X; \Code{\char`\~/.emacs} is the default on Unix systems):
+\begin{CodeVerbatim}[frame=lines]
 (autoload 'ltc-mode "ltc-mode" "" t)
 \end{CodeVerbatim}
 
-We recommend to avoid adding a hook from \Code{latex-mode} to \Code{ltc-mode} (usually done with \Code{add-hook}) as our mode requires the \Code{latex-mode} to be fully executed before it works. The hooks are not guaranteed to be executed in particular order, so it is best to manually invoke LTC mode after you have opened a \Code{.tex} file.
+We recommend to avoid loading LTC automatically when opening \Code{.tex} files.  Therefore, do not add a hook from \Code{latex-mode} to \Code{ltc-mode} (usually done with \Code{add-hook}).   The reason is that our mode requires the \Code{latex-mode} to be fully executed before LTC works. The hooks are not guaranteed to be executed in particular order, so it is best to manually invoke \Code{ltc-mode} after you have opened a \Code{.tex} file.
 
 \begin{figure}[t]
 \centering
 \mygraphics{width=\textwidth,height=.5\textheight,keepaspectratio}{figures/emacs-port}
-\caption{Customizing LTC port number in Emacs} \label{fig:emacs-port}
+\caption{Using \Code{M-x customize-variable <RET> ltc-port <RET>} to set LTC port number in Emacs} \label{fig:emacs-port}
 \end{figure}
 
-If you need to change the port number that Emacs uses to communicate with the LTC Server (for example, if the default number is already in use on your computer), you first have to load \Code{ltc-mode} at least once (possibly with a failure) using command \Code{M-x ltc-mode}.  Then, you can view the current port setting using \Code{C-h v ltc-port <RET>}.  You can customize the port number using \Code{M-x customize-group <RET> ltc <RET>} or open the customization buffer and browse to the LTC group under the Tex group, which may be located under the Wp (word processing) top-level group.  See Figure~\ref{fig:emacs-port} for a screenshot when customizing the port number using the customization buffer in Aquamacs under Mac OS X.
+If you need to change the port number that Emacs uses to communicate with the LTC Server (for example, if the default number is already in use on your computer), you first have to load LTC mode at least once using command \Code{M-x ltc-mode}, possibly with a failure as the server is not running or not using the default port.  Then, you can view the current port setting using \Code{C-h v ltc-port <RET>}.  You can customize the port number using \Code{M-x customize-variable <RET> ltc-port <RET>} or open the customization buffer and browse to the LTC group under the Tex group, which may be located under the Wp (word processing) top-level group.  See Figure~\ref{fig:emacs-port} for a screenshot when customizing the port number in Aquamacs under Mac OS X.
 
 %\subsubsection{Git from Emacs}
 %

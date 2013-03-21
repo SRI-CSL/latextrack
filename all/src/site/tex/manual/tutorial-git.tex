@@ -1,48 +1,7 @@
 % !TEX root = manual.tex
-\chapter{Tutorial with Git} \label{ch:tutorial-git}
+\section{Tutorial with Git and LTC Editor} \label{sec:tutorial-git}
 
-This tutorial uses an example git repository called ``independence.bundle,'' which can be downloaded from 
-\url{http://sourceforge.net/projects/latextrack/files/examples/}.
-
-\section{Creating an Example Git Repository}
-
-First, save the bundled repository into a directory of your choice.  We call this directory \Code{\$TUTORIAL}.  Then, clone from this bundle to obtain a valid git working tree.
-\begin{CodeVerbatim}
-$> cd $TUTORIAL
-$> git clone independence.bundle independence
-Cloning into independence...
-$> cd independence/
-$> git status
-# On branch master
-nothing to commit (working directory clean)
-$> git log --oneline
-d3f904c sixth version
-203e0ce fifth version
-36eeab0 fourth version
-fa2be39 third version
-bac2f51 second version
-d6d1cf8 first version
-\end{CodeVerbatim}
-
-Now we impersonate John Adams to work on this writing project for the Declaration of Independence.
-
-\begin{CodeVerbatim}
-$> git config --add user.name "John Adams"
-$> git config --add user.email "adams@usa.gov"
-$> git config --list | grep dams
-user.name=John Adams
-user.email=adams@usa.gov
-\end{CodeVerbatim}
-
-Another way to investigate the current git repository are graphical tools such as gitk (comes with git distribution) or gitx under Mac OS X.  Note that gitx is not required to run LTC.  Figure~\ref{fig:gitx-screen} for using gitx on the just created repository.
-\begin{figure}[t]
-\centering
-\mygraphics{width=\textwidth,height=.5\textheight,keepaspectratio}{figures/gitx-screen}
-\caption{Investigating git repository with a graphical tool} \label{fig:gitx-screen}
-\end{figure}
-The other point to note here is the way that gitx displays the changes in the file \Code{independence.tex} when using the graphical git interface.  It shows the lines in the file that have changed (much like a standard Unix diff would) -- however, when looking at changes in LaTeX source code, the granularity of the line-based difference is much too coarse.  An author would most likely only care about the change in words of line 15 or even characters such as removing the mistaken `d' in the word ``Roger'' on line seven.
-
-\section{Running the LTC Editor}
+\subsection{Running the LTC Editor}
 
 Now that we are comfortable with the git repository, let us start the LTC Editor to interact with LTC and track the changes of the file.  Assume you have installed LTC as \Code{\$LTC/LTC.jar}, we can look at the command line options of the editor:
 \begin{CodeVerbatim}[commandchars=\\\{\}]
@@ -69,7 +28,7 @@ $> java -cp $LTC/LTC.jar \textbackslash
 \end{figure}
 In this figure, we see a panel at the bottom-right that resembles the upper part of the gitx graphical interface to git.  There, we display the history of the current LaTeX file under git.  We can also see what git currently perceives as the current user -- now John Adams because we had overridden the git settings in this tutorial repository.  (If you had another local git repository on your file system, the user information there is not changed.)
 
-\section{Showing and Hiding Certain Changes}
+\subsection{Showing and Hiding Certain Changes}
 
 The bottom-left panels of the editor allows us to customize the way LTC displays the changes of the file.  Section~\ref{sec:general-use} contains all the details of how LTC displays the changes including limiting the file history and filtering.  In this tutorial, we will just use some of the options and see their effect.
 
@@ -89,7 +48,7 @@ Next, focus on the typographical error in the command ``\textbackslash maketitle
 \end{figure}
 Figure~\ref{fig:editor-filter-small} shows that ``\textbackslash maketitle'' is no longer marked up, and the deletion of ``If'' at the beginning of the paragraph is now omitted.
 
-\section{Understanding the Commit Graph}
+\subsection{Understanding the Commit Graph}
 
 Now draw your attention back to the graph with the history of the current file under git (located in the bottom-right panel).  In our example repository, this graph is just a line as the authors committed their versions in sequential order.  For the tutorial example, in which the writing project contained only one .tex file, the history graph in the LTC Editor looks almost the same as viewing the git repository in a graphical tool such as gitx.  However, if the writing project contained more .tex files, these graphs would not look similar anymore.  The git repository is tracking the history of all files that have been added to it.  In contrast, the LTC Editor only displays the history of the current .tex file loaded.
 
@@ -103,7 +62,7 @@ After we have obtained an ordered list of commits, we ignore subsequent commits 
 \end{figure}
 Furthermore, notice that the first commit is also grayed out and not taken into account when displaying the changes.  The reason for this behavior is another default setting---we only go back until the next commit of the current author John Adams, which is the second version.  Here, we attempt to provide a reasonable general behavior for most cases, but this can be easily overridden by customizing the history view as explained below in Section~\ref{sec:limit-history}.
 
-\section{Limiting History} \label{sec:limit-history}
+\subsection{Limiting History} \label{sec:limit-history}
 
 We allow the user to filter and customize how the potentially rich history of a .tex file is compiled, so as to provide a better view of the tracked changes.  The user can show and hide changes as seen above, limit the authors of interest, and specify a date or revision number to tell LTC how far back in time the history should be considered.
 
@@ -133,7 +92,7 @@ To remove the limit by revision number, simply erase the text in the field ``Unt
 
 Limiting the history by date works similarly.  You may drag a date from the commit graph on the right, for example the date of the third version commit, and drop it into the field ``Until Date:'' on the left.  Or, type a date such as \Code{Jul 20, 2010} into the field.  Git tries to make sense of the input as a date or time string, and you do not need to follow the exact format shown in the commit graph.  Again, you will need to click ``Update'' for the change to take effect.  To remove the limit by date, erase all text in the text field and update.
 
-\section{Editing, Saving, and Committing}
+\subsection{Editing, Saving, and Committing}
 
 Let us start the next step by resetting all filters to the default configuration, i.e., no limit by authors, date, and revision.  Then, we will edit the text in the editor panel to see the latest changes.
 
@@ -182,7 +141,7 @@ Now update your editor window and see the addition of the commit from the comman
 \caption{Updated commit graph after command line commit} \label{fig:commit-cmd-line}
 \end{figure}
 
-\section{Collaborating}
+\subsection{Collaborating}
 
 Collaboration on your writing project mainly happens through git.  It depends on your setup how you exchange git repositories.  Whatever the configuration, it will probably show up under the list of registered remotes for your repository.  In the example, we cloned from the downloaded .bundle file, so looking at the remotes will look like this:
 \begin{CodeVerbatim}
