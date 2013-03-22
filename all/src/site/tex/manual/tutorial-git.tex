@@ -1,9 +1,11 @@
 % !TEX root = manual.tex
 \section{Tutorial with Git and LTC Editor} \label{sec:tutorial-git}
 
+In this section, we assume that the example git repository has been created according to the instructions in Section~\ref{sec:example-git} above.
+
 \subsection{Running the LTC Editor}
 
-Now that we are comfortable with the git repository, let us start the LTC Editor to interact with LTC and track the changes of the file.  Assume you have installed LTC as \Code{\$LTC/LTC.jar}, we can look at the command line options of the editor:
+First, we start the LTC Editor to interact with LTC and track the changes of the file.  Assume you have installed LTC as \Code{\$LTC/LTC.jar}, we can look at the command line options of the editor:
 \begin{CodeVerbatim}[commandchars=\\\{\}]
 $> java -cp $LTC/LTC.jar com.sri.ltc.editor.LTCEditor -h
 usage: java -cp ... com.sri.ltc.editor.LTCEditor [options...] [FILE] 
@@ -15,11 +17,10 @@ with
  -r       : reset to default settings
 \end{CodeVerbatim}
 
-To open our tutorial file when starting the editor, execute the following command.  We will also set the logging level to INFO to tone down the chatter.  This will open the editor as a window similar to the screen shot in Figure~\ref{fig:editor-open}.
+To open our tutorial file at \Code{\$TUTORIAL/independence/independence.tex} when starting the editor, execute the following command.  We will also set the logging level to INFO to tone down the chatter.  This will open the editor as a window similar to the screen shot in Figure~\ref{fig:editor-open}.
 \begin{CodeVerbatim}[samepage=true,commandchars=\\\{\}]
-$> cd $TUTORIAL/independence
 $> java -cp $LTC/LTC.jar \textbackslash
-   com.sri.ltc.editor.LTCEditor -l INFO independence.tex
+   com.sri.ltc.editor.LTCEditor $TUTORIAL/independence/independence.tex
 \end{CodeVerbatim}
 \begin{figure}[t]
 \centering
@@ -34,63 +35,103 @@ The bottom-left panels of the editor allows us to customize the way LTC displays
 
 First, notice the list of known authors (as they are stored in the git repository) and the colors assigned to each of them.  Now perform a double-click on the colored square next to Roger Sherman to open a dialog and  choose a dark color such as brown (you will want something with contrast to the white background).  Notice how the text in the editor panel on the top changes color for those parts that are attributed to Roger Sherman's edits.
 
-Next, focus on the typographical error in the command ``\textbackslash maketitle'' in line 11 and the beginning of the first paragraph in line thirteen.  If you uncheck the box for ``small'' changes and then the box for deletions, notice how the text in the editor panel is rendered.
+Next, focus on the typographical error in the command ``\textbackslash maketitle'' in line 11 and the beginning of the first paragraph in line thirteen.  If you uncheck the box for ``small'' changes and also the box for deletions, notice how the text in the editor panel is rendered.
 \begin{figure}[t]
 \centering
-\mygraphics{width=.2\textwidth}{figures/editor-filter-small1}
+\mygraphics{width=.3\textwidth}{figures/editor-filter-small1}
 \hspace{2ex}
 \begin{tikzpicture}
   \node [single arrow,draw] {};
 \end{tikzpicture}
 \hspace{2ex}
-\mygraphics{width=.2\textwidth}{figures/editor-filter-small2}
+\mygraphics{width=.3\textwidth}{figures/editor-filter-small2}
 \caption{Effect of hiding ``small'' changes and deletions} \label{fig:editor-filter-small}
 \end{figure}
-Figure~\ref{fig:editor-filter-small} shows that ``\textbackslash maketitle'' is no longer marked up, and the deletion of ``If'' at the beginning of the paragraph is now omitted.
+Figure~\ref{fig:editor-filter-small} shows that ``\textbackslash maketitle'' is no longer marked up, and the deletion beginning with ``If'' at the beginning of the paragraph is now omitted.
 
 \subsection{Understanding the Commit Graph}
 
 Now draw your attention back to the graph with the history of the current file under git (located in the bottom-right panel).  In our example repository, this graph is just a line as the authors committed their versions in sequential order.  For the tutorial example, in which the writing project contained only one .tex file, the history graph in the LTC Editor looks almost the same as viewing the git repository in a graphical tool such as gitx.  However, if the writing project contained more .tex files, these graphs would not look similar anymore.  The git repository is tracking the history of all files that have been added to it.  In contrast, the LTC Editor only displays the history of the current .tex file loaded.
 
-In addition to taking only commits with changes of the current file into account, the commit graph is traversed in a depth-first fashion to obtain one path from the current version of the file to some ancestor.  
-
-After we have obtained an ordered list of commits, we ignore subsequent commits of the same author---only the latest version of the same author is considered.  The idea behind this is that we do not want to penalize an author who commits often to the repository.  Instead, we treat all his or her changes from the time the file was changed by a different author as one big change event.  In our example, see that Roger Sherman committed version 5 and 6 to the repository, but version 5 is depicted in gray and not taken into account when displaying the changes.  Refer to Figure~\ref{fig:commit-graph} for a screen shot of the example file history.
 \begin{figure}[t]
 \centering
 \mygraphics{scale=.5}{figures/commit-graph}
 \caption{Example of commit graph} \label{fig:commit-graph}
 \end{figure}
-Furthermore, notice that the first commit is also grayed out and not taken into account when displaying the changes.  The reason for this behavior is another default setting---we only go back until the next commit of the current author John Adams, which is the second version.  Here, we attempt to provide a reasonable general behavior for most cases, but this can be easily overridden by customizing the history view as explained below in Section~\ref{sec:limit-history}.
+In addition to taking only commits with changes of the current file into account, the commit graph is traversed in a depth-first fashion to obtain one path from the current version of the file to some ancestor.  Refer to Figure~\ref{fig:commit-graph} for a screen shot of the example file history.How far we go back in history depends on some filtering settings, which are discussed further in Section~\ref{sec:limit-history} below.  By default, we first include all version of the current author at the top.  In our example with impersonating John Adams, there are currently no further recent commits of him.  Then, we continue down the path and collecting all versions of different authors until we find the next version of John Adams in the commit with the message ``second version.''
+
+%After we have obtained an ordered sequence of commits by traversing the graph from the top down, we ignore subsequent commits of the same author---only the latest version of the same author is considered.  The idea behind this is that we do not want to penalize an author who commits often to the repository.  Instead, we treat all his or her changes from the time the file was changed by a different author as one big change event.  In our example, see that Roger Sherman committed version 5 and 6 to the repository, but version 5 is depicted in gray and not taken into account when displaying the changes.  
 
 \subsection{Limiting History} \label{sec:limit-history}
 
 We allow the user to filter and customize how the potentially rich history of a .tex file is compiled, so as to provide a better view of the tracked changes.  The user can show and hide changes as seen above, limit the authors of interest, and specify a date or revision number to tell LTC how far back in time the history should be considered.
 
-\subsection{Limiting by Authors}
+%\subsubsection{Limiting by Authors}
 
-In the list of authors, select both authors Roger Sherman and Thomas Jefferson through clicking while holding down the CTRL or CMD key.  Then, click the button ``Limit'' below the list, which will gray out the unselected authors.  For a limiting action to take effect, you need to click ``Update.''  This is different from showing and hiding changes, which is applied instantly.
-\begin{figure}[t]
+\begin{figure}
 \centering
-\mygraphics{width=\textwidth,height=.5\textheight,keepaspectratio}{figures/limit-authors}
-\caption{Effect of limiting authors to Roger Sherman and Thomas Jefferson} \label{fig:limit-authors}
+  % first sub-figure
+  \begin{minipage}[t]{0.28\linewidth}
+  \centering
+  \mygraphics{width=\linewidth}{figures/editor-select-authors}
+  \caption{Selecting authors for filtering} \label{fig:editor-select-authors}
+  \end{minipage}%
+\hspace{0.04\linewidth}%
+  % second sub-figure
+  \begin{minipage}[t]{0.68\linewidth}
+  \centering
+  \mygraphics{width=\linewidth}{figures/editor-limit-authors}
+  \caption{Effect of limiting authors to Roger Sherman and Thomas Jefferson after clicking ``Update''} \label{fig:editor-limit-authors}
+  \end{minipage}  
 \end{figure}
-Notice how most of the commit graph is now gray as only commits from the selected authors are considered.  Again, the history is only taken until the next revision of the current author, so that the first version is not included even though one of the selected authors has performed the commit.  Compare your editor window with the screen shot in Figure~\ref{fig:limit-authors} and see how the commit graph has changed.
+To limit the history by \textbf{authors}, select both authors Roger Sherman and Thomas Jefferson through clicking while holding down the CTRL or CMD key in the list of authors in the middle lower panel.  Then, click the button ``Limit'' below the list, which will gray out the unselected authors.  For a limiting action to take effect, you need to click ``Update.''  This is different from showing and hiding various changes, which is applied instantly.
+
+Notice how any version by the ignored authors Benjamin Franklin and John Adams is now gray as only commits from the selected authors are considered.  Again, the history is only taken until the next revision of the current author but since he is being ignored, we go all the way back to the first revision. Compare your editor window with the screen shot in Figure~\ref{fig:editor-limit-authors} and see how the commit graph has changed.
 
 Then, clicking the ``Reset'' button followed by ``Update'' will remove and limits on the history by author, so the original view is restored.
 
-\subsection{Limiting by Date or Revision}
+%\subsubsection{Limiting by Date or Revision}
 
-Next, we apply limits on how far back the history of the file is considered.  As we had seen, the first version is not taken into account because it was committed before the next commit by the current author John Adams.  Let us now type the first few characters \Code{6d6} of the SHA-1 key of the first commit into the field labeled ``Until Revision:'' or simply drag the key from the entry in the commit graph, which will copy the complete SHA-1 sequence.  Now click ``Update'' and see how the first version is listed in black and considered in the tracked changes above.  Since changes by the current author John Adams from the first to the second version are now included, notice the text marked up in red appearing in the screen shot in Figure~\ref{fig:limit-rev}.
-\begin{figure}[t]
+Next, we apply limits on \textbf{revision} and \textbf{date} to control how far back the history of the file is considered.  As we had seen, the first version is not taken into account because it was committed before the next commit by the current author John Adams.  Let us now type the first few characters \Code{d6d} of the SHA-1 key of the first commit into the field labeled ``Until Revision:'' or simply drag the key from the entry in the commit graph, which will copy the complete SHA-1 sequence.  Now click ``Update'' and see how the first version is listed in black and considered in the tracked changes above.  Since changes by the current author John Adams from the first to the second version are now included, notice the text marked up in red appearing in the editor window. We see that John Adams must have added himself as an author in the LaTeX preamble among other edits.
+
+\begin{figure}
 \centering
-\mygraphics{width=\textwidth,height=.5\textheight,keepaspectratio}{figures/limit-rev}
-\caption{Changing how far back history goes by revision} \label{fig:limit-rev}
+  % first sub-figure
+  \begin{minipage}[t]{0.28\linewidth}
+  \centering
+  \mygraphics{width=\linewidth}{figures/editor-select-rev}
+  \caption{Selecting revision for filtering} \label{fig:editor-select-rev}
+  \end{minipage}%
+\hspace{0.04\linewidth}%
+  % second sub-figure
+  \begin{minipage}[t]{0.68\linewidth}
+  \centering
+  \mygraphics{width=\linewidth}{figures/editor-limit-rev}
+  \caption{Effect of going back to first revision after clicking ``Update''} \label{fig:editor-limit-rev}
+  \end{minipage}  
 \end{figure}
-We see that John Adams must have added himself as an author in the LaTeX preamble among other edits.
 
 To remove the limit by revision number, simply erase the text in the field ``Until Revision:'' and click ``Update'' again.
 
-Limiting the history by date works similarly.  You may drag a date from the commit graph on the right, for example the date of the third version commit, and drop it into the field ``Until Date:'' on the left.  Or, type a date such as \Code{Jul 20, 2010} into the field.  Git tries to make sense of the input as a date or time string, and you do not need to follow the exact format shown in the commit graph.  Again, you will need to click ``Update'' for the change to take effect.  To remove the limit by date, erase all text in the text field and update.
+\begin{figure}
+\centering
+  % first sub-figure
+  \begin{minipage}[t]{0.28\linewidth}
+  \centering
+  \mygraphics{width=\linewidth}{figures/editor-select-date}
+  \caption{Selecting date for filtering} \label{fig:editor-select-date}
+  \end{minipage}%
+\hspace{0.04\linewidth}%
+  % second sub-figure
+  \begin{minipage}[t]{0.68\linewidth}
+  \centering
+  \mygraphics{width=\linewidth}{figures/editor-limit-date}
+  \caption{Effect of limiting history to date of third version after clicking ``Update''} \label{fig:editor-limit-date}
+  \end{minipage}  
+\end{figure}
+
+Limiting the history by date works similarly.  You may drag a date from the commit graph on the right, for example the date of the third version commit, and drop it into the field ``Until Date:'' on the left.  %Or, type a date such as \Code{Jul 23, 2010 1:11p} into the field.  Git tries to make sense of the input as a date or time string, and you do not need to follow the exact format shown in the commit graph.  
+Again, you will need to click ``Update'' for the change to take effect.  See Figures~\ref{fig:editor-select-date} and \ref{fig:editor-limit-date} for screenshots. To remove the limit by date, erase all text in the text field and update.
 
 \subsection{Editing, Saving, and Committing}
 

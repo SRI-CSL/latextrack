@@ -1,9 +1,13 @@
 % !TEX root = manual.tex
 \chapter{Tutorials} \label{ch:tutorials}
 
-This chapter contains a number of tutorials adjusted to the user's preference of text editor and version control system.  The following matrix allows to easily identify the best fit for your situation and contains links to the respective tutorial sections.  Whether you are using git or svn as a version control system, you will want to visit the respective section to setup your example repository first, which is linked from the first column in the table below.
+This chapter contains a number of tutorials adjusted to the user's preference of text editor and version control system.  The following matrix allows to easily identify the best fit for your situation and contains links to the respective tutorial sections.  Whether you are using git or svn as a version control system, you will want to visit the respective section to setup your example repository first, which is linked from the gray column in the table below.
 
-\begin{tabular}{lccc}
+{
+\setlength{\aboverulesep}{0pt} % remove space around rules as it will not be colored
+\setlength{\belowrulesep}{0pt}
+\setlength{\extrarowheight}{.75ex} % increase row height to compensate
+\begin{tabular}{l>{\columncolor{LightGray}}ccc}
 \toprule
  & Example & Emacs & LTC Editor \\
  & Repository & & \\
@@ -12,6 +16,7 @@ This chapter contains a number of tutorials adjusted to the user's preference of
 \Code{svn} & Sec.~\ref{sec:example-svn} & Sec.~\ref{sec:tutorial-svn-emacs} & Sec.~\ref{sec:tutorial-svn} \\
 \bottomrule
 \end{tabular}
+}
 
 \input{example-git}
 \input{tutorial-git-emacs}
