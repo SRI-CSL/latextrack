@@ -47,9 +47,9 @@ public class RpcClient {
         System.out.println(" i - init_session(String path)");
         System.out.println(" c - close_session(int ID)");
         System.out.println(" g - get_changes(int ID)\n");
-        System.out.println(" s - get_show(String key) and set_show(String key, bool value)");
-        System.out.println(" r - reset_show");
-        System.out.println(" l - get_show_items\n");
+        System.out.println(" s - get_bool_pref(String key) and set_bool_pref(String key, bool value)");
+        System.out.println(" r - reset_bool_prefs");
+        System.out.println(" l - get_bool_pref_items\n");
         System.out.println(" a - get_authors(int sessionID)");
         System.out.println(" p - get_commits(int sessionID)");
         System.out.println(" t - get_self(int sessionID) and set_self(int sessionID, String name, String email)");
@@ -141,16 +141,16 @@ public class RpcClient {
                             break;
                         case 'S':
                             if (tokens.length > 2)
-                                server.set_show(tokens[1], Boolean.parseBoolean(tokens[2]));
+                                server.set_bool_pref(tokens[1], Boolean.parseBoolean(tokens[2]));
                             else
-                                System.out.println("show status = "+server.get_show(tokens[1]));
+                                System.out.println("show status = "+server.get_bool_pref(tokens[1]));
                             break;
                         case 'R':
-                            server.reset_show();
+                            server.reset_bool_prefs();
                             break;
                         case 'L':
                             System.out.println("Show items are:");
-                            for (Object name : server.get_show_items())
+                            for (Object name : server.get_bool_pref_items())
                                 System.out.print(name+" ");
                             System.out.println();
                             break;

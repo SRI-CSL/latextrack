@@ -347,11 +347,11 @@ public final class LTCserverImpl implements LTCserverInterface {
                     readers.toArray(new ReaderWrapper[readers.size()]),
                     indices.toArray(new Integer[indices.size()]),
                     Change.buildFlagsToHide(
-                            filter.getShowingStatus(LTCserverInterface.Show.DELETIONS),
-                            filter.getShowingStatus(LTCserverInterface.Show.SMALL),
-                            filter.getShowingStatus(LTCserverInterface.Show.PREAMBLE),
-                            filter.getShowingStatus(LTCserverInterface.Show.COMMENTS),
-                            filter.getShowingStatus(LTCserverInterface.Show.COMMANDS)),
+                            filter.getStatus(BoolPrefs.DELETIONS),
+                            filter.getStatus(BoolPrefs.SMALL),
+                            filter.getStatus(BoolPrefs.PREAMBLE),
+                            filter.getStatus(BoolPrefs.COMMENTS),
+                            filter.getStatus(BoolPrefs.COMMANDS)),
                     caretPosition);
             map.put(LTCserverInterface.KEY_AUTHORS, mappedAuthors); // add current author map
             map.put(LTCserverInterface.KEY_EXPANDED_REVS, expanded_revisions); // add list of expanded revisions
@@ -506,20 +506,20 @@ public final class LTCserverImpl implements LTCserverInterface {
         return 0;
     }
 
-    public boolean get_show(String key) throws XmlRpcException {
+    public boolean get_bool_pref(String key) throws XmlRpcException {
         try {
-            Show show = Show.valueOf(key);
-            return Filtering.getInstance().getShowingStatus(show);
+            BoolPrefs boolPref = BoolPrefs.valueOf(key);
+            return Filtering.getInstance().getStatus(boolPref);
         } catch (IllegalArgumentException e) {
             logAndThrow(1, e.getMessage());
         }
         return false;
     }
 
-    public int set_show(String key, boolean value) throws XmlRpcException {
+    public int set_bool_pref(String key, boolean value) throws XmlRpcException {
         try {
-            Show show = Show.valueOf(key);
-            Filtering.getInstance().setShowingStatus(show, value);
+            BoolPrefs boolPref = BoolPrefs.valueOf(key);
+            Filtering.getInstance().setStatus(boolPref, value);
             LOGGER.info("Turning show of "+key+(value?" on.":" off."));
         } catch (IllegalArgumentException e) {
             logAndThrow(1, e.getMessage());
@@ -527,16 +527,16 @@ public final class LTCserverImpl implements LTCserverInterface {
         return 0;
     }
 
-    public int reset_show() {
-        Filtering.getInstance().resetShowingStatus();
+    public int reset_bool_prefs() {
+        Filtering.getInstance().resetAllStatus();
         LOGGER.info("Resetting all show states to default.");
         return 0;
     }
 
-    public Object[] get_show_items() {
+    public Object[] get_bool_pref_items() {
         List<String> names = new ArrayList<String>();
-        for (Show show : LTCserverInterface.Show.values())
-            names.add(show.name());
+        for (BoolPrefs boolPref : BoolPrefs.values())
+            names.add(boolPref.name());
         return names.toArray();
     }
 
@@ -861,12 +861,12 @@ public final class LTCserverImpl implements LTCserverInterface {
             Element element = document.createElement("show-options");
             rootElement.appendChild(element);
 
-            for (Show show : LTCserverInterface.Show.values()) {
+            for (BoolPrefs boolPref : BoolPrefs.values()) {
                 Element optionElement = document.createElement("show-option");
                 element.appendChild(optionElement);
 
-                addSimpleTextNode(document, optionElement, "key", show.name(), null);
-                addSimpleTextNode(document, optionElement, "value", Boolean.toString(get_show(show.name())), null);
+                addSimpleTextNode(document, optionElement, "key", boolPref.name(), null);
+                addSimpleTextNode(document, optionElement, "value", Boolean.toString(get_bool_pref(boolPref.name())), null);
             }
         }
 

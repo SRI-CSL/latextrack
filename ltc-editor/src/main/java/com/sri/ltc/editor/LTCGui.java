@@ -135,11 +135,11 @@ public abstract class LTCGui {
                 BorderFactory.createTitledBorder(" Showing "),
                 BorderFactory.createEmptyBorder(0, 5, 0, 5)));
         showPane.setLayout(new BoxLayout(showPane, BoxLayout.PAGE_AXIS));
-        showPane.add(new ShowingCheckBox("deletions", LTCserverInterface.Show.DELETIONS, updateButton));
-        showPane.add(new ShowingCheckBox("\"small\" changes", LTCserverInterface.Show.SMALL, updateButton));
-        showPane.add(new ShowingCheckBox("changes in preamble", LTCserverInterface.Show.PREAMBLE, updateButton));
-        showPane.add(new ShowingCheckBox("changes in comments", LTCserverInterface.Show.COMMENTS, updateButton));
-        showPane.add(new ShowingCheckBox("changes in commands", LTCserverInterface.Show.COMMANDS, updateButton));
+        showPane.add(new BoolPrefCheckBox("deletions", LTCserverInterface.BoolPrefs.DELETIONS, updateButton));
+        showPane.add(new BoolPrefCheckBox("\"small\" changes", LTCserverInterface.BoolPrefs.SMALL, updateButton));
+        showPane.add(new BoolPrefCheckBox("changes in preamble", LTCserverInterface.BoolPrefs.PREAMBLE, updateButton));
+        showPane.add(new BoolPrefCheckBox("changes in comments", LTCserverInterface.BoolPrefs.COMMENTS, updateButton));
+        showPane.add(new BoolPrefCheckBox("changes in commands", LTCserverInterface.BoolPrefs.COMMANDS, updateButton));
         final JCheckBox paraCheckBox = new JCheckBox("white space characters", textPane.getShowParagraphs());
         paraCheckBox.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {

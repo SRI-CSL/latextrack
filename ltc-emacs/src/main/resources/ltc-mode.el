@@ -197,7 +197,7 @@
 						      (list 'list
 						       (list 'setq show-var (list 'not show-var)) 
 						       (list 'ltc-method-call 
-							     "set_show" 
+							     "set_bool_pref" 
 							     (list 'cdr (list 'assoc (list 'quote show-var) 'show-map)) 
 							     show-var) 
 						       '(ltc-update)) 
@@ -267,7 +267,7 @@
     (setq ltc-info-buffer (concat "LTC info (session " (number-to-string session-id) ")"))
     ;; update filtering settings
     (mapc (lambda (show-var) 
-	    (set show-var (ltc-method-call "get_show" (cdr (assoc show-var show-map))))) (mapcar 'car show-map))
+	    (set show-var (ltc-method-call "get_bool_pref" (cdr (assoc show-var show-map))))) (mapcar 'car show-map))
     (mapc (lambda (var) 
 	    (set var 'nil)) 
 	  limit-vars)

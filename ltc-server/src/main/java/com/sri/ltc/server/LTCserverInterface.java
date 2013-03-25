@@ -41,7 +41,7 @@ public interface LTCserverInterface {
     public final static String KEY_CARET = "caret";
     public final static String KEY_EXPANDED_REVS = "expanded_revs";
     public final static String KEY_REVS = "revs";
-    public static enum Show {SMALL, DELETIONS, PREAMBLE, COMMANDS, COMMENTS};
+    public static enum BoolPrefs {SMALL, DELETIONS, PREAMBLE, COMMANDS, COMMENTS, COLLAPSE_AUTHORS};
     public final static String ON_DISK = "on disk"; // special name for version on disk (if file modified and not committed)
     public final static String MODIFIED = "modified"; // special name for text modified in editor
 
@@ -394,41 +394,41 @@ public interface LTCserverInterface {
     public int reset_limited_rev(int sessionID) throws XmlRpcException;
 
     /**
-     * Obtain the current setting of filtering for the given showing item.
-     * @param key String that identifies which showing item is requested.  Should denote
-     *            one of the constants of {@link com.sri.ltc.server.LTCserverInterface.Show}
-     * @return boolean value of current status of given showing item
+     * Obtain the current status for the given boolean preference item.
+     * @param key String that identifies which boolean preference item is requested.  Should denote
+     *            one of the constants of {@link com.sri.ltc.server.LTCserverInterface.BoolPrefs}
+     * @return boolean value of current status of given boolean preference item
      * @throws XmlRpcException <ul>
      *   <li>with error code = 1 if the given String is not one of the constants of
-     *       {@link com.sri.ltc.server.LTCserverInterface.Show}.
+     *       {@link com.sri.ltc.server.LTCserverInterface.BoolPrefs}.
      * </ul>
      */
-    public boolean get_show(String key) throws XmlRpcException;
+    public boolean get_bool_pref(String key) throws XmlRpcException;
 
     /**
-     * Set new filtering status of given showing item to given value.
-     * @param key String that identifies which showing item is to be set.  Should denote
-     *            one of the constants of {@link com.sri.ltc.server.LTCserverInterface.Show}
-     * @param value boolean that denotes the new filtering status of given showing item
+     * Set new status of given boolean preference item to given value.
+     * @param key String that identifies which boolean preference item is to be set.  Should denote
+     *            one of the constants of {@link com.sri.ltc.server.LTCserverInterface.BoolPrefs}
+     * @param value boolean that denotes the new status of given boolean preference item
      * @throws XmlRpcException <ul>
      *   <li>with error code = 1 if the given String is not one of the constants of
-     *       {@link com.sri.ltc.server.LTCserverInterface.Show}.
+     *       {@link com.sri.ltc.server.LTCserverInterface.BoolPrefs}.
      * </ul>
      * @return 0
      */
-    public int set_show(String key, boolean value) throws XmlRpcException;
+    public int set_bool_pref(String key, boolean value) throws XmlRpcException;
 
     /**
-     * Reset all showing items to their default values.
+     * Reset all boolean preference items to their default values.
      * @return 0
      */
-    public int reset_show();
+    public int reset_bool_prefs();
 
     /**
-     * Get all permissible showing item names.
-     * @return An array of permissible showing item names
+     * Get all permissible boolean preference item names.
+     * @return An array of permissible boolean preference item names
      */
-    public Object[] get_show_items();
+    public Object[] get_bool_pref_items();
 
     /**
      * Get currently set remote aliases from git.  The list can be empty.
