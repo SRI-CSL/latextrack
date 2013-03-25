@@ -205,21 +205,36 @@ or use TeXShop
 $> cd all/src/site/tex/manual
 $> htlatex manual "manual,0,png" "" "" "-interaction=nonstopmode --src-specials"
 
-* Converting images using Makefile:
+* Converting images using Makefile (and to clean):
 
 $> cd all/src/site/tex/manual/figures
 $> make
 
+$> make clean
+
 * To convert manually:
 
 $> cd all/src/site/tex/manual/figures
-$> convert -density 300 manual-figure0.pdf manual-figure0.png
+$> convert -density 150 manual-figure0.pdf manual-figure0.png
 or
-$> for i in figures/manual-figure*.pdf; do convert -density 300 $i `echo $i | sed -e 's/\.pdf/\.png/g'`; done
+$> for i in figures/manual-figure*.pdf; do convert -density 150 $i `echo $i | sed -e 's/\.pdf/\.png/g'`; done
 or use Preview.app?
 
 $> cd all/src/site/tex/manual/figures
 $> for file in *.tiff; do convert $file `basename $file .tiff`.png; done
+
+NOTE: When changing or adding TikZ pictures in the manual, do the following steps:
+
+$> cd all/src/site/tex/manual
+$> cd figures; make clean; rm -fv manual-figure*; cd ..
+$> cd figures; make; cd ..
+$> pdflatex manual -shell-escape
+$> pdflatex manual -shell-escape
+$> make -f manual.makefile
+$> pdflatex manual -shell-escape
+$> pdflatex manual -shell-escape
+$> cd figures; make; cd ..
+$> htlatex manual "manual,0,png" "" "" "-interaction=nonstopmode --src-specials"
 
 
 Incrementing version number

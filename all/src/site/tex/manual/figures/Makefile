@@ -10,8 +10,8 @@ PNG_FROM_PDF_FILES = $(PDF_FILES:.pdf=.png)
 all : $(PNG_FROM_TIFF_FILES) $(PNG_FROM_PDF_FILES)
 
 $(PNG_FROM_TIFF_FILES) : %.png : %.tiff
-	@printf "Converting to PNG from %s... " "$*.tiff"
-	@convert $*.tiff $*.png
+	@printf "Converting (with color-type 6) to PNG from %s... " "$*.tiff"
+	@convert -define png:color-type=6 $*.tiff $*.png
 	@printf "done\n"
 
 $(PNG_FROM_PDF_FILES) : %.png : %.pdf
