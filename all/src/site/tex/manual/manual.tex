@@ -26,6 +26,8 @@
 %% pgf/tikz customization
 \usepgflibrary{shapes.arrows}
 \usetikzlibrary{external} % to create tikz pictures in .pdf/.png for tex4ht
+\usetikzlibrary{arrows,automata}
+\usetikzlibrary{positioning}
 \tikzsetexternalprefix{figures/} % all generated figures go into this subdirectory
 %% using tikz pictures with tex4ht:
 % (see: http://tex.stackexchange.com/questions/40135/htlatex-and-tikz-creates-sometimes-incorrect-svgs)
@@ -37,12 +39,23 @@
   }}}
   \tikzset{png export}% 
   }{% else
-  \tikzexternalize%
+  \tikzexternalize[mode=list and make]%
   \tikzset{pdf export/.style={/pgf/images/external info,/pgf/images/include external/.code={%
     \includegraphics[width=\pgfexternalwidth,height=\pgfexternalheight]{##1.pdf}%
   }}}
   \tikzset{pdf export}% 
 }
+\makeatother
+
+%% \nameref without hyperlink (to be used within \hyperref etc):
+\makeatletter
+\@ifdefinable\nolinknameref{%
+  \DeclareRobustCommand*\nolinknameref[1]{%
+    \csname @safe@activestrue\endcsname%
+    \expandafter\real@setref%
+    \csname r@#1\endcsname\@thirdoffive{#1}%
+    \csname @safe@activesfalse\endcsname}%
+}%
 \makeatother
 
 %% version string
