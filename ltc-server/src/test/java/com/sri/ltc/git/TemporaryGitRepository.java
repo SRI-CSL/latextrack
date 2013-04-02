@@ -21,6 +21,7 @@
  */
 package com.sri.ltc.git;
 
+import com.sri.ltc.filter.Author;
 import com.sri.ltc.versioncontrol.Repository;
 import com.sri.ltc.versioncontrol.TrackedFile;
 import com.sri.ltc.versioncontrol.git.GitRepository;
@@ -82,5 +83,11 @@ public class TemporaryGitRepository extends TemporaryFolder {
         fileWriter.append(text);
         fileWriter.flush();
         fileWriter.close();
+    }
+
+    public void setAuthor(Author author) {
+        if (repository == null)
+            throw new RuntimeException("Repository is not initialized");
+        repository.setSelf(author);
     }
 }

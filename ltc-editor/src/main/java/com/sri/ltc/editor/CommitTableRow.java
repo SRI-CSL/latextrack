@@ -41,7 +41,7 @@ public final class CommitTableRow {
             new CommitGraphRow(null),
             LTCserverInterface.ON_DISK+"MM",
             new Date(),
-            new Author("Git Author XXXXX", null, null),
+            new Author("Git Author XXXXX", null),
             "msgM"
     }; // reference values to determine initial column widths
 
@@ -62,7 +62,7 @@ public final class CommitTableRow {
         this.ID = array[0].toString();
         this.message = array[1].toString(); // TODO: limit to first newline (if any)
         this.date = Commit.deSerializeDate(array[4].toString());
-        this.author = new Author(array[2].toString(), array[3].toString(), null);
+        this.author = new Author(array[2].toString(), array[3].toString());
     }
 
     public CommitTableRow(String ID) {

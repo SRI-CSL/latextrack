@@ -418,8 +418,8 @@ public final class LTCserverImpl implements LTCserverInterface {
     public Object[] set_self(int sessionID, String name, String email) throws XmlRpcException {
         Session session = getSession(sessionID);
         try {
-            Author a = new Author(name, email, null);
-            session.getTrackedFile().getRepository().setSelf(a);
+            Author a = new Author(name, email);
+            session.getTrackedFile().getRepository().setSelf(a);  // TODO: if not implemented by repository (e.g., svn) then don't add to authors!
             session.addAuthors(Collections.singleton(a));
         } catch (IllegalArgumentException e) {
             logAndThrow(4,"Cannot create author to set as self with given arguments: "+e.getMessage());
@@ -678,7 +678,7 @@ public final class LTCserverImpl implements LTCserverInterface {
         if (authorName == null || "".equals(authorName))
             logAndThrow(10, "Cannot get color with NULL or empty author name");
 
-        Author author = new Author(authorName, authorEmail, null);
+        Author author = new Author(authorName, authorEmail);
         LOGGER.fine("Server: getting color for author \""+author.gitRepresentation()+"\" called.");
 
         // define random color based on randomized hue
@@ -710,7 +710,7 @@ public final class LTCserverImpl implements LTCserverInterface {
         if (authorName == null || "".equals(authorName))
             logAndThrow(1, "Cannot set color with NULL or empty author name");
 
-        Author author = new Author(authorName, authorEmail, null);
+        Author author = new Author(authorName, authorEmail);
         LOGGER.fine("Server: setting color for author \"" + author.gitRepresentation() + "\" to " + hexColor + ".");
 
         synchronized (preferences) {
@@ -732,7 +732,7 @@ public final class LTCserverImpl implements LTCserverInterface {
         if (authorName == null || "".equals(authorName))
             logAndThrow(1, "Cannot reset color with NULL or empty author name");
         synchronized (preferences) {
-            preferences.remove(getColorKey(new Author(authorName, authorEmail, null)));
+            preferences.remove(getColorKey(new Author(authorName, authorEmail)));
         }
         return 0;
     }

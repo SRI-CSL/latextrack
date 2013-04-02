@@ -54,6 +54,23 @@ public abstract class FileHistory {
     abstract void transformGraph();
     abstract void transformList() throws IOException;
 
+    /**
+     * Update the commit graph from the tracked file and create a list of commits based on current settings.
+     * Each commit is a 6-tuple of strings:
+     * <ol>
+     *     <li>Revision ID (e.g., SHA-1 for git repositories)</li>
+     *     <li>Commit message</li>
+     *     <li>Author name</li>
+     *     <li>Author email (could be empty)</li>
+     *     <li>Date and time of commit</li>
+     *     <li>List of parent commits as space separated revision IDs</li>
+     * </ol>
+     *
+     * @return List of commits in order of newest to oldest
+     * @throws ParseException
+     * @throws IOException
+     * @throws VersionControlException
+     */
     public final List<Object[]> update() throws ParseException, IOException, VersionControlException {
         List<Commit> commits = updateCommits();
 

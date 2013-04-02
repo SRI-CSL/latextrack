@@ -44,7 +44,7 @@ public class SVNRepository implements Repository {
         clientManager = SVNClientManager.newInstance();
         this.initialPath = initialPath;
 
-        defaultAuthor = new Author(System.getProperty("user.name"), null, null);
+        defaultAuthor = new Author(System.getProperty("user.name"), null);
         currentAuthor = defaultAuthor;
     }
 
