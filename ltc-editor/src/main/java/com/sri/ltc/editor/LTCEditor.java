@@ -214,7 +214,6 @@ public final class LTCEditor extends LTCGui {
                                 String text,
                                 List<Integer[]> styles,
                                 int caretPosition,
-                                Set<String> IDs,
                                 List<String> orderedIDs,
                                 List<Object[]> commits,
                                 List<Object[]> remotes) {
@@ -227,7 +226,7 @@ public final class LTCEditor extends LTCGui {
         textPane.updateFromMaps(text, styles, colors, caretPosition, orderedIDs);
         // update list of commits
         commitModel.init(commits, false);
-        commitModel.update(IDs);
+        commitModel.update(new HashSet<String>(orderedIDs));
         // update list of remotes
         remoteModel.update(remotes);
     }

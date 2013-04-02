@@ -100,6 +100,7 @@
 (defvar ltc-show-preamble nil "Show changes in preamble")
 (defvar ltc-show-comments nil "Show changes in comments")
 (defvar ltc-show-commands t "Show changes in commands")
+(defvar ltc-condense-authors nil "Condense authors in file history")
 (defconst show-map
   '((ltc-show-deletions . "DELETIONS")
     (ltc-show-small . "SMALL")
@@ -226,6 +227,7 @@
 			"..."
 		      (concat " [" (shorten 7 ltc-limiting-rev) "]...")))]
     )
+   ["Condense authors" nil]
    "--"
    "MOVE CURSOR"
    ["To previous change" ltc-prev-change]
@@ -356,7 +358,7 @@
 		    ) styles))
 	(ltc-add-edit-hooks) ; add (local) hooks to capture user's edits
 	;; update commit graph in temp info buffer
-	(init-commit-graph (cdr (assoc-string "expanded_revs" map)))
+	(init-commit-graph (cdr (assoc-string "revs" map)))
 	(update-info-buffer)
 	(set-buffer-modified-p old-buffer-modified-p) ; restore modification flag
 	))

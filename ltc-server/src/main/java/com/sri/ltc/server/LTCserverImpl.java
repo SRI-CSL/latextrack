@@ -240,21 +240,22 @@ public final class LTCserverImpl implements LTCserverInterface {
         }
         updateProgress(10);
 
+        Filtering filter = Filtering.getInstance();
+
         // obtain file history from GIT, disk, and session (obeying any filters):
         List<ReaderWrapper> readers = null;
         List<Author> authors = null;
-        List<String> expanded_revisions = new ArrayList<String>();
         List<String> revisions = new ArrayList<String>();
         try {
+            // TODO: whether to condense authors or not (from Filtering)
             // create history with limits and obtain revision IDs, authors, and readers:
             LimitedHistory history = new LimitedHistory(session.getTrackedFile(),
                     session.getLimitedAuthors(),
                     session.getLimitDate(),
-                    session.getLimitRev());
+                    session.getLimitRev(),
+                    filter.getStatus(BoolPrefs.COLLAPSE_AUTHORS));
             updateProgress(12);
-            // TODO: temporarily fixing Peter's complaint that we should color everything in between:
-            expanded_revisions = history.getIDsFromExpanded();
-            revisions = history.getIDs(); // these are just the IDs used in the accumulation
+            revisions = history.getIDs(); // these are the IDs used in the accumulation
             authors = history.getAuthorsList();
             updateProgress(15);
             readers = history.getReadersList();
@@ -274,7 +275,6 @@ public final class LTCserverImpl implements LTCserverInterface {
                         // add self as author
                         authors.add(self);
                     readers.add(fileReader);
-                    expanded_revisions.add(LTCserverInterface.ON_DISK);
                     revisions.add(LTCserverInterface.ON_DISK);
             }
             // add current text from editor, if modified since last save:
@@ -288,19 +288,16 @@ public final class LTCserverImpl implements LTCserverInterface {
                     authors.add(self);
                 readers.add(currentTextReader);
                 // replace ON_DISK if present, otherwise append MODIFIED
-                if (expanded_revisions.size() > 0 && revisions.size() > 0
-                        && LTCserverInterface.ON_DISK.equals(expanded_revisions.get(expanded_revisions.size()-1))) {
-                    expanded_revisions.remove(expanded_revisions.size()-1);
+                if (revisions.size() > 0
+                        && LTCserverInterface.ON_DISK.equals(revisions.get(revisions.size()-1))) {
                     revisions.remove(revisions.size()-1);
                 }
-                expanded_revisions.add(LTCserverInterface.MODIFIED);
                 revisions.add(LTCserverInterface.MODIFIED);
             }
             // if no readers, then use text from file and self as author
             if (readers.size() == 0 && authors.size() == 0) {
                 authors.add(self);
                 readers.add(new FileReaderWrapper(session.getTrackedFile().getFile().getCanonicalPath()));
-                expanded_revisions.add("");
                 revisions.add("");
             }
             updateProgress(47);
@@ -342,7 +339,6 @@ public final class LTCserverImpl implements LTCserverInterface {
                 };
                 session.getAccumulate().addPropertyChangeListener(listener);
             }
-            Filtering filter = Filtering.getInstance();
             map = session.getAccumulate().perform(
                     readers.toArray(new ReaderWrapper[readers.size()]),
                     indices.toArray(new Integer[indices.size()]),
@@ -354,7 +350,6 @@ public final class LTCserverImpl implements LTCserverInterface {
                             filter.getStatus(BoolPrefs.COMMANDS)),
                     caretPosition);
             map.put(LTCserverInterface.KEY_AUTHORS, mappedAuthors); // add current author map
-            map.put(LTCserverInterface.KEY_EXPANDED_REVS, expanded_revisions); // add list of expanded revisions
             map.put(LTCserverInterface.KEY_REVS, revisions); // add list of revisions used in accumulation
             session.getAccumulate().removePropertyChangeListener(listener);
         } catch (Exception e) {
@@ -520,7 +515,7 @@ public final class LTCserverImpl implements LTCserverInterface {
         try {
             BoolPrefs boolPref = BoolPrefs.valueOf(key);
             Filtering.getInstance().setStatus(boolPref, value);
-            LOGGER.info("Turning show of "+key+(value?" on.":" off."));
+            LOGGER.info("Server: turning boolean preference for \""+key+(value?"\" on.":"\" off."));
         } catch (IllegalArgumentException e) {
             logAndThrow(1, e.getMessage());
         }
@@ -529,7 +524,7 @@ public final class LTCserverImpl implements LTCserverInterface {
 
     public int reset_bool_prefs() {
         Filtering.getInstance().resetAllStatus();
-        LOGGER.info("Resetting all show states to default.");
+        LOGGER.info("Server: resetting all boolean preferences to default.");
         return 0;
     }
 
@@ -845,7 +840,8 @@ public final class LTCserverImpl implements LTCserverInterface {
                 history = new LimitedHistory(session.getTrackedFile(),
                         session.getLimitedAuthors(),
                         session.getLimitDate(),
-                        session.getLimitRev());
+                        session.getLimitRev(),
+                        get_bool_pref(BoolPrefs.COLLAPSE_AUTHORS.name()));
             } catch (Exception e) {
                 logAndThrow(3, "Could not create LimitedHistory:" + e.getMessage());
             }

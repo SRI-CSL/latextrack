@@ -39,7 +39,6 @@ public interface LTCserverInterface {
     public final static String KEY_STYLES = "styles";
     public final static String KEY_AUTHORS = "authors";
     public final static String KEY_CARET = "caret";
-    public final static String KEY_EXPANDED_REVS = "expanded_revs";
     public final static String KEY_REVS = "revs";
     public static enum BoolPrefs {SMALL, DELETIONS, PREAMBLE, COMMANDS, COMMENTS, COLLAPSE_AUTHORS};
     public final static String ON_DISK = "on disk"; // special name for version on disk (if file modified and not committed)
@@ -135,13 +134,8 @@ public interface LTCserverInterface {
      * The value under {@link #KEY_CARET} contains the transformed cursor
      * position into the new text of the one given as an argument to the method.
      * <p>
-     * Another entry under {@link #KEY_EXPANDED_REVS} in the returned map is a list of revision
-     * names that have been used to obtain the changes including those that are in between
-     * by the same author.
-     * <p>
      * Finally, an entry under {@link #KEY_REVS} in the returned map is a list of revision
-     * names that have been used to obtain the changes but not including those with same
-     * authors in between.
+     * names from newest to oldest that have been used to obtain the changes.
      *
      * @param sessionID identifies the session
      * @param isModified whether the text has been modified since the last save operation
