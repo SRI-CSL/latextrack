@@ -22,6 +22,7 @@
 package com.sri.ltc.versioncontrol.svn;
 
 import com.sri.ltc.filter.Author;
+import com.sri.ltc.server.LTCserverInterface;
 import com.sri.ltc.versioncontrol.Remotes;
 import com.sri.ltc.versioncontrol.Repository;
 import com.sri.ltc.versioncontrol.TrackedFile;
@@ -72,6 +73,11 @@ public class SVNRepository implements Repository {
     public File getBundle(File outputDirectory) throws IOException {
         // TODO: decide here what to do
         return null;
+    }
+
+    @Override
+    public LTCserverInterface.VersionControlSystems getVCS() {
+        return LTCserverInterface.VersionControlSystems.SVN;
     }
 
     @Override

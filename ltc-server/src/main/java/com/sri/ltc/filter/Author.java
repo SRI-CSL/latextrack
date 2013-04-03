@@ -77,7 +77,8 @@ public final class Author implements Comparable<Author> {
         return new Author(mAuthor.group(1).trim(), mAuthor.group(4));
     }
 
-    public String gitRepresentation() {
+    @Override
+    public String toString() {
         return name+("".equals(email)?"":" <"+email+">");
     }
 
@@ -87,11 +88,6 @@ public final class Author implements Comparable<Author> {
         if (result == 0)
             return email.compareTo(author.email);
         return result;
-    }
-
-    @Override
-    public String toString() {
-        return gitRepresentation();
     }
 
     @Override

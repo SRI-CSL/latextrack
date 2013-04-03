@@ -40,7 +40,7 @@ public final class AuthorCell implements Comparable<AuthorCell> {
         if (author == null)
             throw new IllegalArgumentException("Cannot create author cell with NULL author");
         this.author = author;
-        this.label = author.gitRepresentation();
+        this.label = author.toString();
         this.color = color;
     }
 

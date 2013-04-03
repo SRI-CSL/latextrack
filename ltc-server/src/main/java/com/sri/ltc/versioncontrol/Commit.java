@@ -98,6 +98,6 @@ public abstract class Commit<RepositoryClass extends Repository, TrackedFileClas
     public String toString() {
         return getId() //.substring(0, LTCserverInterface.ON_DISK.length())
                 + "  " + serializeDate(getDate())
-                + "  " + getAuthor().gitRepresentation();
+                + "  " + getAuthor();
     }
 }

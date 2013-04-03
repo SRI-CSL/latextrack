@@ -371,10 +371,16 @@ public final class LTCserverImpl implements LTCserverInterface {
         try {
             session.getTrackedFile().commit(message);
         } catch (Exception e) {
-            logAndThrow(4, "JavaGitException during git commit: " + e.getMessage());
+            logAndThrow(4, "Exception during git commit: " + e.getMessage());
         }
 
         return 0;
+    }
+
+    public String get_VCS(int sessionID) throws XmlRpcException {
+        Session session = getSession(sessionID);
+
+        return session.getTrackedFile().getRepository().getVCS().name();
     }
 
     private Object[] concatAuthorAndColor(Author author) throws XmlRpcException {
@@ -515,7 +521,7 @@ public final class LTCserverImpl implements LTCserverInterface {
         try {
             BoolPrefs boolPref = BoolPrefs.valueOf(key);
             Filtering.getInstance().setStatus(boolPref, value);
-            LOGGER.fine("Server: turning boolean preference for \""+key+(value?"\" on.":"\" off."));
+            LOGGER.fine("Server: turning boolean preference for \"" + key + (value ? "\" on." : "\" off."));
         } catch (IllegalArgumentException e) {
             logAndThrow(1, e.getMessage());
         }
@@ -667,7 +673,7 @@ public final class LTCserverImpl implements LTCserverInterface {
     }
 
     private String getColorKey(Author author) {
-        return KEY_COLOR + author.toString();
+        return KEY_COLOR + author;
     }
 
     public static String convertToHex(Color color) {
@@ -679,7 +685,7 @@ public final class LTCserverImpl implements LTCserverInterface {
             logAndThrow(10, "Cannot get color with NULL or empty author name");
 
         Author author = new Author(authorName, authorEmail);
-        LOGGER.fine("Server: getting color for author \""+author.gitRepresentation()+"\" called.");
+        LOGGER.fine("Server: getting color for author \""+author+"\" called.");
 
         // define random color based on randomized hue
         Color randomColor = Color.getHSBColor((float) Math.random(), 0.85f, 1.0f);
@@ -711,7 +717,7 @@ public final class LTCserverImpl implements LTCserverInterface {
             logAndThrow(1, "Cannot set color with NULL or empty author name");
 
         Author author = new Author(authorName, authorEmail);
-        LOGGER.fine("Server: setting color for author \"" + author.gitRepresentation() + "\" to " + hexColor + ".");
+        LOGGER.fine("Server: setting color for author \""+author+"\" to " + hexColor + ".");
 
         synchronized (preferences) {
             try {

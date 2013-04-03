@@ -88,6 +88,9 @@ public final class LTCEditor extends LTCGui {
     private final AuthorListModel authorModel = new AuthorListModel(session);
     private final CommitTableModel commitModel = new CommitTableModel();
     private final SelfComboBoxModel selfModel = new SelfComboBoxModel(textPane, authorModel, session);
+    private final JPanel selfPane = new JPanel(new BorderLayout(0, 0));
+    private final JComboBox selfCombo = new JComboBox(selfModel);
+    private final SelfTextField selfField = new SelfTextField(authorModel);
     private final JButton pullButton = new JButton("Pull");
     private final JButton pushButton = new JButton("Push");
     private final RemoteComboBoxModel remoteModel = new RemoteComboBoxModel(session, pushButton, pullButton);
@@ -202,10 +205,13 @@ public final class LTCEditor extends LTCGui {
         saveButton.setEnabled(false);
     }
 
-    protected void finishInit(List<Object[]> authors, List<Object[]> commits, Object[] self) {
+    protected void finishInit(List<Object[]> authors, List<Object[]> commits, Object[] self, String VCS) {
+        // TODO: decide here whether we have SVN or GIT and change GUI elements accordingly
+        System.out.println("VCS = "+VCS);
         authorModel.init(authors);
         commitModel.init(commits, true);
         selfModel.init(authors, self);
+        selfField.setSelf(self);
         saveButton.setEnabled(false); // start with modified = false
         setFile(session.getCanonicalPath(), false);
     }
@@ -255,6 +261,7 @@ public final class LTCEditor extends LTCGui {
         authorModel.clear();
         commitModel.clear(true);
         selfModel.clear();
+        selfField.setText("");
         dateField.setText("");
         revField.setText("");
         saveButton.setEnabled(false); // start with modified = false        
@@ -481,14 +488,14 @@ public final class LTCEditor extends LTCGui {
                 BorderFactory.createTitledBorder(" Content Tracking "),
                 BorderFactory.createEmptyBorder(0, 5, 0, 5)));
 
-        // 1) self combo box
-        JPanel selfPane = new JPanel(new BorderLayout(0,0));
+        // 1) self combo box/label
         selfPane.add(new JLabel("Self: "), BorderLayout.LINE_START);
-        final JComboBox selfCombo = new JComboBox(selfModel);
         selfCombo.setEditable(true);
         selfCombo.setRenderer(new MyComboRenderer());
         selfCombo.setEditor(new SelfComboBoxEditor(authorModel));
-        selfPane.add(selfCombo, BorderLayout.CENTER);
+        // TODO: default self:
+        selfPane.add(selfField, BorderLayout.CENTER);
+//        selfPane.add(selfCombo, BorderLayout.CENTER);
         contentTrackingPane.add(selfPane, BorderLayout.PAGE_START);
 
         // 2) commit graph
@@ -540,7 +547,7 @@ public final class LTCEditor extends LTCGui {
         c1.gridx = 2;
         commitPane.add(commitMsgField, c1);
 
-        // 4) remotes and push/pull
+        // 4) remotes and push/pull TODO: disable when SVN, enable when GIT!
         final JComboBox remoteCombo = new JComboBox(remoteModel);
         remoteCombo.setEditable(true);
         remoteCombo.setRenderer(new MyComboRenderer());
@@ -580,8 +587,9 @@ public final class LTCEditor extends LTCGui {
                 new PropertyChangeListener() {
                     public void propertyChange(PropertyChangeEvent e) {
                         preferences.putInt(KEY_LAST_DIVIDER_H, splitPaneH.getDividerLocation());
-                        LOGGER.config("Divider location: "+splitPaneH.getDividerLocation());
-                    }});
+                        LOGGER.config("Divider location: " + splitPaneH.getDividerLocation());
+                    }
+                });
         splitPaneH.setBorder(null);
         panel.add(splitPaneH, BorderLayout.CENTER);
     }

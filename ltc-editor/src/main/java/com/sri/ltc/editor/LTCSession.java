@@ -72,6 +72,7 @@ public class LTCSession {
             List<Object[]> authors = null;
             java.util.List<Object[]> commits = null;
             Object[] self = null;
+            String VCS = null;
             int sessionID = -1;
 
             @SuppressWarnings("unchecked")
@@ -89,6 +90,9 @@ public class LTCSession {
                 setProgress(75);
                 self = LTC.get_self(sessionID);
                 if (isCancelled()) return -1;
+                setProgress(95);
+                VCS = LTC.get_VCS(sessionID);
+                if (isCancelled()) return -1;
                 setProgress(100);
                 return sessionID;
             }
@@ -97,11 +101,11 @@ public class LTCSession {
             protected void done() {
                 if (isCancelled()) {
                     ID = -1;
-                    editor.finishInit(null, null, null);
+                    editor.finishInit(null, null, null, VCS);
                 } else
                     try {
                         ID = get();
-                        editor.finishInit(authors, commits, self);
+                        editor.finishInit(authors, commits, self, VCS);
                         startUpdate(date, rev, false, "", Collections.<Object[]>emptyList(), caretPosition);
                     } catch (InterruptedException e) {
                         LOGGER.log(Level.SEVERE, e.getMessage(), e);

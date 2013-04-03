@@ -22,6 +22,7 @@
 package com.sri.ltc.versioncontrol.git;
 
 import com.sri.ltc.filter.Author;
+import com.sri.ltc.server.LTCserverInterface;
 import com.sri.ltc.versioncontrol.Remotes;
 import com.sri.ltc.versioncontrol.Repository;
 import com.sri.ltc.versioncontrol.TrackedFile;
@@ -99,6 +100,11 @@ public class GitRepository implements Repository {
         fos.close();
 
         return bundle;
+    }
+
+    @Override
+    public LTCserverInterface.VersionControlSystems getVCS() {
+        return LTCserverInterface.VersionControlSystems.GIT;
     }
 
     @Override

@@ -32,7 +32,7 @@ import java.awt.*;
  * @author linda
  */
 @SuppressWarnings("serial")
-public final class MyComboRenderer extends JLabel implements ListCellRenderer{
+public final class MyComboRenderer extends JLabel implements ListCellRenderer {
 
     public MyComboRenderer() {
         setOpaque(true);
@@ -44,7 +44,7 @@ public final class MyComboRenderer extends JLabel implements ListCellRenderer{
                                                   boolean isSelected,
                                                   boolean cellHasFocus) {
         if (value instanceof Author) {
-            setText(((Author) value).gitRepresentation());
+            setText(((Author) value).toString());
             return this;
         }
 

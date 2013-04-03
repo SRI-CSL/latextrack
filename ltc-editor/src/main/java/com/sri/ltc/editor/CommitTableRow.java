@@ -36,7 +36,7 @@ import java.util.List;
  */
 public final class CommitTableRow {
 
-    protected final static String[] COLUMN_NAMES = {"","SHA-1","Date","Author","Message"};
+    protected final static String[] COLUMN_NAMES = {"","Revision","Date","Author","Message"};
     protected final static Object[] REF_VALUES = {
             new CommitGraphRow(null),
             LTCserverInterface.ON_DISK+"MM",

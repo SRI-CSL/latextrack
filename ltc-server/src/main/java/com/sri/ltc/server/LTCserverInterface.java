@@ -43,6 +43,7 @@ public interface LTCserverInterface {
     public static enum BoolPrefs {SMALL, DELETIONS, PREAMBLE, COMMANDS, COMMENTS, COLLAPSE_AUTHORS};
     public final static String ON_DISK = "on disk"; // special name for version on disk (if file modified and not committed)
     public final static String MODIFIED = "modified"; // special name for text modified in editor
+    public static enum VersionControlSystems {GIT, SVN};
 
     /**
      * Initialize a new track changes session with the base system.
@@ -158,11 +159,8 @@ public interface LTCserverInterface {
             throws XmlRpcException;
 
     /**
-     * Commit the current file on disk to git.  The file is indicated by the session ID.
+     * Commit the current file on disk.  The file is indicated by the session ID.
      * A non-null and non-empty message must be supplied.
-     *
-     * A special error case is the so-called "empty commit" when the file on disk has not
-     * changed compared to the last commit.  In this case, an exception with code 5 is thrown.
      *
      * @param sessionID identifies the session
      * @param message A non-null and not empty message for the commit
@@ -170,13 +168,22 @@ public interface LTCserverInterface {
      * @throws XmlRpcException <ul>
      *   <li>with error code = 1 if the given identifier does not denote a known session.
      *   <li>with error code = 2 if the given message is NULL or empty.
-     *   <li>with error code = 3 if an IOException occurred during committing.
-     *   <li>with error code = 4 if a JavaGitException occurred during committing.
-     *   <li>with error code = 5 if there was nothing to commit (empty commit).
-     *   <li>with error code = 6 if an error occurred during performing <code>git commit</code>.
+     *   <li>with error code = 4 if an Exception occurred during committing.
      * </ul>
      */
     public int commit_file(int sessionID, String message) throws XmlRpcException;
+
+    /**
+     * Obtain the name of the version control system that tracks the current file of the given session.
+     *
+     * @param sessionID identifies the session
+     * @return String that denotes one of the possible version control systems as contained in
+     *   {@link VersionControlSystems}
+     * @throws XmlRpcException <ul>
+     *   <li>with error code = 1 if the given identifier does not denote a known session.
+     * </ul>
+     */
+    public String get_VCS(int sessionID) throws XmlRpcException;
 
     /**
      * Obtain all known authors for the file indicated by the session ID.  The returned

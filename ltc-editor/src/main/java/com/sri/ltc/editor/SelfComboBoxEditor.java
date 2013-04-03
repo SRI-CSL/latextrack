@@ -125,7 +125,7 @@ public final class SelfComboBoxEditor implements ComboBoxEditor, ListDataListene
             if (value == null)
                 return "";
             if (value instanceof Author)
-                return ((Author) value).gitRepresentation();
+                return ((Author) value).toString();
             throw new ParseException("Value is not of class Author", 0);
         }
     }
