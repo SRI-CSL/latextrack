@@ -515,7 +515,7 @@ public final class LTCserverImpl implements LTCserverInterface {
         try {
             BoolPrefs boolPref = BoolPrefs.valueOf(key);
             Filtering.getInstance().setStatus(boolPref, value);
-            LOGGER.info("Server: turning boolean preference for \""+key+(value?"\" on.":"\" off."));
+            LOGGER.fine("Server: turning boolean preference for \""+key+(value?"\" on.":"\" off."));
         } catch (IllegalArgumentException e) {
             logAndThrow(1, e.getMessage());
         }
