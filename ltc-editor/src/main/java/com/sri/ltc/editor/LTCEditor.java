@@ -214,7 +214,6 @@ public final class LTCEditor extends LTCGui {
                                 String text,
                                 List<Integer[]> styles,
                                 int caretPosition,
-                                Set<String> IDs,
                                 List<String> orderedIDs,
                                 List<Object[]> commits,
                                 List<Object[]> remotes) {
@@ -227,7 +226,7 @@ public final class LTCEditor extends LTCGui {
         textPane.updateFromMaps(text, styles, colors, caretPosition, orderedIDs);
         // update list of commits
         commitModel.init(commits, false);
-        commitModel.update(IDs);
+        commitModel.update(new HashSet<String>(orderedIDs));
         // update list of remotes
         remoteModel.update(remotes);
     }
@@ -439,15 +438,21 @@ public final class LTCEditor extends LTCGui {
         c.weighty = 1.0;
         filteringPane.add(authorPane, c);
 
-        c.weightx = 0.8;
+        c.weightx = 0.0;
         c.weighty = 0.0;
         c.gridy = 1;
+        filteringPane.add(new BoolPrefCheckBox("condense authors",
+                LTCserverInterface.BoolPrefs.COLLAPSE_AUTHORS,
+                getUpdateButton()), c);
+
+        c.weightx = 0.8;
+        c.gridy = 2;
         filteringPane.add(datePane, c);
 
-        c.gridy = 2;
+        c.gridy = 3;
         filteringPane.add(revPane, c);
 
-        c.gridy = 3;
+        c.gridy = 4;
         c.weightx = 0.0;
         c.fill = GridBagConstraints.NONE;
         filteringPane.add(getUpdateButton(), c);

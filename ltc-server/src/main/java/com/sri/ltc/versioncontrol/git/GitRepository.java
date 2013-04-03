@@ -29,7 +29,6 @@ import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.lib.Ref;
 import org.eclipse.jgit.storage.file.FileRepositoryBuilder;
 import org.eclipse.jgit.transport.BundleWriter;
-import sun.security.pkcs11.wrapper.Constants;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -107,7 +106,7 @@ public class GitRepository implements Repository {
         String name = repository.getConfig().getString("user", null, "name");
         String email = repository.getConfig().getString("user", null, "email");
 
-        return new Author(name, email, null);
+        return new Author(name, email);
     }
 
     @Override

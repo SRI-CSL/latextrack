@@ -100,13 +100,17 @@
 (defvar ltc-show-preamble nil "Show changes in preamble")
 (defvar ltc-show-comments nil "Show changes in comments")
 (defvar ltc-show-commands t "Show changes in commands")
+(defvar ltc-condense-authors nil "Condense authors in file history")
 (defconst show-map
   '((ltc-show-deletions . "DELETIONS")
     (ltc-show-small . "SMALL")
     (ltc-show-preamble . "PREAMBLE")
     (ltc-show-commands . "COMMANDS")
     (ltc-show-comments . "COMMENTS"))
-  "define mappings from custom options to show/hide changes to the string used in command.")
+  "define mappings from custom options to show/hide changes to the string used in API call.")
+(defconst other-settings-map
+  '((ltc-condense-authors . "COLLAPSE_AUTHORS"))
+  "define mapping from other boolean settings to the string used in API call.")
 ;;; the following filters are buffer-local:
 (defvar ltc-limiting-authors nil "Set of authors to limit commit graph.")
 (defvar ltc-limiting-date nil "Date to limit commit graph.")
@@ -197,7 +201,7 @@
 						      (list 'list
 						       (list 'setq show-var (list 'not show-var)) 
 						       (list 'ltc-method-call 
-							     "set_show" 
+							     "set_bool_pref" 
 							     (list 'cdr (list 'assoc (list 'quote show-var) 'show-map)) 
 							     show-var) 
 						       '(ltc-update)) 
@@ -226,6 +230,13 @@
 			"..."
 		      (concat " [" (shorten 7 ltc-limiting-rev) "]...")))]
     )
+   ["Condense authors" 
+    (list 
+     (setq ltc-condense-authors (not ltc-condense-authors))
+     (ltc-method-call "set_bool_pref" (cdr (assoc 'ltc-condense-authors other-settings-map)) ltc-condense-authors)
+     (ltc-update)
+     )
+    :style toggle :selected ltc-condense-authors :key-sequence nil]
    "--"
    "MOVE CURSOR"
    ["To previous change" ltc-prev-change]
@@ -265,9 +276,10 @@
     ;; else-forms: initialization of session was successful:
     (message "LTC session ID = %d" session-id)
     (setq ltc-info-buffer (concat "LTC info (session " (number-to-string session-id) ")"))
-    ;; update filtering settings
+    ;; update boolean settings
     (mapc (lambda (show-var) 
-	    (set show-var (ltc-method-call "get_show" (cdr (assoc show-var show-map))))) (mapcar 'car show-map))
+	    (set show-var (ltc-method-call "get_bool_pref" (cdr (assoc show-var show-map))))) (mapcar 'car show-map))
+    (setq ltc-condense-authors (ltc-method-call "get_bool_pref" (cdr (assoc 'ltc-condense-authors other-settings-map))))
     (mapc (lambda (var) 
 	    (set var 'nil)) 
 	  limit-vars)
@@ -356,7 +368,7 @@
 		    ) styles))
 	(ltc-add-edit-hooks) ; add (local) hooks to capture user's edits
 	;; update commit graph in temp info buffer
-	(init-commit-graph (cdr (assoc-string "expanded_revs" map)))
+	(init-commit-graph (cdr (assoc-string "revs" map)))
 	(update-info-buffer)
 	(set-buffer-modified-p old-buffer-modified-p) ; restore modification flag
 	))

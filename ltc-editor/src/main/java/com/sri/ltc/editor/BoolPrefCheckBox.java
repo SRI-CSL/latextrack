@@ -33,16 +33,16 @@ import java.awt.event.ItemListener;
  * @author linda
  */
 @SuppressWarnings("serial")
-public final class ShowingCheckBox extends JCheckBox {
+public final class BoolPrefCheckBox extends JCheckBox {
 
-    public ShowingCheckBox(String text,
-                           final LTCserverInterface.Show show,
-                           final JButton updateButton) {
-        super(text, Filtering.getInstance().getShowingStatus(show));
+    public BoolPrefCheckBox(String text,
+                            final LTCserverInterface.BoolPrefs boolPref,
+                            final JButton updateButton) {
+        super(text, Filtering.getInstance().getStatus(boolPref));
         addItemListener(new ItemListener() {
             public void itemStateChanged(ItemEvent e) {
-                Filtering.getInstance().setShowingStatus(
-                        show,
+                Filtering.getInstance().setStatus(
+                        boolPref,
                         e.getStateChange() == ItemEvent.SELECTED);
                 updateButton.doClick();
             }

@@ -56,7 +56,7 @@ public class SVNCommit extends Commit<SVNRepository, SVNTrackedFile> {
 
     @Override
     public Author getAuthor() {
-        return new Author(logEntry.getAuthor(), null, null);
+        return new Author(logEntry.getAuthor(), null);
     }
 
     @Override

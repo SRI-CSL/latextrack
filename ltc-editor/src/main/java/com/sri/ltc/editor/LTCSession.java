@@ -30,7 +30,6 @@ import javax.swing.*;
 import java.io.File;
 import java.io.IOException;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
@@ -182,7 +181,6 @@ public class LTCSession {
                                 (String) map.get(LTCserverInterface.KEY_TEXT),
                                 (List<Integer[]>) map.get(LTCserverInterface.KEY_STYLES),
                                 (Integer) map.get(LTCserverInterface.KEY_CARET),
-                                new HashSet<String>((List<String>) map.get(LTCserverInterface.KEY_EXPANDED_REVS)),
                                 (List<String>) map.get(LTCserverInterface.KEY_REVS),
                                 commits, remotes);
                     } catch (InterruptedException e) {
