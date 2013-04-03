@@ -417,12 +417,12 @@ public final class LTCEditor extends LTCGui {
 
         // 3) date panel
         JPanel datePane = new JPanel(new BorderLayout(5,0));
-        datePane.add(new JLabel("Until Date:"), BorderLayout.LINE_START);
+        datePane.add(new JLabel("Start at date:"), BorderLayout.LINE_START);
         datePane.add(dateField, BorderLayout.CENTER);
 
         // 4) rev panel
         JPanel revPane = new JPanel(new BorderLayout(5,0));
-        revPane.add(new JLabel("Until Revision:"), BorderLayout.LINE_START);
+        revPane.add(new JLabel("Start at revision:"), BorderLayout.LINE_START);
         revPane.add(revField, BorderLayout.CENTER);
 
         // layout
