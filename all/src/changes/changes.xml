@@ -27,6 +27,15 @@
         <author email="lilalinda at users.sourceforge.net">Linda Briesemeister</author>
     </properties>
     <body>
+        <release version="1.0" date="2013-April">
+            <action dev="lilalinda" type="add" issue="22">
+                Added a boolean setting (persistent) whether to condense authors or not.  By default, this is off so
+                we see all intermediate versions of the same author marked up.  The mark up changes once we turn this
+                setting on, resulting in skipping intermediate versions (as done in the original implementation).
+            </action>
+
+        </release>
+
         <release version="0.9.13" date="2013-03-19">
             <action dev="lilalinda" type="fix" issue="3">
                 LTC Editor now has a button (with shortcut CMD/CTRL-R) to open a dialog to create a bug report.
