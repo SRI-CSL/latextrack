@@ -93,6 +93,7 @@ public final class LTCEditor extends LTCGui {
     private final JButton pullButton = new JButton("Pull");
     private final JButton pushButton = new JButton("Push");
     private final RemoteComboBoxModel remoteModel = new RemoteComboBoxModel(session, pushButton, pullButton);
+    private final JPanel remotePane = new JPanel(new GridBagLayout());
     private final JFileChooser fileChooser = new JFileChooser();
     private final JTextField fileField = new JTextField();
     private final Action updateAction = new AbstractAction("Update") {
@@ -205,7 +206,7 @@ public final class LTCEditor extends LTCGui {
     }
 
     protected void finishInit(List<Object[]> authors, List<Object[]> commits, Object[] self, String VCS) {
-        // TODO: decide here whether we have SVN or GIT and change GUI elements accordingly
+        // decide here whether we have SVN or GIT and change GUI elements accordingly
         LTCserverInterface.VersionControlSystems vcs = null;
         try {
             vcs = LTCserverInterface.VersionControlSystems.valueOf(VCS);
@@ -213,19 +214,13 @@ public final class LTCEditor extends LTCGui {
             // VCS was not a proper name: make svn the default
             vcs = LTCserverInterface.VersionControlSystems.SVN;
         }
+        // switch self panel:
         CardLayout cl = (CardLayout) cards.getLayout();
         cl.show(cards, vcs.name());
-//        switch (vcs) {
-//            case GIT:
-////                selfPane.add(selfCombo, BorderLayout.CENTER);
-//
-//
-//                break;
-//            case SVN: // make svn the default
-//            default:
-////                selfPane.add(selfField, BorderLayout.CENTER);
-//
-//        }
+        // enable or disable remote panel
+        enableComponents(remotePane, LTCserverInterface.VersionControlSystems.GIT.equals(vcs));
+
+        // other initializations:
         authorModel.init(authors);
         commitModel.init(commits, true);
         selfModel.init(authors, self);
@@ -345,6 +340,7 @@ public final class LTCEditor extends LTCGui {
                     return false;
                 return true;
             }
+
             @Override
             public boolean importData(TransferSupport support) {
                 if (!canImport(support))
@@ -372,6 +368,7 @@ public final class LTCEditor extends LTCGui {
         filePane.add(fileField, BorderLayout.CENTER);
         filePane.add(new JButton(new AbstractAction("Choose...") {
             private static final long serialVersionUID = 138311848972917973L;
+
             public void actionPerformed(ActionEvent e) {
                 if (fileChooser.showOpenDialog(getFrame()) == JFileChooser.APPROVE_OPTION) {
                     File file = fileChooser.getSelectedFile();
@@ -567,12 +564,11 @@ public final class LTCEditor extends LTCGui {
         c1.gridx = 2;
         commitPane.add(commitMsgField, c1);
 
-        // 4) remotes and push/pull TODO: disable when SVN, enable when GIT!
+        // 4) remotes and push/pull
         final JComboBox remoteCombo = new JComboBox(remoteModel);
         remoteCombo.setEditable(true);
         remoteCombo.setRenderer(new MyComboRenderer());
         remoteCombo.setEditor(new RemoteComboBoxEditor());
-        JPanel remotePane = new JPanel(new GridBagLayout());
         GridBagConstraints c2 = new GridBagConstraints();
         c2.gridx = 0;
         remotePane.add(new JLabel("Remote: "), c2);
@@ -588,6 +584,7 @@ public final class LTCEditor extends LTCGui {
         c2.weightx = 1.0; // combo box gets all space
         c2.gridx = 1;
         remotePane.add(remoteCombo, c2);
+        enableComponents(remotePane, false); // by default disabled
 
         // combine 3) and 4) into one pane using BoxLayout
         JPanel boxedPane = new JPanel();
@@ -614,6 +611,14 @@ public final class LTCEditor extends LTCGui {
         panel.add(splitPaneH, BorderLayout.CENTER);
     }
 
+    private void enableComponents(Container container, boolean enable) {
+        for (Component component : container.getComponents()) {
+            component.setEnabled(enable);
+            if (component instanceof Container)
+                enableComponents((Container) component, enable);
+        }
+    }
+
     public LTCEditor() {
         super(true, "LTC Editor");
 
@@ -630,7 +635,7 @@ public final class LTCEditor extends LTCGui {
     }
 
     private static void printUsage(PrintStream out, CmdLineParser parser) {
-        out.println("usage: java -cp ... "+LTCEditor.class.getCanonicalName()+" [options...] [FILE] \nwith");
+        out.println("usage: java -cp ... " + LTCEditor.class.getCanonicalName() + " [options...] [FILE] \nwith");
         parser.printUsage(out);
     }
 
