@@ -78,6 +78,13 @@
             <artifactId>svnkit</artifactId>
             <version>1.7.8</version>
         </dependency>
+
+        <!-- natural language parsing for dates -->
+        <dependency>
+            <groupId>com.joestelmach</groupId>
+            <artifactId>natty</artifactId>
+            <version>0.6</version>
+        </dependency>
     </dependencies>
 
     <build>

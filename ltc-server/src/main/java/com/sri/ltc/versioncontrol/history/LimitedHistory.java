@@ -21,6 +21,7 @@
  */
 package com.sri.ltc.versioncontrol.history;
 
+import com.sri.ltc.CommonUtils;
 import com.sri.ltc.filter.Author;
 import com.sri.ltc.latexdiff.CommitReaderWrapper;
 import com.sri.ltc.latexdiff.ReaderWrapper;
@@ -61,7 +62,7 @@ public final class LimitedHistory extends FileHistory {
     @Override
     List<Commit> updateCommits() throws ParseException, VersionControlException, IOException {
         return trackedFile.getCommits(
-                ((limitingDate == null) || limitingDate.isEmpty()) ? null : Commit.deSerializeDate(limitingDate),
+                ((limitingDate == null) || limitingDate.isEmpty()) ? null : CommonUtils.deSerializeDate(limitingDate),
                 ((limitingRev == null) || limitingRev.isEmpty()) ? null : limitingRev);
     }
 

@@ -21,7 +21,7 @@
  */
 package com.sri.ltc.versioncontrol.history;
 
-import com.google.common.collect.Lists;
+import com.sri.ltc.CommonUtils;
 import com.sri.ltc.filter.Author;
 import com.sri.ltc.versioncontrol.CommitGraph;
 import com.sri.ltc.versioncontrol.Commit;
@@ -99,7 +99,7 @@ public abstract class FileHistory {
                     commit.getMessage().trim(),
                     author.name,
                     author.email,
-                    Commit.serializeDate(commit.getDate()),
+                    CommonUtils.serializeDate(commit.getDate()),
                     parentsAsString.toString()
             });
         }

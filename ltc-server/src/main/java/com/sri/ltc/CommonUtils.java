@@ -22,11 +22,18 @@
 package com.sri.ltc;
 
 import com.google.common.io.CharStreams;
+import com.joestelmach.natty.DateGroup;
+import com.joestelmach.natty.Parser;
 import com.sri.ltc.xplatform.AppInterface;
 
 import javax.swing.*;
 import java.io.*;
 import java.net.URL;
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.List;
 import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -46,6 +53,10 @@ public final class CommonUtils {
             return file.isDirectory() && s.matches("\\.LTC.*\\.log");
         }
     };
+
+    // for natural language dates
+    public final static DateFormat FORMATTER = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss Z");
+    private final static Parser NATTY_PARSER = new Parser();
 
     // create notice
     private static String NOTICE = "";
@@ -158,4 +169,37 @@ public final class CommonUtils {
         }
     }
 
+    /**
+     * Translate given date into a String representation using the {@link #FORMATTER}.
+     *
+     * @param date Date to translate
+     * @return String representing the given date
+     */
+    public static String serializeDate(Date date) {
+        return FORMATTER.format(date);
+    }
+
+    /**
+     * Try to parse given date into a Java Date instance.  If the date does not adhere to {@link #FORMATTER}, we try
+     * to parse it with Natty that understands natural language to some extend.
+     *
+     * @param date String describing the date
+     * @return Date that the given String described
+     */
+    public static Date deSerializeDate(String date) throws ParseException {
+        Date result = null;
+        try {
+            result = FORMATTER.parse(date);
+        } catch (ParseException e) {
+            // now try to parse with natty:
+            List<DateGroup> groups = NATTY_PARSER.parse(date);
+            if (groups.isEmpty())
+                throw new ParseException("Cannot parse given string into a date (empty groups)", 0);
+            List<Date> dates = groups.get(0).getDates();
+            if (dates.isEmpty())
+                throw new ParseException("Cannot parse given string into a date (empty dates)", groups.get(0).getPosition());
+            result = dates.get(0);
+        }
+        return result;
+    }
 }

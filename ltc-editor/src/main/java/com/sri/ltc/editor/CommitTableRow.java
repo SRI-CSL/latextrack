@@ -22,9 +22,9 @@ package com.sri.ltc.editor;
  * #L%
  */
 
+import com.sri.ltc.CommonUtils;
 import com.sri.ltc.filter.Author;
 import com.sri.ltc.server.LTCserverInterface;
-import com.sri.ltc.versioncontrol.Commit;
 
 import java.text.ParseException;
 import java.util.ArrayList;
@@ -60,8 +60,8 @@ public final class CommitTableRow {
         if (array.length < 6)
             throw new IllegalArgumentException("Cannot create commit table row from less than 6 objects in array");
         this.ID = array[0].toString();
-        this.message = array[1].toString(); // TODO: limit to first newline (if any)
-        this.date = Commit.deSerializeDate(array[4].toString());
+        this.message = array[1].toString(); // TODO: limit to first full stop ("\.\s+") or newline (if any)
+        this.date = CommonUtils.deSerializeDate(array[4].toString());
         this.author = new Author(array[2].toString(), array[3].toString());
     }
 

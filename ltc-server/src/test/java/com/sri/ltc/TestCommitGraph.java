@@ -87,31 +87,31 @@ public final class TestCommitGraph {
         // commit objects
         Commit[] commits = new TestCommit[7];
         commits[0] = new TestCommit("d3f904cd6ea27f9d8eae2191483f111631cd5129", 
-                Commit.deSerializeDate("2010-07-23 20:27:04 +0200"),
+                CommonUtils.deSerializeDate("2010-07-23 20:27:04 +0200"),
                 "Roger Sherman", "sherman@usa.gov",
                 "sixth version");
         commits[1] = new TestCommit("203e0ce8a57032612912c92219f228ce23b8f1de",
-                Commit.deSerializeDate("2010-07-23 20:26:35 +0200"),
+                CommonUtils.deSerializeDate("2010-07-23 20:26:35 +0200"),
                 "Roger Sherman", "sherman@usa.gov",
                 "fifth version");
         commits[2] = new TestCommit("36eeab06e8a7d06a721cfa639702581b2ac7e688",
-                Commit.deSerializeDate("2010-07-23 20:12:42 +0200"),
+                CommonUtils.deSerializeDate("2010-07-23 20:12:42 +0200"),
                 "Thomas Jefferson", "jefferson@usa.gov",
                 "fourth version");
         commits[3] = new TestCommit("fa2be391bbaa3f926518e5f0b55bde7613805d6d",
-                Commit.deSerializeDate("2010-07-23 20:11:18 +0200"),
+                CommonUtils.deSerializeDate("2010-07-23 20:11:18 +0200"),
                 "Benjamin Franklin", "franklin@usa.gov",
                 "third version");
         commits[4] = new TestCommit("bac2f5155c502d5ee103b4f2ed2e0a520601dddf",
-                Commit.deSerializeDate("2010-07-23 20:09:51 +0200"),
+                CommonUtils.deSerializeDate("2010-07-23 20:09:51 +0200"),
                 "John Adams", "adams@usa.gov",
                 "second version");
         commits[5] = new TestCommit("d6d1cf81740be22fba6f7cef1a33831017736015",
-                Commit.deSerializeDate("2010-07-23 20:08:39 +0200"),
+                CommonUtils.deSerializeDate("2010-07-23 20:08:39 +0200"),
                 "Thomas Jefferson", "jefferson@usa.gov",
                 "first version");
         commits[6] = new TestCommit("xxxf5155c502d5ee103b4f2ed2e0a520601dddf",
-                Commit.deSerializeDate("2010-07-24 20:09:51 +0200"),
+                CommonUtils.deSerializeDate("2010-07-24 20:09:51 +0200"),
                 "John Adams", "adams@usa.gov",
                 "last version");
 

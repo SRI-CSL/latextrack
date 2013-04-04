@@ -28,7 +28,6 @@ import com.sri.ltc.logging.LevelOptionHandler;
 import com.sri.ltc.logging.LogConfiguration;
 import com.sri.ltc.server.LTCserverImpl;
 import com.sri.ltc.server.LTCserverInterface;
-import com.sri.ltc.versioncontrol.Commit;
 import org.apache.xmlrpc.XmlRpcException;
 import org.kohsuke.args4j.Argument;
 import org.kohsuke.args4j.CmdLineException;
@@ -47,6 +46,7 @@ import java.beans.PropertyChangeListener;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
+import java.text.ParseException;
 import java.util.*;
 import java.util.List;
 import java.util.logging.Level;
@@ -164,7 +164,7 @@ public final class LTCEditor extends LTCGui {
             }
         }
     };
-    private final JTextField dateField = new JTextField();
+    private final DateField dateField = new DateField();
     private final JTextField revField = new JTextField();
     private final JTextField commitMsgField = new JTextField();
     private final JButton saveButton = new JButton(new AbstractAction("Save") {
@@ -248,6 +248,15 @@ public final class LTCEditor extends LTCGui {
         commitModel.update(new HashSet<String>(orderedIDs));
         // update list of remotes
         remoteModel.update(remotes);
+        // update date field
+        String date = dateField.getText();
+        if (!date.isEmpty())
+            try {
+                dateField.setText(CommonUtils.serializeDate(CommonUtils.deSerializeDate(date)));
+            } catch (ParseException e) {
+                // ignore and reset to old value:
+                dateField.setText(date);
+            }
     }
 
     protected void finishAuthors(List<Object[]> authors) {
@@ -316,7 +325,7 @@ public final class LTCEditor extends LTCGui {
                 try {
                     Date data = (Date) support.getTransferable().getTransferData(DATE_FLAVOR);
                     // insert data
-                    dateField.setText(Commit.serializeDate(data));
+                    dateField.setText(CommonUtils.serializeDate(data));
                     // signal success
                     return true;
                 } catch (UnsupportedFlavorException e) {
@@ -752,6 +761,14 @@ public final class LTCEditor extends LTCGui {
                 session.pullOrPush(repository, isPull, dateField.getText(), revField.getText(),
                         saveButton.isEnabled(), textPane.getText(), textPane.stopFiltering(), textPane.getCaretPosition());
             }
+        }
+    }
+
+    private class DateField extends JTextField {
+        @Override
+        public void setText(String s) {
+            super.setText(s);
+            setCaretPosition(0);
         }
     }
 }
