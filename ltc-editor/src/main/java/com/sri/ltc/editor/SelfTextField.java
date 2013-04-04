@@ -50,11 +50,17 @@ public final class SelfTextField extends JTextField implements ListDataListener 
 
     private void triggerUpdate() {
         if (self == null) {
-            setText("");
+            super.setText("");
             setForeground(Color.black);
         } else {
-            setText(self.toString());
+            super.setText(self.toString());
             setForeground(authorModel.getColorForAuthor(self));
         }
+        revalidate();
+    }
+
+    @Override
+    public void setText(String s) {
+        // ignore; only manipulate text via setSelf
     }
 }

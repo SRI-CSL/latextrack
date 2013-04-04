@@ -101,7 +101,7 @@ public class LTCSession {
             protected void done() {
                 if (isCancelled()) {
                     ID = -1;
-                    editor.finishInit(null, null, null, VCS);
+                    editor.finishInit(null, null, null, null);
                 } else
                     try {
                         ID = get();
