@@ -35,26 +35,69 @@
                 Is LTC the same as Track Changes in Microsoft Word?
             </question>
             <answer>
-                <p>No.  LTC was inspired by the general capability of Word to track changes.  However, we made a few conscious design choices that sets LTC apart from track changes in Word.  The most important difference is that the author does not have to accept or reject changes.  Also, the author does not have to turn the feature on or off in order to track changes.  He or she, however, has to create a history of the document by committing versions of the file to a version control system.  To date, we support <a href="http://git-scm.com/">git</a> because of its popularity, free availability and distributed nature, which fits well with the intended use in a collaboration on a writing project among scientific authors. </p>
+                <p>No.  LTC was inspired by the general capability of Word to track changes.  However, we made a few
+                    conscious design choices that sets LTC apart from track changes in Word.  The most important
+                    difference is that the author does not have to accept or reject changes.  Also, the author does
+                    not have to turn the feature on or off in order to track changes.  He or she, however, has to
+                    create a history of the document by committing versions of the file to a version control system.
+                    To date, we support <a href="http://git-scm.com/">git</a> and
+                    <a href="http://subversion.apache.org/">Subversion</a>.  We recommend using git because of its
+                    popularity, free availability and distributed nature, which fits well with the intended use in
+                    a collaboration on a writing project among scientific authors. Subversion is also freely available
+                    and already used by many.  See the questions below for more details on different version control
+                    systems.</p>
             </answer>
         </faq>
 
         <faq id="only-git">
             <question>
-                Why use git?  Could other version control systems be used?
+                Why use git?
             </question>
             <answer>
                 <p><a href="http://git-scm.com/">Git</a> is free and open source and as the version control system for
                     the Linux kernel and other high-profile open source systems under very active development.  Git is
                     also a distributed version control system, which suits the idea of collaborating authors working
                     mostly offline (some people write best when not connected to the Internet with all its distractions).</p>
-                <p>That said, we have recently added support for Subversion to manage versions of the .tex file of
-                    interest.  As the database is typically stored on an off-site server, the author must be connected
-                    to this machine via the Internet or other networking while using LTC.  Also, since each version
-                    needs to be fetched from afar, it may also create more latency than using git.</p>
-                <p>LTC could work with other version control systems if there is interest.  We leave this as a future
+            </answer>
+        </faq>
+
+        <faq id="about-svn">
+            <question>
+                Why use Subversion?
+            </question>
+            <answer>
+                <p><a href="http://subversion.apache.org/">Subversion</a> is also a free and open source version
+                control system, which is very popular and under active development.  However, it is a so-called
+                centralized version control system, which means that authors can only use LTC while connected to the
+                server, as the history of the .tex file is kept there.  This prevents working with LTC in offline
+                situations.  Since it remains widely in use and is familiar to some authors, we do support using it.
+                The response time is slower than using git.</p>
+            </answer>
+        </faq>
+
+        <faq id="other-vcs">
+            <question>
+                Could LTC support other version control systems?
+            </question>
+            <answer>
+                <p>Yes, LTC can work with other version control systems if there is interest.  We leave this as a future
                     exercise for the open source community to provide a different back-end for a new version control
                     system.</p>
+            </answer>
+        </faq>
+
+        <faq id="mailing-lists">
+            <question>
+                How do I stay in touch?
+            </question>
+            <answer>
+                <p>Until we have a proper mechanism to check for updates from the LTC applications, it is best to
+                    subscribe to changes using the <a href="http://sourceforge.net/projects/latextrack/">
+                        SourceForge web site
+                    </a> or to the <a href="http://lists.sourceforge.net/lists/listinfo/latextrack-announce">
+                        latextrack-announce mailing list
+                    </a>
+                </p>
             </answer>
         </faq>
     </part>
@@ -67,11 +110,12 @@
             <question>How do I submit a bug report?</question>
             <answer>
                 <p>Thank you for contributing to this project by filing a bug report.  To help us debugging, please
-                provide the log file at ~/.LTC.log or ~/.LTCEditor.log that should contain log output from the session
-                that exhibited the problem.  Furthermore, if you can share your git repository with us to enable us to
-                reproduce the problem better, you could bundle it using the following command inside the root directory
-                of your repository:</p>
-                <source>$> git bundle create myrepo.bundle --all</source>
+                    create a bug report file "report.zip" using the button "Bug Report..." in the LTC Editor or the
+                    Emacs menu item "Bug report...", which is also accessible via the command "M-x ltc-bug-report".
+                    Specify a location where to generate the report ZIP file, give an explanation if you wish, and
+                    decide whether to include the source repository of your writing project.  Then send an email to
+                    <a href="mailto:latextrack-bugs@lists.sourceforge.net">latextrack-bugs</a> attaching the
+                    generated "report.zip" file.</p>
             </answer>
         </faq>
 
@@ -129,16 +173,15 @@ The answer to the question of life is: 42
 
         <faq id="strikethrough-emacs">
             <question>
-                My ltc-mode seems to be working but deletions are missing strike-through markup.
+                My ltc-mode seems to be working but deletions are missing the strike-through markup.
             </question>
             <answer>
                 <p>Unfortunately, Emacs under Mac OS X is missing the Courier font in strike-through.
                 Other operating systems such as Linux do not have this problem but the default setting for marking up
                 deletions may not show the strike-through.</p>
                 <p>You can customize Emacs to use a different font face for marking up deletions using command
-                "M-x customize-group RET ltc RET" once LTC mode has been loaded at least once via "M-x ltc-mode"
-                (which may have been unsuccessful).  Then, customize the faces called "Ltc Addition" and "Ltc Deletion"
-                to your liking.</p>
+                "M-x customize-face RET ltc-deletion RET" once LTC mode has been loaded at least once via "M-x ltc-mode"
+                (which may have been unsuccessful).  </p>
             </answer>
         </faq>
 

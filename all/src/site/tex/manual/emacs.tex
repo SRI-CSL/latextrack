@@ -28,7 +28,7 @@ $> java -jar $LTC/LTC.jar -p 5555
 <current date> | INFO: 	Started RPC server on port 5555.
 \end{CodeVerbatim}
 
-The log messages from the LTC server are also saved in file \Code{~/.LTC.log}.  This log file is created every time that the server starts, so if you need the contents, please make a copy before starting the server anew.
+The log messages from the LTC server are also saved in file \Code{\char`\~/.LTC.log}.  This log file is created every time that the server starts, so if you need the contents, please make a copy before starting the server anew.
 
 \subsection{Entering and Exiting \texttt{ltc-mode}}
 
@@ -64,7 +64,7 @@ To customize LTC mode, you can use the command \Code{M-x customize-group RET ltc
 
 \begin{description}
 \item[Port] This denotes the port of the LTC server running on your local machine.  Leave the default value unless there are problems and the port is already in use by another application.
-\item[Ltc Command Prefix] This is a global command prefix for all interactive LTC commands in Emacs.  The Emacs convention for modes is to use \Code{\^C} and another character but you can adjust this to your liking if you like to use shortcuts to the LTC functions.
+\item[Ltc Command Prefix] This is a global command prefix for all interactive LTC commands in Emacs.  The Emacs convention for modes is to use \Code{\char`\^C} and another character (default is \Code{\char`\^C '}) but you can adjust this to your liking if you like to use shortcuts to the LTC functions.
 \item[Ltc Addition and Deletion faces]  Here you can customize how LTC marks up additions and deletions respectively.  You will not want to set the Foreground or Background color, as this will be overridden by the colors of the authors who made the change.  On Mac OS X, the strike-through fonts may not be available so the default for deletions is also to invert the foreground and background coloring.  On Linux, you may want to turn the color inversion off for a less intrusive scheme as the strike-through font is available there.
 \end{description}
 
