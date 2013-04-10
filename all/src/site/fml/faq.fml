@@ -113,8 +113,8 @@
                     create a bug report file "report.zip" using the button "Bug Report..." in the LTC Editor or the
                     Emacs menu item "Bug report...", which is also accessible via the command "M-x ltc-bug-report".
                     Specify a location where to generate the report ZIP file, give an explanation if you wish, and
-                    decide whether to include the source repository of your writing project.  Then send an email to
-                    <a href="mailto:latextrack-bugs@lists.sourceforge.net">latextrack-bugs</a> attaching the
+                    decide whether to include the source repository of your writing project.  Then send an email to the
+                    <a href="mailto:lilalinda@users.sourceforge.net">lead developer</a> attaching the
                     generated "report.zip" file.</p>
             </answer>
         </faq>
