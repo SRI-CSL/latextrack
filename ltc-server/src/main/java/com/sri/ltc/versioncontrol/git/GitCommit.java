@@ -59,7 +59,7 @@ public class GitCommit extends Commit<GitRepository, GitTrackedFile> {
 
     @Override
     public Author getAuthor() {
-        return new Author(revCommit.getAuthorIdent().getName(), revCommit.getAuthorIdent().getEmailAddress(), null);
+        return new Author(revCommit.getAuthorIdent().getName(), revCommit.getAuthorIdent().getEmailAddress());
     }
 
     @Override

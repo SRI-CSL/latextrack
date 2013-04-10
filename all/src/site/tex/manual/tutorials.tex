@@ -1,0 +1,56 @@
+% !TEX root = manual.tex
+\chapter{Tutorials} \label{ch:tutorials}
+
+This chapter contains a number of tutorials adjusted to the user's preference of text editor and version control system.  The following diagram allows to easily identify the best fit for your situation and contains links to the respective tutorial sections.  Whether you are using git or svn as a version control system, you will want to visit the respective section to setup your example repository first.  Then move on to the respective section for the editor you will be using, Emacs or the bundled Java application LTC Editor.
+
+\begin{tikzpicture}[->,>=stealth',shorten >=1pt,font=\small,auto]
+	\tikzset{CircleStyle/.style={circle,draw=black,minimum size=0.2cm}}
+	\tikzset{VertexStyle/.style={rectangle,rounded corners,draw=black,minimum size=0.2cm,text width=2.2cm}}
+  	\tikzset{LabelStyle/.style={draw=none,fill=white,font=\footnotesize,midway}}
+
+	% first row
+	\node[CircleStyle,initial above,initial text=,initial distance=0.3cm] (INIT) {};
+	
+	% second row  
+	\node[VertexStyle,text width=3.5cm] (example-git) [below left=0.6cm of INIT,xshift=-0.8cm] 
+	 {Sec.~\ref{sec:example-git}\\ \nolinknameref{sec:example-git}};
+	\node[VertexStyle,text width=3.5cm] (example-svn) [below right=0.6cm of INIT,xshift=0.8cm]
+	 {Sec.~\ref{sec:example-svn}\\ \nolinknameref{sec:example-svn}};
+	
+	% third row
+	\node[CircleStyle] (git-EDITOR) [below=0.3cm of example-git] {};
+	\node[CircleStyle] (svn-EDITOR) [below=0.3cm of example-svn] {};
+	  
+	% fourth row
+	\node[VertexStyle] (git-emacs)  [below left=0.5cm of git-EDITOR]
+	 {Sec.~\ref{sec:tutorial-git-emacs}\\ \nolinknameref{sec:tutorial-git-emacs}};
+	\node[VertexStyle] (git-editor) [below right=0.5cm of git-EDITOR]
+	 {Sec.~\ref{sec:tutorial-git}\\ \nolinknameref{sec:tutorial-git}};
+	\node[VertexStyle] (svn-emacs)  [below left=0.5cm of svn-EDITOR] 
+	 {Sec.~\ref{sec:tutorial-svn-emacs}\\ \nolinknameref{sec:tutorial-svn-emacs}};
+	\node[VertexStyle] (svn-editor) [below right=0.5cm of svn-EDITOR]
+	 {Sec.~\ref{sec:tutorial-svn}\\ \nolinknameref{sec:tutorial-svn}};
+	
+	% explanations
+	\node[state] (expl-third) [left=2.7cm of git-EDITOR,draw=none] {which editor?};
+	\node[state] (expl-first) [left=5cm of INIT,draw=none] {which version control?};
+	
+	\path
+		(INIT)        edge node[LabelStyle,above left]  {git}        (example-git)
+	  	(INIT)        edge node[LabelStyle,above right] {svn}        (example-svn)
+		(example-git) edge (git-EDITOR)
+		(example-svn) edge (svn-EDITOR)
+		(git-EDITOR)  edge node[LabelStyle,above left]  {Emacs}      (git-emacs)
+		(git-EDITOR)  edge node[LabelStyle,above right] {LTC Editor} (git-editor)
+		(svn-EDITOR)  edge node[LabelStyle,above left]  {Emacs}      (svn-emacs)
+		(svn-EDITOR)  edge node[LabelStyle,above right] {LTC Editor} (svn-editor)
+		;
+	\end{tikzpicture}
+
+\input{example-git}
+\input{tutorial-git-emacs}
+\input{tutorial-git}
+
+\input{example-svn}
+\input{tutorial-svn-emacs}
+\input{tutorial-svn}

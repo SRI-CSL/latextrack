@@ -27,7 +27,6 @@ import com.sri.ltc.versioncontrol.Commit;
 import com.sri.ltc.versioncontrol.RepositoryFactory;
 import com.sri.ltc.versioncontrol.TrackedFile;
 import com.sri.ltc.versioncontrol.VersionControlException;
-import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -41,11 +40,10 @@ import static org.junit.Assert.*;
 
 @Category(IntegrationTests.class)
 public class TestGitRepository {
-    @ClassRule
-    public static TemporaryGitRepository temporaryGitRepository = new TemporaryGitRepository();
 
+    // a fresh repository for each test:
     @Rule
-    public TemporaryGitRepository toBeRemoved = new TemporaryGitRepository();
+    public TemporaryGitRepository temporaryGitRepository = new TemporaryGitRepository();
 
     @Test
     public void testUntracked() {
@@ -65,10 +63,10 @@ public class TestGitRepository {
 
         try {
             TrackedFile trackedFile = temporaryGitRepository.createTestFileInRepository("foo", ".txt", "testAddAndCommit", true);
-            assertTrue(trackedFile.getStatus() == TrackedFile.Status.Added);
+            assertEquals("Status is ADDED", TrackedFile.Status.Added, trackedFile.getStatus());
 
             trackedFile.commit("commit from testAddAndCommit");
-            assertTrue(trackedFile.getStatus() == TrackedFile.Status.Unchanged);
+            assertEquals("Status is UNCHANGED", TrackedFile.Status.Unchanged, trackedFile.getStatus());
         } catch (Exception e) {
             fail(e.getMessage());
         }
@@ -78,19 +76,12 @@ public class TestGitRepository {
     public void testAddCommitAndModify() {
         assertTrue(temporaryGitRepository.getRoot().exists());
 
-        TrackedFile.Status status;
-
         try {
-            System.out.println("Working with repository in " + temporaryGitRepository.getRoot().getPath());
-
             TrackedFile trackedFile = temporaryGitRepository.createTestFileInRepository("foo", ".txt", "testAddCommitAndModify", true);
-            status = trackedFile.getStatus();
-            assertTrue(status == TrackedFile.Status.Added);
+            assertEquals("Status is ADDED", TrackedFile.Status.Added, trackedFile.getStatus());
 
             trackedFile.commit("commit A from testAddCommitAndModify");
-
-            status = trackedFile.getStatus();
-            assertTrue(status == TrackedFile.Status.Unchanged);
+            assertEquals("Status is UNCHANGED", TrackedFile.Status.Unchanged, trackedFile.getStatus());
 
             {
                 // create a different file, so we can verify that we get commits only for the file we do care about
@@ -105,8 +96,7 @@ public class TestGitRepository {
             assertTrue(commits.get(0).getMessage().equals("commit A from testAddCommitAndModify"));
 
             temporaryGitRepository.modifyTestFileInRepository(trackedFile, "modification", true);
-            status = trackedFile.getStatus();
-            assertTrue(status == TrackedFile.Status.Modified);
+            assertEquals("Status is MODIFIED", TrackedFile.Status.Modified, trackedFile.getStatus());
 
             trackedFile.commit("commit B from testAddCommitAndModify");
 
@@ -125,8 +115,6 @@ public class TestGitRepository {
         assertTrue(temporaryGitRepository.getRoot().exists());
 
         try {
-            System.out.println("Working with repository in " + temporaryGitRepository.getRoot().getPath());
-
             TrackedFile trackedFile0 = temporaryGitRepository.createTestFileInRepository("file0", ".txt", "file0 contents", true);
             TrackedFile trackedFile1 = temporaryGitRepository.createTestFileInRepository("file1", ".txt", "file1 contents", true);
             TrackedFile trackedFile2 = temporaryGitRepository.createTestFileInRepository("file2", ".txt", "file2 contents", true);
@@ -160,16 +148,16 @@ public class TestGitRepository {
     public void badThingsWithRepo() throws VersionControlException, IOException {
         // do bad things to repo such as removing .git or the whole tree...
 
-        assertTrue(toBeRemoved.getRoot().exists());
+        assertTrue(temporaryGitRepository.getRoot().exists());
         TrackedFile trackedFile = null;
         List<Commit> commits = null;
 
         try {
             // commit a few revisions
-            trackedFile = toBeRemoved.createTestFileInRepository("foo", ".txt", "first version of file", true);
+            trackedFile = temporaryGitRepository.createTestFileInRepository("foo", ".txt", "first version of file", true);
             assertEquals("tracked file is added", TrackedFile.Status.Added, trackedFile.getStatus());
             trackedFile.commit("commit A from badThingsWithRepo");
-            toBeRemoved.modifyTestFileInRepository(trackedFile, "\n more text into file", true);
+            temporaryGitRepository.modifyTestFileInRepository(trackedFile, "\n more text into file", true);
             assertEquals("tracked file is modified", TrackedFile.Status.Modified, trackedFile.getStatus());
             trackedFile.commit("commit B from badThingsWithRepo");
 
@@ -178,8 +166,8 @@ public class TestGitRepository {
             assertEquals("2 commits", 2, commits.size());
 
             // checking out file structure
-            assertTrue("root is directory", toBeRemoved.getRoot().isDirectory());
-            File[] gitDir = toBeRemoved.getRoot().listFiles(RepositoryFactory.GIT_FILTER);
+            assertTrue("root is directory", temporaryGitRepository.getRoot().isDirectory());
+            File[] gitDir = temporaryGitRepository.getRoot().listFiles(RepositoryFactory.GIT_FILTER);
             assertTrue(".git exists", gitDir != null);
             assertEquals("only 1 .git exists", 1, gitDir.length);
 

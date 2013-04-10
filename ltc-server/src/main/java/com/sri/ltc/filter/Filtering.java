@@ -31,6 +31,9 @@ import java.util.prefs.BackingStoreException;
 import java.util.prefs.Preferences;
 
 /**
+ * A singleton class that manages the (persistent) settings for boolean preferences
+ * including the status of showing or hiding certain changes.
+ *
  * @author linda
  */
 public final class Filtering {
@@ -66,43 +69,45 @@ public final class Filtering {
 
     private static final Logger logger = Logger.getLogger(Filtering.class.getName());
     private final Preferences preferences = Preferences.userNodeForPackage(this.getClass());
-    private final Map<LTCserverInterface.Show,Boolean> defaultsShow =
-            new HashMap<LTCserverInterface.Show,Boolean>();
+    private final Map<LTCserverInterface.BoolPrefs,Boolean> defaultsShow =
+            new HashMap<LTCserverInterface.BoolPrefs,Boolean>();
 
     private void init () {
         // default values for showing flags
-        defaultsShow.put(LTCserverInterface.Show.SMALL, false);
-        defaultsShow.put(LTCserverInterface.Show.DELETIONS, true);
-        defaultsShow.put(LTCserverInterface.Show.PREAMBLE, true);
-        defaultsShow.put(LTCserverInterface.Show.COMMANDS, true);
-        defaultsShow.put(LTCserverInterface.Show.COMMENTS, false);
+        defaultsShow.put(LTCserverInterface.BoolPrefs.SMALL, false);
+        defaultsShow.put(LTCserverInterface.BoolPrefs.DELETIONS, true);
+        defaultsShow.put(LTCserverInterface.BoolPrefs.PREAMBLE, true);
+        defaultsShow.put(LTCserverInterface.BoolPrefs.COMMANDS, true);
+        defaultsShow.put(LTCserverInterface.BoolPrefs.COMMENTS, false);
+        // default values for other boolean preferences
+        defaultsShow.put(LTCserverInterface.BoolPrefs.COLLAPSE_AUTHORS, false);
     }
 
-    public boolean getShowingStatus(LTCserverInterface.Show key) {
+    public boolean getStatus(LTCserverInterface.BoolPrefs key) {
         synchronized (preferences) {
             return preferences.getBoolean(key.name(), defaultsShow.get(key));
         }
     }
 
-    public void setShowingStatus(LTCserverInterface.Show key, boolean value) {
+    public void setStatus(LTCserverInterface.BoolPrefs key, boolean value) {
         synchronized (preferences) {
             preferences.putBoolean(key.name(), value);
             try {
                 preferences.flush();
             } catch (BackingStoreException e) {
-                logger.log(Level.SEVERE, "Exception while setting showing status:", e);
+                logger.log(Level.SEVERE, "Exception while setting status:", e);
             }
         }
     }
 
-    public void resetShowingStatus() {
+    public void resetAllStatus() {
         synchronized (preferences) {
-            for (LTCserverInterface.Show key : LTCserverInterface.Show.values())
+            for (LTCserverInterface.BoolPrefs key : LTCserverInterface.BoolPrefs.values())
                 preferences.putBoolean(key.name(), defaultsShow.get(key));
             try {
                 preferences.flush();
             } catch (BackingStoreException e) {
-                logger.log(Level.SEVERE, "Exception while resetting showing status:", e);
+                logger.log(Level.SEVERE, "Exception while resetting all status:", e);
             }
         }
     }

@@ -33,34 +33,19 @@ import java.util.regex.Pattern;
  */
 public final class Author implements Comparable<Author> {
 
-    private final static Pattern INITIALS_PATTERN = Pattern.compile("\\b([a-zA-Z])\\S*\\b");
     private final static Pattern EMAIL_PATTERN = Pattern.compile("^\\w([\\.\\w\\-])*[\\w]*@(\\w[\\w\\-\\.\\(\\)]*)+$");
-    private final static Pattern AUTHOR_PATTERN = Pattern.compile("^\\s*(([a-zA-Z\\-\\.]+\\s*)+)(\\s+<([^<>\\s]+)>){0,1}(\\s+\\(([A-Z]+)\\)){0,1}\\s*$");
+    private final static Pattern AUTHOR_PATTERN = Pattern.compile("^\\s*(([a-zA-Z\\-\\.]+\\s*)+)(\\s+<([^<>\\s]+)>){0,1}\\s*$");
 
     public final String name;
     public final String email;
-    private String initials;
 
-    public Author(String name, String email, String initials) {
+    public Author(String name, String email) {
         if (name == null || "".equals(name))
             throw new IllegalArgumentException("Cannot create an author with empty or NULL name.");
         if (email == null)
             email = "";
         this.name = name;
         this.email = email;
-        if (initials == null || "".equals(initials))
-            initials = createInitials();
-        this.initials = initials;
-    }
-
-    private String createInitials() {
-        StringBuffer buffer = new StringBuffer();
-        Matcher matcher = INITIALS_PATTERN.matcher(name);
-        while (matcher.find()) {
-            if (matcher.groupCount() > 0)
-                buffer.append(matcher.group(1));
-        }
-        return buffer.toString().toUpperCase();
     }
 
     public Object[] asList() {
@@ -71,8 +56,8 @@ public final class Author implements Comparable<Author> {
         if (list == null || list.length < 1)
             throw new RuntimeException("Cannot create author from NULL or list with less than 1 entry");
         return new Author((String) list[0],
-                list.length>1?(String) list[1]:null,
-                null);
+                list.length>1?(String) list[1]:null
+        );
     }
 
     public static Author parse(String string) throws ParseException {
@@ -89,10 +74,11 @@ public final class Author implements Comparable<Author> {
                 throw new ParseException("Given email string is not valid: "+mAuthor.group(4), mAuthor.start(4));
         }
 
-        return new Author(mAuthor.group(1).trim(), mAuthor.group(4), mAuthor.group(6));
+        return new Author(mAuthor.group(1).trim(), mAuthor.group(4));
     }
 
-    public String gitRepresentation() {
+    @Override
+    public String toString() {
         return name+("".equals(email)?"":" <"+email+">");
     }
 
@@ -102,11 +88,6 @@ public final class Author implements Comparable<Author> {
         if (result == 0)
             return email.compareTo(author.email);
         return result;
-    }
-
-    @Override
-    public String toString() {
-        return gitRepresentation()+" ("+initials+")";
     }
 
     @Override

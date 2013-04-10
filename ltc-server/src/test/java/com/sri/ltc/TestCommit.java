@@ -24,7 +24,6 @@ package com.sri.ltc;
 import com.sri.ltc.filter.Author;
 import com.sri.ltc.versioncontrol.Commit;
 
-import java.io.IOException;
 import java.io.InputStream;
 import java.util.Date;
 import java.util.List;
@@ -57,7 +56,7 @@ public class TestCommit extends Commit {
 
     @Override
     public Author getAuthor() {
-        return new Author(authorName, authorEmail, null);
+        return new Author(authorName, authorEmail);
     }
 
     @Override

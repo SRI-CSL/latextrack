@@ -21,6 +21,7 @@
  */
 package com.sri.ltc.git;
 
+import com.sri.ltc.filter.Author;
 import com.sri.ltc.versioncontrol.Repository;
 import com.sri.ltc.versioncontrol.TrackedFile;
 import com.sri.ltc.versioncontrol.git.GitRepository;
@@ -44,7 +45,7 @@ public class TemporaryGitRepository extends TemporaryFolder {
         super.before();
         assert this.getRoot().exists();
 
-        System.out.println("Creating a git repo at " + this.getRoot().toString());
+        System.out.println("Working with git repo at " + this.getRoot().toString());
         repository = new GitRepository(new File(this.getRoot().toString()), true);
 
         File testGitDir = new File(this.getRoot().toString() + File.separatorChar + ".git");
@@ -82,5 +83,11 @@ public class TemporaryGitRepository extends TemporaryFolder {
         fileWriter.append(text);
         fileWriter.flush();
         fileWriter.close();
+    }
+
+    public void setAuthor(Author author) {
+        if (repository == null)
+            throw new RuntimeException("Repository is not initialized");
+        repository.setSelf(author);
     }
 }

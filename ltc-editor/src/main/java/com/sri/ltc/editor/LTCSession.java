@@ -30,7 +30,6 @@ import javax.swing.*;
 import java.io.File;
 import java.io.IOException;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
@@ -73,6 +72,7 @@ public class LTCSession {
             List<Object[]> authors = null;
             java.util.List<Object[]> commits = null;
             Object[] self = null;
+            String VCS = null;
             int sessionID = -1;
 
             @SuppressWarnings("unchecked")
@@ -90,6 +90,9 @@ public class LTCSession {
                 setProgress(75);
                 self = LTC.get_self(sessionID);
                 if (isCancelled()) return -1;
+                setProgress(95);
+                VCS = LTC.get_VCS(sessionID);
+                if (isCancelled()) return -1;
                 setProgress(100);
                 return sessionID;
             }
@@ -98,11 +101,11 @@ public class LTCSession {
             protected void done() {
                 if (isCancelled()) {
                     ID = -1;
-                    editor.finishInit(null, null, null);
+                    editor.finishInit(null, null, null, null);
                 } else
                     try {
                         ID = get();
-                        editor.finishInit(authors, commits, self);
+                        editor.finishInit(authors, commits, self, VCS);
                         startUpdate(date, rev, false, "", Collections.<Object[]>emptyList(), caretPosition);
                     } catch (InterruptedException e) {
                         LOGGER.log(Level.SEVERE, e.getMessage(), e);
@@ -182,7 +185,6 @@ public class LTCSession {
                                 (String) map.get(LTCserverInterface.KEY_TEXT),
                                 (List<Integer[]>) map.get(LTCserverInterface.KEY_STYLES),
                                 (Integer) map.get(LTCserverInterface.KEY_CARET),
-                                new HashSet<String>((List<String>) map.get(LTCserverInterface.KEY_EXPANDED_REVS)),
                                 (List<String>) map.get(LTCserverInterface.KEY_REVS),
                                 commits, remotes);
                     } catch (InterruptedException e) {

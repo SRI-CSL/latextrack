@@ -240,21 +240,22 @@ public final class LTCserverImpl implements LTCserverInterface {
         }
         updateProgress(10);
 
+        Filtering filter = Filtering.getInstance();
+
         // obtain file history from GIT, disk, and session (obeying any filters):
         List<ReaderWrapper> readers = null;
         List<Author> authors = null;
-        List<String> expanded_revisions = new ArrayList<String>();
         List<String> revisions = new ArrayList<String>();
         try {
+            // TODO: whether to condense authors or not (from Filtering)
             // create history with limits and obtain revision IDs, authors, and readers:
             LimitedHistory history = new LimitedHistory(session.getTrackedFile(),
                     session.getLimitedAuthors(),
                     session.getLimitDate(),
-                    session.getLimitRev());
+                    session.getLimitRev(),
+                    filter.getStatus(BoolPrefs.COLLAPSE_AUTHORS));
             updateProgress(12);
-            // TODO: temporarily fixing Peter's complaint that we should color everything in between:
-            expanded_revisions = history.getIDsFromExpanded();
-            revisions = history.getIDs(); // these are just the IDs used in the accumulation
+            revisions = history.getIDs(); // these are the IDs used in the accumulation
             authors = history.getAuthorsList();
             updateProgress(15);
             readers = history.getReadersList();
@@ -274,7 +275,6 @@ public final class LTCserverImpl implements LTCserverInterface {
                         // add self as author
                         authors.add(self);
                     readers.add(fileReader);
-                    expanded_revisions.add(LTCserverInterface.ON_DISK);
                     revisions.add(LTCserverInterface.ON_DISK);
             }
             // add current text from editor, if modified since last save:
@@ -288,19 +288,16 @@ public final class LTCserverImpl implements LTCserverInterface {
                     authors.add(self);
                 readers.add(currentTextReader);
                 // replace ON_DISK if present, otherwise append MODIFIED
-                if (expanded_revisions.size() > 0 && revisions.size() > 0
-                        && LTCserverInterface.ON_DISK.equals(expanded_revisions.get(expanded_revisions.size()-1))) {
-                    expanded_revisions.remove(expanded_revisions.size()-1);
+                if (revisions.size() > 0
+                        && LTCserverInterface.ON_DISK.equals(revisions.get(revisions.size()-1))) {
                     revisions.remove(revisions.size()-1);
                 }
-                expanded_revisions.add(LTCserverInterface.MODIFIED);
                 revisions.add(LTCserverInterface.MODIFIED);
             }
             // if no readers, then use text from file and self as author
             if (readers.size() == 0 && authors.size() == 0) {
                 authors.add(self);
                 readers.add(new FileReaderWrapper(session.getTrackedFile().getFile().getCanonicalPath()));
-                expanded_revisions.add("");
                 revisions.add("");
             }
             updateProgress(47);
@@ -342,19 +339,17 @@ public final class LTCserverImpl implements LTCserverInterface {
                 };
                 session.getAccumulate().addPropertyChangeListener(listener);
             }
-            Filtering filter = Filtering.getInstance();
             map = session.getAccumulate().perform(
                     readers.toArray(new ReaderWrapper[readers.size()]),
                     indices.toArray(new Integer[indices.size()]),
                     Change.buildFlagsToHide(
-                            filter.getShowingStatus(LTCserverInterface.Show.DELETIONS),
-                            filter.getShowingStatus(LTCserverInterface.Show.SMALL),
-                            filter.getShowingStatus(LTCserverInterface.Show.PREAMBLE),
-                            filter.getShowingStatus(LTCserverInterface.Show.COMMENTS),
-                            filter.getShowingStatus(LTCserverInterface.Show.COMMANDS)),
+                            filter.getStatus(BoolPrefs.DELETIONS),
+                            filter.getStatus(BoolPrefs.SMALL),
+                            filter.getStatus(BoolPrefs.PREAMBLE),
+                            filter.getStatus(BoolPrefs.COMMENTS),
+                            filter.getStatus(BoolPrefs.COMMANDS)),
                     caretPosition);
             map.put(LTCserverInterface.KEY_AUTHORS, mappedAuthors); // add current author map
-            map.put(LTCserverInterface.KEY_EXPANDED_REVS, expanded_revisions); // add list of expanded revisions
             map.put(LTCserverInterface.KEY_REVS, revisions); // add list of revisions used in accumulation
             session.getAccumulate().removePropertyChangeListener(listener);
         } catch (Exception e) {
@@ -376,10 +371,16 @@ public final class LTCserverImpl implements LTCserverInterface {
         try {
             session.getTrackedFile().commit(message);
         } catch (Exception e) {
-            logAndThrow(4, "JavaGitException during git commit: " + e.getMessage());
+            logAndThrow(4, "Exception during git commit: " + e.getMessage());
         }
 
         return 0;
+    }
+
+    public String get_VCS(int sessionID) throws XmlRpcException {
+        Session session = getSession(sessionID);
+
+        return session.getTrackedFile().getRepository().getVCS().name();
     }
 
     private Object[] concatAuthorAndColor(Author author) throws XmlRpcException {
@@ -423,8 +424,8 @@ public final class LTCserverImpl implements LTCserverInterface {
     public Object[] set_self(int sessionID, String name, String email) throws XmlRpcException {
         Session session = getSession(sessionID);
         try {
-            Author a = new Author(name, email, null);
-            session.getTrackedFile().getRepository().setSelf(a);
+            Author a = new Author(name, email);
+            session.getTrackedFile().getRepository().setSelf(a);  // TODO: if not implemented by repository (e.g., svn) then don't add to authors!
             session.addAuthors(Collections.singleton(a));
         } catch (IllegalArgumentException e) {
             logAndThrow(4,"Cannot create author to set as self with given arguments: "+e.getMessage());
@@ -506,37 +507,37 @@ public final class LTCserverImpl implements LTCserverInterface {
         return 0;
     }
 
-    public boolean get_show(String key) throws XmlRpcException {
+    public boolean get_bool_pref(String key) throws XmlRpcException {
         try {
-            Show show = Show.valueOf(key);
-            return Filtering.getInstance().getShowingStatus(show);
+            BoolPrefs boolPref = BoolPrefs.valueOf(key);
+            return Filtering.getInstance().getStatus(boolPref);
         } catch (IllegalArgumentException e) {
             logAndThrow(1, e.getMessage());
         }
         return false;
     }
 
-    public int set_show(String key, boolean value) throws XmlRpcException {
+    public int set_bool_pref(String key, boolean value) throws XmlRpcException {
         try {
-            Show show = Show.valueOf(key);
-            Filtering.getInstance().setShowingStatus(show, value);
-            LOGGER.info("Turning show of "+key+(value?" on.":" off."));
+            BoolPrefs boolPref = BoolPrefs.valueOf(key);
+            Filtering.getInstance().setStatus(boolPref, value);
+            LOGGER.fine("Server: turning boolean preference for \"" + key + (value ? "\" on." : "\" off."));
         } catch (IllegalArgumentException e) {
             logAndThrow(1, e.getMessage());
         }
         return 0;
     }
 
-    public int reset_show() {
-        Filtering.getInstance().resetShowingStatus();
-        LOGGER.info("Resetting all show states to default.");
+    public int reset_bool_prefs() {
+        Filtering.getInstance().resetAllStatus();
+        LOGGER.info("Server: resetting all boolean preferences to default.");
         return 0;
     }
 
-    public Object[] get_show_items() {
+    public Object[] get_bool_pref_items() {
         List<String> names = new ArrayList<String>();
-        for (Show show : LTCserverInterface.Show.values())
-            names.add(show.name());
+        for (BoolPrefs boolPref : BoolPrefs.values())
+            names.add(boolPref.name());
         return names.toArray();
     }
 
@@ -632,24 +633,24 @@ public final class LTCserverImpl implements LTCserverInterface {
         File xmlFile = new File(outputDirectory, "report.xml");
         create_bug_report_xml(sessionID, message, bundle, xmlFile.getAbsolutePath());
 
-        // create zip
+        // create zip with additional files
         File zipFile = new File(outputDirectory, "report.zip");
         LOGGER.fine("Server: zipping up bug report as \""+zipFile.getAbsolutePath()+"\"");
         try {
             ZipOutputStream zos = new ZipOutputStream(new FileOutputStream(zipFile, false));
 
             // add "report.xml"
-            copyToZip(zos, xmlFile);
+            copyToZip(zos, xmlFile, xmlFile.getName());
 
             // add log file(s), if they exist
             File[] logFiles = new File(System.getProperty("user.home")).listFiles(CommonUtils.LOG_FILE_FILTER);
             if (logFiles != null)
                 for (File logFile : logFiles)
-                    copyToZip(zos, logFile);
+                    copyToZip(zos, logFile, logFile.getName().substring(1)); // remove leading "." from name
 
             // add bundle file (if exists)
             if (bundle != null)
-                copyToZip(zos, bundle);
+                copyToZip(zos, bundle, bundle.getName());
 
             zos.close();
         } catch (FileNotFoundException e) {
@@ -661,8 +662,8 @@ public final class LTCserverImpl implements LTCserverInterface {
         return zipFile.getAbsolutePath();
     }
 
-    private void copyToZip(ZipOutputStream zos, File file) throws IOException {
-        zos.putNextEntry(new ZipEntry(file.getName()));
+    private void copyToZip(ZipOutputStream zos, File file, String name) throws IOException {
+        zos.putNextEntry(new ZipEntry(name));
         FileInputStream fis = new FileInputStream(file);
         byte[] buf = new byte[1024];
         int len;
@@ -672,7 +673,7 @@ public final class LTCserverImpl implements LTCserverInterface {
     }
 
     private String getColorKey(Author author) {
-        return KEY_COLOR + author.toString();
+        return KEY_COLOR + author;
     }
 
     public static String convertToHex(Color color) {
@@ -683,8 +684,8 @@ public final class LTCserverImpl implements LTCserverInterface {
         if (authorName == null || "".equals(authorName))
             logAndThrow(10, "Cannot get color with NULL or empty author name");
 
-        Author author = new Author(authorName, authorEmail, null);
-        LOGGER.fine("Server: getting color for author \""+author.gitRepresentation()+"\" called.");
+        Author author = new Author(authorName, authorEmail);
+        LOGGER.fine("Server: getting color for author \""+author+"\" called.");
 
         // define random color based on randomized hue
         Color randomColor = Color.getHSBColor((float) Math.random(), 0.85f, 1.0f);
@@ -715,8 +716,8 @@ public final class LTCserverImpl implements LTCserverInterface {
         if (authorName == null || "".equals(authorName))
             logAndThrow(1, "Cannot set color with NULL or empty author name");
 
-        Author author = new Author(authorName, authorEmail, null);
-        LOGGER.fine("Server: setting color for author \"" + author.gitRepresentation() + "\" to " + hexColor + ".");
+        Author author = new Author(authorName, authorEmail);
+        LOGGER.fine("Server: setting color for author \""+author+"\" to " + hexColor + ".");
 
         synchronized (preferences) {
             try {
@@ -737,7 +738,7 @@ public final class LTCserverImpl implements LTCserverInterface {
         if (authorName == null || "".equals(authorName))
             logAndThrow(1, "Cannot reset color with NULL or empty author name");
         synchronized (preferences) {
-            preferences.remove(getColorKey(new Author(authorName, authorEmail, null)));
+            preferences.remove(getColorKey(new Author(authorName, authorEmail)));
         }
         return 0;
     }
@@ -845,7 +846,8 @@ public final class LTCserverImpl implements LTCserverInterface {
                 history = new LimitedHistory(session.getTrackedFile(),
                         session.getLimitedAuthors(),
                         session.getLimitDate(),
-                        session.getLimitRev());
+                        session.getLimitRev(),
+                        get_bool_pref(BoolPrefs.COLLAPSE_AUTHORS.name()));
             } catch (Exception e) {
                 logAndThrow(3, "Could not create LimitedHistory:" + e.getMessage());
             }
@@ -861,12 +863,12 @@ public final class LTCserverImpl implements LTCserverInterface {
             Element element = document.createElement("show-options");
             rootElement.appendChild(element);
 
-            for (Show show : LTCserverInterface.Show.values()) {
+            for (BoolPrefs boolPref : BoolPrefs.values()) {
                 Element optionElement = document.createElement("show-option");
                 element.appendChild(optionElement);
 
-                addSimpleTextNode(document, optionElement, "key", show.name(), null);
-                addSimpleTextNode(document, optionElement, "value", Boolean.toString(get_show(show.name())), null);
+                addSimpleTextNode(document, optionElement, "key", boolPref.name(), null);
+                addSimpleTextNode(document, optionElement, "value", Boolean.toString(get_bool_pref(boolPref.name())), null);
             }
         }
 

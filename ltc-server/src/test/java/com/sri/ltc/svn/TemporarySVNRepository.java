@@ -71,7 +71,7 @@ public class TemporarySVNRepository extends TemporaryFolder{
         assertTrue(".svn directory exists", svn.exists());
         assertTrue(".svn is directory", svn.isDirectory());
 
-        repository.setSelf(new Author("adams", null, null));
+        repository.setSelf(new Author("adams", null));
     }
 
     public TrackedFile getTrackedFile() throws IOException {

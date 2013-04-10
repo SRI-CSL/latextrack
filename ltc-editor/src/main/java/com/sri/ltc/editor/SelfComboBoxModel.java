@@ -95,12 +95,11 @@ public final class SelfComboBoxModel extends AbstractListModel implements ComboB
         return new ArrayList<Author>(authors).get(index);
     }
 
-    // TODO: change to List<Object[]> authors...
-    public void init(List<Object[]> list, Object[] self) {
+    public void init(List<Object[]> authorList, Object[] self) {
         synchronized (authors) {
             clear();            
-            if (list != null && !list.isEmpty()) {
-                for (Object[] authorAsList : list) {
+            if (authorList != null && !authorList.isEmpty()) {
+                for (Object[] authorAsList : authorList) {
                     authors.add(Author.fromList(authorAsList));
                 }
                 fireIntervalAdded(this, 0, authors.size()-1);
@@ -110,7 +109,8 @@ public final class SelfComboBoxModel extends AbstractListModel implements ComboB
                 authors.add(author);
                 updateLTC = false; // as self is coming from init, we don't need to update LTC
                 setSelectedItem(author);
-            }
+            } else
+                setSelectedItem(null);
         }
     }
 

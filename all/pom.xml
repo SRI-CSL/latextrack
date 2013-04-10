@@ -7,7 +7,7 @@
     <parent>
         <groupId>com.sri.ltc</groupId>
         <artifactId>LTC</artifactId>
-        <version>0.9.13</version>
+        <version>0.9.14</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
@@ -45,11 +45,15 @@
 
     <mailingLists>
         <mailingList>
-            <name>LTC Support</name>
+            <name>LTC Forum</name>
             <subscribe>http://lists.sourceforge.net/lists/listinfo/latextrack-support</subscribe>
             <unsubscribe>http://lists.sourceforge.net/lists/listinfo/latextrack-support</unsubscribe>
             <post>latextrack-support@lists.sourceforge.net</post>
             <archive>http://sourceforge.net/mailarchive/forum.php?forum_name=latextrack-support</archive>
+        </mailingList>
+        <mailingList>
+            <name>LTC Bug Reports</name>
+            <post>latextrack-bugs@lists.sourceforge.net</post>
         </mailingList>
         <mailingList>
             <name>LTC Announcements</name>
@@ -261,7 +265,7 @@
                 </executions>
             </plugin>
 
-            <!-- ~~~ pre-site ~~~ -->
+            <!-- ~~~ pre-site and clean ~~~ -->
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>exec-maven-plugin</artifactId>

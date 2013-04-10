@@ -22,8 +22,8 @@ package com.sri.ltc.editor;
  * #L%
  */
 
+import com.sri.ltc.CommonUtils;
 import com.sri.ltc.filter.Author;
-import com.sri.ltc.versioncontrol.Commit;
 
 import javax.activation.DataHandler;
 import javax.swing.*;
@@ -80,7 +80,7 @@ public final class CommitTable extends JTable {
         setDefaultRenderer(Date.class, new CommitTableRenderer() {
             @Override
             String renderText(Object object) {
-                return Commit.serializeDate((Date) object);
+                return CommonUtils.serializeDate((Date) object);
             }
         });
         setDefaultRenderer(Author.class, new CommitTableRenderer() {

@@ -39,11 +39,11 @@ public interface LTCserverInterface {
     public final static String KEY_STYLES = "styles";
     public final static String KEY_AUTHORS = "authors";
     public final static String KEY_CARET = "caret";
-    public final static String KEY_EXPANDED_REVS = "expanded_revs";
     public final static String KEY_REVS = "revs";
-    public static enum Show {SMALL, DELETIONS, PREAMBLE, COMMANDS, COMMENTS};
+    public static enum BoolPrefs {SMALL, DELETIONS, PREAMBLE, COMMANDS, COMMENTS, COLLAPSE_AUTHORS};
     public final static String ON_DISK = "on disk"; // special name for version on disk (if file modified and not committed)
     public final static String MODIFIED = "modified"; // special name for text modified in editor
+    public static enum VersionControlSystems {GIT, SVN};
 
     /**
      * Initialize a new track changes session with the base system.
@@ -135,13 +135,8 @@ public interface LTCserverInterface {
      * The value under {@link #KEY_CARET} contains the transformed cursor
      * position into the new text of the one given as an argument to the method.
      * <p>
-     * Another entry under {@link #KEY_EXPANDED_REVS} in the returned map is a list of revision
-     * names that have been used to obtain the changes including those that are in between
-     * by the same author.
-     * <p>
      * Finally, an entry under {@link #KEY_REVS} in the returned map is a list of revision
-     * names that have been used to obtain the changes but not including those with same
-     * authors in between.
+     * names from newest to oldest that have been used to obtain the changes.
      *
      * @param sessionID identifies the session
      * @param isModified whether the text has been modified since the last save operation
@@ -164,11 +159,8 @@ public interface LTCserverInterface {
             throws XmlRpcException;
 
     /**
-     * Commit the current file on disk to git.  The file is indicated by the session ID.
+     * Commit the current file on disk.  The file is indicated by the session ID.
      * A non-null and non-empty message must be supplied.
-     *
-     * A special error case is the so-called "empty commit" when the file on disk has not
-     * changed compared to the last commit.  In this case, an exception with code 5 is thrown.
      *
      * @param sessionID identifies the session
      * @param message A non-null and not empty message for the commit
@@ -176,13 +168,22 @@ public interface LTCserverInterface {
      * @throws XmlRpcException <ul>
      *   <li>with error code = 1 if the given identifier does not denote a known session.
      *   <li>with error code = 2 if the given message is NULL or empty.
-     *   <li>with error code = 3 if an IOException occurred during committing.
-     *   <li>with error code = 4 if a JavaGitException occurred during committing.
-     *   <li>with error code = 5 if there was nothing to commit (empty commit).
-     *   <li>with error code = 6 if an error occurred during performing <code>git commit</code>.
+     *   <li>with error code = 4 if an Exception occurred during committing.
      * </ul>
      */
     public int commit_file(int sessionID, String message) throws XmlRpcException;
+
+    /**
+     * Obtain the name of the version control system that tracks the current file of the given session.
+     *
+     * @param sessionID identifies the session
+     * @return String that denotes one of the possible version control systems as contained in
+     *   {@link VersionControlSystems}
+     * @throws XmlRpcException <ul>
+     *   <li>with error code = 1 if the given identifier does not denote a known session.
+     * </ul>
+     */
+    public String get_VCS(int sessionID) throws XmlRpcException;
 
     /**
      * Obtain all known authors for the file indicated by the session ID.  The returned
@@ -394,41 +395,41 @@ public interface LTCserverInterface {
     public int reset_limited_rev(int sessionID) throws XmlRpcException;
 
     /**
-     * Obtain the current setting of filtering for the given showing item.
-     * @param key String that identifies which showing item is requested.  Should denote
-     *            one of the constants of {@link com.sri.ltc.server.LTCserverInterface.Show}
-     * @return boolean value of current status of given showing item
+     * Obtain the current status for the given boolean preference item.
+     * @param key String that identifies which boolean preference item is requested.  Should denote
+     *            one of the constants of {@link com.sri.ltc.server.LTCserverInterface.BoolPrefs}
+     * @return boolean value of current status of given boolean preference item
      * @throws XmlRpcException <ul>
      *   <li>with error code = 1 if the given String is not one of the constants of
-     *       {@link com.sri.ltc.server.LTCserverInterface.Show}.
+     *       {@link com.sri.ltc.server.LTCserverInterface.BoolPrefs}.
      * </ul>
      */
-    public boolean get_show(String key) throws XmlRpcException;
+    public boolean get_bool_pref(String key) throws XmlRpcException;
 
     /**
-     * Set new filtering status of given showing item to given value.
-     * @param key String that identifies which showing item is to be set.  Should denote
-     *            one of the constants of {@link com.sri.ltc.server.LTCserverInterface.Show}
-     * @param value boolean that denotes the new filtering status of given showing item
+     * Set new status of given boolean preference item to given value.
+     * @param key String that identifies which boolean preference item is to be set.  Should denote
+     *            one of the constants of {@link com.sri.ltc.server.LTCserverInterface.BoolPrefs}
+     * @param value boolean that denotes the new status of given boolean preference item
      * @throws XmlRpcException <ul>
      *   <li>with error code = 1 if the given String is not one of the constants of
-     *       {@link com.sri.ltc.server.LTCserverInterface.Show}.
+     *       {@link com.sri.ltc.server.LTCserverInterface.BoolPrefs}.
      * </ul>
      * @return 0
      */
-    public int set_show(String key, boolean value) throws XmlRpcException;
+    public int set_bool_pref(String key, boolean value) throws XmlRpcException;
 
     /**
-     * Reset all showing items to their default values.
+     * Reset all boolean preference items to their default values.
      * @return 0
      */
-    public int reset_show();
+    public int reset_bool_prefs();
 
     /**
-     * Get all permissible showing item names.
-     * @return An array of permissible showing item names
+     * Get all permissible boolean preference item names.
+     * @return An array of permissible boolean preference item names
      */
-    public Object[] get_show_items();
+    public Object[] get_bool_pref_items();
 
     /**
      * Get currently set remote aliases from git.  The list can be empty.

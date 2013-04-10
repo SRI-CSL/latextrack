@@ -28,7 +28,6 @@ import com.sri.ltc.logging.LevelOptionHandler;
 import com.sri.ltc.logging.LogConfiguration;
 import com.sri.ltc.server.LTCserverImpl;
 import com.sri.ltc.server.LTCserverInterface;
-import com.sri.ltc.versioncontrol.Commit;
 import org.apache.xmlrpc.XmlRpcException;
 import org.kohsuke.args4j.Argument;
 import org.kohsuke.args4j.CmdLineException;
@@ -47,6 +46,7 @@ import java.beans.PropertyChangeListener;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
+import java.text.ParseException;
 import java.util.*;
 import java.util.List;
 import java.util.logging.Level;
@@ -88,9 +88,12 @@ public final class LTCEditor extends LTCGui {
     private final AuthorListModel authorModel = new AuthorListModel(session);
     private final CommitTableModel commitModel = new CommitTableModel();
     private final SelfComboBoxModel selfModel = new SelfComboBoxModel(textPane, authorModel, session);
+    private final JPanel cards = new JPanel(new CardLayout());
+    private final SelfTextField selfField = new SelfTextField(authorModel);
     private final JButton pullButton = new JButton("Pull");
     private final JButton pushButton = new JButton("Push");
     private final RemoteComboBoxModel remoteModel = new RemoteComboBoxModel(session, pushButton, pullButton);
+    private final JPanel remotePane = new JPanel(new GridBagLayout());
     private final JFileChooser fileChooser = new JFileChooser();
     private final JTextField fileField = new JTextField();
     private final Action updateAction = new AbstractAction("Update") {
@@ -161,7 +164,7 @@ public final class LTCEditor extends LTCGui {
             }
         }
     };
-    private final JTextField dateField = new JTextField();
+    private final DateField dateField = new DateField();
     private final JTextField revField = new JTextField();
     private final JTextField commitMsgField = new JTextField();
     private final JButton saveButton = new JButton(new AbstractAction("Save") {
@@ -202,10 +205,26 @@ public final class LTCEditor extends LTCGui {
         saveButton.setEnabled(false);
     }
 
-    protected void finishInit(List<Object[]> authors, List<Object[]> commits, Object[] self) {
+    protected void finishInit(List<Object[]> authors, List<Object[]> commits, Object[] self, String VCS) {
+        // decide here whether we have SVN or GIT and change GUI elements accordingly
+        LTCserverInterface.VersionControlSystems vcs = null;
+        try {
+            vcs = LTCserverInterface.VersionControlSystems.valueOf(VCS);
+        } catch (IllegalArgumentException e) {
+            // VCS was not a proper name: make svn the default
+            vcs = LTCserverInterface.VersionControlSystems.SVN;
+        }
+        // switch self panel:
+        CardLayout cl = (CardLayout) cards.getLayout();
+        cl.show(cards, vcs.name());
+        // enable or disable remote panel
+        enableComponents(remotePane, LTCserverInterface.VersionControlSystems.GIT.equals(vcs));
+
+        // other initializations:
         authorModel.init(authors);
         commitModel.init(commits, true);
         selfModel.init(authors, self);
+        selfField.setSelf(self);
         saveButton.setEnabled(false); // start with modified = false
         setFile(session.getCanonicalPath(), false);
     }
@@ -214,7 +233,6 @@ public final class LTCEditor extends LTCGui {
                                 String text,
                                 List<Integer[]> styles,
                                 int caretPosition,
-                                Set<String> IDs,
                                 List<String> orderedIDs,
                                 List<Object[]> commits,
                                 List<Object[]> remotes) {
@@ -227,9 +245,18 @@ public final class LTCEditor extends LTCGui {
         textPane.updateFromMaps(text, styles, colors, caretPosition, orderedIDs);
         // update list of commits
         commitModel.init(commits, false);
-        commitModel.update(IDs);
+        commitModel.update(new HashSet<String>(orderedIDs));
         // update list of remotes
         remoteModel.update(remotes);
+        // update date field
+        String date = dateField.getText();
+        if (!date.isEmpty())
+            try {
+                dateField.setText(CommonUtils.serializeDate(CommonUtils.deSerializeDate(date)));
+            } catch (ParseException e) {
+                // ignore and reset to old value:
+                dateField.setText(date);
+            }
     }
 
     protected void finishAuthors(List<Object[]> authors) {
@@ -256,6 +283,7 @@ public final class LTCEditor extends LTCGui {
         authorModel.clear();
         commitModel.clear(true);
         selfModel.clear();
+        selfField.setSelf(null);
         dateField.setText("");
         revField.setText("");
         saveButton.setEnabled(false); // start with modified = false        
@@ -297,7 +325,7 @@ public final class LTCEditor extends LTCGui {
                 try {
                     Date data = (Date) support.getTransferable().getTransferData(DATE_FLAVOR);
                     // insert data
-                    dateField.setText(Commit.serializeDate(data));
+                    dateField.setText(CommonUtils.serializeDate(data));
                     // signal success
                     return true;
                 } catch (UnsupportedFlavorException e) {
@@ -321,6 +349,7 @@ public final class LTCEditor extends LTCGui {
                     return false;
                 return true;
             }
+
             @Override
             public boolean importData(TransferSupport support) {
                 if (!canImport(support))
@@ -348,6 +377,7 @@ public final class LTCEditor extends LTCGui {
         filePane.add(fileField, BorderLayout.CENTER);
         filePane.add(new JButton(new AbstractAction("Choose...") {
             private static final long serialVersionUID = 138311848972917973L;
+
             public void actionPerformed(ActionEvent e) {
                 if (fileChooser.showOpenDialog(getFrame()) == JFileChooser.APPROVE_OPTION) {
                     File file = fileChooser.getSelectedFile();
@@ -418,12 +448,12 @@ public final class LTCEditor extends LTCGui {
 
         // 3) date panel
         JPanel datePane = new JPanel(new BorderLayout(5,0));
-        datePane.add(new JLabel("Until Date:"), BorderLayout.LINE_START);
+        datePane.add(new JLabel("Start at date:"), BorderLayout.LINE_START);
         datePane.add(dateField, BorderLayout.CENTER);
 
         // 4) rev panel
         JPanel revPane = new JPanel(new BorderLayout(5,0));
-        revPane.add(new JLabel("Until Revision:"), BorderLayout.LINE_START);
+        revPane.add(new JLabel("Start at revision:"), BorderLayout.LINE_START);
         revPane.add(revField, BorderLayout.CENTER);
 
         // layout
@@ -439,15 +469,21 @@ public final class LTCEditor extends LTCGui {
         c.weighty = 1.0;
         filteringPane.add(authorPane, c);
 
-        c.weightx = 0.8;
+        c.weightx = 0.0;
         c.weighty = 0.0;
         c.gridy = 1;
+        filteringPane.add(new BoolPrefCheckBox("condense authors",
+                LTCserverInterface.BoolPrefs.COLLAPSE_AUTHORS,
+                getUpdateButton()), c);
+
+        c.weightx = 0.8;
+        c.gridy = 2;
         filteringPane.add(datePane, c);
 
-        c.gridy = 2;
+        c.gridy = 3;
         filteringPane.add(revPane, c);
 
-        c.gridy = 3;
+        c.gridy = 4;
         c.weightx = 0.0;
         c.fill = GridBagConstraints.NONE;
         filteringPane.add(getUpdateButton(), c);
@@ -476,14 +512,16 @@ public final class LTCEditor extends LTCGui {
                 BorderFactory.createTitledBorder(" Content Tracking "),
                 BorderFactory.createEmptyBorder(0, 5, 0, 5)));
 
-        // 1) self combo box
-        JPanel selfPane = new JPanel(new BorderLayout(0,0));
+        // 1) self combo box/label: as card layout
+        final JPanel selfPane = new JPanel(new BorderLayout(0, 0));
         selfPane.add(new JLabel("Self: "), BorderLayout.LINE_START);
         final JComboBox selfCombo = new JComboBox(selfModel);
         selfCombo.setEditable(true);
         selfCombo.setRenderer(new MyComboRenderer());
         selfCombo.setEditor(new SelfComboBoxEditor(authorModel));
-        selfPane.add(selfCombo, BorderLayout.CENTER);
+        cards.add(selfCombo, LTCserverInterface.VersionControlSystems.GIT.name());
+        cards.add(selfField, LTCserverInterface.VersionControlSystems.SVN.name());
+        selfPane.add(cards, BorderLayout.CENTER);
         contentTrackingPane.add(selfPane, BorderLayout.PAGE_START);
 
         // 2) commit graph
@@ -540,7 +578,6 @@ public final class LTCEditor extends LTCGui {
         remoteCombo.setEditable(true);
         remoteCombo.setRenderer(new MyComboRenderer());
         remoteCombo.setEditor(new RemoteComboBoxEditor());
-        JPanel remotePane = new JPanel(new GridBagLayout());
         GridBagConstraints c2 = new GridBagConstraints();
         c2.gridx = 0;
         remotePane.add(new JLabel("Remote: "), c2);
@@ -556,6 +593,7 @@ public final class LTCEditor extends LTCGui {
         c2.weightx = 1.0; // combo box gets all space
         c2.gridx = 1;
         remotePane.add(remoteCombo, c2);
+        enableComponents(remotePane, false); // by default disabled
 
         // combine 3) and 4) into one pane using BoxLayout
         JPanel boxedPane = new JPanel();
@@ -575,10 +613,19 @@ public final class LTCEditor extends LTCGui {
                 new PropertyChangeListener() {
                     public void propertyChange(PropertyChangeEvent e) {
                         preferences.putInt(KEY_LAST_DIVIDER_H, splitPaneH.getDividerLocation());
-                        LOGGER.config("Divider location: "+splitPaneH.getDividerLocation());
-                    }});
+                        LOGGER.config("Divider location: " + splitPaneH.getDividerLocation());
+                    }
+                });
         splitPaneH.setBorder(null);
         panel.add(splitPaneH, BorderLayout.CENTER);
+    }
+
+    private void enableComponents(Container container, boolean enable) {
+        for (Component component : container.getComponents()) {
+            component.setEnabled(enable);
+            if (component instanceof Container)
+                enableComponents((Container) component, enable);
+        }
     }
 
     public LTCEditor() {
@@ -597,7 +644,7 @@ public final class LTCEditor extends LTCGui {
     }
 
     private static void printUsage(PrintStream out, CmdLineParser parser) {
-        out.println("usage: java -cp ... "+LTCEditor.class.getCanonicalName()+" [options...] [FILE] \nwith");
+        out.println("usage: java -cp ... " + LTCEditor.class.getCanonicalName() + " [options...] [FILE] \nwith");
         parser.printUsage(out);
     }
 
@@ -714,6 +761,14 @@ public final class LTCEditor extends LTCGui {
                 session.pullOrPush(repository, isPull, dateField.getText(), revField.getText(),
                         saveButton.isEnabled(), textPane.getText(), textPane.stopFiltering(), textPane.getCaretPosition());
             }
+        }
+    }
+
+    private class DateField extends JTextField {
+        @Override
+        public void setText(String s) {
+            super.setText(s);
+            setCaretPosition(0);
         }
     }
 }

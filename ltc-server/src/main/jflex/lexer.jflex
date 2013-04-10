@@ -126,8 +126,6 @@ import java.util.regex.Pattern;
 %}
 
 EOL         = [\r\n] | \r\n
-punctuation = [.,;:!?\'\"`\^]
-symbol      = [{}\[\]()|#$%&@+\-<=>_\\/*~]
 space       = [ \t\f]
 
 %%
@@ -154,20 +152,10 @@ space       = [ \t\f]
   /* commands that are one non-whitespace character after backslash */
 
 <YYINITIAL,PREAMBLE_SEEN>
-  {punctuation}       { return Lists.newArrayList(
-                          new Lexeme(LexemeType.PUNCTUATION, yytext(), yychar, preambleSeen)); }
-  /* match single punctuation characters */
-
-<YYINITIAL,PREAMBLE_SEEN>
   [+\-]{0,1} [0-9] ([A-Za-z0-9] | [,\.][0-9])+ 
                       { return Lists.newArrayList(
                           new Lexeme(LexemeType.NUMERAL, yytext(), yychar, preambleSeen)); }
   /* numerals start with an optional minus or plus and one digit, then almost anything goes */ 
-
-<YYINITIAL,PREAMBLE_SEEN>
-  {symbol}            { return Lists.newArrayList(
-                          new Lexeme(LexemeType.SYMBOL, yytext(), yychar, preambleSeen)); }
-  /* match single symbol characters */
 
 <YYINITIAL,PREAMBLE_SEEN>
   [A-Za-z0-9\-]+      { return Lists.newArrayList(
@@ -191,7 +179,7 @@ space       = [ \t\f]
 <YYINITIAL,PREAMBLE_SEEN> 
   {EOL}+              { return Lists.newArrayList(
                           new Lexeme(LexemeType.WHITESPACE, yytext(), yychar, preambleSeen)); }
-  /* gobble-up any end-of-line characters TODO: make this a NEWLINE lexeme? */
+  /* gobble-up any end-of-line characters */
 
 <YYINITIAL,PREAMBLE_SEEN> 
   <<EOF>>             { yybegin(EOF);
@@ -199,6 +187,7 @@ space       = [ \t\f]
                           new Lexeme(LexemeType.END_OF_FILE, "", yychar, preambleSeen)); }
   /* mark end-of-file so that there is always one matching lexeme to determine end position of deletions */ 
 
-.                    { RuntimeException e = new RuntimeException("Cannot parse at position "+yychar+": "+yytext());
-                       Logger.getLogger(Lexer.class.getName()).log(Level.SEVERE, e.getMessage(), e);
-                       throw e; }
+<YYINITIAL,PREAMBLE_SEEN>
+  .                   { return Lists.newArrayList(
+                          new Lexeme(LexemeType.SYMBOL, yytext(), yychar, preambleSeen)); }
+  /* match other single characters */

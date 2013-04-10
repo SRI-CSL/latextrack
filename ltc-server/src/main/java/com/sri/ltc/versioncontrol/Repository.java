@@ -22,6 +22,7 @@
 package com.sri.ltc.versioncontrol;
 
 import com.sri.ltc.filter.Author;
+import com.sri.ltc.server.LTCserverInterface;
 
 import java.io.File;
 import java.io.IOException;
@@ -41,6 +42,13 @@ public interface Repository {
      * @throws IOException if the bundle cannot be generated in a file
      */
     public File getBundle(File outputDirectory) throws IOException;
+
+    /**
+     * Obtain type of represented version control system.  Should not return NULL.
+     *
+     * @return Type of represented version control system
+     */
+    public LTCserverInterface.VersionControlSystems getVCS();
 
     // TODO: could push these into a separate interface, but probably not needed
     public Author getSelf();

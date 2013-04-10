@@ -233,11 +233,11 @@ public final class LTCFileViewer extends LTCGui implements ListSelectionListener
                                 null, // this will cause style indices to use order of readers
                                 // this will cause revision indices to use the order of readers
                                 Change.buildFlagsToHide(
-                                        filter.getShowingStatus(LTCserverInterface.Show.DELETIONS),
-                                        filter.getShowingStatus(LTCserverInterface.Show.SMALL),
-                                        filter.getShowingStatus(LTCserverInterface.Show.PREAMBLE),
-                                        filter.getShowingStatus(LTCserverInterface.Show.COMMENTS),
-                                        filter.getShowingStatus(LTCserverInterface.Show.COMMANDS)),
+                                        filter.getStatus(LTCserverInterface.BoolPrefs.DELETIONS),
+                                        filter.getStatus(LTCserverInterface.BoolPrefs.SMALL),
+                                        filter.getStatus(LTCserverInterface.BoolPrefs.PREAMBLE),
+                                        filter.getStatus(LTCserverInterface.BoolPrefs.COMMENTS),
+                                        filter.getStatus(LTCserverInterface.BoolPrefs.COMMANDS)),
                                 textPane.getCaretPosition()
                         );
                         textPane.updateFromMaps(

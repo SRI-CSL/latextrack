@@ -22,6 +22,7 @@
 package com.sri.ltc.versioncontrol.git;
 
 import com.sri.ltc.filter.Author;
+import com.sri.ltc.server.LTCserverInterface;
 import com.sri.ltc.versioncontrol.Remotes;
 import com.sri.ltc.versioncontrol.Repository;
 import com.sri.ltc.versioncontrol.TrackedFile;
@@ -29,7 +30,6 @@ import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.lib.Ref;
 import org.eclipse.jgit.storage.file.FileRepositoryBuilder;
 import org.eclipse.jgit.transport.BundleWriter;
-import sun.security.pkcs11.wrapper.Constants;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -103,11 +103,16 @@ public class GitRepository implements Repository {
     }
 
     @Override
+    public LTCserverInterface.VersionControlSystems getVCS() {
+        return LTCserverInterface.VersionControlSystems.GIT;
+    }
+
+    @Override
     public Author getSelf() {
         String name = repository.getConfig().getString("user", null, "name");
         String email = repository.getConfig().getString("user", null, "email");
 
-        return new Author(name, email, null);
+        return new Author(name, email);
     }
 
     @Override
