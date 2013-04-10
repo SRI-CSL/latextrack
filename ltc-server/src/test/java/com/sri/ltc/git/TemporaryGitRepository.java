@@ -45,7 +45,7 @@ public class TemporaryGitRepository extends TemporaryFolder {
         super.before();
         assert this.getRoot().exists();
 
-        System.out.println("Creating a git repo at " + this.getRoot().toString());
+        System.out.println("Working with git repo at " + this.getRoot().toString());
         repository = new GitRepository(new File(this.getRoot().toString()), true);
 
         File testGitDir = new File(this.getRoot().toString() + File.separatorChar + ".git");

@@ -633,24 +633,24 @@ public final class LTCserverImpl implements LTCserverInterface {
         File xmlFile = new File(outputDirectory, "report.xml");
         create_bug_report_xml(sessionID, message, bundle, xmlFile.getAbsolutePath());
 
-        // create zip
+        // create zip with additional files
         File zipFile = new File(outputDirectory, "report.zip");
         LOGGER.fine("Server: zipping up bug report as \""+zipFile.getAbsolutePath()+"\"");
         try {
             ZipOutputStream zos = new ZipOutputStream(new FileOutputStream(zipFile, false));
 
             // add "report.xml"
-            copyToZip(zos, xmlFile);
+            copyToZip(zos, xmlFile, xmlFile.getName());
 
             // add log file(s), if they exist
             File[] logFiles = new File(System.getProperty("user.home")).listFiles(CommonUtils.LOG_FILE_FILTER);
             if (logFiles != null)
                 for (File logFile : logFiles)
-                    copyToZip(zos, logFile);
+                    copyToZip(zos, logFile, logFile.getName().substring(1)); // remove leading "." from name
 
             // add bundle file (if exists)
             if (bundle != null)
-                copyToZip(zos, bundle);
+                copyToZip(zos, bundle, bundle.getName());
 
             zos.close();
         } catch (FileNotFoundException e) {
@@ -662,8 +662,8 @@ public final class LTCserverImpl implements LTCserverInterface {
         return zipFile.getAbsolutePath();
     }
 
-    private void copyToZip(ZipOutputStream zos, File file) throws IOException {
-        zos.putNextEntry(new ZipEntry(file.getName()));
+    private void copyToZip(ZipOutputStream zos, File file, String name) throws IOException {
+        zos.putNextEntry(new ZipEntry(name));
         FileInputStream fis = new FileInputStream(file);
         byte[] buf = new byte[1024];
         int len;

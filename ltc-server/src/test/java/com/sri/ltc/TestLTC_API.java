@@ -37,6 +37,7 @@ import org.xml.sax.SAXException;
 
 import javax.xml.parsers.*;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Set;
@@ -65,6 +66,11 @@ public final class TestLTC_API {
 
     @Test
     public void bugReport() throws Exception {
+        // create ~/.LTC.log if not present
+        File logFile = new File(System.getProperty("user.home")+File.separator+".LTC.log");
+        if (!logFile.exists())
+            new FileOutputStream(logFile).close();
+
         // create moderately interesting git repository
         // create, add and commit 2 files:
         TrackedFile file1 = temporaryGitRepository.createTestFileInRepository("file1-", ".txt", "contents of file1", true);
@@ -114,6 +120,10 @@ public final class TestLTC_API {
                 assertTrue("ZIP contains bundle", bundleEntry != null);
             } else
                 assertTrue("bundle not included", bundleName == null);
+
+            // check that it contains log file
+            ZipEntry logEntry = zipFile.getEntry("LTC.log");
+            assertTrue("ZIP contains \"LTC.log\"", logEntry != null);
         } catch (IOException e) {
             fail("file is not a ZIP: "+e.getMessage());
         } finally {
