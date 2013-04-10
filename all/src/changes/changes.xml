@@ -27,13 +27,26 @@
         <author email="lilalinda at users.sourceforge.net">Linda Briesemeister</author>
     </properties>
     <body>
-        <release version="1.0" date="2013-April">
+        <release version="1.0" date="2013-April?">
+
+        </release>
+
+        <release version="0.9.14" date="2013-04-10">
+            <action dev="lilalinda" type="fix">
+                Now parsing non-ASCII characters during lexical analysis.
+            </action>
+            <action dev="lilalinda" type="fix" issue="21">
+                Now parsing natural language constructs for limiting the version control history to a start date.
+            </action>
+            <action dev="lilalinda" type="update">
+                Improved LTC Editor to disable certain GUI controls when presented with an SVN-controlled .tex file,
+                as setting "Self" and "Remotes" make no sense in that context.
+            </action>
             <action dev="lilalinda" type="add" issue="22">
                 Added a boolean setting (persistent) whether to condense authors or not.  By default, this is off so
                 we see all intermediate versions of the same author marked up.  The mark up changes once we turn this
                 setting on, resulting in skipping intermediate versions (as done in the original implementation).
             </action>
-
         </release>
 
         <release version="0.9.13" date="2013-03-19">
