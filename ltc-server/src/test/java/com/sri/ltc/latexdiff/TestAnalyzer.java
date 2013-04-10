@@ -53,7 +53,7 @@ public final class TestAnalyzer {
         // exercise simple analyses
         lexemes = analyze(new StringReaderWrapper("Lorem ipsum dolor sit amet. "));
         assertLexemes(8);
-        assertEquals(LexemeType.PUNCTUATION, lexemes.get(6).type);
+        assertEquals(LexemeType.SYMBOL, lexemes.get(6).type);
         lexemes = analyze(new StringReaderWrapper("   \\textbf{Lorem} ipsum dolor sit amet. "));
         assertLexemes(11);
         assertEquals(LexemeType.COMMAND, lexemes.get(1).type);
