@@ -90,9 +90,8 @@ public class GitRepository implements Repository {
 
         BundleWriter bundleWriter = new BundleWriter(repository);
         for (Ref ref : repository.getAllRefs().values()) {
-            if (!ref.isSymbolic()) {
+            if (!ref.isSymbolic())
                 bundleWriter.include(ref);
-            }
         }
 
         FileOutputStream fos = new FileOutputStream(bundle);

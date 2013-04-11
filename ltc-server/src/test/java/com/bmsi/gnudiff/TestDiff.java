@@ -23,8 +23,8 @@ import org.junit.Test;
 
 import java.io.StringWriter;
 
-import static junit.framework.Assert.assertEquals;
-import static junit.framework.Assert.assertTrue;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 /** Test Diff behavior.
  @author Stuart D. Gathman
