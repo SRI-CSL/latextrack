@@ -22,6 +22,7 @@
 \usepackage{ifpdf} % to detect whether pdflatex or htlatex is runnning
 \usepackage{caption}[2013/02/03]
 \usepackage{fancyhdr}
+\usepackage{subfig}
 
 %% pgf/tikz customization
 \usepgflibrary{shapes.arrows}
@@ -107,7 +108,9 @@
 \renewcommand{\headrulewidth}{0.2pt} 
 \renewcommand{\footrulewidth}{0pt}
 % custom header: chapter on left, section on right for odd; even reversed
-\fancyhead[LE,RO]{\nouppercase\rightmark}\fancyhead[LO,RE]{\nouppercase\leftmark}% custom footer: version -- copyright -- page number for odd; even reversed
+\fancyhead[LE,RO]{\nouppercase\rightmark}
+\fancyhead[LO,RE]{\nouppercase\leftmark}
+% custom footer: version -- copyright -- page number for odd; even reversed
 \fancyfoot[LO,RE]{\small{LTC v\version}}
 \fancyfoot[C]{\small{\textcopyright~SRI International}}
 \fancyfoot[RO,LE]{\small{\thepage}}
@@ -149,7 +152,9 @@ See Appendix~\ref{ch:license} or \href{http://www.gnu.org/licenses/}{http://www.
 \thispagestyle{empty}
 
 % for the first page of each chapter adjust 'plain' style:
-\fancypagestyle{plain}{%  \fancyhf{} % clear all header and footer fields  \fancyfoot[LO,RE]{\small{LTC v\version}}
+\fancypagestyle{plain}{%
+  \fancyhf{} % clear all header and footer fields
+  \fancyfoot[LO,RE]{\small{LTC v\version}}
   \fancyfoot[C]{\small{\textcopyright~SRI International}}
   \fancyfoot[RO,LE]{\small{\thepage}}
 }

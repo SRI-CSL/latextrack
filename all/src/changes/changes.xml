@@ -29,6 +29,10 @@
     <body>
         <release version="1.0" date="2013-April?">
 
+            <action dev="lilalinda" type="fix" issue="28">
+                The text field to define a start date in LTC Editor now accepts text that is dragged-and-dropped or
+                pasted into the field.
+            </action>
         </release>
 
         <release version="0.9.14" date="2013-04-10">
