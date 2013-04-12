@@ -39,6 +39,7 @@ import javax.swing.event.*;
 import javax.swing.text.BadLocationException;
 import java.awt.*;
 import java.awt.datatransfer.DataFlavor;
+import java.awt.datatransfer.Transferable;
 import java.awt.datatransfer.UnsupportedFlavorException;
 import java.awt.event.*;
 import java.beans.PropertyChangeEvent;
@@ -312,7 +313,8 @@ public final class LTCEditor extends LTCGui {
         dateField.setTransferHandler(new TransferHandler() {
             @Override
             public boolean canImport(TransferSupport support) {
-                if (support.isDataFlavorSupported(DATE_FLAVOR))
+                if (support.isDataFlavorSupported(DATE_FLAVOR) ||
+                        support.isDataFlavorSupported(DataFlavor.stringFlavor))
                     return true;
                 return false;
             }
@@ -320,14 +322,22 @@ public final class LTCEditor extends LTCGui {
             public boolean importData(TransferSupport support) {
                 if (!canImport(support))
                     return false;
-
                 // Fetch the Transferable and its data
                 try {
-                    Date data = (Date) support.getTransferable().getTransferData(DATE_FLAVOR);
-                    // insert data
-                    dateField.setText(CommonUtils.serializeDate(data));
-                    // signal success
-                    return true;
+                    Transferable t = support.getTransferable();
+                    DataFlavor[] flavors = t.getTransferDataFlavors();
+                    if (flavors == null || flavors.length < 1)
+                        return false; // cannot get flavor
+                    Class representationClass = flavors[0].getRepresentationClass();
+                    if (Date.class.equals(representationClass)) {
+                        Date data = (Date) t.getTransferData(DATE_FLAVOR);
+                        dateField.setText(CommonUtils.serializeDate(data)); // insert data
+                        return true; // signal success
+                    }
+                    if (String.class.equals(representationClass)) {
+                        dateField.setText((String) t.getTransferData(stringFlavor));
+                        return true; // signal success
+                    }
                 } catch (UnsupportedFlavorException e) {
                     LOGGER.log(Level.SEVERE, e.getMessage(), e);
                 } catch (IOException e) {
