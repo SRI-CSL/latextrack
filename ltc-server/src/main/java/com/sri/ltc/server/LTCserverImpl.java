@@ -493,6 +493,7 @@ public final class LTCserverImpl implements LTCserverInterface {
 
     public String set_limited_rev(int sessionID, String rev) throws XmlRpcException {
         Session session = getSession(sessionID);
+        LOGGER.fine("Setting limiting rev: "+rev);
         session.setLimitRev(rev);
         return session.getLimitRev();
     }

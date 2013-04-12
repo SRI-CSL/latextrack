@@ -140,9 +140,11 @@ public interface LTCserverInterface {
      *
      * @param sessionID identifies the session
      * @param isModified whether the text has been modified since the last save operation
-     * @param currentText current text in editor
-     * @param deletions list of pairs with start and end position of deletions in <code>currentText</code> if any
-     * @param caretPosition current cursor position to be transformed into new one
+     * @param currentText current text in editor (cannot be <code>null</code>)
+     * @param deletions list of pairs with start and end position of deletions in <code>currentText</code> if any;
+     *                  <code>null</code> or empty list if no deletions
+     * @param caretPosition current cursor position to be transformed into new one (should be a valid position in
+     *                      <code>currentText</code>)
      * @return Map that contains the text with changes, list of styles to be applied to
      * this text, map of indices to authors, updated caret position and lists of revision names
      * @throws XmlRpcException <ul>
@@ -314,8 +316,8 @@ public interface LTCserverInterface {
     /**
      * Set a date to limit the commit graph for the given session.
      * If the given string for date is empty, then no limit is applied.
-     * Otherwise, the string can take any form that <code>git-log</code> understands such as
-     * "2 weeks ago" or "2010-7-29".
+     * Otherwise, the string could contain a natural language representation, which
+     * will be parsed using {@link com.sri.ltc.CommonUtils.deSerializeDate()}.
      *
      * @param sessionID identifies the session
      * @param date string describing the date to limit the commit graph (as understood by
@@ -356,13 +358,14 @@ public interface LTCserverInterface {
      * Set a revision to limit the commit graph for the given session.
      * The revision can be a unique substring at the beginning of any valid revision ID.
      * If the given string for rev is empty, then no limit is applied.
-     * Otherwise, if the revision control does not know the given revision, all
+     * If the revision control does not know the given revision, all
      * revisions are included (unless limited by other filters).
      *
      * @param sessionID identifies the session
-     * @param rev string describing the revision to limit the commit graph (as understood by
-     *    <code>git-log</code>) or "" (empty string) if no limit should be applied
-     * @return the set revision as a string
+     * @param rev string describing the revision to limit the commit graph (can be a unique
+     *            substring at the beginning of the revision ID)
+     *            or "" (empty string) if no limit should be applied
+     * @return the given revision string
      * @throws XmlRpcException <ul>
      *   <li>with error code = 1 if the given identifier does not denote a known session.
      * </ul>

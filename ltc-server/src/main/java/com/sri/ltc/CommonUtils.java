@@ -181,7 +181,7 @@ public final class CommonUtils {
 
     /**
      * Try to parse given date into a Java Date instance.  If the date does not adhere to {@link #FORMATTER}, we try
-     * to parse it with Natty that understands natural language to some extend.
+     * to parse it with <a href=http://natty.joestelmach.com/>Natty</a> that understands natural language to some extend.
      *
      * @param date String describing the date
      * @return Date that the given String described
