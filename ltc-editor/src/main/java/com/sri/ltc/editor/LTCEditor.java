@@ -334,7 +334,9 @@ public final class LTCEditor extends LTCGui {
                         dateField.setText(CommonUtils.serializeDate(data)); // insert data
                         return true; // signal success
                     }
-                    if (String.class.equals(representationClass)) {
+                    // now try text representations:
+                    DataFlavor bestTextFlavor = DataFlavor.selectBestTextFlavor(flavors);
+                    if (bestTextFlavor != null) {
                         dateField.setText((String) t.getTransferData(stringFlavor));
                         return true; // signal success
                     }

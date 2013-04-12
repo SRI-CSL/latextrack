@@ -417,16 +417,7 @@ public final class LatexDiff {
         // merge diff result with location information and convert into list of changes
         return mergeDiffResult(script,
                 lexemLists.get(0), lexemLists.get(1),
-                copyText(readerWrapper1.createReader()));
-    }
-
-    public static String copyText(Reader reader) throws IOException {
-        StringBuilder buffer = new StringBuilder();
-        int c;
-        while ((c = reader.read()) != -1)
-            buffer.append((char) c);
-        reader.close();
-        return buffer.toString();
+                CommonUtils.copyText(readerWrapper1.createReader()));
     }
 
     private static void printUsage(PrintStream out, CmdLineParser parser) {

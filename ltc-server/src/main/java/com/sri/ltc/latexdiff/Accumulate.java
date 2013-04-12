@@ -21,6 +21,7 @@
  */
 package com.sri.ltc.latexdiff;
 
+import com.sri.ltc.CommonUtils;
 import com.sri.ltc.server.LTCserverInterface;
 
 import javax.swing.text.*;
@@ -28,7 +29,6 @@ import java.awt.*;
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
 import java.io.IOException;
-import java.lang.reflect.InvocationTargetException;
 import java.util.*;
 import java.util.List;
 
@@ -119,7 +119,7 @@ public final class Accumulate {
 
         // merge everything into one styled document: init document with latest text
         final MarkedUpDocument document = new MarkedUpDocument();
-        document.insertString(0, LatexDiff.copyText(priorText[priorText.length - 1].createReader()), null);
+        document.insertString(0, CommonUtils.copyText(priorText[priorText.length - 1].createReader()), null);
 
         float progress = 0f; // track progress through the loops below
 

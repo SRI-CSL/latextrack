@@ -154,6 +154,7 @@ public final class CommonUtils {
         return System.getProperty("os.name").toLowerCase().startsWith("mac os x");
     }
 
+    @SuppressWarnings("unchecked")
     public static void customizeApp(String image) {
         Class myClass = null;
         String myClassName = "com.sri.ltc.xplatform.UnknownApp";
@@ -201,5 +202,20 @@ public final class CommonUtils {
             result = dates.get(0);
         }
         return result;
+    }
+
+    /**
+     * Copy text from given reader into a String.
+     * @param reader with text copied into a String
+     * @return String with text from reader
+     * @throws IOException if the given reader cannot be read
+     */
+    public static String copyText(Reader reader) throws IOException {
+        StringBuilder buffer = new StringBuilder();
+        int c;
+        while ((c = reader.read()) != -1)
+            buffer.append((char) c);
+        reader.close();
+        return buffer.toString();
     }
 }
