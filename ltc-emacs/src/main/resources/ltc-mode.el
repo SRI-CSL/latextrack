@@ -380,7 +380,7 @@
   "Let LTC base system save the correct text to file."
   (if (not ltc-mode)
       nil
-    (message "Before saving file %s for session %d" (buffer-file-name) session-id)
+;    (message "Before saving file %s for session %d" (buffer-file-name) session-id)
     (ltc-method-call "save_file" session-id
 		     (buffer-string) 
 		     (compile-deletions))
@@ -397,7 +397,7 @@
 
 (defun ltc-hook-before-kill ()
   "Close session before killing."
-  (message "Before killing buffer in session %d for file %s" session-id (buffer-file-name))
+;  (message "Before killing buffer in session %d for file %s" session-id (buffer-file-name))
   (if ltc-mode (ltc-mode 0)) ; turn LTC mode off (includes closing session)
   nil)
 
@@ -575,7 +575,7 @@
 ;;; --- info buffer functions
 
 (defun init-commit-graph (&optional ids)
-  "Init commit graph from git.  If a list of IDS is given (optional), those will be used to determine the activation state.  In this case, the first entry of the list is left untouched if it exists.  The author in the first entry in the list will be the current self."
+  "Init commit graph.  If a list of IDS is given (optional), those will be used to determine the activation state.  In this case, the first entry of the list is left untouched if it exists.  The author in the first entry in the list will be the current self."
   (if ltc-mode
     ;; build commit graph from LTC session
     (let ((commits (ltc-method-call "get_commits" session-id)) ; list of 6-tuple strings
@@ -620,21 +620,25 @@
 (defun update-info-buffer ()
   "Update output in info buffer from current commit graph."
   (when (string< "" ltc-info-buffer)
-    (with-output-to-temp-buffer ltc-info-buffer
-      (let ((old-buffer (current-buffer))
-	    (old-window (get-buffer-window (current-buffer)))
-	    (temp-buffer (get-buffer-create ltc-info-buffer))
-	    (temp-output (pretty-print-commit-graph)))
-	(set-buffer temp-buffer)
-	(set (make-variable-buffer-local 'parent-window) old-window)
-	(insert temp-output)
-	(set-buffer old-buffer)
-	))
-    ;; TODO: hide cursor (using Cursor Parameters)?
-    ;; adjust height of temp info buffer
-    (with-selected-window (get-buffer-window ltc-info-buffer)
-      (shrink-window (- (window-height) 7)))
-    ))
+    (let ((prior-height 7)) ; default height of info buffer = 7
+      (with-output-to-temp-buffer ltc-info-buffer
+	(let* ((old-buffer (current-buffer))
+	       (old-window (get-buffer-window (current-buffer)))
+	       (temp-buffer (get-buffer-create ltc-info-buffer))
+	       (temp-window (get-buffer-window temp-buffer))
+	       (temp-output (pretty-print-commit-graph)))
+	  (if temp-window 
+	      (setq prior-height (window-height temp-window)))
+	  (set-buffer temp-buffer)
+	  (set (make-variable-buffer-local 'parent-window) old-window)
+	  (insert temp-output)
+	  (set-buffer old-buffer)
+	  ))
+      ;; TODO: hide cursor (using Cursor Parameters)?
+      ;; adjust height of temp info buffer
+      (with-selected-window (get-buffer-window ltc-info-buffer)
+	(shrink-window (- (window-height) prior-height)))
+      )))
 
 (defun pretty-print-commit-graph ()
   "Create string representation with text properties from current commit graph."
@@ -796,9 +800,9 @@ it will only set the new, chosen color if it is different than the old one."
   ;(message " --- LTC: before change with beg=%d and end=%d" beg end)
   ;; if first change (buffer-modified-p == nil) then update commit graph
   (when (and (not (buffer-modified-p)) commit-graph)
-    ;; manipulate commit graph: if at least one entry and the first element is "" then replace first ID with "modified"
+    ;; manipulate commit graph: if at least one entry and the first element is "" or "on disk" then replace first ID with "modified"
     (let ((head (car commit-graph)))
-      (when (and head (string= "" (car head)))
+      (when (and head (or (string= "" (car head)) (string= on_disk (car head))))
 	(setcar head modified)
 	(setcar commit-graph head)
 	(update-info-buffer))))
