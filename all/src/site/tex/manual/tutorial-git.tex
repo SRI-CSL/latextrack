@@ -22,7 +22,7 @@ with
  -r       : reset to default settings
 \end{CodeVerbatim}
 
-To open our tutorial file at \Code{\$TUTORIAL/independence/independence.tex} when starting the editor, execute the following command.  We will also set the logging level to INFO to tone down the chatter.  This will open the editor as a window similar to the screen shot in Figure~\ref{fig:editor-open}.
+To open our tutorial file at \Code{\$TUTORIAL/independence/independence.tex} when starting the editor, execute the following command.  This will open the editor as a window similar to the screen shot in Figure~\ref{fig:editor-open}.
 \begin{CodeVerbatim}[samepage=true,commandchars=\\\{\}]
 $> java -cp $LTC/LTC.jar \textbackslash
    com.sri.ltc.editor.LTCEditor $TUTORIAL/independence/independence.tex
@@ -43,11 +43,17 @@ First, notice the list of known authors (as they are stored in the git repositor
 Next, focus on the typographical errors in the command ``\textbackslash maketitle'' in line 11 and the beginning of the first paragraph in line thirteen as well as the spelling errors in the word ``political.''  If you first uncheck the box for ``small'' changes and second, also the box for deletions, notice how the text rendering in the editor panel changes.
 \begin{figure}[t]
   \centering
-  \subfloat{    \label{subfig:editor-filter-small1}     \mygraphics{width=.25\textwidth}{figures/editor-filter-small1}}
+  \subfloat{
+    \label{subfig:editor-filter-small1} 
+    \mygraphics{width=.25\textwidth}{figures/editor-filter-small1}}
   \hspace{2em}
-  \subfloat{    \label{subfig:editor-filter-small2}     \mygraphics{width=.25\textwidth}{figures/editor-filter-small2}}
+  \subfloat{
+    \label{subfig:editor-filter-small2} 
+    \mygraphics{width=.25\textwidth}{figures/editor-filter-small2}}
   \hspace{2em}
-  \subfloat{    \label{subfig:editor-filter-small3}     \mygraphics{width=.25\textwidth}{figures/editor-filter-small3}}
+  \subfloat{
+    \label{subfig:editor-filter-small3} 
+    \mygraphics{width=.25\textwidth}{figures/editor-filter-small3}}
 \caption{Effect of hiding ``small'' changes first (middle) and then also deletions (right)} \label{fig:editor-filter-small}
 \end{figure}
 Figures~\ref{fig:editor-filter-small} show that ``\textbackslash maketitle'' as well as the typos in the word ``political'' are no longer marked up, and in the third image, the deletion beginning with ``If'' at the beginning of the paragraph is now omitted.
@@ -61,7 +67,7 @@ Now draw your attention back to the graph with the history of the current file u
 \mygraphics{scale=.5}{figures/commit-graph}
 \caption{Example of commit graph} \label{fig:commit-graph}
 \end{figure}
-In addition to taking only commits of the current file into account, the commit graph is traversed in a depth-first fashion to obtain one path from the current version of the file to some ancestor.  Refer to Figure~\ref{fig:commit-graph} for a screen shot of the example file history.How far we go back in history depends on some filtering settings, which are discussed further in Section~\ref{sec:limit-history} below.  By default, we first include all version of the current author at the top.  In our example with impersonating John Adams, there are currently no further recent commits of him.  Then, we continue down the path and collecting all versions of different authors until we find the next version of John Adams in the commit with the message ``second version.''
+In addition to taking only commits of the current file into account, the commit graph is traversed in a depth-first fashion to obtain one path from the current version of the file to some ancestor.  Refer to Figure~\ref{fig:commit-graph} for a screen shot of the example file history. How far we go back in history depends on some filtering settings, which are discussed further in Section~\ref{sec:limit-history} below.  By default, we first include all version of the current author at the top.  In our example with impersonating John Adams, there are currently no further recent commits of him.  Then, we continue down the path and collecting all versions of different authors until we find the next version of John Adams in the commit with the message ``second version.''
 
 %After we have obtained an ordered sequence of commits by traversing the graph from the top down, we ignore subsequent commits of the same author---only the latest version of the same author is considered.  The idea behind this is that we do not want to penalize an author who commits often to the repository.  Instead, we treat all his or her changes from the time the file was changed by a different author as one big change event.  In our example, see that Roger Sherman committed version 5 and 6 to the repository, but version 5 is depicted in gray and not taken into account when displaying the changes.  
 
@@ -95,7 +101,7 @@ Then, clicking the ``Reset'' button followed by ``Update'' will remove and limit
 
 %\subsubsection{Limiting by Date or Revision}
 
-Next, we apply limits on \textbf{revision} and \textbf{date} to control how far back the history of the file is considered.  As we had seen, the first version is not taken into account because it was committed before the next commit by the current author John Adams.  Let us now type the first few characters \Code{d6d} of the SHA-1 key of the first commit into the field labeled ``Start at revision:'' or simply drag the key from the entry in the commit graph, which will copy the complete SHA-1 sequence.  Now click ``Update'' and see how the first version is listed in black and considered in the tracked changes above.  Since changes by the current author John Adams from the first to the second version are now included, notice the text marked up in red appearing in the editor window. We see that John Adams must have added himself as an author in the LaTeX preamble among other edits.
+Next, we apply limits on \textbf{revision} and \textbf{date} to control how far back the history of the file is considered.  As we had seen, the first version is not taken into account because it was committed before the next commit by the current author John Adams.  Let us now type the first few characters \Code{d6d} of the SHA-1 key of the first commit into the field labeled ``Start at revision:'' (refer to Figure~\ref{fig:editor-select-rev}) or simply drag the key from the entry in the commit graph, which will copy the complete SHA-1 sequence.  Now click ``Update'' and see how the first version is listed in black and considered in the tracked changes above as seen in Figure~\ref{fig:editor-limit-rev}.  Since changes by the current author John Adams from the first to the second version are now included, notice the text marked up in red appearing in the editor window. We see that John Adams must have added himself as an author in the LaTeX preamble among other edits.
 
 \begin{figure}
 \centering
@@ -141,9 +147,9 @@ Again, you will need to click ``Update'' for the change to take effect or click 
 Let us start the next step by resetting all filters to the default configuration, i.e., no limit by authors, date, and revision.  Then, we will edit the text in the editor panel to see the latest changes.
 
 Click into the text field and enter some text, for example a LaTeX comment reminding John Adams to work on a list of charges against King George III in line nineteen:
-\begin{CodeVerbatim}
+\begin{FileVerbatim}
 % list charges against King George III here
-\end{CodeVerbatim}
+\end{FileVerbatim}
 The added text will be rendered in red (or the color code for the current author) and underlined.  Notice how the commit graph adds a first line with the label ``modified'' and the ``Save'' button becomes enabled.  Now delete some of the characters you have just entered, for example the word \Code{here} at the end.  The characters simply disappear as they were added by the same author.
 
 Now delete other characters that are either rendered black or a different color than red but not marked as deletions (strike-through font).  Notice how these characters remain visible but are now colored red and marked up with strike-through.  If you tried to delete anything that is already marked as deletion (i.e., anything in strike-through font), nothing will happen as this text is already deleted in a prior version.  See Figure~\ref{fig:editor-modified} for a screen shot of the above edits: text in red and underlined was added and text in red and strike-through was deleted.
@@ -157,9 +163,9 @@ Now delete other characters that are either rendered black or a different color 
 Finally, you will want to click ``Save'' to save the current file to disk.  This will cause the label ``modified'' to change to ``on disk.''  If you would then again edit, the label would switch back to ``modified'' of course.
 
 Saving the file, however, does not tell git to create a new version under its management.  In order to commit the current file to git, you have to give it a commit message such as 
-\begin{CodeVerbatim}
+\begin{FileVerbatim}
 added comment about list of charges
-\end{CodeVerbatim}
+\end{FileVerbatim}
 in the text field next to the ``Commit'' button.  Once the text field is not empty, the ``Commit'' button becomes enabled.  After you commit, the commit graph will list the new entry and the editor panel will be updated.  
 
 Now two things can happen depending on your setting for showing changes in comments (lower-left most panel).  If the checkbox was off, the newly added comment is no longer marked up in red with underlining.  After updating the editor from the commit history, the settings of which changes to show influence the markup of the text.  Now the newly entered comment is recognized as such, and if we hide changes in comments, the markup will not show.  If the box for ``changes in comments'' is checked, you will see your latest text still marked up as an addition.  Your editor should now look similar to the part shown in either Figure~\ref{fig:commit-no-comment} or Figure~\ref{fig:commit-comment}.

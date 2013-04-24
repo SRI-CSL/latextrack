@@ -1,14 +1,14 @@
 % !TEX root = manual.tex
 \section{Using Emacs} \label{sec:emacs}
 
-In this section, we explain how to use Emacs as the editor of the .tex-file with LTC.
+In this section, we explain how to use Emacs as the editor of the .tex file with LTC.
 
-\begin{center}
-\fcolorbox{red}{yellow}{
-\begin{minipage}[t]{.9\textwidth}
-  \textbf{CAVEAT:} due to current bugs, it is best to use \Code{ltc-mode} defensively without editing the file in Emacs while LTC is turned on.  It is safe to view changes in the file and use different filtering settings.  If the text becomes scrambled, try to exit \Code{ltc-mode} by toggling it (e.g., using command \Code{M-x ltc-mode}) or quitting Emacs altogether before saving the file.  As long as you do not save while in \Code{ltc-mode} nothing bad should happen.
-\end{minipage}}
-\end{center}
+%\begin{center}
+%\fcolorbox{red}{yellow}{
+%\begin{minipage}[t]{.9\textwidth}
+%  \textbf{CAVEAT:} due to current bugs, it is best to use \Code{ltc-mode} defensively without editing the file in Emacs while LTC is turned on.  It is safe to view changes in the file and use different filtering settings.  If the text becomes scrambled, try to exit \Code{ltc-mode} by toggling it (e.g., using command \Code{M-x ltc-mode}) or quitting Emacs altogether before saving the file.  As long as you do not save while in \Code{ltc-mode} nothing bad should happen.
+%\end{minipage}}
+%\end{center}
 
 \subsection{Starting the LTC Server}
 
@@ -44,7 +44,7 @@ The log messages from the LTC server are also saved in file \Code{\char`\~/.LTC.
 \caption{Starting \texttt{ltc-mode} in Emacs} \label{fig:emacs-ltc-started}
 \end{figure}
 
-Once your Emacs has a .tex-file loaded in plain \Code{latex-mode} as seen on the left in Figure~\ref{fig:emacs-ltc-started}, you can invoke the minor-mode \Code{ltc-mode} in different ways.  Usually, the mode launching command \Code{M-x ltc-mode} is available.  If Emacs has its own window and supports context menus, you may be able to right-click on the word ``LaTeX'' in the mode line at the bottom of Emacs. Then, a list of minor modes appears from which you can select ``LTC Mode.''  Once the mode starts successfully, a number of status messages, a smaller window at the bottom of the text that contains LTC information, and changes in the text marked up by color and style appear.  Emacs then looks similar to the right in Figure~\ref{fig:emacs-ltc-started}.
+Once your Emacs has a .tex file loaded in plain \Code{latex-mode} as seen on the left in Figure~\ref{fig:emacs-ltc-started}, you can invoke the minor-mode \Code{ltc-mode} in different ways.  Usually, the mode launching command \Code{M-x ltc-mode} is available.  If Emacs has its own window and supports context menus, you may be able to right-click on the word ``LaTeX'' in the mode line at the bottom of Emacs. Then, a list of minor modes appears from which you can select ``LTC Mode.''  Once the mode starts successfully, a number of status messages, a smaller window at the bottom of the text that contains LTC information, and changes in the text marked up by color and style appear.  Emacs then looks similar to the right in Figure~\ref{fig:emacs-ltc-started}.
 
 The mode can be toggled, i.e., the same command starts and stops \Code{ltc-mode}.
 
@@ -56,7 +56,7 @@ The new, smaller window at the bottom of the frame is called ``LTC info'' and co
 
 \subsubsection{Updating the Buffer}
 
-An important command is \Code{M-x ltc-update} or the menu item LTC $>$ Update buffer.  This will update the  view of the file based on current filtering and other settings.  Use this command when the ``LTC info'' buffer ended up in a different frame or tab, or when you make changes such as a git commit from the command line.
+An important command is \Code{M-x ltc-update} or the menu item \Menu{Update buffer}{LTC}.  This will update the  view of the file based on current filtering and other settings.  Use this command when the ``LTC info'' buffer ended up in a different frame or tab, or when you make changes such as a git commit from the command line.
 
 \subsection{Customizing LTC Mode}
 
