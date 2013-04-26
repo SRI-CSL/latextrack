@@ -22,6 +22,7 @@ package com.sri.ltc.editor;
  * #L%
  */
 
+import com.google.common.collect.Sets;
 import com.sri.ltc.server.LTCserverInterface;
 
 import javax.swing.table.AbstractTableModel;
@@ -112,31 +113,48 @@ public final class CommitTableModel extends AbstractTableModel {
             commits.get(0).graph.circleColumn = 0; // start with first column
             SortedSet<Integer> currentColumns = new TreeSet<Integer>(); // keep track of passing lines
             for (CommitTableRow node : commits) {
+                // update current columns based on incoming set
+                currentColumns.removeAll(node.graph.incomingColumns); // remove all incoming columns...
+                currentColumns.add(node.graph.circleColumn); // ... except the current column
                 // set of passing lines is difference currentColumns\{circleColumn}
                 node.graph.passingColumns.clear();
-                node.graph.passingColumns.addAll(currentColumns);
-                node.graph.passingColumns.remove(node.graph.circleColumn);
-                // add own column to incoming (if not first)
-                if (!node.children.isEmpty())
-                    node.graph.incomingColumns.add(node.graph.circleColumn);
+                Sets.difference(currentColumns, Collections.singleton(node.graph.circleColumn))
+                        .copyInto(node.graph.passingColumns);
                 // determine columns of parents:
-                int currentParentColumn = node.graph.circleColumn;
                 for (CommitTableRow parent : node.parents) {
-                    if (parent.graph.circleColumn > currentParentColumn) {
-                        if (currentColumns.remove(parent.graph.circleColumn))
-                            // if actually removed then add to incoming columns:
-                            parent.graph.incomingColumns.add(parent.graph.circleColumn);
-                        parent.graph.circleColumn = currentParentColumn;
-                        // update outgoing columns:
-                        node.graph.outgoingColumns.add(currentParentColumn);
-                        // maintain current columns
-                        currentColumns.add(currentParentColumn);
-                        currentParentColumn++;
+                    // find lowest that is neither in outgoing columns nor in passing columns
+                    SortedSet<Integer> union = new TreeSet<Integer>();
+                    Sets.union(node.graph.outgoingColumns, node.graph.passingColumns).copyInto(union);
+                    int lowest = getLowestNotIn(union, 0);
+                    if (parent.graph.circleColumn == Integer.MAX_VALUE) {
+                        parent.graph.circleColumn = lowest;
+                    } else {
+                        // see if we should move the parent further left
+                        if (lowest < parent.graph.circleColumn) {
+                            currentColumns.remove(parent.graph.circleColumn); // no more passing there
+                            parent.graph.circleColumn = lowest;
+                        }
                     }
+                    // maintain current columns
+                    currentColumns.add(parent.graph.circleColumn);
+                    // update incoming columns of parent
+                    parent.graph.incomingColumns.add(parent.graph.circleColumn); // add current column to incoming
+                    // update outgoing columns of node
+                    node.graph.outgoingColumns.add(parent.graph.circleColumn); // TODO: is this correct?  what if parent changes location?
                 }
+                // maintain current columns: merges are when...
+                if (!node.graph.outgoingColumns.contains(node.graph.circleColumn))
+                    currentColumns.remove(node.graph.circleColumn); // merge
+
             }
             fireTableDataChanged();
         }
+    }
+
+    private int getLowestNotIn(Set<Integer> set, int start) {
+        int lowest = start;
+        for (; set.contains(lowest); lowest++) {}
+        return lowest;
     }
 
     public void update(Set<String> IDs) {
@@ -167,7 +185,7 @@ public final class CommitTableModel extends AbstractTableModel {
                 }
             }
     }
-    
+
     // return true if something changed
     private void initFirstCell(String ID) {
         boolean updated = firstCell != null && !firstCell.ID.equals(ID);

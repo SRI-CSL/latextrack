@@ -26,13 +26,16 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.geom.Ellipse2D;
 import java.awt.geom.Line2D;
+import java.awt.geom.Point2D;
 import java.awt.geom.QuadCurve2D;
-import java.util.List;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
 /**
  * Information of how to render the commit graph in a row.
+ * <p>
+ * An inner class <code>CommitGraphIcon</code> handles the rendering according to the image below.
+ * <img src="doc-files/CommitGraphIcon-1.png" alt="icon rendering details"/>
  *
  * @author linda
  */
@@ -41,7 +44,7 @@ public final class CommitGraphRow {
     final CommitTableRow row;
     int circleColumn = Integer.MAX_VALUE;
     final SortedSet<Integer> incomingColumns = new TreeSet<Integer>();
-    final SortedSet<Integer> outgoingColumns = new TreeSet<Integer>(); 
+    final SortedSet<Integer> outgoingColumns = new TreeSet<Integer>();
     final SortedSet<Integer> passingColumns = new TreeSet<Integer>();
 
     public CommitGraphRow(CommitTableRow row) {
@@ -50,7 +53,7 @@ public final class CommitGraphRow {
 
     @Override
     public String toString() {
-        return row.ID.substring(0,6)+" @ row "+circleColumn;
+        return row.ID.substring(0,6)+" @ row "+(circleColumn==Integer.MAX_VALUE?"MAX":circleColumn);
     }
 
     public Icon toIcon(int height, Color foreground) {
@@ -59,7 +62,7 @@ public final class CommitGraphRow {
 
     private class CommitGraphIcon implements Icon {
 
-        private final static float PAD = 6f;
+        private final static float PAD = 6f; // padding in x-dimension
         private final static float MAX_DIAMETER = 8f;
 
         private final int width;
@@ -86,13 +89,6 @@ public final class CommitGraphRow {
                     maxColumn = Math.max(maxColumn, passingColumns.last());
                 this.width = (int) ((maxColumn+1)*columnWidth());
             }
-        }
-
-        private SortedSet<Integer> getColumnsAsSet(List<CommitTableRow> list) {
-            SortedSet<Integer> set = new TreeSet<Integer>();
-            for (CommitTableRow row : list)
-                set.add(row.graph.circleColumn);
-            return set;
         }
 
         private float columnWidth() {
@@ -127,29 +123,37 @@ public final class CommitGraphRow {
                     ));
                 else {
                     // draw curved lines
+                    Point2D.Float startPoint = new Point2D.Float(xCircle + diameter/2f, yCircle);
+                    Point2D.Float endPoint = new Point2D.Float(otherColumn*columnWidth() + PAD + diameter/2f, 0);
                     if (circleColumn > otherColumn) {
-                        // draw in Q4: circleColumn segment and outside segment
+                        // draw in Q4:
+                        Point2D.Float midPoint = new Point2D.Float(zeroX, yCircle/2f);
+                        // circleColumn segment
                         g2d.draw(new QuadCurve2D.Float(
-                                xCircle, yCircle, // start
-                                xCircle, yCircle/2f, // ctrl
-                                zeroX, yCircle/2f // end
+                                startPoint.x, startPoint.y, // start of
+                                xCircle + diameter/4f, midPoint.y, // ctrl
+                                midPoint.x, midPoint.y // end
                         ));
+                        // outside segment
                         g2d.draw(new QuadCurve2D.Float(
-                                zeroX, yCircle/2f, // start
-                                otherColumn*columnWidth() + PAD + diameter/2f, yCircle/2f, // ctrl
-                                otherColumn*columnWidth() + PAD + diameter/2f, 0 // end
+                                midPoint.x, midPoint.y, // start
+                                otherColumn*columnWidth() + PAD + diameter - diameter/4f, midPoint.y, // ctrl
+                                endPoint.x, endPoint.y // end
                         ));
                     } else {
-                        // draw in Q1: circleColumn segment and outside segment
+                        // draw in Q1:
+                        Point2D.Float midPoint = new Point2D.Float(circleColumnWidth, yCircle/2f);
+                        // circleColumn segment
                         g2d.draw(new QuadCurve2D.Float(
-                                xCircle + diameter, yCircle, // start
-                                xCircle + diameter, yCircle/2f, // ctrl
-                                circleColumnWidth, yCircle/2f // end
+                                startPoint.x, startPoint.y, // start
+                                xCircle + diameter - diameter/4f, midPoint.y, // ctrl
+                                midPoint.x, midPoint.y // end
                         ));
+                        // outside segment
                         g2d.draw(new QuadCurve2D.Float(
-                                circleColumnWidth, yCircle/2f, // start
-                                otherColumn*columnWidth() + PAD + diameter/2f, yCircle/2f, // ctrl
-                                otherColumn*columnWidth() + PAD + diameter/2f, 0 // end
+                                midPoint.x, midPoint.y, // start
+                                otherColumn*columnWidth() + PAD + diameter/4f, midPoint.y, // ctrl
+                                endPoint.x, endPoint.y // end
                         ));
                     }
                 }
@@ -164,29 +168,37 @@ public final class CommitGraphRow {
                     ));
                 else {
                     // draw curved line
+                    Point2D.Float startPoint = new Point2D.Float(xCircle + diameter/2f, yCircle + diameter);
+                    Point2D.Float endPoint = new Point2D.Float(otherColumn*columnWidth() + PAD + diameter/2f, height);
                     if (circleColumn > otherColumn) {
-                        // draw in Q3: circleColumn segment and outside segment
+                        // draw in Q3:
+                        Point2D.Float midPoint = new Point2D.Float(zeroX, height - yCircle/2f);
+                        // circleColumn segment
                         g2d.draw(new QuadCurve2D.Float(
-                                xCircle, yCircle + diameter, // start
-                                xCircle, yCircle + diameter + yCircle/2f, // ctrl
-                                zeroX, yCircle + diameter + yCircle/2f // end
+                                startPoint.x, startPoint.y, // start of
+                                xCircle + diameter/4f, midPoint.y, // ctrl
+                                midPoint.x, midPoint.y // end
                         ));
+                        // outside segment
                         g2d.draw(new QuadCurve2D.Float(
-                                zeroX, yCircle + diameter + yCircle/2f, // start
-                                otherColumn*columnWidth() + PAD + diameter/2f, yCircle + diameter + yCircle/2f, // ctrl
-                                otherColumn*columnWidth() + PAD + diameter/2f, height // end
+                                midPoint.x, midPoint.y, // start
+                                otherColumn*columnWidth() + PAD + diameter - diameter/4f, midPoint.y, // ctrl
+                                endPoint.x, endPoint.y // end
                         ));
                     } else {
-                        // draw in Q2: circleColumn segment and outside segment
+                        // draw in Q2:
+                        Point2D.Float midPoint = new Point2D.Float(circleColumnWidth, height - yCircle/2f);
+                        // circleColumn segment
                         g2d.draw(new QuadCurve2D.Float(
-                                xCircle + diameter, yCircle + diameter, // start
-                                xCircle + diameter, yCircle + diameter + yCircle/2f, // ctrl
-                                circleColumnWidth, yCircle + diameter + yCircle/2f // end
+                                startPoint.x, startPoint.y, // start of
+                                xCircle + diameter - diameter/4f, midPoint.y, // ctrl
+                                midPoint.x, midPoint.y // end
                         ));
+                        // outside segment
                         g2d.draw(new QuadCurve2D.Float(
-                                circleColumnWidth, yCircle + diameter + yCircle/2f, // start
-                                otherColumn*columnWidth() + PAD + diameter/2f, yCircle + diameter + yCircle/2f, // ctrl
-                                otherColumn*columnWidth() + PAD + diameter/2f, height // end
+                                midPoint.x, midPoint.y, // start
+                                otherColumn*columnWidth() + PAD + diameter/4f, midPoint.y, // ctrl
+                                endPoint.x, endPoint.y // end
                         ));
                     }
                 }
@@ -202,9 +214,7 @@ public final class CommitGraphRow {
 
             // draw circle in current foreground color
             g2d.setColor(foreground);
-            Shape circle = new Ellipse2D.Float(
-                    xCircle, yCircle,
-                    diameter, diameter);
+            Shape circle = new Ellipse2D.Float(xCircle, yCircle, diameter, diameter);
             g2d.draw(circle);
             if (row.isActive())
                 g2d.fill(circle);
