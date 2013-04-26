@@ -668,7 +668,7 @@
 				  (propertize 
 				   (format "%8s" id) ; short SHA1 or revision
 				   'mouse-face 'highlight
-				   'help-echo (if is-active "mouse-1: limit by this start revision")
+				   'help-echo "mouse-1: limit by this start revision"
 				   'keymap rev-map
 				   'action id
 				   'face facevalue)
@@ -676,7 +676,7 @@
 				  (propertize
 				   (format "%25s" (nth 1 commit)) ; date
 				   'mouse-face 'highlight
-				   'help-echo (if is-active "mouse-1: limit by this start date")
+				   'help-echo "mouse-1: limit by this start date"
 				   'keymap date-map
 				   'action (nth 1 commit)
 				   'face facevalue)
