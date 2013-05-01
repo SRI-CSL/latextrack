@@ -140,12 +140,11 @@ public final class CommitTableModel extends AbstractTableModel {
                     // update incoming columns of parent
                     parent.graph.incomingColumns.add(parent.graph.circleColumn); // add current column to incoming
                     // update outgoing columns of node
-                    node.graph.outgoingColumns.add(parent.graph.circleColumn); // TODO: is this correct?  what if parent changes location?
+                    node.graph.outgoingColumns.add(parent.graph.circleColumn); // TODO: is this correct?
                 }
                 // maintain current columns: merges are when...
                 if (!node.graph.outgoingColumns.contains(node.graph.circleColumn))
                     currentColumns.remove(node.graph.circleColumn); // merge
-
             }
             fireTableDataChanged();
         }
