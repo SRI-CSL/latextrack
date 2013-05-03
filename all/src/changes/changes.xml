@@ -27,8 +27,28 @@
         <author email="lilalinda at users.sourceforge.net">Linda Briesemeister</author>
     </properties>
     <body>
-        <release version="1.0" date="2013-April?">
+        <release version="1.0" date="2013-May">
 
+        </release>
+
+        <release version="0.9.15" date="2013-April?">
+            <action dev="lilalinda" type="fix" issue="27">
+                When specifying limit dates that are not exactly a commit date, one commit too many was included in the
+                active list.  This is now fixed and affected both, Emacs and LTC Editor.
+            </action>
+            <action dev="lilalinda" type="fix" issue="28">
+                The text field to define a start date in LTC Editor now accepts text that is dragged-and-dropped or
+                pasted into the field.
+            </action>
+            <action dev="lilalinda" type="fix" issue="30">
+                Emacs mode now displays a graph instead of a line for the history of the file.  This makes much more
+                sense to the user.
+            </action>
+            <action dev="lilalinda" type="fix" issue="31">
+                Emacs remembers height and location in the info buffer between updates.  The lines are also truncated
+                for a better use of screen real estate (not if vertically split, though).  The user has to manually
+                scroll in that buffer to be able to view the truncated lines.
+            </action>
         </release>
 
         <release version="0.9.14" date="2013-04-10">

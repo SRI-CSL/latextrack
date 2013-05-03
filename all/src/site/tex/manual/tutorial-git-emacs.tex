@@ -1,2 +1,166 @@
 % !TEX root = manual.tex
 \section{Tutorial with Git and Emacs} \label{sec:tutorial-git-emacs}
+
+In this section, we assume that the example git repository has been created according to the instructions in Section~\ref{sec:example-git} above.  And we assume that LTC has been installed using the optional Emacs directory, as well as Emacs configuration adjustments made that are mentioned in Section~\ref{sec:config-emacs}.
+
+\subsection{Starting LTC Server and \texttt{ltc-mode}}
+
+First, we start the LTC Server from the command line.  Assuming you have installed LTC in the directory \Code{\$LTC}, we run this command line for the server.  The output will be similar to the following.  Leave the server running while performing the rest of this tutorial.
+\begin{CodeVerbatim}
+$> java -jar $LTC/LTC.jar
+LaTeX Track Changes (LTC)  Copyright (C) 2009-2013  SRI International
+This program comes with ABSOLUTELY NO WARRANTY; for details use command line switch -c.
+This is free software, and you are welcome to redistribute it under certain conditions.
+
+<current date> | CONFIG:  Logging configured to level CONFIG
+<current date> | CONFIG:  LTC version: <version info>
+--log4j: <current date> [main] INFO  org.apache.xmlrpc.webserver.XmlRpcServlet - init
+<current date> | INFO:    Started RPC server on port 7777.
+\end{CodeVerbatim}
+
+Next, we switch to Emacs and open the tutorial file \Code{\$TUTORIAL/independence/independence.tex}.  This should put Emacs into \Code{latex-mode} but any other mode should work as well.  Then, start LTC mode using the command \Code{M-x ltc-mode} in Emacs.  You will see a few messages appearing briefly in the mini buffer (you can also look at them in the \Code{*Messages*} buffer), such as the following.
+\begin{FileVerbatim}
+Starting LTC mode for file "\$TUTORIAL/independence/independence.tex"...
+Using `xml-rpc' package version: 1.6.8.1
+LTC session ID = 1
+Starting LTC update...
+LTC updates received
+\end{FileVerbatim}
+Emacs should now look similar to the screen shot in Figure~\ref{fig:emacs-open}.
+\begin{figure}[t]
+\centering
+\mygraphics{scale=.35}{figures/emacs-open}
+\caption{Starting \Code{ltc-mode} in Emacs with tutorial file} \label{fig:emacs-open}
+\end{figure}
+In this figure, we see the changes marked up in various colors and fonts: underlined for additions and inverse for deletions.  There is also a smaller buffer called ``LTC info (session $N$)'' with $N$ as the session ID, at the bottom (or the right, if your Emacs is in landscape mode) of the buffer with the tutorial file.  There, we display the history of the current file under git.  We can also see what git currently perceives as the current user at the top of the graph -- now John Adams because we had overridden the git settings in this tutorial repository.
+
+\subsection{Showing and Hiding Certain Changes}
+
+The LTC menu and ``LTC info'' buffer in Emacs allow us to customize the way LTC displays the changes of the file.  Section~\ref{sec:general-use} contains all the details of how LTC displays the changes including limiting the file history and filtering.  In this tutorial, we will just use some of the options and see their effect.
+
+First, notice the colors assigned to each of the authors.  To change an author color, for example Roger Sherman's,  perform a single left-click on the colored name of Roger Sherman.  This opens another buffer called \Code{*Colors*} with a preview of colors and their names.  Also look at the mini buffer that requests input.   You can enter a name or an RGB value in hex notation.  The color names can also be auto-completed, for example type \Code{Bro<TAB>} (if TAB is your completion key in Emacs) to see \Code{Brown}.  You will want something with contrast to the white background, so brown is a fine choice.  When clicking the RETURN key, notice how the text in the editor panel on the top changes color for those parts that are attributed to Roger Sherman's edits.  To abort choosing a color simply enter an empty value.
+
+Next, focus on the typographical errors in the command ``\textbackslash maketitle'' in line 11 and the beginning of the first paragraph in line thirteen as well as the spelling errors in the word ``political.''  Open the LTC menu (in the menu bar and in the mode line) and then the sub-menu ``Show/Hide'' as seen in Figure~\ref{fig:emacs-LTC-menu}.  
+\begin{figure}[t]
+\centering
+\mygraphics{scale=.35}{figures/emacs-LTC-menu}
+\caption{Opening the LTC menu from the mode line in Emacs} \label{fig:emacs-LTC-menu}
+\end{figure}
+If you first uncheck the item \Menu{Show/Hide;Show small changes}{LTC}, and second, also the item \Menu{Show/Hide;Show deletions}{LTC}, notice how the text rendering in the editor panel changes.
+\begin{figure}[t]
+  \centering
+  \subfloat{
+    \label{subfig:emacs-filter-small1} 
+    \mygraphics{width=.25\textwidth}{figures/emacs-filter-small1}}
+  \hspace{2em}
+  \subfloat{
+    \label{subfig:emacs-filter-small2} 
+    \mygraphics{width=.25\textwidth}{figures/emacs-filter-small2}}
+  \hspace{2em}
+  \subfloat{
+    \label{subfig:emacs-filter-small3} 
+    \mygraphics{width=.25\textwidth}{figures/emacs-filter-small3}}
+\caption{Effect of hiding ``small'' changes first (middle) and then also deletions (right)} \label{fig:emacs-filter-small}
+\end{figure}
+Figures~\ref{fig:emacs-filter-small} show that ``\textbackslash maketitle'' as well as the typos in the word ``political'' are no longer marked up, and in the third image, the deletion beginning with ``If'' at the beginning of the paragraph is now omitted.
+
+\subsection{Understanding the Commit Graph}
+
+Now draw your attention back to LTC info buffer with the history of the current file under git (located at the bottom or right of your tracked file).  The Emacs representation is currently lacking the edges between nodes of the commit graph (you can watch \href{http://sourceforge.net/p/latextrack/tickets/30/}{ticket \#30} for this issue). 
+\begin{figure}[t]
+\centering
+\mygraphics{scale=.5}{figures/emacs-commit-graph}
+\caption{Example of commit graph} \label{fig:emacs-commit-graph}
+\end{figure}
+Refer to Figure~\ref{fig:emacs-commit-graph} for a screen shot of the example file history. Versions that are included in the tracked changes are denoted with an asterisk at the beginning of the line and the line is not printed in gray.  How far we go back in history depends on some filtering settings, which are discussed further in Section~\ref{sec:emacs-limit-history} below.  By default, we first include all version of the current author at the top.  In our example with impersonating John Adams, there are currently no further recent commits of him.  Then, we continue down the path and collecting all versions of different authors until we find the next version of John Adams in the commit with the message ``second version.''
+
+\subsection{Limiting History} \label{sec:emacs-limit-history}
+
+We allow the user to filter and customize how the potentially rich history of a .tex file is selected, so as to provide a better view of the tracked changes.  The user can show and hide changes as seen above, limit the authors of interest, and specify a date or revision number to tell LTC how far back in time the history should be considered.
+
+%\subsubsection{Limiting by Authors}
+
+\begin{figure}
+\centering
+\mygraphics{scale=.5}{figures/emacs-limit-authors}
+\caption{Effect on commit graph of limiting authors to Roger Sherman and Thomas Jefferson} \label{fig:emacs-limit-authors}
+\end{figure}
+To limit the history by \textbf{authors}, choose menu item \Menu{Limit by;Set of authors...}{LTC}. This will prompt the user to enter author names to limit by in the mini buffer.  Again, automatic completion works, so you can enter \Code{Ro<TAB> <RET>} and \Code{Th<TAB> <RET> <RET>} to select authors Roger Sherman and Thomas Jefferson.  After the last author was selected, the system automatically updates the displayed changes.
+
+Notice how any version by the ignored authors Benjamin Franklin and John Adams is now gray as only commits from the selected authors are considered.  The first line in the LTC info buffer still shows the currently active author John Adams, so this line is not gray.  Again, the history is only taken until the next revision of the current author but since he is being ignored, we go all the way back to the first revision. Compare your Emacs now with the screen shot in Figure~\ref{fig:emacs-limit-authors} and see how the file history has changed.
+
+To reset limiting by authors, simply choose the same menu \Menu{Limit by;Set of authors...}{LTC} again and enter an empty author as the first one.  Now the display is back in the original state.
+
+%\subsubsection{Limiting by Date or Revision}
+
+Next, we apply limits on \textbf{revision} and \textbf{date} to control how far back the history of the file is considered.  As we had seen, the first version is not taken into account because it was committed before the next commit by the current author John Adams.  Let us now choose menu item \Menu{Limit by;Start at revision...}{LTC}.  This will prompt the user to specify a known revision number.  Type the first few characters \Code{d6d<RET>} of the SHA-1 key of the first commit.  If unique, it is not necessary to expand the revision number using the TAB key (or whatever key is used for completion in your Emacs configuration).  See how the first version is listed in color and considered in the tracked changes above.  Since changes by the current author John Adams from the first to the second version are now included, notice the text marked up in red appearing in the editor window. We see that John Adams must have added himself as an author in the LaTeX preamble among other edits in the second commit of the file.
+
+\begin{figure}
+\centering
+\mygraphics{scale=.5}{figures/emacs-limit-rev}
+\caption{Effect on commit graph of going back to first revision} \label{fig:emacs-limit-rev}
+\end{figure}
+
+Another way of limiting by revision number is to simply left-click the number in the display.  
+
+To remove the limit by revision number, simply choose the same menu \Menu{Limit by;Start at revision...}{LTC} again and enter an empty revision. Or, click into the empty revision column of the first line (denoting the currently active author) to achieve the same effect.  Now the display is back in the original state.
+
+\begin{figure}
+\centering
+\mygraphics{scale=.5}{figures/emacs-limit-date}
+\caption{Effect on commit graph of limiting history to date of third version} \label{fig:emacs-limit-date}
+\end{figure}
+
+Limiting the history by date works similarly.  Select menu item \Menu{Limit by;Start at date...}{LTC}. At the prompt, you can enter a date from the history of the file using auto-completion.  For example, enter \Code{2<TAB>11<TAB> <RET>} to get the exact date of the third revision.  Or, type a date such as \Code{Jul 23, 2010 1:11p} into the field.  We employ some software to process times and dates in natural language, and if successful, the field will contain the date string as it was understood translated into the format used in the commit tree. Finally, you may also perform a left-click on the date in the history to achieve the same effect.  See Figure~\ref{fig:emacs-limit-date} for a screen shot of the effect of limiting to the date of the third revision. 
+
+To remove the limit by date, either left-click on the empty date column of the first line of the file history or enter an empty date after selecting menu item \Menu{Limit by;Start at date...}{LTC} again.
+
+\subsection{Editing, Saving, and Committing}
+
+Let us start the next step by resetting all filters to the default configuration, i.e., no limit by authors, date, and revision.  Then, we will edit the text in the editor panel to see the latest changes.
+
+Click into the text buffer and enter some text, for example a LaTeX comment reminding John Adams to work on a list of charges against King George III in line nineteen:
+\begin{FileVerbatim}
+% list charges against King George III here
+\end{FileVerbatim}
+The added text will be rendered in red (or the color code for the current author) and underlined.  Notice how the commit graph displays the label ``modified'' in the revision column of the first line of the file history.  The mode line of Emacs also displays the symbol \Code{**} to denote a modified buffer. Now delete some of the characters you have just entered, for example the word \Code{here} at the end.  The characters simply disappear as they were added by the same author.
+
+Now delete other characters that are either rendered black or a different color than red but not marked as deletions (inverse color).  Notice how these characters remain visible but are now colored red and marked up with inverse colors.  If you tried to delete anything that is already marked as deletion (i.e., anything in inverse color), nothing will happen as this text is already deleted in a prior version.  See Figure~\ref{fig:emacs-modified} for a screen shot of the above edits: text in red and underlined was added and text in inverse red was deleted.
+
+\begin{figure}[t]
+\centering
+\mygraphics{scale=.35}{figures/emacs-modified}
+\caption{After editing the text as John Adams} \label{fig:emacs-modified}
+\end{figure}
+
+Finally, you will want to save the current file to disk.  This will cause the label ``modified'' to change to ``on disk'' after saving in Emacs, for example with \Code{C-x s}.  If you would then again edit, the label would switch back to ``modified'' of course.
+
+Saving the file, however, does not tell git to create a new version under its management.  In order to commit the current file to git, first, make sure that the .tex file is saved under Emacs and the first line does not say ``modified.'' Then, on a command line, switch to the directory with the tutorial file and perform the following commit command (printed in bold below).  You may want to check the status of git before and after the commit:
+\begin{CodeVerbatim}[commandchars=\\\{\}]
+$ git status
+# On branch master
+# Changes not staged for commit:
+#   (use "git add <file>..." to update what will be committed)
+#   (use "git checkout -- <file>..." to discard changes in working directory)
+#
+#	modified:   independence.tex
+#
+no changes added to commit (use "git add" and/or "git commit -a")
+$ \textbf{git commit -am "added comment about list of charges"}
+[master 85a3c18] added comment about list of charges
+ 1 file changed, 3 insertions(+), 1 deletion(-)
+$ git status
+# On branch master
+# Your branch is ahead of 'origin/master' by 1 commit.
+#   (use "git push" to publish your local commits)
+#
+nothing to commit, working directory clean
+\end{CodeVerbatim}
+
+To make Emacs aware of the underlying commit, use menu item \Menu{Update buffer}{LTC} or use the command \Code{M-x ltc-update}.  Notice how the recent commit gets included at the top of the list as seen in Figure~\ref{fig:emacs-new-commit}.
+
+\begin{figure}
+\centering
+\mygraphics{scale=.5}{figures/emacs-new-commit}
+\caption{File history after committing latest version and updating Emacs} \label{fig:emacs-new-commit}
+\end{figure}

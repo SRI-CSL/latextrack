@@ -67,7 +67,7 @@ $> git config --global user.email doe@inter.net
 \end{CodeVerbatim}
 
 Typically, you don't want to track automatic backups and build products of your LaTeX project, so create a file \Code{\char`\~/.gitignore\_global} (or any name and location of your choice) and add the following lines as contents. 
-\begin{CodeVerbatim}[samepage=true,frame=lines]
+\begin{FileVerbatim}[samepage=true]
 *~
 *.out
 *.aux
@@ -81,7 +81,7 @@ Typically, you don't want to track automatic backups and build products of your 
 *.toc
 *.lol
 *.lot
-\end{CodeVerbatim}
+\end{FileVerbatim}
 
 Then, issue the git config command below (with a possibly adjusted file name and location).
 \begin{CodeVerbatim}
@@ -106,10 +106,10 @@ svn, version 1.6.18 (r1303927)
 Subversion uses only your Unix user name but not your email address to attribute changes.  Hence, we do not need to configure these.
 
 Typically, you don't want to track build products of your LaTeX project, so you may want to edit your file \Code{\char`\~/.subversion/config} to change the line with \Code{globale-ignores} in your favorite text editor.  You will want to add these patterns to the existing line:
-\begin{CodeVerbatim}[samepage=true,frame=lines]
+\begin{FileVerbatim}[samepage=true]
 global-ignores = <current values> \
   *.out *.aux *.bbl *.blg *.bst *.dvi *.idx *.lof *.log *.toc *.lol *.lot
-\end{CodeVerbatim}
+\end{FileVerbatim}
 
 To learn how to set up a new writing project under a subversion repository for using it with LTC refer to Section~\ref{sec:svn-use}.
 
@@ -121,9 +121,9 @@ To use the supplied \Code{ltc-mode} in Emacs, you will have to put the relevant 
 \begin{enumerate}
 \item Use a location that is already included in the \Code{load-path}. To view the contents of this path in your Emacs, execute the command \Code{C-h v load-path}.  On Mac OS X systems with Aquamacs, this could be for example \Code{\char`\~/Library/Preferences/Emacs/}.
 \item Add a new directory where you will extract the Emacs Lisp files to the \Code{load-path}. Assuming the Emacs Lisp files will be installed in directory \Code{\char`\~/.emacs.d/}, add the following line to your \Code{.emacs} or other Emacs configuration file:
-  \begin{CodeVerbatim}[frame=lines]
+  \begin{FileVerbatim}
 (add-to-list 'load-path "~/.emacs.d")
-  \end{CodeVerbatim}
+  \end{FileVerbatim}
 \end{enumerate}
 
 Now based on which method of the above you choose, supply the chosen directory as \Code{\$EMACS\_DIR} in the second argument to the install script:
@@ -132,11 +132,11 @@ $> bash ltc-install.sh $LTC $EMACS_DIR
 \end{CodeVerbatim}
 
 In order to enable the LTC mode in Emacs, add the following line to your Emacs configuration file (for example, \Code{\char`\~/Library/Preferences/Emacs/Preferences.el} is the default for Aquamacs under Mac OS X; \Code{\char`\~/.emacs} is the default on Unix systems):
-\begin{CodeVerbatim}[frame=lines]
+\begin{FileVerbatim}
 (autoload 'ltc-mode "ltc-mode" "" t)
-\end{CodeVerbatim}
+\end{FileVerbatim}
 
-We recommend to avoid loading LTC automatically when opening \Code{.tex} files.  Therefore, do not add a hook from \Code{latex-mode} to \Code{ltc-mode} (usually done with \Code{add-hook}).   The reason is that our mode requires the \Code{latex-mode} to be fully executed before LTC works. The hooks are not guaranteed to be executed in particular order, so it is best to manually invoke \Code{ltc-mode} after you have opened a \Code{.tex} file.
+We recommend to avoid loading LTC automatically when opening .tex files.  Therefore, do not add a hook from \Code{latex-mode} to \Code{ltc-mode} (usually done with \Code{add-hook}).   The reason is that our mode requires the \Code{latex-mode} to be fully executed before LTC works. The hooks are not guaranteed to be executed in particular order, so it is best to manually invoke \Code{ltc-mode} after you have opened a .tex file.
 
 \begin{figure}[t]
 \centering
@@ -152,4 +152,4 @@ If you need to change the port number that Emacs uses to communicate with the LT
 
 \section{Troubleshooting}
 
-We are keeping a list of \hlink{\baseurl /faq.html}{../../faq.html}{frequently-asked-questions} at the project's web site that may help for troubleshooting.  There will also be mailing lists and a way to report bugs available in the future.
+We are keeping a list of \hlink{\baseurl /faq.html}{../../faq.html}{frequently-asked-questions} at the project's web site that may help for troubleshooting.

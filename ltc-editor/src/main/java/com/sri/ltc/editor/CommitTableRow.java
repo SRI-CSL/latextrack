@@ -60,7 +60,9 @@ public final class CommitTableRow {
         if (array.length < 6)
             throw new IllegalArgumentException("Cannot create commit table row from less than 6 objects in array");
         this.ID = array[0].toString();
-        this.message = array[1].toString(); // TODO: limit to first full stop ("\.\s+") or newline (if any)
+        // limit to first full stop, question or exclamation mark followed by space ("\.\s+") or newline (if any):
+        String[] messages = array[1].toString().split("(\\.\\?\\!\\s+)|[\n\r]+",2);
+        this.message = messages[0];
         this.date = CommonUtils.deSerializeDate(array[4].toString());
         this.author = new Author(array[2].toString(), array[3].toString());
     }

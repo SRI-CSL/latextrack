@@ -49,10 +49,10 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 /**
- * Test cases for API calls in LTC.
+ * Test cases for creating a bug report.
  * @author linda
  */
-public final class TestLTC_API {
+public final class TestBugReport {
 
     @ClassRule
     public static TemporaryGitRepository temporaryGitRepository = new TemporaryGitRepository();

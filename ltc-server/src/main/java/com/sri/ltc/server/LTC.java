@@ -110,8 +110,7 @@ public final class LTC {
     }
 
     private static void printUsage(PrintStream out, CmdLineParser parser) {
-        out.println("usage: java -cp ... "+LTC.class.getCanonicalName()+" [options...]");
-        out.println("   or: java -jar LTC-<...>.jar [options...]");
+        out.println("usage: java -jar LTC-<...>.jar [options...]");
         out.println("with");
         parser.printUsage(out);
     }

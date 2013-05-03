@@ -91,15 +91,20 @@ public class GitTrackedFile extends TrackedFile<GitRepository> {
         }
 
         RevCommit limitRevCommit = null;
-        if (inclusiveLimitRevision != null) limitRevCommit = revWalk.parseCommit(wrappedRepository.resolve(inclusiveLimitRevision));
+        if (inclusiveLimitRevision != null)
+            limitRevCommit = revWalk.parseCommit(wrappedRepository.resolve(inclusiveLimitRevision));
 
-        if (inclusiveLimitDate == null) inclusiveLimitDate = new Date(0);
+        if (inclusiveLimitDate == null)
+            inclusiveLimitDate = new Date(0);
 
         for (RevCommit revCommit : revWalk) {
 
+            // test limiting date first before adding commit
+            if (inclusiveLimitDate.compareTo(GitCommit.CommitDate(revCommit)) > 0) break;
+
             commits.add(new GitCommit(getRepository(), this, revCommit));
 
-            if (inclusiveLimitDate.compareTo(GitCommit.CommitDate(revCommit)) >= 0) break;
+            // now test if this was the last commit we wanted
             if (revCommit.getId().equals(limitRevCommit)) break;
 
 //            TreeWalk treeWalk = TreeWalk.forPath(wrappedRepository, getRepositoryRelativeFilePath(), revCommit.getTree());

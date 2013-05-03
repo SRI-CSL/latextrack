@@ -48,6 +48,7 @@
 
 (require 'xml-rpc)
 (require 'versions)
+(require 'cl) ; for set operations
 (defconst min-xml-rpc-version "1.6.8.1" "minimum version requirement for xml-rpc mode")
 
 ;;; ----------------------------------------------------------------------------
@@ -287,7 +288,7 @@
     (add-hook 'write-file-functions 'ltc-hook-before-save nil t) ; add (local) hook to intercept saving to file
     (add-hook 'kill-buffer-hook 'ltc-hook-before-kill nil t) ; add hook to intercept closing buffer
     ;; initialize known authors, commit graph and self
-    (init-commit-graph)
+    (setq commit-graph (init-commit-graph))
     (setq self (ltc-method-call "get_self" session-id)) ; get current author and color
     ;; run first update
     (ltc-update)))
@@ -368,7 +369,7 @@
 		    ) styles))
 	(ltc-add-edit-hooks) ; add (local) hooks to capture user's edits
 	;; update commit graph in temp info buffer
-	(init-commit-graph (cdr (assoc-string "revs" map)))
+	(setq commit-graph (init-commit-graph (cdr (assoc-string "revs" map))))
 	(update-info-buffer)
 	(set-buffer-modified-p old-buffer-modified-p) ; restore modification flag
 	))
@@ -380,7 +381,7 @@
   "Let LTC base system save the correct text to file."
   (if (not ltc-mode)
       nil
-    (message "Before saving file %s for session %d" (buffer-file-name) session-id)
+;    (message "Before saving file %s for session %d" (buffer-file-name) session-id)
     (ltc-method-call "save_file" session-id
 		     (buffer-string) 
 		     (compile-deletions))
@@ -397,7 +398,7 @@
 
 (defun ltc-hook-before-kill ()
   "Close session before killing."
-  (message "Before killing buffer in session %d for file %s" session-id (buffer-file-name))
+;  (message "Before killing buffer in session %d for file %s" session-id (buffer-file-name))
   (if ltc-mode (ltc-mode 0)) ; turn LTC mode off (includes closing session)
   nil)
 
@@ -575,66 +576,252 @@
 ;;; --- info buffer functions
 
 (defun init-commit-graph (&optional ids)
-  "Init commit graph from git.  If a list of IDS is given (optional), those will be used to determine the activation state.  In this case, the first entry of the list is left untouched if it exists.  The author in the first entry in the list will be the current self."
+  "Init commit graph.  If a list of IDS is given (optional), those will be used to determine the activation state.  In this case, the first entry of the list is left untouched if it exists.  The author in the first entry in the list will be the current self in either case.
+
+Each entry in the commit graph that is returned, contains a list with the following elements:
+ (ID date (name email) message isActive color (column (incoming-columns) (outgoing-columns) (passing-columns)))
+"
   (if ltc-mode
     ;; build commit graph from LTC session
     (let ((commits (ltc-method-call "get_commits" session-id)) ; list of 6-tuple strings
 	  (authors (mapcar (lambda (v) (cons (list (car v) (cadr v)) (nth 2 v))) 
 			   (ltc-method-call "get_authors" session-id)))
-	  (self (ltc-method-call "get_self" session-id)))
-      ;; init graph with first item for self:
-      ;; - if optional IDS given, look at last item and keep it if MODIFIED or ON_DISK, else 
-      ;; - if prior graph not empty, keep first ID, otherwise "" 
-      (setq commit-graph (list
-			  ;; determine ID of first item:
-			  (if ids
-			      (concat "" (car (member (car (last ids)) (list modified on_disk))))
-			    (if commit-graph (caar commit-graph) "")) ; keep first ID if prior graph exists
-			  ;; set rest of first item to empty and self:
-			  "" (list (car self) (nth 1 self)) "" t nil nil (nth 2 self)))
-      ;; build up list from first entry and current commits
-      (setq commit-graph 
-	    (cons
-	     commit-graph
-	     (mapcar (lambda (raw-commit)
-		       (let ((id (car raw-commit))
-			     (author (list (nth 2 raw-commit) (nth 3 raw-commit)))
-			     (parents (nth 5 raw-commit)))
-			 (list 
-			  id ; SHA1 or revision
-			  (nth 4 raw-commit) ; date
-			  author ; (author-name author-email)
-			  (nth 1 raw-commit) ; message
-			  (or (not ids) (not (not (member id ids)))) ; isActive: if no IDS, then t, otherwise look up 
-			  (if parents (split-string parents) nil) ; list of parents
-			  nil ; list of children (initially empty)
-			  (cdr (assoc author authors)) ; color of author
-			  )))
-		     commits)))
-      ;; TODO: build up list of children for each entry by going through one more time
-      ;; TODO (if original order?): create column locations if plotting graph structure
-      )
-    (setq commit-graph nil) ; LTC session not valid
-    ))
+	  (self (ltc-method-call "get_self" session-id))
+	  (parents-alist nil)
+	  (children-alist nil)
+	  (circle-alist '((0 0))) ; index -> circle column, start with 0 -> 0
+	  (incoming-alist nil)    ; index -> set of incoming columns
+	  (outgoing-alist nil)    ; index -> set of outgoing columns
+	  (passing-alist nil)     ; index -> set of passing columns
+	  (current-columns nil)   ; set of current columns
+	  )
+      ;; NOTE: this is modeled after CommitTableModel.init() in LTC Editor code!
+      ;; 1) build up map : ID -> index in commits
+      (setq commit-map (make-hash-table :test 'equal :size (length commits)))
+      (setq counter -1) ; keep track of index in list of commits
+      (mapc (lambda (raw-commit)
+	      (let ((id (car raw-commit))
+		    (author (list (nth 2 raw-commit) (nth 3 raw-commit))))
+		; side-effect: build up map
+		(setq counter (+ 1 counter))
+		(puthash (car raw-commit) counter commit-map) ; revision -> index in list of commits
+		))
+	    commits)
+      ;; 2) calculate index -> parents indices and index -> children indices (in alists)
+      (mapc (lambda (raw-commit)
+       	      (let* ((id (car raw-commit))
+       		     (index (gethash id commit-map))
+		     (parents (nth 5 raw-commit))
+       		     (parent-ids (if parents (split-string parents) nil))
+       		     (parent-indices nil) ; will hold list of parent indices
+       		     )
+       		; go through list of parents and find indices; also update children
+       		(setq parent-indices
+       		      (mapcar (lambda (parent-id)
+       				(let* ((parent-index (gethash parent-id commit-map))
+				       (children-indices (cdr (assoc parent-index children-alist)))
+       				       )
+       				  ; side-effect: add index to list of children
+				  (setq children-indices (cons index children-indices))
+				  (setq children-alist
+					(cons
+					 (cons parent-index children-indices)
+					 children-alist))
+       				  parent-index))
+       			      parent-ids))
+		(setq parents-alist 
+		      (cons 
+		       (cons index parent-indices)
+		       parents-alist))
+       		))
+       	    commits)
+      ;; 3) calculate graph column locations:
+      (mapc (lambda (raw-commit)
+	      (let* ((id (car raw-commit))
+       		     (index (gethash id commit-map))
+		     (circle (cadr (assoc index circle-alist)))
+		     (incoming (cdr (assoc index incoming-alist)))
+		     (parent-indices (cdr (assoc index parents-alist)))
+		     )
+		; update current columns based on incoming set
+		(setq current-columns (set-difference current-columns incoming)) ; remove incoming
+		(setq current-columns (cons circle current-columns)) ; add circle column
+		; passing columns = current columns \ {circle column}
+		(setq passing-alist
+		      (cons
+		       (cons index (set-difference current-columns (list circle)))
+		       passing-alist))
+		; determine circle columns of parents:
+		(mapc (lambda (parent-index)
+			(let* ((outgoing (cdr (assoc index outgoing-alist)))
+			       (passing (cdr (assoc index passing-alist)))
+			       (union (union outgoing passing))
+			       (lowest (get-lowest-not-in union))
+			       (parent-circle (cadr (assoc parent-index circle-alist)))
+			       )
+			  (if parent-circle
+			      ; parent circle was set: move to the left?
+			      (when (< lowest parent-circle)
+				(setq current-columns (delete parent-circle current-columns)) ; remove old parent circle
+				(setq circle-alist
+				      (cons
+				       (list parent-index lowest)
+				       circle-alist))) ; set parent circle to lowest
+			    ; parent circle not yet set: use lowest
+			    (setq circle-alist
+				  (cons
+				   (list parent-index lowest)
+				   circle-alist)))
+			  ; maintain current columns: 
+			  ; add latest parent circle (as one-element list) to it
+			  (setq parent-circle (cdr (assoc parent-index circle-alist)))
+			  (setq current-columns (union parent-circle current-columns))
+			  ; update incoming columns of parent:
+			  ; add latest parent circle to current incoming
+			  (setq incoming-alist
+				(cons
+				 (cons parent-index (union 
+						     parent-circle 
+						     (cdr (assoc parent-index incoming-alist))))
+				 incoming-alist))
+			  ; update outgoing columns of index:
+			  ; add latest parent circle to current outgoing
+			  (setq outgoing-alist
+				(cons
+				 (cons index (union parent-circle outgoing))
+				 outgoing-alist))
+			  ))
+		      parent-indices)
+		; maintain current columns if there was a merge:
+		(if (not (member circle (cdr (assoc index outgoing-alist))))
+		    (setq current-columns (delete circle current-columns)))
+		))
+	    commits)
+      ;; 4) prepend first row and assemble graph structure in list as return value:
+      ;; each row:
+      ;;  (id date (name email) msg isActive color graph)
+      ;;  where GRAPH is:
+      ;;   (column incoming-columns outgoing-columns passing-columns)
+      (cons 
+       ;; first row is item for self:
+       ;; - if optional IDS given, look at last item and keep it if MODIFIED or ON_DISK, else 
+       ;; - if prior graph not empty, keep first ID, otherwise "" 
+       (list
+	;; determine ID of first item:
+	(if ids
+	    (concat "" (car (member (car (last ids)) (list modified on_disk))))
+	  (if commit-graph (caar commit-graph) "")) ; keep first ID if prior graph exists
+	;; set rest of first item to empty and self:
+	"" (list (car self) (nth 1 self)) "" t (nth 2 self) '(0 nil nil nil))
+       ;; assemble rest of graph from list of commits and other data structures above:
+       (mapcar (lambda (raw-commit)
+		 (let* ((id (car raw-commit))
+			(author (list (nth 2 raw-commit) (nth 3 raw-commit)))
+			(index (gethash id commit-map)))
+		   (list 
+		    id ; revision
+		    (nth 4 raw-commit) ; date
+		    author ; (author-name author-email)
+		    ; limit message to first full stop, question or exclamation mark (followed by space) or newline (if any):
+		    (car (split-string (nth 1 raw-commit) "\\([.?!][:space:]+\\)\\|\n" t)) ; shortened message 
+		    (or (not ids) (not (not (member id ids)))) ; isActive: if no IDS, then t, otherwise look up 
+		    (cdr (assoc author authors)) ; color of author
+		    (list ; graph:
+		     (cadr (assoc index circle-alist)) ; circle column
+		     (cdr (assoc index incoming-alist)) ; incoming columns
+		     (cdr (assoc index outgoing-alist)) ; outgoing columns
+		     (cdr (assoc index passing-alist)) ; passing columns
+		     ))))
+	       commits)))
+    nil)) ; LTC session not valid: return NIL
+
+(defun get-lowest-not-in (s)
+  "Get the lowest number that is not in sorted set S, starting from 0."
+  (setq n 0)
+  (while (member n s)
+    (setq n (1+ n)))
+  n)
 
 (defun update-info-buffer ()
   "Update output in info buffer from current commit graph."
   (when (string< "" ltc-info-buffer)
-    (with-output-to-temp-buffer ltc-info-buffer
-      (let ((old-buffer (current-buffer))
-	    (old-window (get-buffer-window (current-buffer)))
-	    (temp-buffer (get-buffer-create ltc-info-buffer))
-	    (temp-output (pretty-print-commit-graph)))
-	(set-buffer temp-buffer)
-	(set (make-variable-buffer-local 'parent-window) old-window)
-	(insert temp-output)
-	(set-buffer old-buffer)
+    (let ((prior-height 7) ; default height of info buffer = 7
+	  (prior-window-start 1) ; default start of window of info-buffer
+	  (info-window (get-buffer-window ltc-info-buffer))
+	  )
+      (when info-window ; if prior info buffer existed, remember current height and start of window
+	(setq prior-height (window-height info-window))
+	(setq prior-window-start (window-start info-window))
+	)
+      (with-output-to-temp-buffer ltc-info-buffer
+	(let* ((old-buffer (current-buffer))
+	       (old-window (get-buffer-window (current-buffer)))
+	       (temp-buffer (get-buffer-create ltc-info-buffer))
+	       (temp-window (get-buffer-window temp-buffer))
+	       (temp-output (pretty-print-commit-graph)))
+	  (set-buffer temp-buffer)
+	  (set (make-variable-buffer-local 'parent-window) old-window)
+	  (insert temp-output)
+	  (setq-default line-spacing nil) ; no extra height between lines in this buffer
+	  (setq-default truncate-lines t) ; no line wrap
+	  (setq truncate-partial-width-windows nil) ; no truncate for vertically-split windows
+	  (set-buffer old-buffer)
+	  ))
+      ;; TODO: hide cursor (using Cursor Parameters)?
+      (with-selected-window (get-buffer-window ltc-info-buffer)
+	(shrink-window (- (window-height) prior-height)) ; adjust height of temp info buffer
+	(set-window-start (selected-window) prior-window-start nil) ; adjust position visible of temp info buffer
+	)
+      )))
+
+(defun draw-branches (front back circle columns max-circle passing 
+			    left-circle-string left-column-string 
+			    middle-circle-string middle-column-string
+			    right-circle-string right-column-string)
+  "Create string representation of branches in between commits.  
+
+FRONT and BACK are strings to concat to the front and back of the resulting string with branches.  
+
+CIRCLE denotes the current position of the commit node.  COLUMNS is either the set of incoming or outgoing columns of the node depending on whether we draw branches above or below the commit.  MAX-CIRCLE is the largest column found in the commit graph and denotes the width of the resulting branch string.  PASSING is the list of passing lines.
+
+The remaining arguments *-STRING denote the string representation of the characters needed for the left, middle, and right columns in the span that are either incoming or outgoing in nature."
+  (setq graph-fmt "") ; build-up string for graph format
+  ; calculate span from union of circle column and columns:
+  (setq left-col (apply 'min (union (list circle) columns)))
+  (setq right-col (apply 'max (union (list circle) columns)))
+  (dotimes (col (1+ max-circle)) ; go through all columns
+    (setq c " ") ; default character for column is space
+    (if (and (< col left-col)      ; left of any joints
+	     (member col passing)) ; and passing column
+	(setq c (string #x2502)))
+    (when (= col left-col) ; at the left column of span?
+      (if (= col circle) 
+	  ; circle column
+	  (setq c (if (member circle columns) (string #x251c) left-circle-string))
+	; not circle column: must be in columns, though!
+	(setq c (if (member col passing) (string #x251c) left-column-string))
 	))
-    ;; TODO: hide cursor (using Cursor Parameters)?
-    ;; adjust height of temp info buffer
-    (with-selected-window (get-buffer-window ltc-info-buffer)
-      (shrink-window (- (window-height) 7)))
-    ))
+    (when (and (> col right-col) (< col right-col)) ; middle of span?
+      (if (= col circle) 
+	  ; circle column in middle
+	  (setq c (if (member circle columns) (string #x253c) middle-circle-string))
+	; column in middle but not circle:
+	(setq c (string #x2500)) ; default is "-"
+	(if (member col columns) (setq c middle-column-string)) 
+	(if (member col passing) (setq c (string #x253c))) ; cross
+	))
+    (when (= col right-col) ; at the right column of span?
+      (if (= col circle)
+	  ; circle column
+	  (setq c (if (member circle columns) (string #x2524) right-circle-string))
+	; not circle column: must be in columns, though!
+	(setq c (if (member col passing) (string #x2524) right-column-string))
+	))
+    (if (and (> col right-col)     ; right of any joints
+	     (member col passing)) ; and passing column
+	(setq c (string #x2502)))
+    (setq graph-fmt (concat graph-fmt c)))
+  (concat front graph-fmt back)) ; add front and back around line with characters
 
 (defun pretty-print-commit-graph ()
   "Create string representation with text properties from current commit graph."
@@ -642,29 +829,76 @@
       (let ((rev-map (make-sparse-keymap))
 	    (date-map (make-sparse-keymap))
 	    (author-map (make-sparse-keymap))
+	    ; Unicode characters from box-drawing set:
+	    (commit-top-bottom #x255e) ;#x251d)
+	    (commit-top #x2558) ;#x2515)
+	    (commit-bottom #x2552) ;#x250d)
 	    )
 	(define-key rev-map (kbd "<mouse-1>") 'ltc-select-rev)
 	(define-key date-map (kbd "<mouse-1>") 'ltc-select-date)
 	(define-key author-map (kbd "<mouse-1>") 'ltc-select-color)
-	;; first loop: calculate longest author string for padding to next column
-	(setq msg-column (+ 2 (apply 'max (mapcar 'length (mapcar (lambda (commit)
-								    (author-to-string (nth 2 commit)))
-								  commit-graph)))))
+	;; first loop: 
+	;; calculate biggest circle column and longest author string for padding to next column
+	(setq max-circle 0)
+	(setq max-author 0)	      
+	(mapc (lambda (commit)
+		(let ((circle (caar (last commit)))
+		      (author (length (author-to-string (nth 2 commit))))
+		      )
+		  ; column
+		  (if (> circle max-circle) 
+		      (setq max-circle circle))
+		  ; length of author string
+		  (if (> author max-author)
+		      (setq max-author author))
+		  ))
+	      commit-graph)
 	;; second loop: build return value
 	(mapconcat (function (lambda (commit) 
 			       (let* ((is-active (nth 4 commit))
 				      (author (author-to-string (nth 2 commit)))
 				      (disabledcolor "#7f7f7f")
 				      (facevalue (if is-active nil (list :foreground disabledcolor)))
-				      (id (shorten 8 (car commit))))
+				      (id (shorten 8 (car commit)))
+				      (graph (nth 6 commit))
+				      (circle (car graph))
+				      (incoming (nth 1 graph))
+				      (outgoing (nth 2 graph))
+				      (passing (nth 3 graph))
+				      (passing-before (delq nil (mapcar (lambda (x) (if (< x circle) x)) passing)))
+				      (passing-after (delq nil (mapcar (lambda (x) (if (> x circle) x)) passing)))
+				      )
+				 (setq before-seq (progn 
+						    (setq n -1) 
+						    (mapcar (lambda (x) (setq n (1+ n)) (+ n x)) (make-list circle 0))))
+				 (setq after-seq (progn 
+						    (setq n circle) 
+						    (mapcar (lambda (x) (setq n (1+ n)) (+ n x)) (make-list (- max-circle circle) 0))))
 				 (concat
+				  (if (set-difference incoming (list circle)) ; extra line to draw incoming branches?
+				      (draw-branches " " "\n" circle incoming max-circle passing
+						     (string #x250c) (string #x2514)
+						     (string #x252c) (string #x2534)
+						     (string #x2510) (string #x2518)))
+				  ; all graph characters in default foreground color:
+				  ;  this line only contains the passing lines and the commit column (circle)
+				  (apply 'format 
+					 (concat
+					  " "
+					  (mapconcat (lambda (x) (if (member x passing-before) "%c" " ")) before-seq "")
+					  "%c"
+					  (mapconcat (lambda (x) (if (member x passing-after) "%c" " ")) after-seq "")
+					  " ")
+					 (append (make-list (length passing-before) #x2502) ; passing lines before
+						 ; circle column: depends on incoming and outgoing:
+						 (list (if (member circle incoming)
+							   (if outgoing commit-top-bottom commit-top)
+							 (if outgoing commit-bottom ?\s)))
+						 (make-list (length passing-after) #x2502))) ; passing lines after
 				  (propertize 
-				   (format " %c " (if is-active ?* ?\s)) ; whether active
-				   'face facevalue)
-				  (propertize 
-				   (format "%8s" id) ; short SHA1 or revision
+				   (format "%8s" id) ; short revision
 				   'mouse-face 'highlight
-				   'help-echo (if is-active "mouse-1: limit by this start revision")
+				   'help-echo "mouse-1: limit by this start revision"
 				   'keymap rev-map
 				   'action id
 				   'face facevalue)
@@ -672,24 +906,27 @@
 				  (propertize
 				   (format "%25s" (nth 1 commit)) ; date
 				   'mouse-face 'highlight
-				   'help-echo (if is-active "mouse-1: limit by this start date")
+				   'help-echo "mouse-1: limit by this start date"
 				   'keymap date-map
 				   'action (nth 1 commit)
 				   'face facevalue)
 				  "  "
 				  (propertize 
-				   (format (concat "%-" (number-to-string msg-column) "s") 
+				   (format (concat "%-" (number-to-string (+ 2 max-author)) "s") 
 					   author)
 				   'mouse-face 'highlight
 				   'help-echo (if is-active "mouse-1: change color")
 				   'keymap author-map
 				   'action (if is-active (cons "textColor" (nth 2 commit)))
-				   'face (list :foreground (if is-active (car (last commit)) disabledcolor)))
+				   'face (list :foreground (if is-active (nth 5 commit) disabledcolor)))
 				  (propertize 
-				   (format "%s" 
-					   (nth 3 commit) ; message
-					   )
+				   (format "%s" (nth 3 commit)) ; message
 				   'face facevalue)
+				  (if (set-difference outgoing (list circle)) ; extra line to draw outgoing branches?
+				      (draw-branches "\n " "" circle outgoing max-circle passing
+						     (string #x2514) (string #x250c) 
+						     (string #x2534) (string #x252c)
+						     (string #x2518) (string #x2510)))
 				  ))))
 		   commit-graph 
 		   "\n")
@@ -796,9 +1033,9 @@ it will only set the new, chosen color if it is different than the old one."
   ;(message " --- LTC: before change with beg=%d and end=%d" beg end)
   ;; if first change (buffer-modified-p == nil) then update commit graph
   (when (and (not (buffer-modified-p)) commit-graph)
-    ;; manipulate commit graph: if at least one entry and the first element is "" then replace first ID with "modified"
+    ;; manipulate commit graph: if at least one entry and the first element is "" or "on disk" then replace first ID with "modified"
     (let ((head (car commit-graph)))
-      (when (and head (string= "" (car head)))
+      (when (and head (or (string= "" (car head)) (string= on_disk (car head))))
 	(setcar head modified)
 	(setcar commit-graph head)
 	(update-info-buffer))))

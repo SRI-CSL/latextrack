@@ -235,6 +235,7 @@ $> pdflatex manual -shell-escape
 $> pdflatex manual -shell-escape
 $> cd figures; make; cd ..
 $> htlatex manual "manual,0,png" "" "" "-interaction=nonstopmode --src-specials"
+$> pdflatex manual
 
 
 Incrementing version number

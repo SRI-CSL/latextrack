@@ -7,7 +7,7 @@
     <parent>
         <groupId>com.sri.ltc</groupId>
         <artifactId>LTC</artifactId>
-        <version>0.9.14</version>
+        <version>0.9.15</version>
     </parent>
 
     <groupId>com.sri.ltc</groupId>
@@ -76,7 +76,7 @@
         <dependency>
             <groupId>org.tmatesoft.svnkit</groupId>
             <artifactId>svnkit</artifactId>
-            <version>1.7.8</version>
+            <version>1.7.9</version>
         </dependency>
 
         <!-- natural language parsing for dates -->

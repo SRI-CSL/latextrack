@@ -33,7 +33,7 @@ import org.junit.Test;
 import java.text.ParseException;
 import java.util.*;
 
-import static junit.framework.Assert.assertTrue;
+import static org.junit.Assert.assertTrue;
 
 /**
  * @author linda
