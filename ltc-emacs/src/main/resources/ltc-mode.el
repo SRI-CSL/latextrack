@@ -745,25 +745,33 @@ Each entry in the commit graph that is returned, contains a list with the follow
 (defun update-info-buffer ()
   "Update output in info buffer from current commit graph."
   (when (string< "" ltc-info-buffer)
-    (let ((prior-height 7)) ; default height of info buffer = 7
+    (let ((prior-height 7) ; default height of info buffer = 7
+	  (prior-window-start 1) ; default start of window of info-buffer
+	  (info-window (get-buffer-window ltc-info-buffer))
+	  )
+      (when info-window ; if prior info buffer existed, remember current height and start of window
+	(setq prior-height (window-height info-window))
+	(setq prior-window-start (window-start info-window))
+	)
       (with-output-to-temp-buffer ltc-info-buffer
 	(let* ((old-buffer (current-buffer))
 	       (old-window (get-buffer-window (current-buffer)))
 	       (temp-buffer (get-buffer-create ltc-info-buffer))
 	       (temp-window (get-buffer-window temp-buffer))
 	       (temp-output (pretty-print-commit-graph)))
-	  (if temp-window 
-	      (setq prior-height (window-height temp-window)))
 	  (set-buffer temp-buffer)
 	  (set (make-variable-buffer-local 'parent-window) old-window)
 	  (insert temp-output)
-	  (setq line-spacing nil) ; no extra height between lines in this buffer
+	  (setq-default line-spacing nil) ; no extra height between lines in this buffer
+	  (setq-default truncate-lines t) ; no line wrap
+	  (setq truncate-partial-width-windows nil) ; no truncate for vertically-split windows
 	  (set-buffer old-buffer)
 	  ))
       ;; TODO: hide cursor (using Cursor Parameters)?
-      ;; adjust height of temp info buffer
       (with-selected-window (get-buffer-window ltc-info-buffer)
-	(shrink-window (- (window-height) prior-height)))
+	(shrink-window (- (window-height) prior-height)) ; adjust height of temp info buffer
+	(set-window-start (selected-window) prior-window-start nil) ; adjust position visible of temp info buffer
+	)
       )))
 
 (defun draw-branches (front back circle columns max-circle passing 
