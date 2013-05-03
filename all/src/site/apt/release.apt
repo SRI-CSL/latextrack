@@ -110,6 +110,8 @@ For path information and login help, type "sf-help".
 <LATER: copy README.txt?>
 +---
 
+  Leave the shell open in order for the deployment through Maven to succeed.
+
 Deploy JAR and Site
 
   Next, we run the Maven build system to deploy the JAR file and site files to sourceforge.
