@@ -187,22 +187,28 @@ CONFLICT (content): Merge conflict in independence.tex
 Automatic merge failed; fix conflicts and then commit the result.
 \end{CodeVerbatim}
 
-Unfortunately, the two repositories have diverged too much and a so-called ``merge conflict'' has arisen.  Now we have to tell git how to fix this before we can proceed.  Let us look at the status one more time:
-\begin{CodeVerbatim}
-$> git status
-# On branch master
-# You have unmerged paths.
-#   (fix conflicts and run "git commit")
-#
-# Unmerged paths:
-#   (use "git add <file>..." to mark resolution)
-#
-#	both modified:      independence.tex
-#
-no changes added to commit (use "git add" and/or "git commit -a")
-\end{CodeVerbatim}
-
-Next, we look at the markers that git has put into our file:
+Unfortunately, the two repositories have diverged too much and a so-called ``merge conflict'' has arisen.  Now we have to tell git how to fix this before we can proceed.  
+%Let us look at the status one more time:
+%\begin{CodeVerbatim}
+%$> git status
+%# On branch master
+%# You have unmerged paths.
+%#   (fix conflicts and run "git commit")
+%#
+%# Unmerged paths:
+%#   (use "git add <file>..." to mark resolution)
+%#
+%#	both modified:      independence.tex
+%#
+%no changes added to commit (use "git add" and/or "git commit -a")
+%\end{CodeVerbatim}
+%
+\begin{figure}
+\centering
+\mygraphics{scale=.35}{figures/emacs-merge-conflict}
+\caption{Git conflict markers in merged file} \label{fig:emacs-merge-conflict}
+\end{figure}
+Next, we look at the markers that git has put into our file.  You can also run \Code{M-x ltc-update} in Emacs to see these markers as seen in Figure~\ref{fig:emacs-merge-conflict}.
 \begin{CodeVerbatim}
 $> cat independence.tex 
 [...]
@@ -210,31 +216,83 @@ $> cat independence.tex
 <<<<<<< HEAD
 % list charges against King George III
 =======
-That to secure these rights, Governments are instituted among Men, deriving their just powers from the consent of the governed, That whenever any Form of Government becomes destructive of these ends, it is the Right of the People to alter or to abolish it, and to institute new Government, laying its foundation on such principles and organizing its powers in such form, as to them shall seem most likely to effect their Safety and Happiness. %TODO: more here
+That to secure these rights, Governments are instituted among Men, [...]
 
 %TODO: indictment here
 >>>>>>> 39cd6172613d1065a4cddc854cf30067869fc727
 \end{CodeVerbatim}
 
+We decide that the comments in the \Code{HEAD} version means the same as the last comment in the merged version \Code{39cd617...} so we modify the text so that it looks like this:
+\begin{CodeVerbatim}
+$> cat independence.tex 
+[...]
 
+That to secure these rights, Governments are instituted among Men, [...]
 
+% list charges against King George III
+\end{CodeVerbatim}
+It is important to remove the git marker lines starting with \Code{<<<<<<<}, \Code{=======}, and \Code{>>>>>>>} for git to recognize that we have resolved the conflicts.  Now committing on the command line yields:
+\begin{CodeVerbatim}
+$> git commit -am "merging Roger Sherman's edits"
+[master 34c1bde] merging Roger Sherman's edits
+\end{CodeVerbatim}
 
+\begin{figure}
+\centering
+\mygraphics{scale=.35}{figures/emacs-merge-resolve}
+\caption{After resolving conflict, committing, and updating in Emacs} \label{fig:emacs-merge-resolve}
+\end{figure}
+This has resolved the conflict and incorporated Roger Sherman's prior changes, as a look at the git log with the graphing function reveals:
+\begin{CodeVerbatim}
+$> git log --oneline --graph --date-order
+*   34c1bde merging Roger Sherman's edits
+|\  
+* | 8629257 added comment about list of charges
+| * 39cd617 todo item for indictment
+| * 45710ff more text for preamble
+|/  
+* d3f904c sixth version
+* 203e0ce fifth version
+* 36eeab0 fourth version
+* fa2be39 third version
+* bac2f51 second version
+* d6d1cf8 first version
+\end{CodeVerbatim}
+Once we update Emacs using for example \Code{M-x ltc-update}, we see the paragraph that was part of the conflicting region now correctly attributed to Roger Sherman.  Furthermore, the git commit graph has gotten more interesting with the branching and merging symbolized by parallel vertical lines and empty rows for connecting them at merge points.  Refer to Figure~\ref{fig:emacs-merge-resolve} for a screen shot of the git commit graph and text changes after resolving the conflict, committing and updating Emacs.
 
+One thing to notice in the commit graph with branches is the grayed out row of the commit \Code{8629257} that we had performed just a little while ago as John Adams.  When we obtain the history of the file and one commit has more than one ancestor (a merge point), we walk the branch that has the older commit time in order to create a sequential path through the commits.  In the future, we want to allow the user to select the branch to use or even overlay parallel branches for better control of the system.  You can watch \href{http://sourceforge.net/p/latextrack/tickets/15/}{ticket \#15} for when we address this problem.
 
+Next we make sure to tell Roger Sherman about our effort to merge changes in the current document.  He will want to pull our effort using the following commands.
+\begin{CodeVerbatim}
+$> cd $TUTORIAL/independence-sherman
+$> git pull adams master
+remote: Counting objects: 10, done.
+remote: Compressing objects: 100% (4/4), done.
+remote: Total 6 (delta 2), reused 0 (delta 0)
+Unpacking objects: 100% (6/6), done.
+From ../independence
+ * branch            master     -> FETCH_HEAD
+Updating 39cd617..34c1bde
+Fast-forward
+ independence.tex | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+\end{CodeVerbatim}
 
+A look at the git graph on the command line shows that the merge has been applied without conflict.
+\begin{CodeVerbatim}
+$> git log --oneline --graph --date-order
+*   34c1bde merging Roger Sherman's edits
+|\  
+* | 8629257 added comment about list of charges
+| * 39cd617 todo item for indictment
+| * 45710ff more text for preamble
+|/  
+* d3f904c sixth version
+* 203e0ce fifth version
+* 36eeab0 fourth version
+* fa2be39 third version
+* bac2f51 second version
+* d6d1cf8 first version
+\end{CodeVerbatim}
 
-%He can obtain John's latest version (and any potential commits in between) using the following command:
-%
-%\begin{CodeVerbatim}
-%$> cd $TUTORIAL/independence-roger
-%$> git pull
-%From $TUTORIAL/independence/.
-%   009bb56..9f99514  master     -> origin/master
-%\end{CodeVerbatim}
-%
-%\begin{FileVerbatim}
-%\begin{itemize}
-%  \item He has refused his Assent to Laws, the most wholesome and necessary 
-%        for the public good.
-%\end{itemize}
-%\end{FileVerbatim}
+Now both can continue working on their versions but to prevent future merge conflicts it would be wise if they told each other immediately about newer versions and devised a plan to edit the file at different times.  In larger writing projects, we recommend to break up the document into smaller .tex files to be included in a master .tex file.  Then, editing different files at the same time for multiple authors minimizes the risk of merge conflicts.
