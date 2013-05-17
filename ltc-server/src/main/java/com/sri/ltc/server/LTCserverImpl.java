@@ -267,6 +267,7 @@ public final class LTCserverImpl implements LTCserverInterface {
                 case Added:
                 case Modified:
                 case Changed:
+                case Conflicting: // TODO: once we implement merge assistance, maybe this gets handled differently
                     ReaderWrapper fileReader = new FileReaderWrapper(session.getTrackedFile().getFile().getCanonicalPath());
                     if (authors.size() > 0 && authors.get(authors.size()-1).equals(self))
                         // replace last reader
