@@ -66,13 +66,13 @@ Figures~\ref{fig:emacs-filter-small} show that ``\textbackslash maketitle'' as w
 
 \subsection{Understanding the Commit Graph}
 
-Now draw your attention back to LTC info buffer with the history of the current file under git (located at the bottom or right of your tracked file).  The Emacs representation is currently lacking the edges between nodes of the commit graph (you can watch \href{http://sourceforge.net/p/latextrack/tickets/30/}{ticket \#30} for this issue). 
+Now draw your attention back to LTC info buffer with the history of the current file under git (located at the bottom or right of your tracked file).  The Emacs representation is using small box characters to draw the graph and its edges.  In our tutorial repository, there are no branches and the graph is a sequential line.  
 \begin{figure}[t]
 \centering
 \mygraphics{scale=.5}{figures/emacs-commit-graph}
 \caption{Example of commit graph} \label{fig:emacs-commit-graph}
 \end{figure}
-Refer to Figure~\ref{fig:emacs-commit-graph} for a screen shot of the example file history. Versions that are included in the tracked changes are denoted with an asterisk at the beginning of the line and the line is not printed in gray.  How far we go back in history depends on some filtering settings, which are discussed further in Section~\ref{sec:emacs-limit-history} below.  By default, we first include all version of the current author at the top.  In our example with impersonating John Adams, there are currently no further recent commits of him.  Then, we continue down the path and collecting all versions of different authors until we find the next version of John Adams in the commit with the message ``second version.''
+Refer to Figure~\ref{fig:emacs-commit-graph} for a screen shot of the example file history. Versions that are included in the tracked changes are not printed in gray.  How far we go back in history depends on some filtering settings, which are discussed further in Section~\ref{sec:emacs-limit-history} below.  By default, we first include all version of the current author at the top.  In our example with impersonating John Adams, there are currently no further recent commits of him.  Then, we continue down the path and collecting all versions of different authors until we find the next version of John Adams in the commit with the message ``second version.''
 
 \subsection{Limiting History} \label{sec:emacs-limit-history}
 
@@ -85,7 +85,7 @@ We allow the user to filter and customize how the potentially rich history of a 
 \mygraphics{scale=.5}{figures/emacs-limit-authors}
 \caption{Effect on commit graph of limiting authors to Roger Sherman and Thomas Jefferson} \label{fig:emacs-limit-authors}
 \end{figure}
-To limit the history by \textbf{authors}, choose menu item \Menu{Limit by;Set of authors...}{LTC}. This will prompt the user to enter author names to limit by in the mini buffer.  Again, automatic completion works, so you can enter \Code{Ro<TAB> <RET>} and \Code{Th<TAB> <RET> <RET>} to select authors Roger Sherman and Thomas Jefferson.  After the last author was selected, the system automatically updates the displayed changes.
+To limit the history by \textbf{authors}, choose menu item \Menu{Limit by;Set of authors...}{LTC}. This will prompt the user to enter author names to limit by in the mini buffer.  Again, automatic completion works, so you can enter \Code{Ro<TAB> <RET>} and \Code{Th<TAB> <RET> <RET>} to select authors Roger Sherman and Thomas Jefferson and exit the dialog.  After the last author was selected, the system automatically updates the displayed changes.
 
 Notice how any version by the ignored authors Benjamin Franklin and John Adams is now gray as only commits from the selected authors are considered.  The first line in the LTC info buffer still shows the currently active author John Adams, so this line is not gray.  Again, the history is only taken until the next revision of the current author but since he is being ignored, we go all the way back to the first revision. Compare your Emacs now with the screen shot in Figure~\ref{fig:emacs-limit-authors} and see how the file history has changed.
 
@@ -93,7 +93,7 @@ To reset limiting by authors, simply choose the same menu \Menu{Limit by;Set of 
 
 %\subsubsection{Limiting by Date or Revision}
 
-Next, we apply limits on \textbf{revision} and \textbf{date} to control how far back the history of the file is considered.  As we had seen, the first version is not taken into account because it was committed before the next commit by the current author John Adams.  Let us now choose menu item \Menu{Limit by;Start at revision...}{LTC}.  This will prompt the user to specify a known revision number.  Type the first few characters \Code{d6d<RET>} of the SHA-1 key of the first commit.  If unique, it is not necessary to expand the revision number using the TAB key (or whatever key is used for completion in your Emacs configuration).  See how the first version is listed in color and considered in the tracked changes above.  Since changes by the current author John Adams from the first to the second version are now included, notice the text marked up in red appearing in the editor window. We see that John Adams must have added himself as an author in the LaTeX preamble among other edits in the second commit of the file.
+Next, we apply limits on \textbf{revision} and \textbf{date} to control how far back the history of the file is considered.  As we had seen, the first version is not taken into account because it was committed before the next commit by the current author John Adams.  Let us now choose menu item \Menu{Limit by;Start at revision...}{LTC}.  This will prompt the user to specify a known revision number.  Type the first few characters \Code{d6d<RET>} of the SHA-1 key of the first commit.  If unique, it is not necessary to expand the revision number using the TAB key (or whatever key is used for completion in your Emacs configuration).  See how the first version is listed in color and considered in the tracked changes above as seen in Figure~\ref{fig:emacs-limit-rev}.  Since changes by the current author John Adams from the first to the second version are now included, notice the text marked up in red appearing in the editor window. We see that John Adams must have added himself as an author in the LaTeX preamble among other edits in the second commit of the file. 
 
 \begin{figure}
 \centering
@@ -111,7 +111,7 @@ To remove the limit by revision number, simply choose the same menu \Menu{Limit 
 \caption{Effect on commit graph of limiting history to date of third version} \label{fig:emacs-limit-date}
 \end{figure}
 
-Limiting the history by date works similarly.  Select menu item \Menu{Limit by;Start at date...}{LTC}. At the prompt, you can enter a date from the history of the file using auto-completion.  For example, enter \Code{2<TAB>11<TAB> <RET>} to get the exact date of the third revision.  Or, type a date such as \Code{Jul 23, 2010 1:11p} into the field.  We employ some software to process times and dates in natural language, and if successful, the field will contain the date string as it was understood translated into the format used in the commit tree. Finally, you may also perform a left-click on the date in the history to achieve the same effect.  See Figure~\ref{fig:emacs-limit-date} for a screen shot of the effect of limiting to the date of the third revision. 
+Limiting the history by date works similarly.  Select menu item \Menu{Limit by;Start at date...}{LTC}. At the prompt, you can enter a date from the history of the file using auto-completion.  For example, enter \Code{2<TAB>11<TAB> <RET>} to get the exact date of the third revision.  Or, type a date such as \Code{Jul 23, 2010 1:11p} into the field.  We employ some software to process times and dates in natural language, and if successful, the field will contain the date string as it was understood translated into the format used in the commit tree. You may also perform a left-click on the date in the history to achieve the same effect.  See Figure~\ref{fig:emacs-limit-date} for a screen shot of the effect of limiting to the date of the third revision. 
 
 To remove the limit by date, either left-click on the empty date column of the first line of the file history or enter an empty date after selecting menu item \Menu{Limit by;Start at date...}{LTC} again.
 
@@ -137,7 +137,7 @@ Finally, you will want to save the current file to disk.  This will cause the la
 
 Saving the file, however, does not tell git to create a new version under its management.  In order to commit the current file to git, first, make sure that the .tex file is saved under Emacs and the first line does not say ``modified.'' Then, on a command line, switch to the directory with the tutorial file and perform the following commit command (printed in bold below).  You may want to check the status of git before and after the commit:
 \begin{CodeVerbatim}[commandchars=\\\{\}]
-$ git status
+$> git status
 # On branch master
 # Changes not staged for commit:
 #   (use "git add <file>..." to update what will be committed)
@@ -146,10 +146,9 @@ $ git status
 #	modified:   independence.tex
 #
 no changes added to commit (use "git add" and/or "git commit -a")
-$ \textbf{git commit -am "added comment about list of charges"}
-[master 85a3c18] added comment about list of charges
- 1 file changed, 3 insertions(+), 1 deletion(-)
-$ git status
+$> \textbf{git commit -am "added comment about list of charges"}
+[master 8629257] added comment about list of charges
+ 1 file changed, 3 insertions(+), 1 deletion(-)$> git status
 # On branch master
 # Your branch is ahead of 'origin/master' by 1 commit.
 #   (use "git push" to publish your local commits)
@@ -164,3 +163,78 @@ To make Emacs aware of the underlying commit, use menu item \Menu{Update buffer}
 \mygraphics{scale=.5}{figures/emacs-new-commit}
 \caption{File history after committing latest version and updating Emacs} \label{fig:emacs-new-commit}
 \end{figure}
+
+\subsection{Collaborating with Roger Sherman} \label{sec:tutorial-git-emacs:collab}
+
+Next we perform an example collaboration with Roger Sherman's example repository as setup in Section~\ref{sec:collaborating} above.  Remember that Roger Sherman's repository has had two more commits than the original one we used for John Adams.  Since we have made edits and commits as John Adams, both repositories have diverged.  To synchronize them, we first pull Roger Sherman's changes into our working copy after checking that we are in a good state:
+
+\begin{CodeVerbatim}
+$> git status
+# On branch master
+# Your branch is ahead of 'origin/master' by 1 commit.
+#   (use "git push" to publish your local commits)
+#
+nothing to commit, working directory clean
+$> git pull sherman master
+remote: Counting objects: 8, done.
+remote: Compressing objects: 100% (3/3), done.
+remote: Total 6 (delta 2), reused 5 (delta 1)
+Unpacking objects: 100% (6/6), done.
+From $TUTORIAL/independence-sherman
+ * branch            master     -> FETCH_HEAD
+Auto-merging independence.tex
+CONFLICT (content): Merge conflict in independence.tex
+Automatic merge failed; fix conflicts and then commit the result.
+\end{CodeVerbatim}
+
+Unfortunately, the two repositories have diverged too much and a so-called ``merge conflict'' has arisen.  Now we have to tell git how to fix this before we can proceed.  Let us look at the status one more time:
+\begin{CodeVerbatim}
+$> git status
+# On branch master
+# You have unmerged paths.
+#   (fix conflicts and run "git commit")
+#
+# Unmerged paths:
+#   (use "git add <file>..." to mark resolution)
+#
+#	both modified:      independence.tex
+#
+no changes added to commit (use "git add" and/or "git commit -a")
+\end{CodeVerbatim}
+
+Next, we look at the markers that git has put into our file:
+\begin{CodeVerbatim}
+$> cat independence.tex 
+[...]
+
+<<<<<<< HEAD
+% list charges against King George III
+=======
+That to secure these rights, Governments are instituted among Men, deriving their just powers from the consent of the governed, That whenever any Form of Government becomes destructive of these ends, it is the Right of the People to alter or to abolish it, and to institute new Government, laying its foundation on such principles and organizing its powers in such form, as to them shall seem most likely to effect their Safety and Happiness. %TODO: more here
+
+%TODO: indictment here
+>>>>>>> 39cd6172613d1065a4cddc854cf30067869fc727
+\end{CodeVerbatim}
+
+
+
+
+
+
+
+
+%He can obtain John's latest version (and any potential commits in between) using the following command:
+%
+%\begin{CodeVerbatim}
+%$> cd $TUTORIAL/independence-roger
+%$> git pull
+%From $TUTORIAL/independence/.
+%   009bb56..9f99514  master     -> origin/master
+%\end{CodeVerbatim}
+%
+%\begin{FileVerbatim}
+%\begin{itemize}
+%  \item He has refused his Assent to Laws, the most wholesome and necessary 
+%        for the public good.
+%\end{itemize}
+%\end{FileVerbatim}

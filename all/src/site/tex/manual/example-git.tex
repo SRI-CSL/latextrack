@@ -1,13 +1,15 @@
 % !TEX root = manual.tex
 \section{Creating the Example Git Repository} \label{sec:example-git}
 
-The git-based tutorials use an example git repository called ``independence.bundle,'' which can be downloaded from 
+The git-based tutorials use two example git repositories called ``independence.bundle'' and ``independence-sherman.bundle,'' which can be downloaded from 
 \url{http://sourceforge.net/projects/latextrack/files/examples/}.
-First, save the bundled repository into a directory of your choice.  We call this directory \Code{\$TUTORIAL}.  Then, clone from this bundle to obtain a valid git working tree.
+First, save the bundled repositories into a directory of your choice.  We call this directory \Code{\$TUTORIAL}.  Then, clone from the first bundle to obtain a valid git working tree.
 \begin{CodeVerbatim}
-$> cd $TUTORIAL
+$> cd $TUTORIAL/
 $> git clone independence.bundle independence
-Cloning into independence...
+Cloning into 'independence'...
+Receiving objects: 100% (18/18), done.
+Resolving deltas: 100% (4/4), done.
 $> cd independence/
 $> git status
 # On branch master
@@ -26,7 +28,7 @@ Now we impersonate John Adams to work on this writing project for the Declaratio
 \begin{CodeVerbatim}
 $> git config --add user.name "John Adams"
 $> git config --add user.email "adams@usa.gov"
-$> git config --list | grep dams
+$> git config --list | grep -e "[Aa]dams"
 user.name=John Adams
 user.email=adams@usa.gov
 \end{CodeVerbatim}
@@ -39,3 +41,87 @@ Another way to investigate the current git repository are graphical tools such a
 \end{figure}
 
 The other point to note here is the way that GitX displays the changes in the file \Code{independence.tex} when using the graphical git interface.  It shows the lines in the file that have changed (much like a standard Unix diff would) -- however, when looking at changes in LaTeX source code, the granularity of the line-based difference is much too coarse.  An author would most likely only care about the change in words of line 15 or even characters such as removing the mistaken `d' in the word ``Roger'' in line seven.
+
+\subsection{Collaborating} \label{sec:collaborating}
+
+Collaboration on your writing project mainly happens through git so we show how to setup an example here.  Your actual setup for writing projects may differ.  Whatever the configuration, it will probably show up under the list of registered remotes for your repository.  In our example, we cloned from the downloaded .bundle file, so looking at the remotes will look like this:
+\begin{CodeVerbatim}
+$> git remote -v
+origin	$TUTORIAL/independence.bundle (fetch)
+origin	$TUTORIAL/independence.bundle (push)
+\end{CodeVerbatim}
+
+As an example of interacting with another repository, let us create a second one on our local file system.  In practice, the remote repository will most likely be on a different computer and accessed via certain network protocols reflected in the address.  Feel free to adjust the file locations in the example below to your taste.
+
+\begin{CodeVerbatim}
+$> cd $TUTORIAL/
+$> git clone independence-sherman.bundle independence-sherman
+Cloning into 'independence-sherman'...
+Receiving objects: 100% (24/24), done.
+Resolving deltas: 100% (6/6), done.
+$> cd $TUTORIAL/independence-sherman/
+$> git log --oneline 
+39cd617 todo item for indictment
+45710ff more text for preamble
+d3f904c sixth version
+203e0ce fifth version
+36eeab0 fourth version
+fa2be39 third version
+bac2f51 second version
+d6d1cf8 first version
+\end{CodeVerbatim}
+
+Now we impersonate Roger Sherman in the newly created repository above, and also check the setting for its remotes.
+\begin{CodeVerbatim}
+$> git config --add user.name "Roger Sherman"
+$> git config --add user.email "sherman@usa.gov"
+$> git config --list | grep -e "[Ss]herman"
+remote.origin.url=$TUTORIAL/independence-sherman.bundle
+user.name=Roger Sherman
+user.email=sherman@usa.gov
+$> git remote -v
+origin	$TUTORIAL/independence-sherman.bundle (fetch)
+origin	$TUTORIAL/independence-sherman.bundle (push)
+\end{CodeVerbatim}
+
+Next, we make the first repository aware of the second and vice versa.  At the same time, we may want to remove the reference to the original bundle so as to not get confused with which repository to synchronize.  So in both repositories do
+\begin{CodeVerbatim}
+$> git remote remove origin  # this is optional!
+\end{CodeVerbatim}
+
+Then, we go into the first one and add a new remote location there:
+\begin{CodeVerbatim}
+$> cd $TUTORIAL/independence/
+$> git remote add sherman $TUTORIAL/independence-sherman
+$> git remote -v
+sherman	$TUTORIAL/independence-sherman (fetch)
+sherman	$TUTORIAL/independence-sherman (push)
+\end{CodeVerbatim}
+
+Afterwards, we go into the second one and add a new remote location there:
+\begin{CodeVerbatim}
+$> cd $TUTORIAL/independence-sherman/
+$> git remote add adams $TUTORIAL/independence
+$> git remote -v
+adams	$TUTORIAL/independence (fetch)
+adams	$TUTORIAL/independence (push)
+\end{CodeVerbatim}
+
+Now you can pull from each directory what the other person has done.  Notice that you cannot push changes to the other directory, as these git repositories are not ``bare.''  This means, they contain working copies and thus cannot be altered remotely.  However, in most situations you may be using a central repository (such as GitHub or a server) that indeed contains a bare repository.  Then, you are typically able to pull and push changes with such a remote repository while your coauthors can do the same to synchronize your work.
+
+We will see examples below in Sections~\ref{sec:tutorial-git-emacs:collab} and \ref{sec:tutorial-git:collab} how John Adams and Roger Sherman synchronize changes with each other.
+
+%At this point, the two repositories are synched so the operations do not perform any changes.  These two commands are also available through the LTC Editor user interface---after choosing the remote from the pull-down menu in the lower-right corner, click the ``Pull'' or ``Push'' buttons.  If the menu is empty you may have to update the editor to obtain the latest git changes that you may have performed on the command line or using a graphical git tool.
+%\begin{CodeVerbatim}
+%$> git push philadelphia master
+%Everything up-to-date
+%$> git pull philadelphia master
+%From /Users/linda/git/independence
+% * branch            master     -> FETCH_HEAD
+%Already up-to-date.
+%\end{CodeVerbatim}
+
+% TODO: create example that shows branches in commit graph => independence2.bundle?
+
+%\subsection{Resolving Merge Conflicts}
+
