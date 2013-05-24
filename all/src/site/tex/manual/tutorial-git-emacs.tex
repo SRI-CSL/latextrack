@@ -51,28 +51,28 @@ If you first uncheck the item \Menu{Show/Hide;Show small changes}{LTC}, and seco
   \centering
   \subfloat{
     \label{subfig:emacs-filter-small1} 
-    \mygraphics{width=.25\textwidth}{figures/emacs-filter-small1}}
+    \mygraphics{scale=.5}{figures/emacs-filter-small1}}
   \hspace{2em}
   \subfloat{
     \label{subfig:emacs-filter-small2} 
-    \mygraphics{width=.25\textwidth}{figures/emacs-filter-small2}}
+    \mygraphics{scale=.5}{figures/emacs-filter-small2}}
   \hspace{2em}
   \subfloat{
     \label{subfig:emacs-filter-small3} 
-    \mygraphics{width=.25\textwidth}{figures/emacs-filter-small3}}
+    \mygraphics{scale=.5}{figures/emacs-filter-small3}}
 \caption{Effect of hiding ``small'' changes first (middle) and then also deletions (right)} \label{fig:emacs-filter-small}
 \end{figure}
 Figures~\ref{fig:emacs-filter-small} show that ``\textbackslash maketitle'' as well as the typos in the word ``political'' are no longer marked up, and in the third image, the deletion beginning with ``If'' at the beginning of the paragraph is now omitted.
 
 \subsection{Understanding the Commit Graph}
 
-Now draw your attention back to LTC info buffer with the history of the current file under git (located at the bottom or right of your tracked file).  The Emacs representation is using small box characters to draw the graph and its edges.  In our tutorial repository, there are no branches and the graph is a sequential line.  
+Now draw your attention back to LTC info buffer with the history of the current file under git (located at the bottom or right of your tracked file).  The Emacs representation is using small box characters to draw the graph and its edges.  In our current tutorial repository, there are no branches and the graph is a sequential line.  
 \begin{figure}[t]
 \centering
 \mygraphics{scale=.5}{figures/emacs-commit-graph}
 \caption{Example of commit graph} \label{fig:emacs-commit-graph}
 \end{figure}
-Refer to Figure~\ref{fig:emacs-commit-graph} for a screen shot of the example file history. Versions that are included in the tracked changes are not printed in gray.  How far we go back in history depends on some filtering settings, which are discussed further in Section~\ref{sec:emacs-limit-history} below.  By default, we first include all version of the current author at the top.  In our example with impersonating John Adams, there are currently no further recent commits of him.  Then, we continue down the path and collecting all versions of different authors until we find the next version of John Adams in the commit with the message ``second version.''
+Refer to Figure~\ref{fig:emacs-commit-graph} for a screen shot of the example file history. Versions that are included in the tracked changes are not printed in gray.  How far we go back in history depends on some filtering settings, which are discussed further in Section~\ref{sec:emacs-limit-history} below.  By default, we first include all version of the current author at the top.  In our example with impersonating John Adams, there are currently no further recent commits of him.  Then, we continue down the path and collect all versions of different authors until we find the next version of John Adams in the commit with the message ``second version.''
 
 \subsection{Limiting History} \label{sec:emacs-limit-history}
 
@@ -115,9 +115,31 @@ Limiting the history by date works similarly.  Select menu item \Menu{Limit by;S
 
 To remove the limit by date, either left-click on the empty date column of the first line of the file history or enter an empty date after selecting menu item \Menu{Limit by;Start at date...}{LTC} again.
 
+\subsection{Condensing History}
+
+\begin{figure}
+\centering
+\mygraphics{scale=.5}{figures/emacs-condense-on}
+\caption{Effect of condensing authors: ignoring the fifth version by Roger Sherman} \label{fig:emacs-condense-on}  
+\end{figure}
+Sometimes the list of commits considered is getting long and the resulting markup of the changes confusing.  One additional way to customize how the changes are displayed is a setting to ``condense authors.''  Now check the menu \Menu{Condense authors}{LTC}.  Then, only the latest version of an author of \textit{consecutive} commits is considered -- in our example, only the sixth version is colored while the fifth version by Roger Sherman is now grayed out as seen in Figure~\ref{fig:emacs-condense-on}.
+
+\begin{figure}
+\centering
+\subfloat{
+  \label{subfig:emacs-condense-before} 
+  \mygraphics{scale=.5}{figures/emacs-condense-before}}
+\hspace{1em}
+\subfloat{
+  \label{subfig:emacs-condense-after} 
+  \mygraphics{scale=.5}{figures/emacs-condense-after}}
+\caption{Example of markup change before (left) and after (right) condensing authors} \label{fig:emacs-condense-before-after}
+\end{figure}
+See Figure~\ref{fig:emacs-condense-before-after} for an example of how condensing authors affects the markup.  Since we are only considering the changes that Roger Sherman made in the sixth version, his correction of the name is no longer shown.  Condensing authors makes sense when users commit versions often so that they do not loose too much history.  Their last version after a number of commits generally has the flavor of a ``final'' version, ready to be shared with others.  Hence, the changes made there compared to the last version of another author is commonly of most interest.
+
 \subsection{Editing, Saving, and Committing}
 
-Let us start the next step by resetting all filters to the default configuration, i.e., no limit by authors, date, and revision.  Then, we will edit the text in the editor panel to see the latest changes.
+Let us start the next step by resetting all filters to the default configuration, i.e., no limit by authors, date, and revision.  Then, we will edit the text in the top buffer to see the latest changes.
 
 Click into the text buffer and enter some text, for example a LaTeX comment reminding John Adams to work on a list of charges against King George III in line nineteen:
 \begin{FileVerbatim}

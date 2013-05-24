@@ -38,7 +38,7 @@ In this figure, we see a panel at the bottom-right that resembles the upper part
 
 The bottom-left panels of the editor allows us to customize the way LTC displays the changes of the file.  Section~\ref{sec:general-use} contains all the details of how LTC displays the changes including limiting the file history and filtering.  In this tutorial, we will just use some of the options and see their effect.
 
-First, notice the list of known authors (as they are stored in the git repository) and the colors assigned to each of them.  Now perform a double-click on the colored square next to Roger Sherman to open a dialog and  choose a dark color such as brown (you will want something with contrast to the white background).  Notice how the text in the editor panel on the top changes color for those parts that are attributed to Roger Sherman's edits.
+First, notice the colors assigned to each of the authors.  To change an author color, for example Roger Sherman's,  perform a double-click on the colored square next to Roger Sherman to open a dialog and  choose a dark color such as brown (you will want something with contrast to the white background).  Notice how the text in the editor panel on the top changes color for those parts that are attributed to Roger Sherman's edits.
 
 Next, focus on the typographical errors in the command ``\textbackslash maketitle'' in line 11 and the beginning of the first paragraph in line thirteen as well as the spelling errors in the word ``political.''  If you first uncheck the box for ``small'' changes and second, also the box for deletions, notice how the text rendering in the editor panel changes.
 \begin{figure}[t]
@@ -60,14 +60,13 @@ Figures~\ref{fig:editor-filter-small} show that ``\textbackslash maketitle'' as 
 
 \subsection{Understanding the Commit Graph}
 
-Now draw your attention back to the graph with the history of the current file under git (located in the bottom-right panel).  In our example repository, this graph is just a line as the authors committed their versions in sequential order.  For the tutorial example, in which the writing project contained only one .tex file, the history graph in the LTC Editor looks almost the same as viewing the git repository in a graphical tool such as GitX.  However, if the writing project contained more .tex files, these graphs would not look similar anymore.  The git repository is tracking the history of all files that have been added to it.  In contrast, the LTC Editor only displays the history of the current .tex file loaded.
-
+Now draw your attention back to the graph with the history of the current file under git (located in the bottom-right panel).  In our current tutorial repository, this graph is just a line as the authors committed their versions in sequential order.  %For the tutorial example, in which the writing project contained only one .tex file, the history graph in the LTC Editor looks almost the same as viewing the git repository in a graphical tool such as GitX.  However, if the writing project contained more .tex files, these graphs would not look similar anymore.  The git repository is tracking the history of all files that have been added to it.  In contrast, the LTC Editor only displays the history of the current .tex file loaded.
 \begin{figure}[t]
 \centering
 \mygraphics{scale=.5}{figures/commit-graph}
 \caption{Example of commit graph} \label{fig:commit-graph}
 \end{figure}
-In addition to taking only commits of the current file into account, the commit graph is traversed in a depth-first fashion to obtain one path from the current version of the file to some ancestor.  Refer to Figure~\ref{fig:commit-graph} for a screen shot of the example file history. How far we go back in history depends on some filtering settings, which are discussed further in Section~\ref{sec:limit-history} below.  By default, we first include all version of the current author at the top.  In our example with impersonating John Adams, there are currently no further recent commits of him.  Then, we continue down the path and collecting all versions of different authors until we find the next version of John Adams in the commit with the message ``second version.''
+Refer to Figure~\ref{fig:commit-graph} for a screen shot of the example file history. Versions that are included in the tracked changes are printed in black and denoted with a filled circle.  How far we go back in history depends on some filtering settings, which are discussed further in Section~\ref{sec:limit-history} below.  By default, we first include all version of the current author at the top.  In our example with impersonating John Adams, there are currently no further recent commits of him.  Then, we continue down the path and collect all versions of different authors until we find the next version of John Adams in the commit with the message ``second version.''
 
 %After we have obtained an ordered sequence of commits by traversing the graph from the top down, we ignore subsequent commits of the same author---only the latest version of the same author is considered.  The idea behind this is that we do not want to penalize an author who commits often to the repository.  Instead, we treat all his or her changes from the time the file was changed by a different author as one big change event.  In our example, see that Roger Sherman committed version 5 and 6 to the repository, but version 5 is depicted in gray and not taken into account when displaying the changes.  
 
@@ -93,7 +92,7 @@ We allow the user to filter and customize how the potentially rich history of a 
   \caption{Effect of limiting authors to Roger Sherman and Thomas Jefferson after clicking ``Update''} \label{fig:editor-limit-authors}
   \end{minipage}  
 \end{figure}
-To limit the history by \textbf{authors}, select both authors Roger Sherman and Thomas Jefferson through clicking while holding down the CTRL or CMD key in the list of authors in the middle lower panel.  Then, click the button ``Limit'' below the list, which will gray out the unselected authors.  For a limiting action to take effect, you need to click ``Update.''  This is different from showing and hiding various changes, which is applied instantly.
+To limit the history by \textbf{authors}, select both authors Roger Sherman and Thomas Jefferson through clicking while holding down the CTRL or CMD key in the list of authors in the middle lower panel.  Then, click the button ``Limit'' below the list, which will gray out the unselected authors.  For a limiting action to take effect, you need to click ``Update.''  This is different from showing and hiding various changes as well as changing author colors, which is applied instantly.
 
 Notice how any version by the ignored authors Benjamin Franklin and John Adams is now gray as only commits from the selected authors are considered.  Again, the history is only taken until the next revision of the current author but since he is being ignored, we go all the way back to the first revision. Compare your editor window with the screen shot in Figure~\ref{fig:editor-limit-authors} and see how the commit graph has changed.
 
@@ -141,6 +140,31 @@ To remove the limit by revision number, simply erase the text in the field ``Sta
 
 Limiting the history by date works similarly.  You may drag a date from the commit graph on the right, for example the date of the third version commit, and drop it into the field ``Start at date:'' on the left.  Or, type a date such as \Code{Jul 23, 2010 1:11p} into the field.  We employ some software to process times and dates in natural language, and if successful, the field will contain the date string as it was understood translated into the format used in the commit tree.
 Again, you will need to click ``Update'' for the change to take effect or click RETURN while editing the text field.  See Figures~\ref{fig:editor-select-date} and \ref{fig:editor-limit-date} for screenshots. To remove the limit by date, erase all text in the text field and update.
+
+\subsection{Condensing History}
+
+\begin{figure}
+\centering
+  \begin{minipage}[b]{0.57\linewidth}
+    \centering
+    \mygraphics{scale=.5}{figures/editor-condense-on}
+    \caption{Effect of condensing authors:\\ ignoring the fifth version by Roger Sherman} \label{fig:editor-condense-on}  
+  \end{minipage}  
+\hspace{0.04\linewidth}%
+  \begin{minipage}[b]{0.38\linewidth}
+    \subfloat{
+      \label{subfig:editor-condense-before} 
+      \mygraphics{width=0.8\linewidth}{figures/editor-condense-before}}
+  \hspace{1em}
+    \subfloat{
+      \label{subfig:editor-condense-after} 
+      \mygraphics{width=0.8\linewidth}{figures/editor-condense-after}}
+    \caption{Example of markup change before (left) and after (right) condensing authors} \label{fig:editor-condense-before-after}
+  \end{minipage}%
+\end{figure}
+Sometimes the list of commits considered is getting long and the resulting markup of the changes confusing.  One additional way to customize how the changes are displayed is a setting to ``condense authors.''  Find a check box with that name under the list of authors for filtering.  If checked, then only the latest version of an author of \textit{consecutive} commits is considered -- in our example, only the sixth version is shown in black while the fifth version by Roger Sherman is now grayed out as seen in Figure~\ref{fig:editor-condense-on}.
+
+See Figure~\ref{fig:editor-condense-before-after} for an example of how condensing authors affects the markup.  Since we are only considering the changes that Roger Sherman made in the sixth version, his correction of the name is no longer shown.  Condensing authors makes sense when users commit versions often so that they do not loose too much history.  Their last version after a number of commits generally has the flavor of a ``final'' version, ready to be shared with others.  Hence, the changes made there compared to the last version of another author is commonly of most interest.
 
 \subsection{Editing, Saving, and Committing}
 
