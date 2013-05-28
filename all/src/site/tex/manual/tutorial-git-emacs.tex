@@ -157,7 +157,7 @@ Now delete other characters that are either rendered black or a different color 
 
 Finally, you will want to save the current file to disk.  This will cause the label ``modified'' to change to ``on disk'' after saving in Emacs, for example with \Code{C-x s}.  If you would then again edit, the label would switch back to ``modified'' of course.
 
-Saving the file, however, does not tell git to create a new version under its management.  In order to commit the current file to git, first, make sure that the .tex file is saved under Emacs and the first line does not say ``modified.'' Then, on a command line, switch to the directory with the tutorial file and perform the following commit command (printed in bold below).  You may want to check the status of git before and after the commit:
+Saving the file, however, does not tell git to create a new version under its management.  In order to commit the current file to git, first, make sure that the .tex file is saved under Emacs and the first line of the commit graph does not say ``modified.'' Then, on a command line, switch to the directory with the tutorial file and perform the following commit command (printed in bold below).  You may want to check the status of git before and after the commit:
 \begin{CodeVerbatim}[commandchars=\\\{\}]
 $> git status
 # On branch master
@@ -170,7 +170,8 @@ $> git status
 no changes added to commit (use "git add" and/or "git commit -a")
 $> \textbf{git commit -am "added comment about list of charges"}
 [master 8629257] added comment about list of charges
- 1 file changed, 3 insertions(+), 1 deletion(-)$> git status
+ 1 file changed, 3 insertions(+), 1 deletion(-)
+$> git status
 # On branch master
 # Your branch is ahead of 'origin/master' by 1 commit.
 #   (use "git push" to publish your local commits)
@@ -191,12 +192,6 @@ To make Emacs aware of the underlying commit, use menu item \Menu{Update buffer}
 Next we perform an example collaboration with Roger Sherman's example repository as setup in Section~\ref{sec:collaborating} above.  Remember that Roger Sherman's repository has had two more commits than the original one we used for John Adams.  Since we have made edits and commits as John Adams, both repositories have diverged.  To synchronize them, we first pull Roger Sherman's changes into our working copy after checking that we are in a good state:
 
 \begin{CodeVerbatim}
-$> git status
-# On branch master
-# Your branch is ahead of 'origin/master' by 1 commit.
-#   (use "git push" to publish your local commits)
-#
-nothing to commit, working directory clean
 $> git pull sherman master
 remote: Counting objects: 8, done.
 remote: Compressing objects: 100% (3/3), done.
@@ -209,28 +204,13 @@ CONFLICT (content): Merge conflict in independence.tex
 Automatic merge failed; fix conflicts and then commit the result.
 \end{CodeVerbatim}
 
-Unfortunately, the two repositories have diverged too much and a so-called ``merge conflict'' has arisen.  Now we have to tell git how to fix this before we can proceed.  
-%Let us look at the status one more time:
-%\begin{CodeVerbatim}
-%$> git status
-%# On branch master
-%# You have unmerged paths.
-%#   (fix conflicts and run "git commit")
-%#
-%# Unmerged paths:
-%#   (use "git add <file>..." to mark resolution)
-%#
-%#	both modified:      independence.tex
-%#
-%no changes added to commit (use "git add" and/or "git commit -a")
-%\end{CodeVerbatim}
-%
 \begin{figure}
 \centering
 \mygraphics{scale=.35}{figures/emacs-merge-conflict}
 \caption{Git conflict markers in merged file} \label{fig:emacs-merge-conflict}
 \end{figure}
-Next, we look at the markers that git has put into our file.  You can also run \Code{M-x ltc-update} in Emacs to see these markers as seen in Figure~\ref{fig:emacs-merge-conflict}.
+Unfortunately, the two repositories have diverged too much and a so-called ``merge conflict'' has arisen.  Now we have to tell git how to fix this before we can proceed.  
+Next, we look at the markers that git has put into our file.  You can run \Code{M-x ltc-update} in Emacs to see these markers as seen in Figure~\ref{fig:emacs-merge-conflict}.  On the command line, the file looks similar to this:
 \begin{CodeVerbatim}
 $> cat independence.tex 
 [...]

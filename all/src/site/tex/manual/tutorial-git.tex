@@ -186,11 +186,28 @@ Now delete other characters that are either rendered black or a different color 
 
 Finally, you will want to click ``Save'' to save the current file to disk.  This will cause the label ``modified'' to change to ``on disk.''  If you would then again edit, the label would switch back to ``modified'' of course.
 
-Saving the file, however, does not tell git to create a new version under its management.  In order to commit the current file to git, you have to give it a commit message such as 
-\begin{FileVerbatim}
-added comment about list of charges
-\end{FileVerbatim}
-in the text field next to the ``Commit'' button.  Once the text field is not empty, the ``Commit'' button becomes enabled.  After you commit, the commit graph will list the new entry and the editor panel will be updated.  
+Saving the file, however, does not tell git to create a new version under its management.  In order to commit the current file to git, first, make sure that the .tex file is saved and  the first line in the commit graph is set to ``on disk.''  Then, on a command line, switch to the directory with the tutorial file and perform the following commit command (printed in bold below).  You may want to check the status of git before and after the commit:
+\begin{CodeVerbatim}[commandchars=\\\{\}]
+$> git status
+# On branch master
+# Changes not staged for commit:
+#   (use "git add <file>..." to update what will be committed)
+#   (use "git checkout -- <file>..." to discard changes in working directory)
+#
+#	modified:   independence.tex
+#
+no changes added to commit (use "git add" and/or "git commit -a")
+$> \textbf{git commit -am "added comment about list of charges"}
+[master 930d080] added comment about list of charges
+ 1 file changed, 3 insertions(+), 1 deletion(-)
+\end{CodeVerbatim}
+
+To make LTC Editor aware of the underlying commit from the command line, click the ``Update'' button.  Notice how the recent commit gets included at the top of the list as seen in Figure~\ref{fig:commit-cmd-line}.
+\begin{figure}[t]
+\centering
+\mygraphics{scale=.5}{figures/commit-cmd-line}
+\caption{Updated commit graph after command line commit} \label{fig:commit-cmd-line}
+\end{figure}
 
 Now two things can happen depending on your setting for showing changes in comments (lower-left most panel).  If the checkbox was off, the newly added comment is no longer marked up in red with underlining.  After updating the editor from the commit history, the settings of which changes to show influence the markup of the text.  Now the newly entered comment is recognized as such, and if we hide changes in comments, the markup will not show.  If the box for ``changes in comments'' is checked, you will see your latest text still marked up as an addition.  Your editor should now look similar to the part shown in either Figure~\ref{fig:commit-no-comment} or Figure~\ref{fig:commit-comment}.
 \begin{figure}
@@ -210,29 +227,76 @@ Now two things can happen depending on your setting for showing changes in comme
   \end{minipage}  
 \end{figure}
 
-The ``Commit'' button is an interface to the underlying git version control management, but you can also interact with git directly from the command line.  To exemplify this, we will add more text under the comment, for example
-
-\begin{FileVerbatim}
-\begin{itemize}
-  \item He has refused his Assent to Laws, the most wholesome and necessary 
-        for the public good.
-\end{itemize}
-\end{FileVerbatim}
-    
-You will want to make sure to have changes saved and the first line in the commit graph set to ``on disk.''  Then, from the command line you would call something similar to
-\begin{CodeVerbatim}
-$> cd $TUTORIAL/independence
-$> git commit -am "first charge" 
-[master 9d8dd3f] first charge
- 1 files changed, 5 insertions(+), 0 deletions(-)
-\end{CodeVerbatim}
-Now update your editor window and see the addition of the commit from the command line to the commit graph as seen in Figure~\ref{fig:commit-cmd-line}.
-\begin{figure}[t]
-\centering
-\mygraphics{scale=.5}{figures/commit-cmd-line}
-\caption{Updated commit graph after command line commit} \label{fig:commit-cmd-line}
-\end{figure}
-
 \subsection{Collaborating with Roger Sherman} \label{sec:tutorial-git:collab}
 
-Next we perform an example collaboration with Roger Sherman's example repository as setup in Section~\ref{sec:collaborating} above. 
+Next we perform an example collaboration with Roger Sherman's example repository as setup in Section~\ref{sec:collaborating} above. Remember that Roger Sherman's repository has had two more commits than the original one we used for John Adams.  Since we have made edits and commits as John Adams, both repositories have diverged.  To synchronize them, we first pull Roger Sherman's changes into our working copy after checking that we are in a good state:
+
+\begin{CodeVerbatim}
+$> git pull sherman master
+remote: Counting objects: 8, done.
+remote: Compressing objects: 100% (3/3), done.
+remote: Total 6 (delta 2), reused 5 (delta 1)
+Unpacking objects: 100% (6/6), done.
+From $TUTORIAL/independence-sherman
+ * branch            master     -> FETCH_HEAD
+Auto-merging independence.tex
+CONFLICT (content): Merge conflict in independence.tex
+Automatic merge failed; fix conflicts and then commit the result.
+\end{CodeVerbatim}
+
+\begin{figure}
+\centering
+\mygraphics{scale=.35}{figures/editor-merge-conflict}
+\caption{Git conflict markers in merged file} \label{fig:editor-merge-conflict}
+\end{figure}
+Unfortunately, the two repositories have diverged too much and a so-called ``merge conflict'' has arisen.  Now we have to tell git how to fix this before we can proceed.  So we look at the markers that git has put into our file.  You can click the ``Update'' button in LTC Editor to see these markers there similar to Figure~\ref{fig:editor-merge-conflict}.  On the command line, the file looks similar to this:
+\begin{CodeVerbatim}
+$ cat independence.tex
+[...]
+
+<<<<<<< HEAD
+% list charges against King George III
+=======
+That to secure these rights, Governments are instituted among Men, [...] 
+
+%TODO: indictment here
+>>>>>>> 39cd6172613d1065a4cddc854cf30067869fc727
+\end{CodeVerbatim}
+
+We decide that the comments in the \Code{HEAD} version means the same as the last comment in the merged version \Code{39cd617...} so we modify the text so that it looks like this:
+\begin{CodeVerbatim}
+$> cat independence.tex 
+[...]
+
+That to secure these rights, Governments are instituted among Men, [...]
+
+% list charges against King George III
+\end{CodeVerbatim}
+It is important to remove the git marker lines starting with \Code{<<<<<<<}, \Code{=======}, and \Code{>>>>>>>} for git to recognize that we have resolved the conflicts.  Now committing on the command line yields:
+\begin{CodeVerbatim}
+$> git commit -am "merging Roger Sherman's edits"
+[master 2a5b3c3] merging Roger Sherman's edits
+\end{CodeVerbatim}
+
+\begin{figure}
+\centering
+\mygraphics{scale=.35}{figures/editor-merge-resolve}
+\caption{After resolving conflict, committing, and updating in LTC Editor} \label{fig:editor-merge-resolve}
+\end{figure}
+This has resolved the conflict and incorporated Roger Sherman's prior changes, as a look at the git log with the graphing function reveals:
+\begin{CodeVerbatim}
+$> git log --oneline --graph --date-order
+*   2a5b3c3 merging Roger Sherman's edits
+|\  
+* | 930d080 added comment about list of charges
+| * 39cd617 todo item for indictment
+| * 45710ff more text for preamble
+|/  
+* d3f904c sixth version
+* 203e0ce fifth version
+* 36eeab0 fourth version
+* fa2be39 third version
+* bac2f51 second version
+* d6d1cf8 first version
+\end{CodeVerbatim}
+Once we update LTC Editor, we see the paragraph that was part of the conflicting region now correctly attributed to Roger Sherman.  Furthermore, the git commit graph has gotten more interesting with the branching and merging in the first column of the commit graph.  Refer to Figure~\ref{fig:editor-merge-resolve} for a screen shot of the git commit graph and text changes after resolving the conflict, committing and updating LTC Editor.
