@@ -148,7 +148,6 @@ public class LTCSession {
         (new LTCWorker<Map,Void>(editor.getFrame(), ID,
                 "Updating...", "<html>Updating changes of<br>"+getCanonicalPath()+"</html>", false) {
             java.util.List<Object[]> commits = null;
-            List<Object[]> remotes = null;
 
             @SuppressWarnings("unchecked")
             @Override
@@ -164,10 +163,7 @@ public class LTCSession {
                 if (isCancelled()) return null;
                 // update commit graph
                 commits = LTC.get_commits(sessionID);
-                setProgress(97);
-                if (isCancelled()) return null;
-                // update remotes
-                remotes = LTC.get_remotes(sessionID);
+                setProgress(99);
                 if (isCancelled()) return null;
                 return map;
             }
@@ -186,7 +182,7 @@ public class LTCSession {
                                 (List<Integer[]>) map.get(LTCserverInterface.KEY_STYLES),
                                 (Integer) map.get(LTCserverInterface.KEY_CARET),
                                 (List<String>) map.get(LTCserverInterface.KEY_REVS),
-                                commits, remotes);
+                                commits);
                     } catch (InterruptedException e) {
                         LOGGER.log(Level.SEVERE, e.getMessage(), e);
                     } catch (ExecutionException e) {
@@ -341,42 +337,6 @@ public class LTCSession {
                     LTC.rm_remote(ID, name);
                 LTC.add_remote(ID, name, url);
                 return null;
-            }
-        }).execute();
-    }
-
-    public void pullOrPush(final String repository, final boolean usePull,
-                           final String date, final String rev,
-                           final boolean isModified, final String currentText, final List<Object[]> deletions, final int caretPosition) {
-        if (!isValid()) return;
-
-        // create new worker to add remote in session
-        final String verb = (usePull?"Pulling":"Pushing");
-        String preposition = (usePull?" from ":" to ");
-        (new LTCWorker<String,Void>(editor.getFrame(), ID,
-                verb+"...",
-                verb+preposition+"remote repository\n"+repository, false) {
-            @Override
-            protected String callLTCinBackground() throws XmlRpcException {
-                if (usePull)
-                    return LTC.pull(ID, repository);
-                else
-                    return LTC.push(ID, repository);
-            }
-
-            @Override
-            protected void done() {
-                try {
-                    String error = get();
-                    if ("".equals(error))
-                        startUpdate(date, rev, isModified, currentText, deletions, caretPosition);
-                    else
-                        JOptionPane.showMessageDialog(editor.getFrame(), error, verb+" Error", JOptionPane.ERROR_MESSAGE);
-                } catch (InterruptedException e) {
-                    LOGGER.log(Level.SEVERE, e.getMessage(), e);
-                } catch (ExecutionException e) {
-                    LOGGER.log(Level.SEVERE, e.getMessage(), e);
-                }
             }
         }).execute();
     }

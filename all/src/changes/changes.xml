@@ -28,10 +28,13 @@
     </properties>
     <body>
         <release version="1.0" date="2013-May">
+            <action dev="lilalinda" type="fix" issue="33">
+                Allowing git files with merge conflicts to be included in history.
+            </action>
 
         </release>
 
-        <release version="0.9.15" date="2013-April?">
+        <release version="0.9.15" date="2013-05-03">
             <action dev="lilalinda" type="fix" issue="27">
                 When specifying limit dates that are not exactly a commit date, one commit too many was included in the
                 active list.  This is now fixed and affected both, Emacs and LTC Editor.

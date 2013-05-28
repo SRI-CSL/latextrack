@@ -556,22 +556,6 @@
     (message "Created bug report at %s" file)
     ))
 
-;;; --- other interactive functions
-
-(defun ltc-commit (msg)
-  "Commit file to git if user interactively provides a commit message."
-  ;; TODO: throw error message if ltc-mode not running
-  (interactive
-   (if ltc-mode
-       (list (read-string "Commit message: "))
-     '(nil))) ; sets msg = nil
-  (if msg 
-      (condition-case err
-	  (ltc-method-call "commit_file" session-id msg)
-	('error 
-	 ;; TODO: handle 'Nothing to commit' && buffer-modified-p
-	 (message "Error while committing file: %s" (error-message-string err)))))
-  )
 
 ;;; --- info buffer functions
 

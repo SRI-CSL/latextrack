@@ -23,7 +23,6 @@ package com.sri.ltc.editor;
  */
 
 import com.sri.ltc.CommonUtils;
-import com.sri.ltc.versioncontrol.Remote;
 import com.sri.ltc.logging.LevelOptionHandler;
 import com.sri.ltc.logging.LogConfiguration;
 import com.sri.ltc.server.LTCserverImpl;
@@ -91,10 +90,6 @@ public final class LTCEditor extends LTCGui {
     private final SelfComboBoxModel selfModel = new SelfComboBoxModel(textPane, authorModel, session);
     private final JPanel cards = new JPanel(new CardLayout());
     private final SelfTextField selfField = new SelfTextField(authorModel);
-    private final JButton pullButton = new JButton("Pull");
-    private final JButton pushButton = new JButton("Push");
-    private final RemoteComboBoxModel remoteModel = new RemoteComboBoxModel(session, pushButton, pullButton);
-    private final JPanel remotePane = new JPanel(new GridBagLayout());
     private final JFileChooser fileChooser = new JFileChooser();
     private final JTextField fileField = new JTextField();
     private final Action updateAction = new AbstractAction("Update") {
@@ -167,7 +162,6 @@ public final class LTCEditor extends LTCGui {
     };
     private final DateField dateField = new DateField();
     private final JTextField revField = new JTextField();
-    private final JTextField commitMsgField = new JTextField();
     private final JButton saveButton = new JButton(new AbstractAction("Save") {
         private static final long serialVersionUID = -6467093865092379559L;
         public void actionPerformed(ActionEvent event) {
@@ -218,8 +212,6 @@ public final class LTCEditor extends LTCGui {
         // switch self panel:
         CardLayout cl = (CardLayout) cards.getLayout();
         cl.show(cards, vcs.name());
-        // enable or disable remote panel
-        enableComponents(remotePane, LTCserverInterface.VersionControlSystems.GIT.equals(vcs));
 
         // other initializations:
         authorModel.init(authors);
@@ -235,8 +227,7 @@ public final class LTCEditor extends LTCGui {
                                 List<Integer[]> styles,
                                 int caretPosition,
                                 List<String> orderedIDs,
-                                List<Object[]> commits,
-                                List<Object[]> remotes) {
+                                List<Object[]> commits) {
         // update list of authors
         finishAuthors(new ArrayList<Object[]>(authors.values()));
         // update and markup text
@@ -247,8 +238,6 @@ public final class LTCEditor extends LTCGui {
         // update list of commits
         commitModel.init(commits, false);
         commitModel.update(new HashSet<String>(orderedIDs));
-        // update list of remotes
-        remoteModel.update(remotes);
         // update date field
         String date = dateField.getText();
         if (!date.isEmpty())
@@ -265,8 +254,6 @@ public final class LTCEditor extends LTCGui {
     }
 
     protected void finishCommit(Object[] last_commit) {
-        commitMsgField.setText("");
-
         // update list of commits:
         if (last_commit == null)
             return;
@@ -534,36 +521,6 @@ public final class LTCEditor extends LTCGui {
         cards.add(selfCombo, LTCserverInterface.VersionControlSystems.GIT.name());
         cards.add(selfField, LTCserverInterface.VersionControlSystems.SVN.name());
         selfPane.add(cards, BorderLayout.CENTER);
-        contentTrackingPane.add(selfPane, BorderLayout.PAGE_START);
-
-        // 2) commit graph
-        JScrollPane scrollPane = new JScrollPane(new CommitTable(commitModel));
-        contentTrackingPane.add(scrollPane, BorderLayout.CENTER);
-
-        // 3) save and commit
-        final JButton commitButton = new JButton(new AbstractAction("Commit") {
-            private static final long serialVersionUID = -6467093865092379559L;
-            public void actionPerformed(ActionEvent e) {
-                session.commit(commitMsgField.getText(), saveButton);
-            }
-        });
-        commitButton.setEnabled(false);
-        commitMsgField.getDocument().addDocumentListener(new DocumentListener() {
-            public void insertUpdate(DocumentEvent e) {
-                commitButton.setEnabled(e.getDocument().getLength()>0);
-            }
-            public void removeUpdate(DocumentEvent e) {
-                commitButton.setEnabled(e.getDocument().getLength()>0);
-            }
-            public void changedUpdate(DocumentEvent e) {
-                commitButton.setEnabled(e.getDocument().getLength()>0);
-            }
-        });
-        commitMsgField.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                commitButton.doClick();
-            }
-        });
         // enable save button upon first change
         saveButton.setEnabled(false);
         textPane.getDocumentFilter().addChangeListener(new ChangeListener() {
@@ -574,45 +531,12 @@ public final class LTCEditor extends LTCGui {
                 }
             }
         });
-        JPanel commitPane = new JPanel(new GridBagLayout());
-        GridBagConstraints c1 = new GridBagConstraints();
-        c1.gridx = 0;
-        commitPane.add(saveButton, c1);
-        c1.gridx = 1;
-        commitPane.add(commitButton, c1);
-        c1.fill = GridBagConstraints.HORIZONTAL;
-        c1.weightx = 1.0; // combo box gets all space
-        c1.gridx = 2;
-        commitPane.add(commitMsgField, c1);
+        selfPane.add(saveButton, BorderLayout.LINE_END);
+        contentTrackingPane.add(selfPane, BorderLayout.PAGE_START);
 
-        // 4) remotes and push/pull
-        final JComboBox remoteCombo = new JComboBox(remoteModel);
-        remoteCombo.setEditable(true);
-        remoteCombo.setRenderer(new MyComboRenderer());
-        remoteCombo.setEditor(new RemoteComboBoxEditor());
-        GridBagConstraints c2 = new GridBagConstraints();
-        c2.gridx = 0;
-        remotePane.add(new JLabel("Remote: "), c2);
-        // two buttons:
-        pullButton.setAction(new PushOrPullAction("Pull", remoteCombo, true));
-        c2.gridx = 2;
-        remotePane.add(pullButton, c2);
-        pushButton.setAction(new PushOrPullAction("Push", remoteCombo, false));
-        c2.gridx = 3;
-        remotePane.add(pushButton, c2);
-        // combo box:
-        c2.fill = GridBagConstraints.HORIZONTAL;
-        c2.weightx = 1.0; // combo box gets all space
-        c2.gridx = 1;
-        remotePane.add(remoteCombo, c2);
-        enableComponents(remotePane, false); // by default disabled
-
-        // combine 3) and 4) into one pane using BoxLayout
-        JPanel boxedPane = new JPanel();
-        boxedPane.setLayout(new BoxLayout(boxedPane, BoxLayout.PAGE_AXIS));
-        boxedPane.add(commitPane);
-        boxedPane.add(remotePane);
-        contentTrackingPane.add(boxedPane, BorderLayout.PAGE_END);
+        // 2) commit graph
+        JScrollPane scrollPane = new JScrollPane(new CommitTable(commitModel));
+        contentTrackingPane.add(scrollPane, BorderLayout.CENTER);
 
         return contentTrackingPane;
     }
@@ -630,14 +554,6 @@ public final class LTCEditor extends LTCGui {
                 });
         splitPaneH.setBorder(null);
         panel.add(splitPaneH, BorderLayout.CENTER);
-    }
-
-    private void enableComponents(Container container, boolean enable) {
-        for (Component component : container.getComponents()) {
-            component.setEnabled(enable);
-            if (component instanceof Container)
-                enableComponents((Container) component, enable);
-        }
     }
 
     public LTCEditor() {
@@ -751,29 +667,6 @@ public final class LTCEditor extends LTCGui {
 
         @Argument(required=false, metaVar="FILE", usage="load given file to track changes")
         File file;
-    }
-
-    private class PushOrPullAction extends AbstractAction {
-
-        private final JComboBox comboBox;
-        private final boolean isPull;
-
-        PushOrPullAction(String s, JComboBox comboBox, boolean pull) {
-            super(s);
-            this.comboBox = comboBox;
-            isPull = pull;
-        }
-
-        @Override
-        public void actionPerformed(ActionEvent actionEvent) {
-            Object o = comboBox.getSelectedItem();
-            if (o instanceof Remote) {
-                Remote r = (Remote) o;
-                String repository = r.isAlias()?r.name:r.url;
-                session.pullOrPush(repository, isPull, dateField.getText(), revField.getText(),
-                        saveButton.isEnabled(), textPane.getText(), textPane.stopFiltering(), textPane.getCaretPosition());
-            }
-        }
     }
 
     private class DateField extends JTextField {
