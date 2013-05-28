@@ -207,64 +207,6 @@ public class LTCSession {
         });
     }
 
-    public void commit(final String message, final JButton saveButton) {
-        if (!isValid()) return;
-
-        // create new worker to set self in session
-        (new LTCWorker<Integer,Void>(editor.getFrame(), ID,
-                "Setting...", "Setting current self", false) {
-            Object[] last_commit = null;
-
-            @SuppressWarnings("unchecked")
-            @Override
-            protected Integer callLTCinBackground() throws XmlRpcException {
-                int code = 0;
-                try {
-                    LTC.commit_file(ID, message);
-                } catch (XmlRpcException e) {
-                    code = e.code;
-                }
-                if (code == 0) {
-                    setProgress(50);
-                    java.util.List<Object[]> commits = LTC.get_commits(sessionID);
-                    if (!commits.isEmpty())
-                        last_commit = commits.get(0);
-                }
-                setProgress(100);
-                return code;
-            }
-
-            @Override
-            protected void done() {
-                try {
-                    int code = get();
-                    if (code == 5) {
-                        if (saveButton.isEnabled()) {
-                            // dialog if nothing to commit && unsaved edits
-                            if (JOptionPane.YES_OPTION == JOptionPane.showConfirmDialog(editor.getFrame(),
-                                    "Save file first before committing?",
-                                    "Nothing to commit but unsaved edits",
-                                    JOptionPane.YES_NO_OPTION,
-                                    JOptionPane.WARNING_MESSAGE)) {
-                                saveButton.doClick();
-                                commit(message, saveButton);
-                            }
-                        } else
-                            JOptionPane.showMessageDialog(editor.getFrame(),
-                                    "Nothing to commit.",
-                                    "Nothing to commit",
-                                    JOptionPane.INFORMATION_MESSAGE);
-                    } else if (code == 0)
-                        editor.finishCommit(last_commit);
-                } catch (InterruptedException e) {
-                    LOGGER.log(Level.SEVERE, e.getMessage(), e);
-                } catch (ExecutionException e) {
-                    LOGGER.log(Level.SEVERE, e.getMessage(), e);
-                }
-            }
-        }).execute();
-    }
-
     public void setSelf(final Author self) {
         if (!isValid()) return;
 
@@ -321,22 +263,6 @@ public class LTCSession {
                 } catch (ExecutionException e) {
                     LOGGER.log(Level.SEVERE, e.getMessage(), e);
                 }
-            }
-        }).execute();
-    }
-
-    public void updateRemote(final String name, final String url, final boolean removeFirst) {
-        if (!isValid()) return;
-
-        // create new worker to add remote in session
-        (new LTCWorker<Void,Void>(editor.getFrame(), ID,
-                "Updating Remote...", "Updating remote alias", false) {
-            @Override
-            protected Void callLTCinBackground() throws XmlRpcException {
-                if (removeFirst)
-                    LTC.rm_remote(ID, name);
-                LTC.add_remote(ID, name, url);
-                return null;
             }
         }).execute();
     }

@@ -26,7 +26,6 @@ import com.sri.ltc.ProgressReceiver;
 import com.sri.ltc.filter.Author;
 import com.sri.ltc.filter.Filtering;
 import com.sri.ltc.versioncontrol.history.LimitedHistory;
-import com.sri.ltc.versioncontrol.Remote;
 import com.sri.ltc.latexdiff.*;
 import com.sri.ltc.versioncontrol.*;
 import org.apache.xmlrpc.XmlRpcException;
@@ -361,23 +360,6 @@ public final class LTCserverImpl implements LTCserverInterface {
         return map;
     }
 
-    public int commit_file(int sessionID, String message) throws XmlRpcException {
-        Session session = getSession(sessionID);
-
-        if (message == null || "".equals(message))
-            logAndThrow(2, "Cannot commit file with an empty message");
-
-        LOGGER.info("Server: commit_file to file \""+session.getTrackedFile().getFile().getAbsolutePath()+"\" called.");
-
-        try {
-            session.getTrackedFile().commit(message);
-        } catch (Exception e) {
-            logAndThrow(4, "Exception during git commit: " + e.getMessage());
-        }
-
-        return 0;
-    }
-
     public String get_VCS(int sessionID) throws XmlRpcException {
         Session session = getSession(sessionID);
 
@@ -541,73 +523,6 @@ public final class LTCserverImpl implements LTCserverInterface {
         for (BoolPrefs boolPref : BoolPrefs.values())
             names.add(boolPref.name());
         return names.toArray();
-    }
-
-    @Override
-    public int add_remote(int sessionID, String name, String url) throws XmlRpcException {
-        Session session = getSession(sessionID);
-        try {
-            if (session.getRemotes().addRemote(name, url) != 0)
-                logAndThrow(3, "Underlying git-remote command exited with non-zero code.");
-        } catch (Exception e) {
-            logAndThrow(2, "JavaGitException while adding a remote: "+e.getMessage());
-        }
-        return 0;
-    }
-
-    @Override
-    public int rm_remote(int sessionID, String name) throws XmlRpcException {
-        Session session = getSession(sessionID);
-        try {
-            if (session.getRemotes().removeRemote(name) != 0)
-                logAndThrow(3, "Underlying git-remote command exited with non-zero code.");
-        } catch (Exception e) {
-            logAndThrow(2, "Exception while removing a remote: "+e.getMessage());
-        }
-        return 0;
-    }
-
-    @Override
-    @SuppressWarnings("unchecked")
-    public List get_remotes(int sessionID) throws XmlRpcException {
-        Session session = getSession(sessionID);
-        List<String[]> remotes = new ArrayList<String[]>();
-        try {
-            Set<Remote> remoteSet = session.getRemotes().get();
-            for (Remote remote : remoteSet)
-                remotes.add(remote.toArray());
-        } catch (Exception e) {
-            logAndThrow(2, "Exception while obtaining remotes: "+e.getMessage());
-        }
-        return remotes;
-    }
-
-    @Override
-    public String push(int sessionID, String repository) throws XmlRpcException {
-        Session session = getSession(sessionID);
-
-        LOGGER.info("Server: push to repository \""+repository+"\" called.");
-
-        try {
-            session.getRemotes().push(repository);
-        } catch (Exception e) {
-            logAndThrow(2, "Exception while removing a remote: "+e.getMessage());
-        }
-        return "";
-    }
-
-    @Override
-    public String pull(int sessionID, String repository) throws XmlRpcException {
-        Session session = getSession(sessionID);
-
-        LOGGER.info("Server: pull from repository \""+repository+"\" called.");
-
-        try {
-            session.getRemotes().pull(repository);
-        } catch (Exception e) {
-            logAndThrow(2, "JavaGitException while removing a remote: "+e.getMessage());
-        }
-        return "";
     }
 
     @Override
