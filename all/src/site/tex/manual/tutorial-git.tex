@@ -54,7 +54,7 @@ Next, focus on the typographical errors in the command ``\textbackslash maketitl
   \subfloat{
     \label{subfig:editor-filter-small3} 
     \mygraphics{width=.25\textwidth}{figures/editor-filter-small3}}
-\caption{Effect of hiding ``small'' changes first (middle) and then also deletions (right)} \label{fig:editor-filter-small}
+\caption[Effect of hiding ``small'' changes and deletions]{Effect of hiding ``small'' changes first (middle) and then also deletions (right)} \label{fig:editor-filter-small}
 \end{figure}
 Figures~\ref{fig:editor-filter-small} show that ``\textbackslash maketitle'' as well as the typos in the word ``political'' are no longer marked up, and in the third image, the deletion beginning with ``If'' at the beginning of the paragraph is now omitted.
 
@@ -89,7 +89,7 @@ We allow the user to filter and customize how the potentially rich history of a 
   \begin{minipage}[t]{0.61\linewidth}
   \centering
   \mygraphics{scale=.5}{figures/editor-limit-authors}
-  \caption{Effect of limiting authors to Roger Sherman and Thomas Jefferson after clicking ``Update''} \label{fig:editor-limit-authors}
+  \caption[Effect of limiting authors]{Effect of limiting authors to Roger Sherman and Thomas Jefferson after clicking ``Update''} \label{fig:editor-limit-authors}
   \end{minipage}  
 \end{figure}
 To limit the history by \textbf{authors}, select both authors Roger Sherman and Thomas Jefferson through clicking while holding down the CTRL or CMD key in the list of authors in the middle lower panel.  Then, click the button ``Limit'' below the list, which will gray out the unselected authors.  For a limiting action to take effect, you need to click ``Update.''  This is different from showing and hiding various changes as well as changing author colors, which is applied instantly.
@@ -115,7 +115,7 @@ Next, we apply limits on \textbf{revision} and \textbf{date} to control how far 
   \begin{minipage}[t]{0.61\linewidth}
   \centering
   \mygraphics{scale=.5}{figures/editor-limit-rev}
-  \caption{Effect of going back to first revision after clicking ``Update''} \label{fig:editor-limit-rev}
+  \caption[Effect of going back to first revision]{Effect of going back to first revision after clicking ``Update''} \label{fig:editor-limit-rev}
   \end{minipage}  
 \end{figure}
 
@@ -134,7 +134,7 @@ To remove the limit by revision number, simply erase the text in the field ``Sta
   \begin{minipage}[t]{0.61\linewidth}
   \centering
   \mygraphics{scale=.5}{figures/editor-limit-date}
-  \caption{Effect of limiting history to date of third version after clicking ``Update''} \label{fig:editor-limit-date}
+  \caption[Effect of limiting history to date of third version]{Effect of limiting history to date of third version after clicking ``Update''} \label{fig:editor-limit-date}
   \end{minipage}  
 \end{figure}
 
@@ -143,12 +143,18 @@ Again, you will need to click ``Update'' for the change to take effect or click 
 
 \subsection{Condensing History}
 
+Sometimes the list of commits considered is getting long and the resulting markup of the changes confusing.  One additional way to customize how the changes are displayed is a setting to ``condense authors.''  Find a check box with that name under the list of authors for filtering.  If checked, then only the latest version of an author of \textit{consecutive} commits is considered -- in our example, only the sixth version is shown in black while the fifth version by Roger Sherman is now grayed out as seen in Figure~\ref{fig:editor-condense-on}.
 \begin{figure}
 \centering
   \begin{minipage}[b]{0.57\linewidth}
     \centering
     \mygraphics{scale=.5}{figures/editor-condense-on}
-    \caption{Effect of condensing authors:\\ ignoring the fifth version by Roger Sherman} \label{fig:editor-condense-on}  
+    \ifpdf
+      \caption[Effect of condensing authors]{Effect of condensing authors:\\ ignoring the fifth version by Roger Sherman} 
+    \else
+      \caption[Effect of condensing authors]{Effect of condensing authors: ignoring the fifth version by Roger Sherman} 
+    \fi
+    \label{fig:editor-condense-on}  
   \end{minipage}  
 \hspace{0.04\linewidth}%
   \begin{minipage}[b]{0.38\linewidth}
@@ -159,10 +165,9 @@ Again, you will need to click ``Update'' for the change to take effect or click 
     \subfloat{
       \label{subfig:editor-condense-after} 
       \mygraphics{width=0.8\linewidth}{figures/editor-condense-after}}
-    \caption{Example of markup change before (left) and after (right) condensing authors} \label{fig:editor-condense-before-after}
+    \caption[Example of condensing authors]{Example of markup change before (left) and after (right) condensing authors} \label{fig:editor-condense-before-after}
   \end{minipage}%
 \end{figure}
-Sometimes the list of commits considered is getting long and the resulting markup of the changes confusing.  One additional way to customize how the changes are displayed is a setting to ``condense authors.''  Find a check box with that name under the list of authors for filtering.  If checked, then only the latest version of an author of \textit{consecutive} commits is considered -- in our example, only the sixth version is shown in black while the fifth version by Roger Sherman is now grayed out as seen in Figure~\ref{fig:editor-condense-on}.
 
 See Figure~\ref{fig:editor-condense-before-after} for an example of how condensing authors affects the markup.  Since we are only considering the changes that Roger Sherman made in the sixth version, his correction of the name is no longer shown.  Condensing authors makes sense when users commit versions often so that they do not loose too much history.  Their last version after a number of commits generally has the flavor of a ``final'' version, ready to be shared with others.  Hence, the changes made there compared to the last version of another author is commonly of most interest.
 

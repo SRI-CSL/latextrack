@@ -60,7 +60,7 @@ If you first uncheck the item \Menu{Show/Hide;Show small changes}{LTC}, and seco
   \subfloat{
     \label{subfig:emacs-filter-small3} 
     \mygraphics{scale=.5}{figures/emacs-filter-small3}}
-\caption{Effect of hiding ``small'' changes first (middle) and then also deletions (right)} \label{fig:emacs-filter-small}
+\caption[Effect of hiding ``small'' changes and deletions]{Effect of hiding ``small'' changes first (middle) and then also deletions (right)} \label{fig:emacs-filter-small}
 \end{figure}
 Figures~\ref{fig:emacs-filter-small} show that ``\textbackslash maketitle'' as well as the typos in the word ``political'' are no longer marked up, and in the third image, the deletion beginning with ``If'' at the beginning of the paragraph is now omitted.
 
@@ -83,7 +83,7 @@ We allow the user to filter and customize how the potentially rich history of a 
 \begin{figure}
 \centering
 \mygraphics{scale=.5}{figures/emacs-limit-authors}
-\caption{Effect on commit graph of limiting authors to Roger Sherman and Thomas Jefferson} \label{fig:emacs-limit-authors}
+\caption[Effect on commit graph of limiting authors]{Effect on commit graph of limiting authors to Roger Sherman and Thomas Jefferson} \label{fig:emacs-limit-authors}
 \end{figure}
 To limit the history by \textbf{authors}, choose menu item \Menu{Limit by;Set of authors...}{LTC}. This will prompt the user to enter author names to limit by in the mini buffer.  Again, automatic completion works, so you can enter \Code{Ro<TAB> <RET>} and \Code{Th<TAB> <RET> <RET>} to select authors Roger Sherman and Thomas Jefferson and exit the dialog.  After the last author was selected, the system automatically updates the displayed changes.
 
@@ -120,7 +120,7 @@ To remove the limit by date, either left-click on the empty date column of the f
 \begin{figure}
 \centering
 \mygraphics{scale=.5}{figures/emacs-condense-on}
-\caption{Effect of condensing authors: ignoring the fifth version by Roger Sherman} \label{fig:emacs-condense-on}  
+\caption[Effect of condensing authors]{Effect of condensing authors: ignoring the fifth version by Roger Sherman} \label{fig:emacs-condense-on}  
 \end{figure}
 Sometimes the list of commits considered is getting long and the resulting markup of the changes confusing.  One additional way to customize how the changes are displayed is a setting to ``condense authors.''  Now check the menu \Menu{Condense authors}{LTC}.  Then, only the latest version of an author of \textit{consecutive} commits is considered -- in our example, only the sixth version is colored while the fifth version by Roger Sherman is now grayed out as seen in Figure~\ref{fig:emacs-condense-on}.
 
@@ -133,7 +133,7 @@ Sometimes the list of commits considered is getting long and the resulting marku
 \subfloat{
   \label{subfig:emacs-condense-after} 
   \mygraphics{scale=.5}{figures/emacs-condense-after}}
-\caption{Example of markup change before (left) and after (right) condensing authors} \label{fig:emacs-condense-before-after}
+\caption[Example of markup change when condensing authors]{Example of markup change before (left) and after (right) condensing authors} \label{fig:emacs-condense-before-after}
 \end{figure}
 See Figure~\ref{fig:emacs-condense-before-after} for an example of how condensing authors affects the markup.  Since we are only considering the changes that Roger Sherman made in the sixth version, his correction of the name is no longer shown.  Condensing authors makes sense when users commit versions often so that they do not loose too much history.  Their last version after a number of commits generally has the flavor of a ``final'' version, ready to be shared with others.  Hence, the changes made there compared to the last version of another author is commonly of most interest.
 

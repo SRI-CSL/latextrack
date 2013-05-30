@@ -141,7 +141,7 @@ We recommend to avoid loading LTC automatically when opening .tex files.  Theref
 \begin{figure}[t]
 \centering
 \mygraphics{width=\textwidth,height=.5\textheight,keepaspectratio}{figures/emacs-port}
-\caption{Using \Code{M-x customize-variable <RET> ltc-port <RET>} to set LTC port number in Emacs} \label{fig:emacs-port}
+\caption[Setting LTC port number in Emacs]{Using \Code{M-x customize-variable <RET> ltc-port <RET>} to set LTC port number in Emacs} \label{fig:emacs-port}
 \end{figure}
 
 If you need to change the port number that Emacs uses to communicate with the LTC Server (for example, if the default number is already in use on your computer), you first have to load LTC mode at least once using command \Code{M-x ltc-mode}, possibly with a failure as the server is not running or not using the default port.  Then, you can view the current port setting using \Code{C-h v ltc-port <RET>}.  You can customize the port number using \Code{M-x customize-variable <RET> ltc-port <RET>} or open the customization buffer and browse to the LTC group under the Tex group, which may be located under the Wp (word processing) top-level group.  See Figure~\ref{fig:emacs-port} for a screenshot when customizing the port number in Aquamacs under Mac OS X.

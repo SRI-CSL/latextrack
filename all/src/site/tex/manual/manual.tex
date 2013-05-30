@@ -164,6 +164,12 @@ See Appendix~\ref{ch:license} or \url{http://www.gnu.org/licenses/} for the comp
 \tableofcontents
 \thispagestyle{empty}
 
+\ifpdf
+  \listoffigures
+  \thispagestyle{empty}
+\else
+\fi
+
 % for the first page of each chapter adjust 'plain' style:
 \fancypagestyle{plain}{%
   \fancyhf{} % clear all header and footer fields
