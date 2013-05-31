@@ -408,7 +408,7 @@
   "Set or reset limiting AUTHORS for commit graph.  If empty list, no limit is used.  Updates automatically unless user chooses to quit input."
   (interactive
    (if ltc-mode
-       (let ((completion-list (cons "" (mapcar 'author-to-string (mapcar 'caddr (cdr commit-graph)))))
+       (let ((completion-list (cons "" (mapcar 'author-to-string (mapcar 'caddr commit-graph))))
 	     (author-list nil)
 	     (n 1)
 	     (old-spc (lookup-key minibuffer-local-completion-map " "))
@@ -935,7 +935,7 @@ The remaining arguments *-STRING denote the string representation of the charact
   (interactive
    (if ltc-mode
        (list (completing-read "Author, for whom to set color (abort with empty value or C-g): " 
-			      (mapcar 'author-to-string (mapcar 'caddr (cdr commit-graph)))
+			      (mapcar 'author-to-string (mapcar 'caddr commit-graph))
 			      nil t))
      '(nil))) ; sets author = nil
   (if (and author (string< "" author))
@@ -950,20 +950,22 @@ it will only set the new, chosen color if it is different than the old one."
     (list-colors-display)
     (condition-case nil
 	(let* ((new-color 
-		(read-color (format "Color for %s (name or #RGB; abort with empty input): " (author-to-string (list name email))) t))
+		(read-color (format "Color for %s (name or #RGB; abort with empty input): " 
+				    (author-to-string (list name email)))
+			    t))
 	       (new-color-short 
 		(concat "#" (substring new-color 1 3) (substring new-color 5 7) (substring new-color 9 11)))
 	       )
-	  (if (not (string= old-color new-color-short))
-	      (ltc-method-call "set_color" name email new-color-short))
+	  (when (not (string= old-color new-color-short))
+	    (ltc-method-call "set_color" name email new-color-short)
+	    (ltc-update))
 	  )	
-      (error nil)) ; no handlers
+      (error nil)) ; no handlers as we simply abort if empty color name given
     ;; remove *Colors* buffer if still visible
     (when (setq b (get-buffer "*Colors*"))
       (delete-windows-on b t)
       (kill-buffer b))
-    (ltc-update) ; not only applies new color (if any) but also resizes temp info buffer
-    ))
+    (update-info-buffer)))
 
 ;;; --- functions to handle online editing
 
