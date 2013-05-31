@@ -939,8 +939,10 @@ The remaining arguments *-STRING denote the string representation of the charact
 			      nil t))
      '(nil))) ; sets author = nil
   (if (and author (string< "" author))
-      (let ((author-list (string-to-author author)))
-	(select-color (nth 0 author-list) (nth 1 author-list) nil))))
+      (let* ((author-list (string-to-author author))
+	     (name (nth 0 author-list))
+	     (email (nth 1 author-list)))
+	(select-color name email (ltc-method-call "get_color" name email)))))
 
 (defun select-color (name email old-color)
   "Select and set color for author with given NAME and EMAIL.  If given OLD-COLOR is not nil, 
@@ -956,7 +958,7 @@ it will only set the new, chosen color if it is different than the old one."
 	       (new-color-short 
 		(concat "#" (substring new-color 1 3) (substring new-color 5 7) (substring new-color 9 11)))
 	       )
-	  (when (not (string= old-color new-color-short))
+	  (when (not (string= (downcase old-color) (downcase new-color-short)))
 	    (ltc-method-call "set_color" name email new-color-short)
 	    (ltc-update))
 	  )	
