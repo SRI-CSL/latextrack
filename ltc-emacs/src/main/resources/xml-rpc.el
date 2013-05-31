@@ -14,7 +14,7 @@
 ;; URL: http://launchpad.net/xml-rpc-el
 ;; Last Modified: <2010-12-03 10:39:20 linda>
 
-(defconst xml-rpc-version "1.6.8.1"
+(defconst xml-rpc-version "1.6.8.2"
   "Current version of xml-rpc.el")
 
 ;; This file is NOT (yet) part of GNU Emacs.
@@ -123,6 +123,9 @@
 
 
 ;;; History:
+
+;; 1.6.8.2 - [linda] Fixed bug that empty values were translated into a boolean (nil)
+;;           instead of an empty string "" when turning XML into an Emacs list.
 
 ;; 1.6.8.1 - [linda] Fixed bugs to be able to use empty lists and lists of lists
 ;;           of strings as XML parameters.
@@ -317,7 +320,11 @@ time, or it will be confused for a list."
   (or (string-equal value "true") (string-equal value "1")))
 
 (defun xml-rpc-caddar-safe (list)
-  (car-safe (cdr-safe (cdr-safe (car-safe list)))))
+  "Assume that LIST is '((value nil REST)) and return REST.  If REST is nil, then return \"\""
+  (let ((rest (car-safe (cdr-safe (cdr-safe (car-safe list))))))
+    (if rest
+	rest
+      "")))
 
 (defun xml-rpc-xml-list-to-value (xml-list)
   "Convert an XML-RPC structure in an xml.el style XML-LIST to an elisp list, \
@@ -325,8 +332,7 @@ interpreting and simplifying it while retaining its structure."
   (let (valtype valvalue)
     (cond
      ((and (xml-rpc-caddar-safe xml-list)
-           (listp (car-safe (cdr-safe (cdr-safe (car-safe xml-list))))))
-
+           (listp (xml-rpc-caddar-safe xml-list)))
       (setq valtype (car (caddar xml-list))
             valvalue (caddr (caddar xml-list)))
       (cond
@@ -346,7 +352,7 @@ interpreting and simplifying it while retaining its structure."
         (string-to-number (or valvalue "0")))
        ;; Double/float
        ((eq valtype 'double)
-        (string-to-number valvalue))
+        (string-to-number (or valvalue "0.0")))
        ;; Struct
        ((eq valtype 'struct)
         (mapcar (lambda (member)
@@ -370,7 +376,8 @@ interpreting and simplifying it while retaining its structure."
         (mapcar (lambda (arrval)
                   (xml-rpc-xml-list-to-value (list arrval)))
                 (cddr valvalue)))))
-     ((xml-rpc-caddar-safe xml-list)))))
+     (t
+      (xml-rpc-caddar-safe xml-list)))))
 
 (defun xml-rpc-boolean-to-string (value)
   "Convert a boolean value to a string"
@@ -600,7 +607,6 @@ or nil if called with ASYNC-CALLBACK-FUNCTION."
          ;; a list, so recurse.
          ((listp elem)
           (setq result (append result (list (xml-rpc-clean elem)))))
-
          ;; everthing else, as is.
          (t
           (setq result (append result (list elem))))))

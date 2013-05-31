@@ -49,7 +49,7 @@
 (require 'xml-rpc)
 (require 'versions)
 (require 'cl) ; for set operations
-(defconst min-xml-rpc-version "1.6.8.1" "minimum version requirement for xml-rpc mode")
+(defconst min-xml-rpc-version "1.6.8.2" "minimum version requirement for xml-rpc mode")
 
 ;;; ----------------------------------------------------------------------------
 ;;; constants
