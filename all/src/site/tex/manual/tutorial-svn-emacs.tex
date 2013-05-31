@@ -1,2 +1,78 @@
 % !TEX root = manual.tex
 \section{Tutorial with Subversion and Emacs} \label{sec:tutorial-svn-emacs}
+
+In this section, we assume that the example svn repository has been created according to the instructions in Section~\ref{sec:example-svn} above.  And we assume that LTC has been installed using the Emacs directory, as well as Emacs configuration adjustments made that are mentioned in Section~\ref{sec:config-emacs}.
+
+\subsection{Starting LTC Server and \texttt{ltc-mode}}
+
+First, we start the LTC Server from the command line.  Assuming you have installed LTC in the directory \Code{\$LTC}, we run this command line for the server.  The output will be similar to the following.  Leave the server running while performing the rest of this tutorial.
+\begin{CodeVerbatim}
+$> java -jar $LTC/LTC.jar
+LaTeX Track Changes (LTC)  Copyright (C) 2009-2013  SRI International
+This program comes with ABSOLUTELY NO WARRANTY; for details use command line switch -c.
+This is free software, and you are welcome to redistribute it under certain conditions.
+
+<current date> | CONFIG:  Logging configured to level CONFIG
+<current date> | CONFIG:  LTC version: <version info>
+<current date> | INFO:    Started RPC server on port 7777.
+\end{CodeVerbatim}
+
+Next, we switch to Emacs and open the tutorial file \Code{\$TUTORIAL/independence/independence.tex}.  This should put Emacs into \Code{latex-mode} but any other mode should work as well.  Then, start LTC mode using the command \Code{M-x ltc-mode} in Emacs.  Beware that using LTC with a remote subversion server takes longer than using git or a local subversion server, as we have to query the distant server hosting the repository for each version of the .tex file.  You will see a few messages appearing briefly in the mini buffer (you can also look at them in the \Code{*Messages*} buffer), such as the following.
+\begin{FileVerbatim}
+Starting LTC mode for file "$TUTORIAL/independence/independence.tex"...
+Using `xml-rpc' package version: 1.6.8.2
+LTC session ID = 1
+Starting LTC update...
+\end{FileVerbatim}
+Emacs should now look similar to the screen shot in Figure~\ref{fig:svn-emacs-open}.
+\begin{figure}[t]
+\centering
+\mygraphics{scale=.35}{figures/svn-emacs-open}
+\caption{Starting \Code{ltc-mode} in Emacs with tutorial file under svn} \label{fig:svn-emacs-open}
+\end{figure}
+In this figure, we see the changes marked up in various colors and fonts: underlined for additions and inverse for deletions.  There is also a smaller buffer called ``LTC info (session $N$)'' with $N$ as the session ID, at the bottom (or the right, if your Emacs is in landscape mode) of the buffer with the tutorial file.  There, we display the history of the current file under svn.  We can also see what svn perceives as the current user at the top of the graph -- here the name of the local user.
+
+First, we will override what LTC thinks is the current author in order to make the following tutorial more meaningful.  In real life situations you will rarely have to use this command as you typically want the changes in the repository attributed to yourself.  In Emacs, type the command \Code{M-x ltc-set-self<RET>adams<RET>} to impersonate John Adams.  This  updates the info buffer at the bottom automatically so it will look like the screen shot in Figure~\ref{fig:svn-adams}.
+\begin{figure}[t]
+\centering
+\mygraphics{scale=.5}{figures/svn-adams}
+\caption{Emacs info buffer after setting current author to ``adams''} \label{fig:svn-adams}
+\end{figure}
+
+\subsection{Showing and Hiding Certain Changes}
+
+The LTC menu and ``LTC info'' buffer in Emacs allow us to customize the way LTC displays the changes of the file.  Section~\ref{sec:general-use} contains all the details of how LTC displays the changes including limiting the file history and filtering.  In this tutorial, we will just use some of the options and see their effect.
+
+First, notice the colors assigned to each of the authors.  To change an author color, for example Roger Sherman's,  perform a single left-click on the name of Roger Sherman.  This opens another buffer called \Code{*Colors*} with a preview of colors and their names.  Also look at the mini buffer that requests input.   You can enter a name or an RGB value in hex notation.  The color names can also be auto-completed, for example type \Code{Bro<TAB>} (if TAB is your completion key in Emacs) to see \Code{Brown}.  You will want something with contrast to the white background, so brown is a fine choice.  When clicking the RETURN key, notice how the text in the editor panel on the top changes color for those parts that are attributed to Roger Sherman's edits.  To abort choosing a color simply enter an empty value.
+
+Next, focus on the typographical errors in the command ``\textbackslash maketitle'' in line 11 and the beginning of the first paragraph in line thirteen as well as the spelling errors in the word ``political.''  Open the LTC menu (in the menu bar and in the mode line) and then the sub-menu ``Show/Hide'' as seen in Figure~\ref{fig:svn-emacs-LTC-menu}.  
+\begin{figure}[t]
+\centering
+\mygraphics{scale=.35}{figures/svn-emacs-LTC-menu}
+\caption{Opening the LTC menu from the mode line in Emacs} \label{fig:svn-emacs-LTC-menu}
+\end{figure}
+If you first uncheck the item \Menu{Show/Hide;Show small changes}{LTC}, and second, also the item \Menu{Show/Hide;Show deletions}{LTC}, notice how the text rendering in the editor panel changes.  Again, if you work with the remote repository, it might take a little while until all the updates are received from the server and the mini buffer shows the message ``LTC updates received.''
+\begin{figure}[t]
+  \centering
+  \subfloat{
+    \label{subfig:svn-emacs-filter-small1} 
+    \mygraphics{scale=.5}{figures/svn-emacs-filter-small1}}
+  \hspace{2em}
+  \subfloat{
+    \label{subfig:svn-emacs-filter-small2} 
+    \mygraphics{scale=.5}{figures/svn-emacs-filter-small2}}
+  \hspace{2em}
+  \subfloat{
+    \label{subfig:svn-emacs-filter-small3} 
+    \mygraphics{scale=.5}{figures/svn-emacs-filter-small3}}
+\caption[Effect of hiding ``small'' changes and deletions]{Effect of hiding ``small'' changes first (middle) and then also deletions (right)} \label{fig:svn-emacs-filter-small}
+\end{figure}
+Figures~\ref{fig:svn-emacs-filter-small} show that ``\textbackslash maketitle'' as well as the typos in the word ``political'' are no longer marked up, and in the third image, the deletion beginning with ``If'' at the beginning of the paragraph is now omitted.
+
+\subsection{Understanding the Commit Graph}
+
+Now draw your attention back to LTC info buffer with the history of the current file under git (located at the bottom or right of your .tex file).  The Emacs representation is using small box characters to draw the graph and its edges.  In our current tutorial repository, there are no branches and the graph is a sequential line.  
+
+Refer back to Figure~\ref{fig:svn-adams} for the screen shot of the example file history. Versions that are included in the tracked changes are not printed in gray.  How far we go back in history depends on some filtering settings, which are discussed further in Section~\ref{sec:svn-emacs-limit-history} below.  By default, we first include all version of the current author at the top.  In our example with impersonating John Adams with the user name ``adams,'' there are currently no further recent commits of him.  Then, we continue down the path and collect all versions of different authors until we find the next version of John Adams in the commit with the message ``second version.''
+
+\subsection{Limiting History} \label{sec:svn-emacs-limit-history}

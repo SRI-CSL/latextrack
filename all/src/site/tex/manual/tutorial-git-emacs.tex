@@ -1,7 +1,7 @@
 % !TEX root = manual.tex
 \section{Tutorial with Git and Emacs} \label{sec:tutorial-git-emacs}
 
-In this section, we assume that the example git repository has been created according to the instructions in Section~\ref{sec:example-git} above.  And we assume that LTC has been installed using the optional Emacs directory, as well as Emacs configuration adjustments made that are mentioned in Section~\ref{sec:config-emacs}.
+In this section, we assume that the example git repository has been created according to the instructions in Section~\ref{sec:example-git} above.  And we assume that LTC has been installed using the Emacs directory, as well as Emacs configuration adjustments made that are mentioned in Section~\ref{sec:config-emacs}.
 
 \subsection{Starting LTC Server and \texttt{ltc-mode}}
 
@@ -14,14 +14,13 @@ This is free software, and you are welcome to redistribute it under certain cond
 
 <current date> | CONFIG:  Logging configured to level CONFIG
 <current date> | CONFIG:  LTC version: <version info>
---log4j: <current date> [main] INFO  org.apache.xmlrpc.webserver.XmlRpcServlet - init
 <current date> | INFO:    Started RPC server on port 7777.
 \end{CodeVerbatim}
 
 Next, we switch to Emacs and open the tutorial file \Code{\$TUTORIAL/independence/independence.tex}.  This should put Emacs into \Code{latex-mode} but any other mode should work as well.  Then, start LTC mode using the command \Code{M-x ltc-mode} in Emacs.  You will see a few messages appearing briefly in the mini buffer (you can also look at them in the \Code{*Messages*} buffer), such as the following.
 \begin{FileVerbatim}
 Starting LTC mode for file "\$TUTORIAL/independence/independence.tex"...
-Using `xml-rpc' package version: 1.6.8.1
+Using `xml-rpc' package version: 1.6.8.2
 LTC session ID = 1
 Starting LTC update...
 LTC updates received
@@ -30,7 +29,7 @@ Emacs should now look similar to the screen shot in Figure~\ref{fig:emacs-open}.
 \begin{figure}[t]
 \centering
 \mygraphics{scale=.35}{figures/emacs-open}
-\caption{Starting \Code{ltc-mode} in Emacs with tutorial file} \label{fig:emacs-open}
+\caption{Starting \Code{ltc-mode} in Emacs with tutorial file under git} \label{fig:emacs-open}
 \end{figure}
 In this figure, we see the changes marked up in various colors and fonts: underlined for additions and inverse for deletions.  There is also a smaller buffer called ``LTC info (session $N$)'' with $N$ as the session ID, at the bottom (or the right, if your Emacs is in landscape mode) of the buffer with the tutorial file.  There, we display the history of the current file under git.  We can also see what git currently perceives as the current user at the top of the graph -- now John Adams because we had overridden the git settings in this tutorial repository.
 
@@ -38,7 +37,7 @@ In this figure, we see the changes marked up in various colors and fonts: underl
 
 The LTC menu and ``LTC info'' buffer in Emacs allow us to customize the way LTC displays the changes of the file.  Section~\ref{sec:general-use} contains all the details of how LTC displays the changes including limiting the file history and filtering.  In this tutorial, we will just use some of the options and see their effect.
 
-First, notice the colors assigned to each of the authors.  To change an author color, for example Roger Sherman's,  perform a single left-click on the colored name of Roger Sherman.  This opens another buffer called \Code{*Colors*} with a preview of colors and their names.  Also look at the mini buffer that requests input.   You can enter a name or an RGB value in hex notation.  The color names can also be auto-completed, for example type \Code{Bro<TAB>} (if TAB is your completion key in Emacs) to see \Code{Brown}.  You will want something with contrast to the white background, so brown is a fine choice.  When clicking the RETURN key, notice how the text in the editor panel on the top changes color for those parts that are attributed to Roger Sherman's edits.  To abort choosing a color simply enter an empty value.
+First, notice the colors assigned to each of the authors.  To change an author color, for example Roger Sherman's,  perform a single left-click on the name of Roger Sherman.  This opens another buffer called \Code{*Colors*} with a preview of colors and their names.  Also look at the mini buffer that requests input.   You can enter a name or an RGB value in hex notation.  The color names can also be auto-completed, for example type \Code{Bro<TAB>} (if TAB is your completion key in Emacs) to see \Code{Brown}.  You will want something with contrast to the white background, so brown is a fine choice.  When clicking the RETURN key, notice how the text in the editor panel on the top changes color for those parts that are attributed to Roger Sherman's edits.  To abort choosing a color simply enter an empty value.
 
 Next, focus on the typographical errors in the command ``\textbackslash maketitle'' in line 11 and the beginning of the first paragraph in line thirteen as well as the spelling errors in the word ``political.''  Open the LTC menu (in the menu bar and in the mode line) and then the sub-menu ``Show/Hide'' as seen in Figure~\ref{fig:emacs-LTC-menu}.  
 \begin{figure}[t]
