@@ -901,9 +901,9 @@ The remaining arguments *-STRING denote the string representation of the charact
 				   (format (concat "%-" (number-to-string (+ 2 max-author)) "s") 
 					   author)
 				   'mouse-face 'highlight
-				   'help-echo (if is-active "mouse-1: change color")
+				   'help-echo "mouse-1: set color"
 				   'keymap author-map
-				   'action (if is-active (cons "textColor" (nth 2 commit)))
+				   'action (cons "textColor" (nth 2 commit))
 				   'face (list :foreground (if is-active (nth 5 commit) disabledcolor)))
 				  (propertize 
 				   (format "%s" (nth 3 commit)) ; message
