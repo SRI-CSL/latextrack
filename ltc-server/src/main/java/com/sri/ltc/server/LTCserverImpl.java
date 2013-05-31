@@ -400,17 +400,21 @@ public final class LTCserverImpl implements LTCserverInterface {
         try {
             return concatAuthorAndColor(session.getTrackedFile().getRepository().getSelf());
         } catch (IllegalArgumentException e) {
-            return new Object[0]; // if self is undefined
+            // ignore
+        } catch (Exception e) {
+            logAndThrow(2, "Exception during get_self: "+e.getMessage());
         }
+        return new Object[0]; // if self is undefined
     }
 
     public Object[] set_self(int sessionID, String name, String email) throws XmlRpcException {
         Session session = getSession(sessionID);
         try {
             Author a = new Author(name, email);
-            session.getTrackedFile().getRepository().setSelf(a);  // TODO: if not implemented by repository (e.g., svn) then don't add to authors!
+            session.getTrackedFile().getRepository().setSelf(a);  // TODO: if not implemented by repository (e.g., svn) then don't add to authors?
             session.addAuthors(Collections.singleton(a));
         } catch (IllegalArgumentException e) {
+            // thrown by constructor of Author
             logAndThrow(4,"Cannot create author to set as self with given arguments: "+e.getMessage());
         }
         return get_self(sessionID);

@@ -204,7 +204,7 @@ public interface LTCserverInterface {
     public List get_commits(int sessionID) throws XmlRpcException;
 
     /**
-     * Obtain the currently set author for the git repository indicated through the given session.
+     * Obtain the currently set author for the repository indicated through the given session.
      * If exists, the author is given as a 3-tuple of strings denoting the name (not empty), the
      * email address (possibly empty), and the color as obtained by {@link #get_color(String, String)}
      * with the name and email as the parameters.  If no author is set, the returned array is empty.
@@ -213,17 +213,16 @@ public interface LTCserverInterface {
      * @return 3-tuple of strings describing the current author or an empty array
      * @throws XmlRpcException <ul>
      *   <li>with error code = 1 if the given identifier does not denote a known session.
-     *   <li>with error code = 2 if a JavaGitException occurred during self retrieval.
-     *   <li>with error code = 3 if an IOException occurred during self retrieval.
+     *   <li>with error code = 2 if another unrecoverable exception occurred.
      * </ul>
      */
     public Object[] get_self(int sessionID) throws XmlRpcException;
 
     /**
-     * Set the current author to the given name and email for the git repository indicated
-     * by given session.  The name cannot be empty.  To unset any author for this git
-     * repository use {@link #reset_self(int)}.  The email address can be empty.  This
-     * function returns the newly set author as if calling {@link #get_self(int)}.
+     * Set the current author to the given name and email for the given session.
+     * The name cannot be empty.  To unset any author for this repository use {@link #reset_self(int)}.
+     * The email address can be empty.  This function returns the newly set author as if
+     * calling {@link #get_self(int)}.
      *
      * @param sessionID identifies the session
      * @param name non-empty String as the name of the current author
@@ -231,28 +230,20 @@ public interface LTCserverInterface {
      * @return 3-tuple of strings describing the current author
      * @throws XmlRpcException <ul>
      *   <li>with error code = 1 if the given identifier does not denote a known session.
-     *   <li>with error code = 2 if a JavaGitException occurred during self retrieval.
-     *   <li>with error code = 3 if an IOException occurred during self retrieval.
      *   <li>with error code = 4 if an author with the given arguments cannot be created.
-     *   <li>with error code = 5 if a JavaGitException occurred during setting self.
-     *   <li>with error code = 6 if an IOException occurred during setting self.
      * </ul>
      */
     public Object[] set_self(int sessionID, String name, String email) throws XmlRpcException;
 
     /**
-     * Unsets any current author for the git repository indicated by given session.
-     * This function returns the current notion of self if a global configuration of git
-     * has been made.
+     * Unsets any current author for the repository indicated by given session.
+     * This function returns the current notion of self before any calls to {@link #set_self(int, String, String)}.
      *
      * @param sessionID identifies the session
      * @return 3-tuple of strings describing the current author or an empty array
      * @throws XmlRpcException <ul>
      *   <li>with error code = 1 if the given identifier does not denote a known session.
-     *   <li>with error code = 2 if a JavaGitException occurred during self retrieval.
-     *   <li>with error code = 3 if an IOException occurred during self retrieval.
-     *   <li>with error code = 4 if a JavaGitException occurred during resetting self.
-     *   <li>with error code = 5 if an IOException occurred during resetting self.
+     *   <li>with error code = 5 if an Exception occurred during resetting self.
      * </ul>
      */
     public Object[] reset_self(int sessionID) throws XmlRpcException;

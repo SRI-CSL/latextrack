@@ -291,7 +291,8 @@
     (setq commit-graph (init-commit-graph))
     (setq self (ltc-method-call "get_self" session-id)) ; get current author and color
     ;; run first update
-    (ltc-update)))
+    (ltc-update))
+  ) ;ltc-mode-start
 
 (defun ltc-mode-stop ()
   "stop LTC mode"  
@@ -328,7 +329,7 @@
     (kill-buffer b)) ; kill temp buffer
   (setq ltc-info-buffer "")
   (font-lock-mode 1) ; turn latex font-lock mode back on
-  )
+  ) ;ltc-mode-stop
 
 (defun ltc-update ()
   "updating changes for current session"
@@ -373,7 +374,7 @@
 	(update-info-buffer)
 	(set-buffer-modified-p old-buffer-modified-p) ; restore modification flag
 	))
-  )
+  ) ;ltc-update
 
 ;;; --- capture save, close, and TODO: save-as (set-visited-file-name) operations 
 
@@ -570,7 +571,6 @@ Each entry in the commit graph that is returned, contains a list with the follow
     (let ((commits (ltc-method-call "get_commits" session-id)) ; list of 6-tuple strings
 	  (authors (mapcar (lambda (v) (cons (list (car v) (cadr v)) (nth 2 v))) 
 			   (ltc-method-call "get_authors" session-id)))
-	  (self (ltc-method-call "get_self" session-id))
 	  (parents-alist nil)
 	  (children-alist nil)
 	  (circle-alist '((0 0))) ; index -> circle column, start with 0 -> 0
@@ -717,7 +717,8 @@ Each entry in the commit graph that is returned, contains a list with the follow
 		     (cdr (assoc index passing-alist)) ; passing columns
 		     ))))
 	       commits)))
-    nil)) ; LTC session not valid: return NIL
+    nil) ; LTC session not valid: return NIL
+  ) ;init-commit-graph
 
 (defun get-lowest-not-in (s)
   "Get the lowest number that is not in sorted set S, starting from 0."
@@ -805,7 +806,8 @@ The remaining arguments *-STRING denote the string representation of the charact
 	     (member col passing)) ; and passing column
 	(setq c (string #x2502)))
     (setq graph-fmt (concat graph-fmt c)))
-  (concat front graph-fmt back)) ; add front and back around line with characters
+  (concat front graph-fmt back) ; add front and back around line with characters
+  ) ;draw-branches
 
 (defun pretty-print-commit-graph ()
   "Create string representation with text properties from current commit graph."
@@ -915,9 +917,10 @@ The remaining arguments *-STRING denote the string representation of the charact
 		   commit-graph 
 		   "\n")
 	)
-    "<commit graph is empty>"))
+    "<commit graph is empty>")
+  ) ;pretty-print-commit-graph
 
-;;; --- set author color functions
+;;; --- set author color and name functions
 
 (defun ltc-select-color (event)
   "Select color for indicated author in mouse event.  Updates automatically."
@@ -931,7 +934,7 @@ The remaining arguments *-STRING denote the string representation of the charact
     (select-color (cadr action) (caddr action) old-color)))
 
 (defun ltc-set-color (author) 
-  "Select and set color for given AUTHOR.  Updates automatically unless user aborts by not chosing a valid author."
+  "Select and set color for given AUTHOR.  Updates automatically unless user aborts by entering an empty name."
   (interactive
    (if ltc-mode
        (list (completing-read "Author, for whom to set color (abort with empty value or C-g): " 
@@ -968,6 +971,21 @@ it will only set the new, chosen color if it is different than the old one."
       (delete-windows-on b t)
       (kill-buffer b))
     (update-info-buffer)))
+
+(defun ltc-set-self (author) 
+  "Set current self to given AUTHOR.  Updates automatically unless user aborts by entering an empty name."
+  (interactive
+   (if ltc-mode
+       (list (completing-read "New current self in format \"name [<email>]\" (abort with empty value or C-g): " 
+			      (mapcar 'author-to-string (mapcar 'caddr commit-graph))
+			      nil t))
+     '(nil))) ; sets author = nil
+  (if (and author (string< "" author))
+      (let* ((author-list (string-to-author author))
+	     (name (nth 0 author-list))
+	     (email (nth 1 author-list)))
+	(setq self (ltc-method-call "set_self" session-id name email))
+	(ltc-update))))
 
 ;;; --- functions to handle online editing
 
