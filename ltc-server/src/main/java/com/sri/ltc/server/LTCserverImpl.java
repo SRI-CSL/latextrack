@@ -556,8 +556,11 @@ public final class LTCserverImpl implements LTCserverInterface {
         try {
             ZipOutputStream zos = new ZipOutputStream(new FileOutputStream(zipFile, false));
 
-            // add "report.xml"
+            // add "report.xml" and remove it
             copyToZip(zos, xmlFile, xmlFile.getName());
+            if (!xmlFile.delete())
+                LOGGER.warning("Couldn't delete file "+xmlFile.getAbsolutePath());
+            xmlFile = null;
 
             // add log file(s), if they exist
             File[] logFiles = new File(System.getProperty("user.home")).listFiles(CommonUtils.LOG_FILE_FILTER);
