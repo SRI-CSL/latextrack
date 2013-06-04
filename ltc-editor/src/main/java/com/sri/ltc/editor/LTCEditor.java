@@ -87,7 +87,7 @@ public final class LTCEditor extends LTCGui {
     // initializing GUI components
     private final AuthorListModel authorModel = new AuthorListModel(session);
     private final CommitTableModel commitModel = new CommitTableModel();
-    private final SelfComboBoxModel selfModel = new SelfComboBoxModel(textPane, authorModel, session);
+    private final SelfComboBoxModel selfModel = new SelfComboBoxModel(session);
     private final JPanel cards = new JPanel(new CardLayout());
     private final SelfTextField selfField = new SelfTextField(authorModel);
     private final JFileChooser fileChooser = new JFileChooser();
@@ -113,13 +113,13 @@ public final class LTCEditor extends LTCGui {
                             return;
                         }
                         clear();
-                        session.startInitAndUpdate(file, dateField.getText(), revField.getText(), textPane.getCaretPosition());
+                        session.startInitAndUpdate(file);
                     } else {
                         session.startUpdate(dateField.getText(), revField.getText(), false, textPane.getText(), textPane.stopFiltering(), textPane.getCaretPosition());
                     }
                 } else {
                     clear();
-                    session.startInitAndUpdate(file, dateField.getText(), revField.getText(), textPane.getCaretPosition());
+                    session.startInitAndUpdate(file);
                 }
                 // update file chooser and preference for next time:
                 fileChooser.setCurrentDirectory(file.getParentFile());
@@ -211,7 +211,7 @@ public final class LTCEditor extends LTCGui {
         }
         // switch self panel:
         CardLayout cl = (CardLayout) cards.getLayout();
-        cl.show(cards, vcs.name());
+        cl.show(cards, LTCserverInterface.VersionControlSystems.GIT.name()); // TODO: remove card layout!
 
         // other initializations:
         authorModel.init(authors);
@@ -220,6 +220,10 @@ public final class LTCEditor extends LTCGui {
         selfField.setSelf(self);
         saveButton.setEnabled(false); // start with modified = false
         setFile(session.getCanonicalPath(), false);
+
+        // start update:
+        //                        startUpdate(date, rev, false, "", Collections.<Object[]>emptyList(), caretPosition);
+        getUpdateButton().doClick();
     }
 
     protected void finishUpdate(Map<Integer, Object[]> authors,
@@ -253,12 +257,15 @@ public final class LTCEditor extends LTCGui {
         authorModel.addAuthors(authors);
     }
 
-    protected void finishCommit(Object[] last_commit) {
-        // update list of commits:
-        if (last_commit == null)
-            return;
-        commitModel.removeOnDisk();
-        commitModel.add(last_commit);
+    protected void finishSetSelf(String color) {
+        // tell document filter about color:
+        if (color != null)
+            textPane.getDocumentFilter().setColor(Color.decode(color));
+        else
+            textPane.getDocumentFilter().setColor(Color.black);
+        // update:
+        // TODO: getAuthors synchronous!
+        getUpdateButton().doClick();
     }
 
     private void clear() {

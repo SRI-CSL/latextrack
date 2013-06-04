@@ -61,8 +61,7 @@ public class LTCSession {
         return ID != -1;
     }
 
-    public void startInitAndUpdate(final File file,
-                                   final String date, final String rev, final int caretPosition)
+    public void startInitAndUpdate(final File file)
             throws IOException {
         canonicalPath = file.getCanonicalPath();
 
@@ -106,14 +105,13 @@ public class LTCSession {
                     try {
                         ID = get();
                         editor.finishInit(authors, commits, self, VCS);
-                        startUpdate(date, rev, false, "", Collections.<Object[]>emptyList(), caretPosition);
                     } catch (InterruptedException e) {
                         LOGGER.log(Level.SEVERE, e.getMessage(), e);
                     } catch (ExecutionException e) {
                         LOGGER.log(Level.SEVERE, e.getMessage(), e);
                         JOptionPane.showMessageDialog(editor.getFrame(),
                                 "An error occurred:\n"+e.getMessage(),
-                                "Error while updating",
+                                "Error while initializing",
                                 JOptionPane.ERROR_MESSAGE);
                     }
             }
@@ -187,7 +185,10 @@ public class LTCSession {
                         LOGGER.log(Level.SEVERE, e.getMessage(), e);
                     } catch (ExecutionException e) {
                         LOGGER.log(Level.SEVERE, e.getMessage(), e);
-                        e.printStackTrace();
+                        JOptionPane.showMessageDialog(editor.getFrame(),
+                                "An error occurred:\n"+e.getMessage(),
+                                "Error while updating",
+                                JOptionPane.ERROR_MESSAGE);
                     }
             }
         }).execute();
@@ -211,16 +212,29 @@ public class LTCSession {
         if (!isValid()) return;
 
         // create new worker to set self in session
-        (new LTCWorker<Void,Void>(editor.getFrame(), ID,
+        (new LTCWorker<String,Void>(editor.getFrame(), ID,
                 "Setting...", "Setting current self", false) {
             @Override
-            protected Void callLTCinBackground() throws XmlRpcException {
+            protected String callLTCinBackground() throws XmlRpcException {
+                Object[] result;
                 if (self == null)
-                    LTC.reset_self(ID);
+                    result = LTC.reset_self(ID);
                 else {
-                    LTC.set_self(ID, self.name, self.email);
+                    result = LTC.set_self(ID, self.name, self.email);
                 }
-                return null;
+                return result==null?null:(String) result[2];
+            }
+
+            @Override
+            protected void done() {
+                try {
+                    editor.finishSetSelf(get());
+                } catch (InterruptedException e) {
+                    LOGGER.log(Level.SEVERE, e.getMessage(), e);
+                } catch (ExecutionException e) {
+                    LOGGER.log(Level.SEVERE, e.getMessage(), e);
+                    e.printStackTrace();
+                }
             }
         }).execute();
     }

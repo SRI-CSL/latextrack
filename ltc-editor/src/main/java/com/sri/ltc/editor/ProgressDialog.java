@@ -110,6 +110,18 @@ public class ProgressDialog extends JDialog implements ActionListener {
     }
 
     public static void done() {
+        if (SwingUtilities.isEventDispatchThread())
+            doneInEDT();
+        else
+            SwingUtilities.invokeLater(new Runnable() {
+                @Override
+                public void run() {
+                    doneInEDT();
+                }
+            });
+    }
+
+    private static void doneInEDT() {
         if (dialog != null && dialog.isVisible()) {
             dialog.setVisible(false);
             dialog.dispose();

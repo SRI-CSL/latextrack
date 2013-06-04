@@ -55,21 +55,21 @@ public abstract class LTCWorker<T,V> extends SwingWorker<T,V> implements Progres
                 if ("progress".equals(e.getPropertyName())) {
                     ProgressDialog.setProgress((Integer) e.getNewValue());
                 }
-                if ("state".equals(e.getPropertyName()) && SwingWorker.StateValue.DONE == e.getNewValue()) {
-                    ProgressDialog.done();
-                }
             }
         });
     }
 
     @Override
     protected final T doInBackground() throws Exception {
+        T result = null;
         try {
-            return callLTCinBackground();
+            result = callLTCinBackground();
         } catch (XmlRpcException e) {
             LOGGER.log(Level.SEVERE, e.getMessage(), e);
             throw e;
         }
+        ProgressDialog.done();
+        return result;
     }
 
     protected abstract T callLTCinBackground() throws XmlRpcException;
