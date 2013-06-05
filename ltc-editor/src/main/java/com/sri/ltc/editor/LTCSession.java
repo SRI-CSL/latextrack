@@ -271,7 +271,7 @@ public class LTCSession {
             @Override
             protected void done() {
                 try {
-                    editor.finishAuthors(get());
+                    editor.finishAuthors(get(), true); // signal to update
                 } catch (InterruptedException e) {
                     LOGGER.log(Level.SEVERE, e.getMessage(), e);
                 } catch (ExecutionException e) {

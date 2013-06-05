@@ -233,7 +233,7 @@ public final class LTCEditor extends LTCGui {
                                 List<String> orderedIDs,
                                 List<Object[]> commits) {
         // update list of authors
-        finishAuthors(new ArrayList<Object[]>(authors.values()));
+        finishAuthors(new ArrayList<Object[]>(authors.values()), false); // don't run another update
         // update and markup text
         Map<Integer,Color> colors = new HashMap<Integer,Color>();
         for (Map.Entry<Integer,Object[]> entry : authors.entrySet())
@@ -253,8 +253,10 @@ public final class LTCEditor extends LTCGui {
             }
     }
 
-    protected void finishAuthors(List<Object[]> authors) {
+    protected void finishAuthors(List<Object[]> authors, boolean doUpdate) {
         authorModel.addAuthors(authors);
+        if (doUpdate)
+            getUpdateButton().doClick();
     }
 
     protected void finishSetSelf(String color) {
@@ -263,9 +265,8 @@ public final class LTCEditor extends LTCGui {
             textPane.getDocumentFilter().setColor(Color.decode(color));
         else
             textPane.getDocumentFilter().setColor(Color.black);
-        // update:
-        // TODO: getAuthors synchronous!
-        getUpdateButton().doClick();
+        // update authors and everything else:
+        session.getAuthors();
     }
 
     private void clear() {
