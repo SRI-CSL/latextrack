@@ -88,8 +88,6 @@ public final class LTCEditor extends LTCGui {
     private final AuthorListModel authorModel = new AuthorListModel(session);
     private final CommitTableModel commitModel = new CommitTableModel();
     private final SelfComboBoxModel selfModel = new SelfComboBoxModel(session);
-    private final JPanel cards = new JPanel(new CardLayout());
-    private final SelfTextField selfField = new SelfTextField(authorModel);
     private final JFileChooser fileChooser = new JFileChooser();
     private final JTextField fileField = new JTextField();
     private final Action updateAction = new AbstractAction("Update") {
@@ -190,39 +188,23 @@ public final class LTCEditor extends LTCGui {
                     saveButton.doClick();
             }
         }
-        clear();
         session.close();
-        textPane.stopFiltering();
         return true;
     }
 
     protected void finishClose() {
-        saveButton.setEnabled(false);
+        clear(); // this will also try to stop filtering
     }
 
-    protected void finishInit(List<Object[]> authors, List<Object[]> commits, Object[] self, String VCS) {
-        // decide here whether we have SVN or GIT and change GUI elements accordingly
-        LTCserverInterface.VersionControlSystems vcs = null;
-        try {
-            vcs = LTCserverInterface.VersionControlSystems.valueOf(VCS);
-        } catch (IllegalArgumentException e) {
-            // VCS was not a proper name: make svn the default
-            vcs = LTCserverInterface.VersionControlSystems.SVN;
-        }
-        // switch self panel:
-        CardLayout cl = (CardLayout) cards.getLayout();
-        cl.show(cards, LTCserverInterface.VersionControlSystems.GIT.name()); // TODO: remove card layout!
-
+    protected void finishInit(List<Object[]> authors, List<Object[]> commits, Object[] self) {
         // other initializations:
         authorModel.init(authors);
         commitModel.init(commits, true);
         selfModel.init(authors, self);
-        selfField.setSelf(self);
         saveButton.setEnabled(false); // start with modified = false
         setFile(session.getCanonicalPath(), false);
 
         // start update:
-        //                        startUpdate(date, rev, false, "", Collections.<Object[]>emptyList(), caretPosition);
         getUpdateButton().doClick();
     }
 
@@ -259,12 +241,7 @@ public final class LTCEditor extends LTCGui {
             getUpdateButton().doClick();
     }
 
-    protected void finishSetSelf(String color) {
-        // tell document filter about color:
-        if (color != null)
-            textPane.getDocumentFilter().setColor(Color.decode(color));
-        else
-            textPane.getDocumentFilter().setColor(Color.black);
+    protected void finishSetSelf() {
         // update authors and everything else:
         session.getAuthors();
     }
@@ -279,7 +256,6 @@ public final class LTCEditor extends LTCGui {
         authorModel.clear();
         commitModel.clear(true);
         selfModel.clear();
-        selfField.setSelf(null);
         dateField.setText("");
         revField.setText("");
         saveButton.setEnabled(false); // start with modified = false        
@@ -524,11 +500,9 @@ public final class LTCEditor extends LTCGui {
         selfPane.add(new JLabel("Self: "), BorderLayout.LINE_START);
         final JComboBox selfCombo = new JComboBox(selfModel);
         selfCombo.setEditable(true);
-        selfCombo.setRenderer(new MyComboRenderer());
-        selfCombo.setEditor(new SelfComboBoxEditor(authorModel));
-        cards.add(selfCombo, LTCserverInterface.VersionControlSystems.GIT.name());
-        cards.add(selfField, LTCserverInterface.VersionControlSystems.SVN.name());
-        selfPane.add(cards, BorderLayout.CENTER);
+        selfCombo.setRenderer(new SelfComboBoxRenderer());
+        selfCombo.setEditor(new SelfComboBoxEditor(authorModel, textPane));
+        selfPane.add(selfCombo, BorderLayout.CENTER);
         // enable save button upon first change
         saveButton.setEnabled(false);
         textPane.getDocumentFilter().addChangeListener(new ChangeListener() {

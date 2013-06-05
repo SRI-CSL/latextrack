@@ -32,9 +32,9 @@ import java.awt.*;
  * @author linda
  */
 @SuppressWarnings("serial")
-public final class MyComboRenderer extends JLabel implements ListCellRenderer {
+public final class SelfComboBoxRenderer extends JLabel implements ListCellRenderer {
 
-    public MyComboRenderer() {
+    public SelfComboBoxRenderer() {
         setOpaque(true);
     }
 

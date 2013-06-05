@@ -65,7 +65,7 @@ public final class SelfComboBoxModel extends AbstractListModel implements ComboB
             else
                 fireContentsChanged(this, 0, 0);
             // update LTC accordingly (if not flagged to skip)
-            if (updateLTC && session.isValid())
+            if (updateLTC)
                 session.setSelf(self);
             updateLTC = true; // reset flag
         }

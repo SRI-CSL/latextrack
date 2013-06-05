@@ -61,8 +61,10 @@ public final class SelfComboBoxEditor implements ComboBoxEditor, ListDataListene
         delegate.setTransferHandler(new AuthorTransferHandler()); // customized drag 'n drop
     }
     private final AuthorListModel authorModel;
+    private final LatexPane latexPane;
 
-    public SelfComboBoxEditor(AuthorListModel authorModel) {
+    public SelfComboBoxEditor(AuthorListModel authorModel, LatexPane latexPane) {
+        this.latexPane = latexPane;
         this.authorModel = authorModel;
         authorModel.addListDataListener(this);
     }
@@ -72,10 +74,13 @@ public final class SelfComboBoxEditor implements ComboBoxEditor, ListDataListene
     }
 
     public void setItem(Object anObject) {
-        if (anObject instanceof Author) 
-            delegate.setForeground(authorModel.getColorForAuthor((Author) anObject));
-        else
-            delegate.setForeground(Color.black);
+        // update self color as well as text color:
+        Color color = Color.black;
+        if (anObject instanceof Author)
+            color = authorModel.getColorForAuthor((Author) anObject);
+        delegate.setForeground(color);
+        latexPane.getDocumentFilter().setColor(color);
+
         delegate.setValue(anObject);
     }
 
@@ -84,7 +89,8 @@ public final class SelfComboBoxEditor implements ComboBoxEditor, ListDataListene
     }
 
     public void selectAll() {
-        delegate.setForeground(Color.black); // start editing
+        delegate.selectAll();
+        System.out.println("SELECT ALL in combo box editor");
         // don't select all text to prevent deleting everything upon hitting ENTER
     }
 

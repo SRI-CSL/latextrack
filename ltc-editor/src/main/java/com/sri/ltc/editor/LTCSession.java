@@ -71,7 +71,6 @@ public class LTCSession {
             List<Object[]> authors = null;
             java.util.List<Object[]> commits = null;
             Object[] self = null;
-            String VCS = null;
             int sessionID = -1;
 
             @SuppressWarnings("unchecked")
@@ -89,9 +88,6 @@ public class LTCSession {
                 setProgress(75);
                 self = LTC.get_self(sessionID);
                 if (isCancelled()) return -1;
-                setProgress(95);
-                VCS = LTC.get_VCS(sessionID);
-                if (isCancelled()) return -1;
                 setProgress(100);
                 return sessionID;
             }
@@ -100,11 +96,11 @@ public class LTCSession {
             protected void done() {
                 if (isCancelled()) {
                     ID = -1;
-                    editor.finishInit(null, null, null, null);
+                    editor.finishInit(null, null, null);
                 } else
                     try {
                         ID = get();
-                        editor.finishInit(authors, commits, self, VCS);
+                        editor.finishInit(authors, commits, self);
                     } catch (InterruptedException e) {
                         LOGGER.log(Level.SEVERE, e.getMessage(), e);
                     } catch (ExecutionException e) {
@@ -212,29 +208,20 @@ public class LTCSession {
         if (!isValid()) return;
 
         // create new worker to set self in session
-        (new LTCWorker<String,Void>(editor.getFrame(), ID,
+        (new LTCWorker<Void,Void>(editor.getFrame(), ID,
                 "Setting...", "Setting current self", false) {
             @Override
-            protected String callLTCinBackground() throws XmlRpcException {
-                Object[] result;
+            protected Void callLTCinBackground() throws XmlRpcException {
                 if (self == null)
-                    result = LTC.reset_self(ID);
-                else {
-                    result = LTC.set_self(ID, self.name, self.email);
-                }
-                return result==null?null:(String) result[2];
+                    LTC.reset_self(ID);
+                else
+                    LTC.set_self(ID, self.name, self.email);
+                return null;
             }
 
             @Override
             protected void done() {
-                try {
-                    editor.finishSetSelf(get());
-                } catch (InterruptedException e) {
-                    LOGGER.log(Level.SEVERE, e.getMessage(), e);
-                } catch (ExecutionException e) {
-                    LOGGER.log(Level.SEVERE, e.getMessage(), e);
-                    e.printStackTrace();
-                }
+                editor.finishSetSelf();
             }
         }).execute();
     }
