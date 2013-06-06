@@ -46,4 +46,91 @@ Unfortunately, we cannot accept changes to this repository so the tutorials base
 
 \subsection{Using a Local Subversion Repository} \label{sec:example-svn-local}
 
-%TODO
+The following will show you how to run a local subversion server on your machine.  Then, we will create a subversion repository there and add a few users to it, so that you can impersonate different users throughout the later parts of the tutorial below.
+
+First, perform the following steps from a directory of your choice.  We assume that this is again \Code{\$TUTORIAL}.  There, you will create the root location of your tutorial repositories called \Code{svnrepos}.  You may choose another name but will then have to adjust the commands accordingly.
+\begin{CodeVerbatim}
+$> cd $TUTORIAL
+$> svnadmin create svnrepos
+$> ls -la svnrepos/
+total 16
+drwxr-xr-x   8 linda  linda   272 Jun  6 13:34 .
+drwxr-xr-x  35 linda  linda  1190 Jun  6 13:34 ..
+-rw-r--r--   1 linda  linda   229 Jun  6 13:34 README.txt
+drwxr-xr-x   5 linda  linda   170 Jun  6 13:34 conf
+drwxr-sr-x  15 linda  linda   510 Jun  6 13:34 db
+-r--r--r--   1 linda  linda     2 Jun  6 13:34 format
+drwxr-xr-x  11 linda  linda   374 Jun  6 13:34 hooks
+drwxr-xr-x   4 linda  linda   136 Jun  6 13:34 locks
+\end{CodeVerbatim}
+
+Now edit the two files 
+\begin{itemize}
+\item \Code{\$TUTORIAL/svnrepos/conf/svnserve.conf} 
+\item \Code{\$TUTORIAL/svnrepos/conf/passwd} 
+\end{itemize}
+to contain the following lines: 
+\begin{CodeVerbatim}
+$> grep -v "^#" svnrepos/conf/svnserve.conf | sed '/^$/d'
+[general]
+anon-access = none
+auth-access = write
+password-db = passwd
+[sasl]
+$> grep -v "^#" svnrepos/conf/passwd | sed '/^$/d'
+[users]
+franklin = ltc
+adams = ltc
+sherman = ltc
+jefferson = ltc
+\end{CodeVerbatim}
+
+Finally, start the SVN server in daemon mode using:
+\begin{CodeVerbatim}
+$> svnserve -d -r svnrepos
+\end{CodeVerbatim}
+
+Now download the file \Code{tutorialsvn.dump} from XXX to, say, directory \Code{\$TUTORIAL} and load the repository into your server:
+\begin{CodeVerbatim}
+$> svnadmin load svnrepos < tutorialsvn.dump
+<<< Started new transaction, based on original revision 1
+     * adding path : tutorial-svn ... done.
+     * adding path : tutorial-svn/independence.tex ... done.
+
+------- Committed revision 1 >>>
+
+<<< Started new transaction, based on original revision 2
+     * editing path : tutorial-svn/independence.tex ... done.
+
+------- Committed revision 2 >>>
+
+<<< Started new transaction, based on original revision 3
+     * editing path : tutorial-svn/independence.tex ... done.
+
+------- Committed revision 3 >>>
+
+<<< Started new transaction, based on original revision 4
+     * editing path : tutorial-svn/independence.tex ... done.
+
+------- Committed revision 4 >>>
+
+<<< Started new transaction, based on original revision 5
+     * editing path : tutorial-svn/independence.tex ... done.
+
+------- Committed revision 5 >>>
+
+<<< Started new transaction, based on original revision 6
+     * editing path : tutorial-svn/independence.tex ... done.
+
+------- Committed revision 6 >>>
+\end{CodeVerbatim}
+
+Now, we will check out from this repository in a new directory, say \Code{independence} using the user credentials for \Code{adams} with the password \Code{ltc}.  The password is shown in bold but will not appear on the screen.
+\begin{CodeVerbatim}[commandchars=\\\{\}]
+$> svn co --username adams svn://localhost/tutorial-svn independence
+
+\textbf{ltc}
+
+\end{CodeVerbatim}
+
+TODO: clean up

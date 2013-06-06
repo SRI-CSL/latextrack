@@ -17,12 +17,13 @@ This is free software, and you are welcome to redistribute it under certain cond
 <current date> | INFO:    Started RPC server on port 7777.
 \end{CodeVerbatim}
 
-Next, we switch to Emacs and open the tutorial file \Code{\$TUTORIAL/independence/independence.tex}.  This should put Emacs into \Code{latex-mode} but any other mode should work as well.  Then, start LTC mode using the command \Code{M-x ltc-mode} in Emacs.  Beware that using LTC with a remote subversion server takes longer than using git or a local subversion server, as we have to query the distant server hosting the repository for each version of the .tex file.  You will see a few messages appearing briefly in the mini buffer (you can also look at them in the \Code{*Messages*} buffer), such as the following.
+Next, we switch to Emacs and open the tutorial file \Code{\$TUTORIAL/independence/independence.tex}.  This should put Emacs into \Code{latex-mode} but any other mode should work as well.  Then, start LTC mode using the command \Code{M-x ltc-mode} in Emacs.  Beware that using LTC with a remote subversion server takes longer than using git or a local subversion server, as we have to query the distant server hosting the repository for each version of the .tex file.  You will see a few messages appearing briefly in the mini buffer (you can also look at them in the \Code{*Messages*} buffer), such as the following.  While the potential time intensive task of downloading versions from the remote server happen, the mini buffer should say \Code{Starting LTC update...}, which turns into \Code{LTC updates received} when the process is done.
 \begin{FileVerbatim}
 Starting LTC mode for file "$TUTORIAL/independence/independence.tex"...
 Using `xml-rpc' package version: 1.6.8.2
 LTC session ID = 1
 Starting LTC update...
+LTC updates received
 \end{FileVerbatim}
 Emacs should now look similar to the screen shot in Figure~\ref{fig:svn-emacs-open}.
 \begin{figure}[t]
@@ -32,7 +33,7 @@ Emacs should now look similar to the screen shot in Figure~\ref{fig:svn-emacs-op
 \end{figure}
 In this figure, we see the changes marked up in various colors and fonts: underlined for additions and inverse for deletions.  There is also a smaller buffer called ``LTC info (session $N$)'' with $N$ as the session ID, at the bottom (or the right, if your Emacs is in landscape mode) of the buffer with the tutorial file.  There, we display the history of the current file under svn.  We can also see what svn perceives as the current user at the top of the graph -- here the name of the local user.
 
-First, we will override what LTC thinks is the current author in order to make the following tutorial more meaningful.  In real life situations you will rarely have to use this command as you typically want the changes in the repository attributed to yourself.  In Emacs, type the command \Code{M-x ltc-set-self<RET>adams<RET>} to impersonate John Adams.  This  updates the info buffer at the bottom automatically so it will look like the screen shot in Figure~\ref{fig:svn-adams}.
+First, we will override what LTC thinks is the current author in order to make the following tutorial more meaningful.  In real life situations you will rarely have to use this command as you typically want the changes in the repository attributed to yourself.  In Emacs, type the command \Code{M-x ltc-set-self<RET>adams<RET>} to impersonate John Adams.  This updates the contents in the main buffer and info buffer at the bottom automatically, which may again take a little time with a remote subversion server.  The info buffer will then look like the screen shot in Figure~\ref{fig:svn-adams}.
 \begin{figure}[t]
 \centering
 \mygraphics{scale=.5}{figures/svn-adams}
@@ -76,3 +77,62 @@ Now draw your attention back to LTC info buffer with the history of the current 
 Refer back to Figure~\ref{fig:svn-adams} for the screen shot of the example file history. Versions that are included in the tracked changes are not printed in gray.  How far we go back in history depends on some filtering settings, which are discussed further in Section~\ref{sec:svn-emacs-limit-history} below.  By default, we first include all version of the current author at the top.  In our example with impersonating John Adams with the user name ``adams,'' there are currently no further recent commits of him.  Then, we continue down the path and collect all versions of different authors until we find the next version of John Adams in the commit with the message ``second version.''
 
 \subsection{Limiting History} \label{sec:svn-emacs-limit-history}
+
+We allow the user to filter and customize how the potentially rich history of a .tex file is selected, so as to provide a better view of the tracked changes.  The user can show and hide changes as seen above, limit the authors of interest, and specify a date or revision number to tell LTC how far back in time the history should be considered.
+
+\begin{figure}
+\centering
+\mygraphics{scale=.5}{figures/svn-emacs-limit-authors}
+\caption[Effect on commit graph of limiting authors]{Effect on commit graph of limiting authors to ``sherman'' and ``jefferson''} \label{fig:svn-emacs-limit-authors}
+\end{figure}
+To limit the history by \textbf{authors}, choose menu item \Menu{Limit by;Set of authors...}{LTC}. This will prompt the user to enter author names to limit by in the mini buffer.  Again, automatic completion works, so you can enter \Code{sh<TAB> <RET>} and \Code{je<TAB> <RET> <RET>} to select authors ``sherman'' and ``jefferson'' and exit the dialog.  After the last author was selected, the system automatically updates the displayed changes.
+
+Notice how any version by the ignored authors ``franklin'' and ``adams'' is now gray as only commits from the selected authors are considered.  The first line in the LTC info buffer still shows the currently active author ``adams,'' so this line is not gray.  Again, the history is only taken until the next revision of the current author but since he is being ignored, we go all the way back to the first revision. Compare your Emacs now with the screen shot in Figure~\ref{fig:svn-emacs-limit-authors} and see how the file history has changed.
+
+To reset limiting by authors, simply choose the same menu \Menu{Limit by;Set of authors...}{LTC} again and enter an empty author as the first one.  Now the display is back in the original state.
+
+Next, we apply limits on \textbf{revision} and \textbf{date} to control how far back the history of the file is considered.  As we had seen, the first version is not taken into account because it was committed before the next commit by the current author John Adams.  Let us now choose menu item \Menu{Limit by;Start at revision...}{LTC}.  This will prompt the user to specify a known revision number.  Type the first few characters \Code{d6d<RET>} of the SHA-1 key of the first commit.  If unique, it is not necessary to expand the revision number using the TAB key (or whatever key is used for completion in your Emacs configuration).  See how the first version is listed in color and considered in the tracked changes above as seen in Figure~\ref{fig:svn-emacs-limit-rev}.  Since changes by the current author John Adams from the first to the second version are now included, notice the text marked up in red appearing in the editor window. We see that John Adams must have added himself as an author in the LaTeX preamble among other edits in the second commit of the file. 
+
+\begin{figure}
+\centering
+%\mygraphics{scale=.5}{figures/svn-emacs-limit-rev}
+\caption{Effect on commit graph of going back to first revision} \label{fig:svn-emacs-limit-rev}
+\end{figure}
+
+Another way of limiting by revision number is to simply left-click the number in the display.  
+
+To remove the limit by revision number, simply choose the same menu \Menu{Limit by;Start at revision...}{LTC} again and enter an empty revision. Or, click into the empty revision column of the first line (denoting the currently active author) to achieve the same effect.  Now the display is back in the original state.
+
+\begin{figure}
+\centering
+\mygraphics{scale=.5}{figures/svn-emacs-limit-date}
+\caption{Effect on commit graph of limiting history to date of third version} \label{fig:svn-emacs-limit-date}
+\end{figure}
+
+Limiting the history by date works similarly.  Select menu item \Menu{Limit by;Start at date...}{LTC}. At the prompt, you can enter a date from the history of the file using auto-completion.  For example, enter \Code{2<TAB>2:59:0<TAB> <RET>} to get the exact date of the third revision.  Or, type a date such as \Code{Nov 13, 2012 12:59p} (should yield the same results if you are in the Central Time Zone) into the field.  We employ some software to process times and dates in natural language, and if successful, the field will contain the date string as it was understood translated into the format used in the commit tree. You may also perform a left-click on the date in the history to achieve the same effect.  See Figure~\ref{fig:svn-emacs-limit-date} for a screen shot of the effect of limiting to the date of the third revision. 
+
+To remove the limit by date, either left-click on the empty date column of the first line of the file history or enter an empty date after selecting menu item \Menu{Limit by;Start at date...}{LTC} again.
+
+\subsection{Condensing History}
+
+\begin{figure}
+\centering
+\mygraphics{scale=.5}{figures/svn-emacs-condense-on}
+\caption[Effect of condensing authors]{Effect of condensing authors: ignoring the fifth version by Roger Sherman} \label{fig:svn-emacs-condense-on}  
+\end{figure}
+Sometimes the list of commits considered is getting long and the resulting markup of the changes confusing.  One additional way to customize how the changes are displayed is a setting to ``condense authors.''  Now check the menu \Menu{Condense authors}{LTC}.  Then, only the latest version of an author of \textit{consecutive} commits is considered -- in our example, only the sixth version is colored while the fifth version by Roger Sherman is now grayed out as seen in Figure~\ref{fig:svn-emacs-condense-on}.
+
+\begin{figure}
+\centering
+%\subfloat{
+%  \label{subfig:svn-emacs-condense-before} 
+%  \mygraphics{scale=.5}{figures/svn-emacs-condense-before}}
+%\hspace{1em}
+%\subfloat{
+%  \label{subfig:svn-emacs-condense-after} 
+%  \mygraphics{scale=.5}{figures/svn-emacs-condense-after}}
+\caption[Example of markup change when condensing authors]{Example of markup change before (left) and after (right) condensing authors} \label{fig:svn-emacs-condense-before-after}
+\end{figure}
+See Figure~\ref{fig:svn-emacs-condense-before-after} for an example of how condensing authors affects the markup.  Since we are only considering the changes that Roger Sherman made in the sixth version, his correction of the name is no longer shown.  Condensing authors makes sense when users commit versions often so that they do not loose too much history.  Their last version after a number of commits generally has the flavor of a ``final'' version, ready to be shared with others.  Hence, the changes made there compared to the last version of another author is commonly of most interest.
+
+\subsection{Editing, Saving, and Committing}
