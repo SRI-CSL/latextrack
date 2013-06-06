@@ -80,9 +80,10 @@ public final class SelfComboBoxEditor implements ComboBoxEditor, ListDataListene
             @Override
             public void focusGained(FocusEvent focusEvent) {
                 System.out.println("delegate FOCUS GAINED ");
+                delegate.setCaretPosition(0); // start at beginning
+                delegate.setText(""); // to make the prior statement work
                 delegate.setForeground(Color.gray); // display temporary text in gray
                 delegate.setText(TEXT_HINT);
-                delegate.setCaretPosition(0); // TODO: start at beginning
                 Document document = delegate.getDocument();
                 if (document instanceof AbstractDocument)
                     ((AbstractDocument) document).setDocumentFilter(new FocusGainedFilter());
