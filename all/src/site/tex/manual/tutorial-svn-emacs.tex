@@ -1,7 +1,7 @@
 % !TEX root = manual.tex
 \section{Tutorial with Subversion and Emacs} \label{sec:tutorial-svn-emacs}
 
-In this section, we assume that the example svn repository has been created according to the instructions in Section~\ref{sec:example-svn} above.  And we assume that LTC has been installed using the Emacs directory, as well as Emacs configuration adjustments made that are mentioned in Section~\ref{sec:config-emacs}.
+In this section, we assume that the example svn repository has been created according to the instructions in Section~\ref{sec:example-svn} above.  The latter subsections require a local svn repository but the beginning can be done with either the remote example repository or a local one.  And we assume that LTC has been installed using the Emacs directory, as well as Emacs configuration adjustments made that are mentioned in Section~\ref{sec:config-emacs}.
 
 \subsection{Starting LTC Server and \texttt{ltc-mode}}
 
@@ -72,7 +72,7 @@ Figures~\ref{fig:svn-emacs-filter-small} show that ``\textbackslash maketitle'' 
 
 \subsection{Understanding the Commit Graph}
 
-Now draw your attention back to LTC info buffer with the history of the current file under git (located at the bottom or right of your .tex file).  The Emacs representation is using small box characters to draw the graph and its edges.  In our current tutorial repository, there are no branches and the graph is a sequential line.  
+Now draw your attention back to LTC info buffer with the history of the current file under svn (located at the bottom or right of your .tex file).  The Emacs representation is using small box characters to draw the graph and its edges.  In our current tutorial repository, there are no branches and the graph is a sequential line.  
 
 Refer back to Figure~\ref{fig:svn-adams} for the screen shot of the example file history. Versions that are included in the tracked changes are not printed in gray.  How far we go back in history depends on some filtering settings, which are discussed further in Section~\ref{sec:svn-emacs-limit-history} below.  By default, we first include all version of the current author at the top.  In our example with impersonating John Adams with the user name ``adams,'' there are currently no further recent commits of him.  Then, we continue down the path and collect all versions of different authors until we find the next version of John Adams in the commit with the message ``second version.''
 
