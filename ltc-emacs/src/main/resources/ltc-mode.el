@@ -478,9 +478,10 @@
   (interactive
    (if ltc-mode
        (let ((revs (mapcar (apply-partially 'shorten 7) (mapcar 'car (cdr commit-graph)))))
-	 (list (completing-read (concat "Limit by revision (eg. \""
-					(substring (car revs) 0 2)
-					"\" and TAB completion; empty to reset): ")
+	 (list (completing-read (concat "Limit by revision ("
+					(if (> (length (car revs)) 1)
+					    (concat "eg. \"" (substring (car revs) 0 2)	"\" and TAB completion; "))
+					"empty to reset): ")
 				(cons "" revs)
 				nil nil)))
      '(nil))) ; sets rev = nil

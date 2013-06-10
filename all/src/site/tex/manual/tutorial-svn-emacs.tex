@@ -91,15 +91,15 @@ Notice how any version by the ignored authors ``franklin'' and ``adams'' is now 
 
 To reset limiting by authors, simply choose the same menu \Menu{Limit by;Set of authors...}{LTC} again and enter an empty author as the first one.  Now the display is back in the original state.
 
-Next, we apply limits on \textbf{revision} and \textbf{date} to control how far back the history of the file is considered.  As we had seen, the first version is not taken into account because it was committed before the next commit by the current author John Adams.  Let us now choose menu item \Menu{Limit by;Start at revision...}{LTC}.  This will prompt the user to specify a known revision number.  Type the first few characters \Code{d6d<RET>} of the SHA-1 key of the first commit.  If unique, it is not necessary to expand the revision number using the TAB key (or whatever key is used for completion in your Emacs configuration).  See how the first version is listed in color and considered in the tracked changes above as seen in Figure~\ref{fig:svn-emacs-limit-rev}.  Since changes by the current author John Adams from the first to the second version are now included, notice the text marked up in red appearing in the editor window. We see that John Adams must have added himself as an author in the LaTeX preamble among other edits in the second commit of the file. 
+Next, we apply limits on \textbf{revision} and \textbf{date} to control how far back the history of the file is considered.  As we had seen, the first version is not taken into account because it was committed before the next commit by the current author John Adams.  Let us now choose menu item \Menu{Limit by;Start at revision...}{LTC}.  This will prompt the user to specify a known revision number.  Type \Code{1} as the revision number of the first commit and hit ENTER.  See how the first version is now listed in color and considered in the tracked changes above as seen in Figure~\ref{fig:svn-emacs-limit-rev}.  Since changes by the current author John Adams from the first to the second version are now included, notice the text marked up in red appearing in the editor window. We see that John Adams must have added himself as an author in the LaTeX preamble among other edits in the second commit of the file. 
 
 \begin{figure}
 \centering
-%\mygraphics{scale=.5}{figures/svn-emacs-limit-rev}
+\mygraphics{scale=.5}{figures/svn-emacs-limit-rev}
 \caption{Effect on commit graph of going back to first revision} \label{fig:svn-emacs-limit-rev}
 \end{figure}
 
-Another way of limiting by revision number is to simply left-click the number in the display.  
+Another way of limiting by revision number is to simply left-click the number in the display of the commit graph.  
 
 To remove the limit by revision number, simply choose the same menu \Menu{Limit by;Start at revision...}{LTC} again and enter an empty revision. Or, click into the empty revision column of the first line (denoting the currently active author) to achieve the same effect.  Now the display is back in the original state.
 
