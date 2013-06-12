@@ -79,7 +79,6 @@ public final class SelfComboBoxEditor implements ComboBoxEditor, ListDataListene
         delegate.addFocusListener(new FocusListener() {
             @Override
             public void focusGained(FocusEvent focusEvent) {
-                System.out.println("delegate FOCUS GAINED ");
                 delegate.setCaretPosition(0); // start at beginning
                 delegate.setText(""); // to make the prior statement work
                 delegate.setForeground(Color.gray); // display temporary text in gray
@@ -91,7 +90,6 @@ public final class SelfComboBoxEditor implements ComboBoxEditor, ListDataListene
 
             @Override
             public void focusLost(FocusEvent focusEvent) {
-                System.out.println("delegate FOCUS LOST ");
                 Document document = delegate.getDocument();
                 if (document instanceof AbstractDocument)
                     ((AbstractDocument) document).setDocumentFilter(null);
