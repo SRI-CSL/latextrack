@@ -1,0 +1,41 @@
+% !TEX root = manual.tex
+\section{General Usage} \label{sec:general-use}
+\newcommand{\generalscale}{0.9}  % scale for figures in the general section
+
+In this section we describe abstractly how one would use LTC as a pattern of a work cycle. See the tutorials for more concrete examples.  Also, the Sections~\ref{sec:emacs} and \ref{sec:java} below contain more details on the specific user interface of interest, namely Emacs and the LTC Editor, respectively.
+
+Typically, more than one author collaborate on a writing project that is kept under version control but it might be a good practice to put all your work under version control.  Especially git is a well suited version control system to run locally on your computer and keeping track of your own changes if you are just interested in how a .tex file evolves over time.
+
+We are assuming that the .tex file or files of interest are kept under version control so as to obtain a history of significant changes that have been made in the past.  Significant changes are usually made through a ``commit'' action to the version control system.  This is in contrast to merely saving edits to the file on the local file system.  Such an operation can be done many more times just to preserve your current work in case of a problem with the editor or computer.
+
+\begin{figure}[t]
+\centering
+  \subfloat{
+    \mygraphics{width=0.48\linewidth}{figures/work-cycle}}
+  \hfill %space{1em}
+  \subfloat{
+    \mygraphics{width=0.48\linewidth}{figures/work-cycle-with-LTC}}
+\caption{A typical work cycle for a version controlled file and when using LaTeX Track Changes} \label{fig:work-cycle}
+\label{fig:editor-condense-before-after}
+\end{figure}
+
+See Figure~\ref{fig:work-cycle} on the left hand side for a diagram that shows a typical work cycle for a version controlled file from the perspective of one author.  Often a user starts working by downloading changes that others have done---this step may be omitted if only one author is working with the revision control system, thus the action is drawn with dashed lines.  Then, an author may edit and save the file.  Finally, when significant changes have been made, it is often time to commit those and possibly upload them to a server where other authors can update from.
+
+Now look at the right hand side of Figure~\ref{fig:work-cycle}; here we added a state for tracking changes.  The user typically switches from editing and saving into tracking changes.  In this mode, one can still edit and save the file.  And also perform version control commands such as downloading and uploading changes.  While in track changes mode, the .tex file of interest is marked up with information about changes in past versions of the file, so the text looks busier and can be longer when displaying deletions.  Thus, most authors will want to switch in and out of tracking changes in order to work at times with only the latest version of the file to avoid being overwhelmed by the information shown.
+
+\subsection{Filtering What is Shown}
+
+show/hide
+
+heuristic of ``small'' changes
+
+\subsection{History of a File}
+
+git -- directed, acyclic graph with branches
+svn -- often sequential history, so only a straight line
+
+LTC currently chooses one path from the first to the latest version of the file, traversing branches in the order of the most recent commit of the last commits before merge.  In the future: user can select
+
+condensing authors
+
+
