@@ -28,11 +28,14 @@
     </properties>
     <body>
         <release version="1.0" date="2013-June">
+            <action dev="lilalinda" type="fix" issue="38">
+                Fixed problem with limiting by revision under svn in Emacs.
+            </action>
             <action dev="lilalinda" type="fix" issue="33">
                 Allowing git files with merge conflicts to be included in history.
             </action>
             <action dev="lilalinda" type="fix" issue="34">
-                Removing commit, pull and push from LTC Editor and ltc-mode and making the API leaner by removing
+                Removing commit, pull and push from LTC Editor and Emacs ltc-mode and making the API leaner by removing
                 calls that interact with version control system.  Instead, users should use the regular tools for
                 their VCS such as the command line.  Adjusted tutorial sections in manual accordingly.
             </action>
