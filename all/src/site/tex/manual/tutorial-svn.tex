@@ -165,5 +165,110 @@ Sometimes the list of commits considered is getting long and the resulting marku
 
 See Figure~\ref{fig:svn-editor-condense-before-after} for an example of how condensing authors affects the markup.  Since we are only considering the changes that Roger Sherman made in the sixth version, his correction of the name is no longer shown.  Condensing authors makes sense when users commit versions often so that they do not loose too much history.  Their last version after a number of commits generally has the flavor of a ``final'' version, ready to be shared with others.  Hence, the changes made there compared to the last version of another author is commonly of most interest.
 
-\subsection{Editing, Saving, and Committing}
+\subsection{Editing and Saving} %\label{sec:svn-editor-editing}
 
+Let us start the next step by resetting all filters to the default configuration, i.e., no limit by authors, date, and revision.  Then, we will edit the text in the editor panel to see the latest changes.
+
+Click into the text panel and enter some text, for example a LaTeX comment reminding John Adams to work on a list of charges against King George III in line nineteen:
+\begin{FileVerbatim}
+% list charges against King George III here
+\end{FileVerbatim}
+The added text will be rendered in red (or the color code for the current author) and underlined.  Notice how the commit graph adds a first line with the label ``modified'' and the ``Save'' button becomes enabled.  Now delete some of the characters you have just entered, for example the word \Code{here} at the end.  The characters simply disappear as they were added by the same author.
+
+Now delete other characters that are either rendered black or a different color than red but not marked as deletions (strike-through font).  Notice how these characters remain visible but are now colored red and marked up with strike-through.  If you tried to delete anything that is already marked as deletion (i.e., anything in strike-through font), nothing will happen as this text is already deleted in a prior version.  See Figure~\ref{fig:svn-editor-modified} for a screen shot of the above edits: text in red and underlined was added and text in red and strike-through was deleted.
+
+\begin{figure}[t]
+\centering
+\mygraphics{scale=.35}{figures/svn-editor-modified}
+\caption{After editing the text as ``adams''} \label{fig:svn-editor-modified}
+\end{figure}
+
+Finally, you will want to click ``Save'' to save the current file to disk.  This will cause the label ``modified'' to change to ``on disk.''  If you would then again edit, the label would switch back to ``modified'' of course.
+
+\subsection{Collaborating Through Commits}
+
+In Subversion, your repository is a central entity that all collaborators commit to.  Therefore, unlike distributed version control systems such as git, the collaboration happens when users commit their version.  It is a good practice to update your working copy regularly to avoid conflicts during committing.  Furthermore, users should communicate with each other to decide who is editing what file at a time.
+
+The following assumes that you are working with a local svn repository per the setup in Sections~\ref{sec:example-svn-local} and {sec:svn-collaborating} above.  Next, we will simulate that Roger Sherman commits his modified version before John Adams can upload his version, resulting in a merge conflict.  To prepare this scenario, first commit the modifications from Roger Sherman's working copy:
+\begin{CodeVerbatim}[commandchars=\\\{\}]
+$> cd $TUTORIAL/independence-sherman/
+$> svn status
+M       independence.tex
+$> svn commit -m "todo item for indictment" --username sherman 
+Sending        independence.tex
+Transmitting file data .
+Committed revision 7.
+\end{CodeVerbatim}
+
+Now the shared repository is already at revision 7 while we (as John Adams) are still editing from revision six.  First, check again that you have saved the file in LTC Editor using the ``Save'' button and that the first entry in the commit graph says ``on disk.'' When we try to commit our latest changes from the Section~\ref{sec:svn-editing} above, using the command line, we get the following error message.  
+\begin{CodeVerbatim}[commandchars=\\\{\}]
+$> cd $TUTORIAL/independence/
+$> svn status
+M       independence.tex
+$> svn commit -m "added comment about list of charges" --username adams
+Sending        independence.tex
+Transmitting file data .svn: Commit failed (details follow):
+svn: File '/tutorial-svn/independence.tex' is out of date
+\end{CodeVerbatim}
+
+Then, we try to update our repository first to mend the situation, which results in another error message about the conflicting versions.  If Roger Sherman and John Adams had been modifying different .tex files in the same repository, we would have not gotten this conflict.  To resolve, we choose to postpone so that we can see the differences in Emacs and resolve it there.  Our input is marked in bold below.
+\begin{CodeVerbatim}[commandchars=\\\{\}]
+$> svn update
+Conflict discovered in 'independence.tex'.
+Select: (p) postpone, (df) diff-full, (e) edit,
+        (mc) mine-conflict, (tc) theirs-conflict,
+        (s) show all options: \textbf{p}
+C    independence.tex
+Updated to revision 7.
+Summary of conflicts:
+  Text conflicts: 1
+\end{CodeVerbatim}
+
+\begin{figure}
+\centering
+\mygraphics{scale=.35}{figures/svn-editor-merge-conflict}
+\caption{Subversion conflict markers in merged file} \label{fig:svn-editor-merge-conflict}
+\end{figure}
+Our current file is now marked as in conflict, so let us click the ``Update'' button in LTC Editor to see something similar to the screen shot in Figure~\ref{fig:svn-editor-merge-conflict}.  The conflicting portion at the end is marked with additional lines and we see revision 7 in the history of the file.  On the command line, the file looks similar to this:
+\begin{CodeVerbatim}
+$> cat independence.tex 
+[...]
+
+<<<<<<< .mine
+% list charges against King George III
+
+=======
+That to secure these rights, Governments are instituted among Men, [...]
+%TODO: indictment here
+
+>>>>>>> .r7
+\end{CodeVerbatim}
+
+We decide that the comments in the version \Code{.mine} version means the same as the last comment in version \Code{.r7} so we modify the text in LTC Editor and save, so that it looks like this on the command line:
+\begin{CodeVerbatim}
+$> cat independence.tex 
+[...]
+
+That to secure these rights, Governments are instituted among Men, [...]
+
+% list charges against King George III
+\end{CodeVerbatim}
+It is important to remove the svn marker lines starting with \Code{<<<<<<<}, \Code{=======}, and \Code{>>>>>>>} for svn to recognize that we have resolved the conflicts. We also have to tell svn that the conflict has been resolved.  Then we can finally  perform the following commit command.  The two important commands are printed in bold below.  
+You may want to check the status of svn before and after the commit:
+\begin{CodeVerbatim}[commandchars=\\\{\}]
+$> \textbf{svn resolved independence.tex}
+Resolved conflicted state of 'independence.tex'
+$> svn status
+M       independence.tex
+$> \textbf{svn commit -m "added comment about list of charges" --username adams}
+Sending        independence.tex
+Transmitting file data .
+Committed revision 8.
+$> svn status
+\end{CodeVerbatim}
+\begin{figure}
+\centering
+\mygraphics{scale=.35}{figures/svn-editor-merge-resolve}
+\caption{After resolving conflict and updating in LTC Editor} \label{fig:svn-editor-merge-resolve}
+\end{figure}
+Once we click the ``Update'' button in LTC Editor, we see the latest revision 8 in the commit graph and the marked up latest edits attributed to John Adams and Roger Sherman similar to Figure~\ref{fig:svn-editor-merge-resolve}.
