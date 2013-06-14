@@ -7,7 +7,8 @@
 \usepackage{tikz} % for portable graphics
 %\usepackage{amsmath} % align and other math constructs
 \usepackage{amssymb} % math symbols
-\usepackage{booktabs,colortbl,tabularx} % tables in publication quality with color etc.
+\usepackage{hhline} % for double \cline's in tables
+%\usepackage{booktabs,colortbl,tabularx} % tables in publication quality with color etc.
 \usepackage{fancyvrb,courier} % for more elaborate verbatim envs 
                               % (and bold-face fonts)
 \usepackage[parfill]{parskip} % paragraphs begin with empty line rather than indent
@@ -22,8 +23,12 @@
 \usepackage{ifpdf} % to detect whether pdflatex or htlatex is runnning
 \usepackage{caption}[2013/02/03]
 \usepackage{fancyhdr}
+\usepackage{ulem} % for strike-out font
+\usepackage{pbox} % for line breaks in table cells
 \usepackage{subfig}
 \usepackage{xparse} % for \Menu command definition
+\usepackage{hanging} % for hanging paragraphs
+\usepackage{wrapfig}
 
 %% pgf/tikz customization
 \usepgflibrary{shapes.arrows}
@@ -185,6 +190,8 @@ See Appendix~\ref{ch:license} or \url{http://www.gnu.org/licenses/} for the comp
 \input{usage}
 
 \input{api}
+
+\input{utils}
 
 \appendix
 \chapter{License} \label{ch:license}
