@@ -97,7 +97,7 @@ public final class LTCEditor extends LTCGui {
             try {
                 // if empty path, close session (if any) and clear fields
                 if ("".equals(path)) {
-                    close();
+                    close(); // TODO: what if "False" returned?
                     return;
                 }
                 // non-empty path: now look at current status of session
@@ -113,7 +113,8 @@ public final class LTCEditor extends LTCGui {
                         clear();
                         session.startInitAndUpdate(file);
                     } else {
-                        session.startUpdate(dateField.getText(), revField.getText(), false, textPane.getText(), textPane.stopFiltering(), textPane.getCaretPosition());
+                        session.startUpdate(dateField.getText(), revField.getText(), saveButton.isEnabled(),
+                                textPane.getText(), textPane.stopFiltering(), textPane.getCaretPosition());
                     }
                 } else {
                     clear();

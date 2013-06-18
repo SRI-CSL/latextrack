@@ -120,7 +120,7 @@ public abstract class FileHistory {
         // do any specific graph transformations before flattening
         transformGraph();
 
-        // serialize commit graph by selecting the path with newest commits for merges
+        // serialize commit graph by selecting the path with oldest commits for merges
         commitList = commitGraph.getPath(new Comparator<Commit>() {
             public int compare(Commit o1, Commit o2) {
                 return o1.getDate().compareTo(o2.getDate());

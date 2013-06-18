@@ -68,33 +68,7 @@ public final class LimitedHistory extends FileHistory {
 
     @Override
     void transformGraph() {
-        // TODO: implement - maybe? (wasn't implemented pre git change)
-//        // reduce commit graph to authors
-//        commitGraph.reduceByAuthors(limitingAuthors);
-//
-//        // collapse sequences of same author
-//        if (commitGraph.vertexSet().size() > 0) {
-//            Author currentAuthor = Author.parse(gitCommits.get(0).getAuthor());
-//            for (ListIterator<GitLogResponse.Commit> i = gitCommits.listIterator(1); i.hasNext(); ) {
-//                Author a = Author.parse(i.next().getAuthor());
-//                if (a.equals(currentAuthor))
-//                    i.remove();
-//                else
-//                    currentAuthor = a;
-//            }
-//        }
-//
-//        // if no limiting date nor rev then reduce list until last commit of calling author (by name only)
-//        if ((limitingDate == null || "".equals(limitingDate)) &&
-//                (limitingRev == null || "".equals(limitingRev))) {
-//            int i = 0; // start with most current
-//            // ignore most recent commit(s) of self:
-//            for (; i < gitCommits.size() && self.name.equals(Author.parse(gitCommits.get(i).getAuthor()).name); i++);
-//            // keep all commits from other authors
-//            for (; i < gitCommits.size() && !self.name.equals(Author.parse(gitCommits.get(i).getAuthor()).name); i++);
-//            if (i < gitCommits.size())
-//                gitCommits.subList(i+1, gitCommits.size()).clear(); // remove all remaining commits
-//        }
+        // nothing to be done here
     }
 
     @Override

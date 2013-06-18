@@ -246,13 +246,12 @@ public final class LTCserverImpl implements LTCserverInterface {
         List<Author> authors = null;
         List<String> revisions = new ArrayList<String>();
         try {
-            // TODO: whether to condense authors or not (from Filtering)
             // create history with limits and obtain revision IDs, authors, and readers:
             LimitedHistory history = new LimitedHistory(session.getTrackedFile(),
                     session.getLimitedAuthors(),
                     session.getLimitDate(),
                     session.getLimitRev(),
-                    filter.getStatus(BoolPrefs.COLLAPSE_AUTHORS));
+                    filter.getStatus(BoolPrefs.COLLAPSE_AUTHORS)); // whether to condense authors or not
             updateProgress(12);
             revisions = history.getIDs(); // these are the IDs used in the accumulation
             authors = history.getAuthorsList();
@@ -269,6 +268,7 @@ public final class LTCserverImpl implements LTCserverInterface {
                 case Conflicting: // TODO: once we implement merge assistance, maybe this gets handled differently
                     ReaderWrapper fileReader = new FileReaderWrapper(session.getTrackedFile().getFile().getCanonicalPath());
                     if (authors.size() > 0 && authors.get(authors.size()-1).equals(self))
+                        // TODO: only if collapse authors is TRUE?
                         // replace last reader
                         readers.remove(readers.size()-1);
                     else
@@ -281,7 +281,7 @@ public final class LTCserverImpl implements LTCserverInterface {
             if (isModified) {
                 ReaderWrapper currentTextReader = new StringReaderWrapper(currentText);
                 if (authors.size() > 0 && authors.get(authors.size()-1).equals(self))
-                    // replace last reader
+                    // replace last reader TODO: only if ON_DISK? hmmm.
                     readers.remove(readers.size()-1);
                 else
                     // add self as author
