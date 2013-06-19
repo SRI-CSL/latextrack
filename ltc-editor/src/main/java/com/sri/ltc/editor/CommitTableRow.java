@@ -46,7 +46,7 @@ public final class CommitTableRow {
     }; // reference values to determine initial column widths
 
     CommitGraphRow graph = new CommitGraphRow(this);
-    final String ID;
+    final String ID; // should be non-null
     final Date date;
     final Author author;
     final String message;
@@ -67,10 +67,10 @@ public final class CommitTableRow {
         this.author = new Author(array[2].toString(), array[3].toString());
     }
 
-    public CommitTableRow(String ID) {
-        this.ID = ID;
+    public CommitTableRow(String ID, Author author) {
+        this.ID = ID==null?"":ID;
         this.date = null;
-        this.author = null;
+        this.author = author;
         this.message = "";
     }
 
@@ -122,13 +122,13 @@ public final class CommitTableRow {
 
         CommitTableRow that = (CommitTableRow) o;
 
-        if (ID != null ? !ID.equals(that.ID) : that.ID != null) return false;
+        if (!ID.equals(that.ID)) return false;
 
         return true;
     }
 
     @Override
     public int hashCode() {
-        return ID != null ? ID.hashCode() : 0;
+        return ID.hashCode();
     }
 }

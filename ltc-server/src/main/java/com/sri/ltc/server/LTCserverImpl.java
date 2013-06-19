@@ -411,7 +411,7 @@ public final class LTCserverImpl implements LTCserverInterface {
         Session session = getSession(sessionID);
         try {
             Author a = new Author(name, email);
-            session.getTrackedFile().getRepository().setSelf(a);  // TODO: if not implemented by repository (e.g., svn) then don't add to authors?
+            session.getTrackedFile().getRepository().setSelf(a);
             session.addAuthors(Collections.singleton(a));
         } catch (IllegalArgumentException e) {
             // thrown by constructor of Author

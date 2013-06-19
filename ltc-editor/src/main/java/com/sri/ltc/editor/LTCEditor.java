@@ -111,14 +111,14 @@ public final class LTCEditor extends LTCGui {
                             return;
                         }
                         clear();
-                        session.startInitAndUpdate(file);
+                        session.startInit(file);
                     } else {
                         session.startUpdate(dateField.getText(), revField.getText(), saveButton.isEnabled(),
                                 textPane.getText(), textPane.stopFiltering(), textPane.getCaretPosition());
                     }
                 } else {
                     clear();
-                    session.startInitAndUpdate(file);
+                    session.startInit(file);
                 }
                 // update file chooser and preference for next time:
                 fileChooser.setCurrentDirectory(file.getParentFile());
@@ -168,7 +168,7 @@ public final class LTCEditor extends LTCGui {
             session.save(textPane.getText(), textPane.stopFiltering());
             textPane.getDocumentFilter().resetChanges(); // allow document listener to fire changes again
             // update commit list:
-            commitModel.addOnDisk();
+            commitModel.setFirstID(LTCserverInterface.ON_DISK);
             textPane.startFiltering();
             saveButton.setEnabled(false); // set modified = false
         }
@@ -197,10 +197,10 @@ public final class LTCEditor extends LTCGui {
         clear(); // this will also try to stop filtering
     }
 
-    protected void finishInit(List<Object[]> authors, List<Object[]> commits, Object[] self) {
+    protected void finishInit(List<Object[]> authors, Object[] self) {
         // other initializations:
         authorModel.init(authors);
-        commitModel.init(commits, true);
+        commitModel.init(self);
         selfModel.init(authors, self);
         saveButton.setEnabled(false); // start with modified = false
         setFile(session.getCanonicalPath(), false);
@@ -223,8 +223,7 @@ public final class LTCEditor extends LTCGui {
             colors.put(entry.getKey(), Color.decode((String) entry.getValue()[2]));
         textPane.updateFromMaps(text, styles, colors, caretPosition, orderedIDs);
         // update list of commits
-        commitModel.init(commits, false);
-        commitModel.update(new HashSet<String>(orderedIDs));
+        commitModel.update(commits, new HashSet<String>(orderedIDs));
         // update date field
         String date = dateField.getText();
         if (!date.isEmpty())
@@ -242,7 +241,8 @@ public final class LTCEditor extends LTCGui {
             getUpdateButton().doClick();
     }
 
-    protected void finishSetSelf() {
+    protected void finishSetSelf(Object[] self) {
+        commitModel.setSelf(self);
         // update authors and everything else:
         session.getAuthors();
     }
@@ -255,7 +255,7 @@ public final class LTCEditor extends LTCGui {
             LOGGER.log(Level.SEVERE, e.getMessage(), e);
         }
         authorModel.clear();
-        commitModel.clear(true);
+        commitModel.clear();
         selfModel.clear();
         dateField.setText("");
         revField.setText("");
@@ -510,7 +510,7 @@ public final class LTCEditor extends LTCGui {
             public void stateChanged(ChangeEvent e) {
                 if (!saveButton.isEnabled()) {
                     saveButton.setEnabled(true);
-                    commitModel.updateFirst(LTCserverInterface.MODIFIED); // update commit list to "on disk" if not already
+                    commitModel.setFirstID(LTCserverInterface.MODIFIED); // update commit list to "modified" if not already
                 }
             }
         });

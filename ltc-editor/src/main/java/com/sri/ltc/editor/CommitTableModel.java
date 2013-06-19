@@ -23,6 +23,7 @@ package com.sri.ltc.editor;
  */
 
 import com.google.common.collect.Sets;
+import com.sri.ltc.filter.Author;
 import com.sri.ltc.server.LTCserverInterface;
 
 import javax.swing.table.AbstractTableModel;
@@ -38,7 +39,8 @@ public final class CommitTableModel extends AbstractTableModel {
 
     private final static Logger LOGGER = Logger.getLogger(CommitTableModel.class.getName());
     private final List<CommitTableRow> commits = new ArrayList<CommitTableRow>();
-    private CommitTableRow firstCell = null;
+    private CommitTableRow firstRow = new CommitTableRow("", null);
+//    private Author self = null;
 
     private static final long serialVersionUID = -923583506868039590L;
 
@@ -60,7 +62,7 @@ public final class CommitTableModel extends AbstractTableModel {
     @Override
     public int getRowCount() {
         synchronized (commits) {
-            return commits.size()+(firstCell==null?0:1);
+            return commits.size()+1;
         }
     }
 
@@ -71,17 +73,40 @@ public final class CommitTableModel extends AbstractTableModel {
 
     private CommitTableRow getRow(int row) {
         synchronized (commits) {
-            if (firstCell == null)
-                return commits.get(row);
             if (row == 0)
-                return firstCell;
+                return firstRow;
             return commits.get(row - 1);
         }
     }
 
-    public void init(List<Object[]> rawCommits, boolean clearFirstCell) {
+    public void init(Object[] self) {
         synchronized (commits) {
-            clear(clearFirstCell);
+            clear();
+            setSelf(self);
+        }
+    }
+
+    public void setSelf(Object[] self) {
+        Author author = null;
+        if (self != null)
+            author = Author.fromList(self);
+        synchronized (commits) {
+            updateFirstRow(
+                    (firstRow.author != null && !firstRow.author.equals(author)) ||
+                            (firstRow.author == null && author != null),
+                    new CommitTableRow(firstRow.ID, author));
+        }
+    }
+
+    private int getLowestNotIn(Set<Integer> set, int start) {
+        int lowest = start;
+        for (; set.contains(lowest); lowest++) {}
+        return lowest;
+    }
+
+    public void update(List<Object[]> rawCommits, Set<String> IDs) {
+        synchronized (commits) {
+            commits.clear(); // clear list but don't touch first row
 
             if (rawCommits == null)
                 return;
@@ -146,79 +171,39 @@ public final class CommitTableModel extends AbstractTableModel {
                 if (!node.graph.outgoingColumns.contains(node.graph.circleColumn))
                     currentColumns.remove(node.graph.circleColumn); // merge
             }
-            fireTableDataChanged();
-        }
-    }
-
-    private int getLowestNotIn(Set<Integer> set, int start) {
-        int lowest = start;
-        for (; set.contains(lowest); lowest++) {}
-        return lowest;
-    }
-
-    public void update(Set<String> IDs) {
-        synchronized (commits) {
-            firstCell = null;
-            if (IDs.contains(LTCserverInterface.ON_DISK)) {
-                initFirstCell(LTCserverInterface.ON_DISK);
-            }
-            if (IDs.contains(LTCserverInterface.MODIFIED)) {
-                initFirstCell(LTCserverInterface.MODIFIED);
-            }
+            // 4) mark active commits from IDs
+            if (IDs.contains(LTCserverInterface.ON_DISK))
+                setFirstID(LTCserverInterface.ON_DISK);
+            if (IDs.contains(LTCserverInterface.MODIFIED))
+                setFirstID(LTCserverInterface.MODIFIED);
             for (CommitTableRow row : commits)
                 row.setActive(IDs.contains(row.ID));
         }
         fireTableDataChanged();
     }
 
-    public void add(Object[] last_commit) {
-        if (last_commit != null)
-            synchronized (commits) {
-                try {
-                    commits.add(0, new CommitTableRow(last_commit));
-                    // TODO: update graph columns etc.
-                    int insertedRow = 0 + (firstCell==null?0:1);
-                    fireTableRowsInserted(insertedRow, insertedRow);
-                } catch (ParseException e) {
-                    LOGGER.log(Level.SEVERE, e.getMessage(), e);
-                }
-            }
-    }
-
-    // return true if something changed
-    private void initFirstCell(String ID) {
-        boolean updated = firstCell != null && !firstCell.ID.equals(ID);
-        if (firstCell == null || updated)
-            firstCell = new CommitTableRow(ID);
-        if (updated)
-            fireTableRowsUpdated(0, 0);
-        else
-            fireTableRowsInserted(0, 0);
-    }
-
-    public void addOnDisk() {
-        initFirstCell(LTCserverInterface.ON_DISK);
-    }
-
-    public void removeOnDisk() {
-        if (firstCell != null && firstCell.ID.equals(LTCserverInterface.ON_DISK)) {
-            firstCell = null;
-            fireTableRowsDeleted(0, 0);
+    public void setFirstID(String ID) {
+        synchronized (commits) {
+            updateFirstRow(
+                    !firstRow.ID.equals(ID),
+                    new CommitTableRow(ID, firstRow.author));
         }
     }
 
-    public void updateFirst(String ID) {
-        initFirstCell(ID);
+    private void updateFirstRow(boolean updated, CommitTableRow first) {
+        if (updated) {
+            firstRow = first;
+            fireTableRowsUpdated(0, 0);
+        }
     }
 
-    public void clear(boolean clearFirstCell) {
+    public void clear() {
         synchronized (commits) {
             int size = getRowCount();
             commits.clear();
-            if (clearFirstCell)
-                firstCell = null;
+            firstRow = new CommitTableRow("", null);
             if (size > 0)
-                fireTableRowsDeleted(firstCell==null?0:1, size-1);
+                fireTableRowsDeleted(1, size-1);
         }
     }
 

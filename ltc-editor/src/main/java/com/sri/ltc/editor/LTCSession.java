@@ -61,7 +61,7 @@ public class LTCSession {
         return ID != -1;
     }
 
-    public void startInitAndUpdate(final File file)
+    public void startInit(final File file)
             throws IOException {
         canonicalPath = file.getCanonicalPath();
 
@@ -69,7 +69,6 @@ public class LTCSession {
         (new LTCWorker<Integer,Void>(editor.getFrame(), ID,
                 "Initializing...", "<html>Initializing track changes of file<br>"+canonicalPath+"</html>", true) {
             List<Object[]> authors = null;
-            java.util.List<Object[]> commits = null;
             Object[] self = null;
             int sessionID = -1;
 
@@ -79,13 +78,10 @@ public class LTCSession {
                 setProgress(1);
                 sessionID = LTC.init_session(file.getAbsolutePath());
                 if (isCancelled()) return -1;
-                setProgress(25);
+                setProgress(35);
                 authors = LTC.get_authors(sessionID);
                 if (isCancelled()) return -1;
-                setProgress(50);
-                commits = LTC.get_commits(sessionID);
-                if (isCancelled()) return -1;
-                setProgress(75);
+                setProgress(70);
                 self = LTC.get_self(sessionID);
                 if (isCancelled()) return -1;
                 setProgress(100);
@@ -96,11 +92,11 @@ public class LTCSession {
             protected void done() {
                 if (isCancelled()) {
                     ID = -1;
-                    editor.finishInit(null, null, null);
+                    editor.finishInit(null, null);
                 } else
                     try {
                         ID = get();
-                        editor.finishInit(authors, commits, self);
+                        editor.finishInit(authors, self);
                     } catch (InterruptedException e) {
                         LOGGER.log(Level.SEVERE, e.getMessage(), e);
                     } catch (ExecutionException e) {
@@ -208,20 +204,27 @@ public class LTCSession {
         if (!isValid()) return;
 
         // create new worker to set self in session
-        (new LTCWorker<Void,Void>(editor.getFrame(), ID,
+        (new LTCWorker<Object[],Void>(editor.getFrame(), ID,
                 "Setting...", "Setting current self", false) {
             @Override
-            protected Void callLTCinBackground() throws XmlRpcException {
+            protected Object[] callLTCinBackground() throws XmlRpcException {
+                Object[] author = null;
                 if (self == null)
-                    LTC.reset_self(ID);
+                    author = LTC.reset_self(ID);
                 else
-                    LTC.set_self(ID, self.name, self.email);
-                return null;
+                    author = LTC.set_self(ID, self.name, self.email);
+                return author;
             }
 
             @Override
             protected void done() {
-                editor.finishSetSelf();
+                try {
+                    editor.finishSetSelf(get());
+                } catch (InterruptedException e) {
+                    LOGGER.log(Level.SEVERE, e.getMessage(), e);
+                } catch (ExecutionException e) {
+                    LOGGER.log(Level.SEVERE, e.getMessage(), e);
+                }
             }
         }).execute();
     }
