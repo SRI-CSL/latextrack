@@ -98,10 +98,20 @@ When LTC parses text, it detects commands as any word following and including a 
 
 \subsection{History of a File}
 
-git -- directed, acyclic graph with branches
-svn -- often sequential history, so only a straight line
+\begin{wrapfigure}{r}[0.3in]{2.2in}\centering%
+ \mygraphics{width=\linewidth}{figures/graph-traverse}
+ \caption{Traversing a history graph of revisions} \label{fig:graph-traverse}
+ \vspace{-\baselineskip}
+\end{wrapfigure}%
+LTC obtains the history of the file of interest from a version control system---currently either git or svn.  All version control systems maintain information about the file's contents at different points in time; normally when the user ``committed'' a revision.  Also, modern version control systems typically provide the option of branching away from the standard path of development.  For writing projects, this could be the case when two authors need to work concurrently on the same text file and decide to make a branch for one author for the time being.  Also, branching (and merging) is common in so-called \textit{distributed} version control systems such as git when different authors synchronize their work.
 
-LTC currently chooses one path from the first to the latest version of the file, traversing branches in the order of the most recent commit of the last commits before merge.  In the future: user can select
+In all cases, there exists a relationship of parent revision to a child revision imposing a graph structure on the revisions made at certain points of time.  When branching, there is more than one child, and, conversely, when merging there is more than one parent.  Thus, a history graph is a directed acyclic graph, which can be inferred from the revisions of a file in the past.  See Figure~\ref{fig:graph-traverse} for an example of such a history graph.  In version control systems, we typically draw the latest version as the top-most node.
+
+LTC needs to transform this graph into a sequence of revisions therefore traversing the graph from the latest version.  We do so by traversing the graph from the latest version to an oldest one in reverse direction.  When a revision is a merge and thus has multiple parents, we currently choose the oldest revision as the next one in the list leaving out any other branches.  However, we plan to make the branch selection the user's choice in future releases as this heuristic does not always apply.
+
+Figure~\ref{fig:graph-traverse} shows that LTC selects the shaded path on the left as revision $r_{i}$ happened at a later time than revision $r_{j}$.  It doesn't matter when the versions just after the branching event were committed as we are traversing the graph in opposite direction to obtain a path.
+
+Once we have a sequence of versions in LTC, we 
 
 condensing authors
 
