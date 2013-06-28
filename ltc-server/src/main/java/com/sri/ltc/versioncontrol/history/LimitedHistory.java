@@ -21,6 +21,7 @@
  */
 package com.sri.ltc.versioncontrol.history;
 
+import com.google.common.collect.Lists;
 import com.sri.ltc.CommonUtils;
 import com.sri.ltc.filter.Author;
 import com.sri.ltc.latexdiff.CommitReaderWrapper;
@@ -108,29 +109,11 @@ public final class LimitedHistory extends FileHistory {
         LOGGER.fine("Transformed list for \""+ trackedFile.getFile().getName()+"\" to "+commitList.size()+" commits");
     }
 
-    public final List<Commit> getCommitsList() {
-        return commitList;
-    }
-
-    public final List<Author> getAuthorsList() throws IOException, ParseException {
-        List<Author> authors = new ArrayList<Author>();
+    public final List<HistoryUnit> getHistoryUnits() {
+        List<HistoryUnit> units = Lists.newArrayList();
         for (Commit commit : commitList)
-            authors.add(commit.getAuthor());
-        return authors;
-    }
+            units.add(new HistoryUnit(commit.getAuthor(), commit.getId(), new CommitReaderWrapper(commit)));
+        return units;
 
-    public final List<ReaderWrapper> getReadersList() throws IOException, ParseException {
-        List<ReaderWrapper> readers = new ArrayList<ReaderWrapper>();
-        for (Commit commit : commitList)
-            // obtain string for readers
-            readers.add(new CommitReaderWrapper(commit));
-        return readers;
-    }
-
-    public final List<String> getIDs() {
-        List<String> ids = new ArrayList<String>();
-        for (Commit commit : commitList)
-            ids.add(commit.getId());
-        return ids;
     }
 }

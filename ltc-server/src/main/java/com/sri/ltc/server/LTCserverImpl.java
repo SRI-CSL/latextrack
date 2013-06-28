@@ -21,10 +21,14 @@
  */
 package com.sri.ltc.server;
 
+import com.google.common.base.Function;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
 import com.sri.ltc.CommonUtils;
 import com.sri.ltc.ProgressReceiver;
 import com.sri.ltc.filter.Author;
 import com.sri.ltc.filter.Filtering;
+import com.sri.ltc.versioncontrol.history.HistoryUnit;
 import com.sri.ltc.versioncontrol.history.LimitedHistory;
 import com.sri.ltc.latexdiff.*;
 import com.sri.ltc.versioncontrol.*;
@@ -32,6 +36,7 @@ import org.apache.xmlrpc.XmlRpcException;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
+import javax.annotation.Nullable;
 import javax.swing.text.BadLocationException;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -241,10 +246,8 @@ public final class LTCserverImpl implements LTCserverInterface {
 
         Filtering filter = Filtering.getInstance();
 
-        // obtain file history from GIT, disk, and session (obeying any filters):
-        List<ReaderWrapper> readers = null;
-        List<Author> authors = null;
-        List<String> revisions = new ArrayList<String>();
+        // obtain file history from version control, disk, and session (obeying any filters):
+        List<HistoryUnit> units = new ArrayList<HistoryUnit>();
         try {
             // create history with limits and obtain revision IDs, authors, and readers:
             LimitedHistory history = new LimitedHistory(session.getTrackedFile(),
@@ -253,10 +256,7 @@ public final class LTCserverImpl implements LTCserverInterface {
                     session.getLimitRev(),
                     filter.getStatus(BoolPrefs.COLLAPSE_AUTHORS)); // whether to condense authors or not
             updateProgress(12);
-            revisions = history.getIDs(); // these are the IDs used in the accumulation
-            authors = history.getAuthorsList();
-            updateProgress(15);
-            readers = history.getReadersList();
+            units = history.getHistoryUnits();
             updateProgress(45);
 
             Author self = session.getTrackedFile().getRepository().getSelf();
@@ -266,40 +266,33 @@ public final class LTCserverImpl implements LTCserverInterface {
                 case Modified:
                 case Changed:
                 case Conflicting: // TODO: once we implement merge assistance, maybe this gets handled differently
-                    ReaderWrapper fileReader = new FileReaderWrapper(session.getTrackedFile().getFile().getCanonicalPath());
-                    if (authors.size() > 0 && authors.get(authors.size()-1).equals(self))
-                        // TODO: only if collapse authors is TRUE?
-                        // replace last reader
-                        readers.remove(readers.size()-1);
-                    else
-                        // add self as author
-                        authors.add(self);
-                    readers.add(fileReader);
-                    revisions.add(LTCserverInterface.ON_DISK);
+                    HistoryUnit last = Iterables.getLast(units, null);
+                    if (last != null && filter.getStatus(BoolPrefs.COLLAPSE_AUTHORS) && last.author.equals(self))
+                        // replace last unit if collapsing authors:
+                        units.remove(units.size()-1);
+                    // add new unit for ON DISK:
+                    units.add(new HistoryUnit(self,
+                            LTCserverInterface.ON_DISK,
+                            new FileReaderWrapper(session.getTrackedFile().getFile().getCanonicalPath())));
             }
             // add current text from editor, if modified since last save:
             if (isModified) {
-                ReaderWrapper currentTextReader = new StringReaderWrapper(currentText);
-                if (authors.size() > 0 && authors.get(authors.size()-1).equals(self))
-                    // replace last reader TODO: only if ON_DISK? hmmm.
-                    readers.remove(readers.size()-1);
-                else
-                    // add self as author
-                    authors.add(self);
-                readers.add(currentTextReader);
-                // replace ON_DISK if present, otherwise append MODIFIED
-                if (revisions.size() > 0
-                        && LTCserverInterface.ON_DISK.equals(revisions.get(revisions.size()-1))) {
-                    revisions.remove(revisions.size()-1);
-                }
-                revisions.add(LTCserverInterface.MODIFIED);
+                // check if ON DISK or collapsing authors && last one equals self:
+                HistoryUnit last = Iterables.getLast(units, null);
+                if (last != null &&
+                        (LTCserverInterface.ON_DISK.equals(last.revision) ||
+                                (filter.getStatus(BoolPrefs.COLLAPSE_AUTHORS) && last.author.equals(self))))
+                    // replace last unit
+                    units.remove(units.size()-1);
+                // add new unit for MODIFIED:
+                units.add(new HistoryUnit(self,
+                        LTCserverInterface.MODIFIED,
+                        new StringReaderWrapper(currentText)));
             }
-            // if no readers, then use text from file and self as author
-            if (readers.size() == 0 && authors.size() == 0) {
-                authors.add(self);
-                readers.add(new FileReaderWrapper(session.getTrackedFile().getFile().getCanonicalPath()));
-                revisions.add("");
-            }
+            // if no history, then use text from file and self as author
+            if (units.isEmpty())
+                units.add(new HistoryUnit(self, "",
+                        new FileReaderWrapper(session.getTrackedFile().getFile().getCanonicalPath())));
             updateProgress(47);
         } catch (IOException e) {
             logAndThrow(5,"IOException during log retrieval: "+e.getMessage());
@@ -309,8 +302,15 @@ public final class LTCserverImpl implements LTCserverInterface {
             logAndThrow(7,"General Exception during log retrieval: "+e.getMessage());
         }
 
-        session.addAuthors(new HashSet<Author>(authors));
-        // compute indices of authors
+        // compute indices of authors:
+        List<Author> authors = Lists.transform(units, new Function<HistoryUnit, Author>() {
+            @Nullable
+            @Override
+            public Author apply(@Nullable HistoryUnit unit) {
+                return unit.author;
+            }
+        });
+        session.addAuthors(new HashSet<Author>());
         Map<Integer,Object[]> mappedAuthors = new HashMap<Integer,Object[]>();
         List<Integer> indices = new ArrayList<Integer>();
         if (authors != null && authors.size() > 0) {
@@ -339,6 +339,13 @@ public final class LTCserverImpl implements LTCserverInterface {
                 };
                 session.getAccumulate().addPropertyChangeListener(listener);
             }
+            List<ReaderWrapper> readers = Lists.transform(units, new Function<HistoryUnit, ReaderWrapper>() {
+                @Nullable
+                @Override
+                public ReaderWrapper apply(@Nullable HistoryUnit unit) {
+                    return unit.reader;
+                }
+            });
             map = session.getAccumulate().perform(
                     readers.toArray(new ReaderWrapper[readers.size()]),
                     indices.toArray(new Integer[indices.size()]),
@@ -350,7 +357,14 @@ public final class LTCserverImpl implements LTCserverInterface {
                             filter.getStatus(BoolPrefs.COMMANDS)),
                     caretPosition);
             map.put(LTCserverInterface.KEY_AUTHORS, mappedAuthors); // add current author map
-            map.put(LTCserverInterface.KEY_REVS, revisions); // add list of revisions used in accumulation
+            map.put(LTCserverInterface.KEY_REVS, Lists.transform(units,
+                    new Function<HistoryUnit, String>() {
+                        @Nullable
+                        @Override
+                        public String apply(@Nullable HistoryUnit unit) {
+                            return unit.revision;
+                        }
+                    })); // add list of revisions used in accumulation
             session.getAccumulate().removePropertyChangeListener(listener);
         } catch (Exception e) {
             logAndThrow(2,"Exception during change accumulation: "+e.getMessage());
@@ -777,8 +791,8 @@ public final class LTCserverImpl implements LTCserverInterface {
             }
 
             assert history != null;
-            for (Commit commit : history.getCommitsList()) {
-                addSimpleTextNode(document, element, "sha", commit.getId(), null);
+            for (HistoryUnit unit : history.getHistoryUnits()) {
+                addSimpleTextNode(document, element, "sha", unit.revision, null);
             }
         }
 
