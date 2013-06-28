@@ -90,8 +90,8 @@ public final class LTCEditor extends LTCGui {
     private final SelfComboBoxModel selfModel = new SelfComboBoxModel(session);
     private final JFileChooser fileChooser = new JFileChooser();
     private final JTextField fileField = new JTextField();
-    private final Action updateAction = new AbstractAction("Update") {
-        private static final long serialVersionUID = -7081121785169995463L;
+    private final Action updateAction = new AbstractAction("Update ("+'\u2318'+"U)") {
+        @Override
         public void actionPerformed(ActionEvent event) {
             String path = fileField.getText();
             try {
@@ -131,7 +131,7 @@ public final class LTCEditor extends LTCGui {
         }
     };
     private final BugReportPanel bugReportPanel = new BugReportPanel();
-    private final Action bugReportAction = new AbstractAction("Bug Report...") {
+    private final Action bugReportAction = new AbstractAction("Bug Report... ("+'\u2318'+"R)") {
         @Override
         public void actionPerformed(ActionEvent actionEvent) {
             if (session.isValid()) {
@@ -162,7 +162,7 @@ public final class LTCEditor extends LTCGui {
     };
     private final DateField dateField = new DateField();
     private final JTextField revField = new JTextField();
-    private final JButton saveButton = new JButton(new AbstractAction("Save") {
+    private final JButton saveButton = new JButton(new AbstractAction("Save ("+'\u2318'+"S)") {
         private static final long serialVersionUID = -6467093865092379559L;
         public void actionPerformed(ActionEvent event) {
             // disable editing and obtain current text/recent edits
@@ -266,6 +266,7 @@ public final class LTCEditor extends LTCGui {
     private void createUIComponents() {
         // add action to update button
         getUpdateButton().setAction(updateAction);
+        getUpdateButton().getActionMap().put(UPDATE_ACTION, updateAction);
 
         // file chooser
         fileChooser.setCurrentDirectory(new File(
@@ -360,16 +361,22 @@ public final class LTCEditor extends LTCGui {
         JPanel filePane = new JPanel(new BorderLayout(5, 0));
         filePane.add(new JLabel("File:"), BorderLayout.LINE_START);
         filePane.add(fileField, BorderLayout.CENTER);
-        filePane.add(new JButton(new AbstractAction("Choose...") {
+        JButton chooseButton = new JButton(new AbstractAction("Choose... ("+'\u2318'+"O)") {
             private static final long serialVersionUID = 138311848972917973L;
-
+            @Override
             public void actionPerformed(ActionEvent e) {
                 if (fileChooser.showOpenDialog(getFrame()) == JFileChooser.APPROVE_OPTION) {
                     File file = fileChooser.getSelectedFile();
                     LTCEditor.this.setFile(file.getAbsolutePath(), true);
                 }
             }
-        }), BorderLayout.LINE_END);
+        });
+        // configuring key binding to CMD-O / CTRL-O for choose button:
+        chooseButton.getActionMap().put("chooseAction", chooseButton.getAction());
+        chooseButton.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(
+                KeyStroke.getKeyStroke(KeyEvent.VK_O, Toolkit.getDefaultToolkit().getMenuShortcutKeyMask()),
+                "chooseAction");
+        filePane.add(chooseButton, BorderLayout.LINE_END);
         return filePane;
     }
 
@@ -515,6 +522,11 @@ public final class LTCEditor extends LTCGui {
                 }
             }
         });
+        // configuring key binding to CMD-S / CTRL-S for save button:
+        saveButton.getActionMap().put("saveAction", saveButton.getAction());
+        saveButton.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(
+                KeyStroke.getKeyStroke(KeyEvent.VK_S, Toolkit.getDefaultToolkit().getMenuShortcutKeyMask()),
+                "saveAction");
         selfPane.add(saveButton, BorderLayout.LINE_END);
         contentTrackingPane.add(selfPane, BorderLayout.PAGE_START);
 

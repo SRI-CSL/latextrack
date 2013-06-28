@@ -204,7 +204,7 @@ public final class LTCFileViewer extends LTCGui implements ListSelectionListener
         super(false, "LTC File Viewer");
 
         // define action for update button
-        getUpdateButton().setAction(new AbstractAction("U") {
+        getUpdateButton().setAction(new AbstractAction('\u2318'+"U") {
             private static final long serialVersionUID = 2695697870010131445L;
             @SuppressWarnings("unchecked")
             @Override
@@ -253,7 +253,9 @@ public final class LTCFileViewer extends LTCGui implements ListSelectionListener
                 list.clearSelection();
             }
         });
+        getUpdateButton().getActionMap().put(UPDATE_ACTION, getUpdateButton().getAction());
         getUpdateButton().setEnabled(false); // only enabled once more than 2 files
+
         createLowerRightPane(getLowerRightPane());
     }
 
