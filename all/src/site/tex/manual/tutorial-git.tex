@@ -66,7 +66,7 @@ Now draw your attention back to the graph with the history of the current file u
 \mygraphics{scale=.5}{figures/commit-graph}
 \caption{Example of commit graph} \label{fig:commit-graph}
 \end{figure}
-Refer to Figure~\ref{fig:commit-graph} for a screen shot of the example file history. Versions that are included in the tracked changes are printed in black and denoted with a filled circle.  How far we go back in history depends on some filtering settings, which are discussed further in Section~\ref{sec:limit-history} below.  By default, we first include all version of the current author at the top.  In our example with impersonating John Adams, there are currently no further recent commits of him.  Then, we continue down the path and collect all versions of different authors until we find the next version of John Adams in the commit with the message ``second version.''
+Refer to Figure~\ref{fig:commit-graph} for a screen shot of the example file history. The first line always contains the current author.  Then, revisions that are included in the tracked changes are printed in black and denoted with a filled circle.  How far we go back in history depends on some filtering settings, which are discussed further in Section~\ref{sec:limit-history} below.  By default, we first include all versions of the current author at the top.  In our example with impersonating John Adams, there are currently no further recent commits of him.  Then, we continue down the path and collect all versions of different authors until we find the next version of John Adams in the commit with the message ``second version.''
 
 %After we have obtained an ordered sequence of commits by traversing the graph from the top down, we ignore subsequent commits of the same author---only the latest version of the same author is considered.  The idea behind this is that we do not want to penalize an author who commits often to the repository.  Instead, we treat all his or her changes from the time the file was changed by a different author as one big change event.  In our example, see that Roger Sherman committed version 5 and 6 to the repository, but version 5 is depicted in gray and not taken into account when displaying the changes.  
 
@@ -173,7 +173,7 @@ See Figure~\ref{fig:editor-condense-before-after} for an example of how condensi
 
 \subsection{Editing, Saving, and Committing}
 
-Let us start the next step by resetting all filters to the default configuration, i.e., no limit by authors, date, and revision.  Then, we will edit the text in the editor panel to see the latest changes.
+Let us start the next step by resetting all filters to the default configuration, i.e., no limit by authors, date, and revision.  Also make sure to turn ``condense authors'' off.  Then, we will edit the text in the editor panel to see the latest changes.
 
 Click into the text panel and enter some text, for example a LaTeX comment reminding John Adams to work on a list of charges against King George III in line nineteen:
 \begin{FileVerbatim}
@@ -203,11 +203,11 @@ $> git status
 #
 no changes added to commit (use "git add" and/or "git commit -a")
 $> \textbf{git commit -am "added comment about list of charges"}
-[master 930d080] added comment about list of charges
+[master 9438e4f] added comment about list of charges
  1 file changed, 3 insertions(+), 1 deletion(-)
 \end{CodeVerbatim}
 
-To make LTC Editor aware of the underlying commit from the command line, click the ``Update'' button.  Notice how the recent commit gets included at the top of the list as seen in Figure~\ref{fig:commit-cmd-line}.
+To make LTC Editor aware of the underlying commit from the command line, click the ``Update'' button.  Notice how the recent commit gets included at the top of the list as seen in Figure~\ref{fig:commit-cmd-line}.  Also see that we still include all revisions up to John Adams' second revision a while ago---all revisions at the top of the graph before any other authors are skipped before looking for the default end point in history.
 \begin{figure}[t]
 \centering
 \mygraphics{scale=.5}{figures/commit-cmd-line}
@@ -234,7 +234,7 @@ Now two things can happen depending on your setting for showing changes in comme
 
 \subsection{Collaborating with Roger Sherman} \label{sec:tutorial-git:collab}
 
-Next we perform an example collaboration with Roger Sherman's example repository as setup in Section~\ref{sec:collaborating} above. Remember that Roger Sherman's repository has had two more commits than the original one we used for John Adams.  Since we have made edits and commits as John Adams, both repositories have diverged.  To synchronize them, we first pull Roger Sherman's changes into our working copy after checking that we are in a good state:
+Next we perform an example collaboration with Roger Sherman's example repository as setup in Section~\ref{sec:collaborating} above. Remember that Roger Sherman's repository has had two more commits than the original one we used for John Adams.  Since we have made edits and commits as John Adams, both repositories have diverged.  To synchronize them, we first pull Roger Sherman's changes into our working copy using the \Code{git pull} command below:
 
 \begin{CodeVerbatim}
 $> git pull sherman master
@@ -251,7 +251,7 @@ Automatic merge failed; fix conflicts and then commit the result.
 
 \begin{figure}
 \centering
-\mygraphics{scale=.35}{figures/editor-merge-conflict}
+\mygraphics{scale=.4}{figures/editor-merge-conflict}
 \caption{Git conflict markers in merged file} \label{fig:editor-merge-conflict}
 \end{figure}
 Unfortunately, the two repositories have diverged too much and a so-called ``merge conflict'' has arisen.  Now we have to tell git how to fix this before we can proceed.  So we look at the markers that git has put into our file.  You can click the ``Update'' button in LTC Editor to see these markers there similar to Figure~\ref{fig:editor-merge-conflict}.  On the command line, the file looks similar to this:
@@ -262,7 +262,7 @@ $ cat independence.tex
 <<<<<<< HEAD
 % list charges against King George III
 =======
-That to secure these rights, Governments are instituted among Men, [...] 
+That to secure these rights, Governments are instituted among Men, [...]
 
 %TODO: indictment here
 >>>>>>> 39cd6172613d1065a4cddc854cf30067869fc727
@@ -277,23 +277,23 @@ That to secure these rights, Governments are instituted among Men, [...]
 
 % list charges against King George III
 \end{CodeVerbatim}
-It is important to remove the git marker lines starting with \Code{<<<<<<<}, \Code{=======}, and \Code{>>>>>>>} for git to recognize that we have resolved the conflicts.  Now committing on the command line yields:
+It is important to remove the git marker lines starting with \Code{<<<<<<<}, \Code{=======}, and \Code{>>>>>>>} for git to recognize that we have resolved the conflicts.  Notice that if you are editing in LTC Editor, all changes are currently marked up in the color of John Adams even though we imported a paragraph from Roger Sherman.  This is because we still have not committed the changes to git and the current version on disk is attributed to John Adams.  However, we now save and then commit on the command line:
 \begin{CodeVerbatim}
 $> git commit -am "merging Roger Sherman's edits"
-[master 2a5b3c3] merging Roger Sherman's edits
+[master 474d53b] merging Roger Sherman's edits
 \end{CodeVerbatim}
 
 \begin{figure}
 \centering
-\mygraphics{scale=.35}{figures/editor-merge-resolve}
+\mygraphics{scale=.4}{figures/editor-merge-resolve}
 \caption{After resolving conflict, committing, and updating in LTC Editor} \label{fig:editor-merge-resolve}
 \end{figure}
 This has resolved the conflict and incorporated Roger Sherman's prior changes, as a look at the git log with the graphing function reveals:
 \begin{CodeVerbatim}
 $> git log --oneline --graph --date-order
-*   2a5b3c3 merging Roger Sherman's edits
+*   474d53b merging Roger Sherman's edits
 |\  
-* | 930d080 added comment about list of charges
+* | 9438e4f added comment about list of charges
 | * 39cd617 todo item for indictment
 | * 45710ff more text for preamble
 |/  
