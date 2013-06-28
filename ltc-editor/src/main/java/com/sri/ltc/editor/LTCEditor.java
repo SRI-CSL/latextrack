@@ -95,9 +95,10 @@ public final class LTCEditor extends LTCGui {
         public void actionPerformed(ActionEvent event) {
             String path = fileField.getText();
             try {
-                // if empty path, close session (if any) and clear fields
+                // if empty path, try to close session (if any) and clear fields, then return
                 if ("".equals(path)) {
-                    close(); // TODO: what if "False" returned?
+                    if (!close())
+                        fileField.setText(session.getCanonicalPath()); // undo setting of file field
                     return;
                 }
                 // non-empty path: now look at current status of session
@@ -174,7 +175,7 @@ public final class LTCEditor extends LTCGui {
         }
     });
 
-    // return false if close was canceled by user
+    // return false if close was canceled by user; otherwise (YES or NO) return true to proceed
     private boolean close() throws XmlRpcException {
         if (saveButton.isEnabled()) {
             // dialog if unsaved edits
@@ -190,7 +191,7 @@ public final class LTCEditor extends LTCGui {
             }
         }
         session.close();
-        return true;
+        return true; // proceed with closing operation
     }
 
     protected void finishClose() {
