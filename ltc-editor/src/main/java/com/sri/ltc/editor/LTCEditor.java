@@ -256,7 +256,7 @@ public final class LTCEditor extends LTCGui {
             LOGGER.log(Level.SEVERE, e.getMessage(), e);
         }
         authorModel.clear();
-        commitModel.clear();
+        commitModel.clear(null);
         selfModel.clear();
         dateField.setText("");
         revField.setText("");

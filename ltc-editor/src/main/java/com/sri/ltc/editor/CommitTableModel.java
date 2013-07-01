@@ -81,7 +81,7 @@ public final class CommitTableModel extends AbstractTableModel {
 
     public void init(Object[] self) {
         synchronized (commits) {
-            clear();
+            clear(null);
             setSelf(self);
         }
     }
@@ -106,7 +106,7 @@ public final class CommitTableModel extends AbstractTableModel {
 
     public void update(List<Object[]> rawCommits, Set<String> IDs) {
         synchronized (commits) {
-            commits.clear(); // clear list but don't touch first row
+            clear(firstRow.author); // keep author in first row but delete the revision ID
 
             if (rawCommits == null)
                 return;
@@ -197,19 +197,23 @@ public final class CommitTableModel extends AbstractTableModel {
         }
     }
 
-    public void clear() {
+    /**
+     * Clear the table except the first entry.  Use given author (can be NULL) in first row.
+     * The first row will have an empty revision.
+     *
+     * @param author Author for first row (can be NULL)
+     */
+    public void clear(Author author) {
         synchronized (commits) {
             int size = getRowCount();
             commits.clear();
-            firstRow = new CommitTableRow("", null);
+            firstRow = new CommitTableRow("", author);
             if (size > 0)
                 fireTableRowsDeleted(1, size-1);
         }
     }
 
     public boolean isActive(int row) {
-        if (row < 0)
-            return false;
-        return getRow(row).isActive();
+        return row >= 0 && getRow(row).isActive();
     }
 }
