@@ -40,7 +40,6 @@ public final class CommitTableModel extends AbstractTableModel {
     private final static Logger LOGGER = Logger.getLogger(CommitTableModel.class.getName());
     private final List<CommitTableRow> commits = new ArrayList<CommitTableRow>();
     private CommitTableRow firstRow = new CommitTableRow("", null);
-//    private Author self = null;
 
     private static final long serialVersionUID = -923583506868039590L;
 
@@ -135,42 +134,45 @@ public final class CommitTableModel extends AbstractTableModel {
                 }
             }
             // 3) update graph column locations
-            commits.get(0).graph.circleColumn = 0; // start with first column
-            SortedSet<Integer> currentColumns = new TreeSet<Integer>(); // keep track of passing lines
-            for (CommitTableRow node : commits) {
-                // update current columns based on incoming set
-                currentColumns.removeAll(node.graph.incomingColumns); // remove all incoming columns...
-                currentColumns.add(node.graph.circleColumn); // ... except the current column
-                // set of passing lines is difference currentColumns\{circleColumn}
-                node.graph.passingColumns.clear();
-                Sets.difference(currentColumns, Collections.singleton(node.graph.circleColumn))
-                        .copyInto(node.graph.passingColumns);
-                // determine columns of parents:
-                for (CommitTableRow parent : node.parents) {
-                    // find lowest that is neither in outgoing columns nor in passing columns
-                    SortedSet<Integer> union = new TreeSet<Integer>();
-                    Sets.union(node.graph.outgoingColumns, node.graph.passingColumns).copyInto(union);
-                    int lowest = getLowestNotIn(union, 0);
-                    if (parent.graph.circleColumn == Integer.MAX_VALUE) {
-                        parent.graph.circleColumn = lowest;
-                    } else {
-                        // see if we should move the parent further left
-                        if (lowest < parent.graph.circleColumn) {
-                            currentColumns.remove(parent.graph.circleColumn); // no more passing there
+            if (!commits.isEmpty()) {
+                commits.get(0).graph.circleColumn = 0; // start with first column
+                SortedSet<Integer> currentColumns = new TreeSet<Integer>(); // keep track of passing lines
+                for (CommitTableRow node : commits) {
+                    // update current columns based on incoming set
+                    currentColumns.removeAll(node.graph.incomingColumns); // remove all incoming columns...
+                    currentColumns.add(node.graph.circleColumn); // ... except the current column
+                    // set of passing lines is difference currentColumns\{circleColumn}
+                    node.graph.passingColumns.clear();
+                    Sets.difference(currentColumns, Collections.singleton(node.graph.circleColumn))
+                            .copyInto(node.graph.passingColumns);
+                    // determine columns of parents:
+                    for (CommitTableRow parent : node.parents) {
+                        // find lowest that is neither in outgoing columns nor in passing columns
+                        SortedSet<Integer> union = new TreeSet<Integer>();
+                        Sets.union(node.graph.outgoingColumns, node.graph.passingColumns).copyInto(union);
+                        int lowest = getLowestNotIn(union, 0);
+                        if (parent.graph.circleColumn == Integer.MAX_VALUE) {
                             parent.graph.circleColumn = lowest;
+                        } else {
+                            // see if we should move the parent further left
+                            if (lowest < parent.graph.circleColumn) {
+                                currentColumns.remove(parent.graph.circleColumn); // no more passing there
+                                parent.graph.circleColumn = lowest;
+                            }
                         }
+                        // maintain current columns
+                        currentColumns.add(parent.graph.circleColumn);
+                        // update incoming columns of parent
+                        parent.graph.incomingColumns.add(parent.graph.circleColumn); // add current column to incoming
+                        // update outgoing columns of node
+                        node.graph.outgoingColumns.add(parent.graph.circleColumn); // TODO: is this correct?
                     }
-                    // maintain current columns
-                    currentColumns.add(parent.graph.circleColumn);
-                    // update incoming columns of parent
-                    parent.graph.incomingColumns.add(parent.graph.circleColumn); // add current column to incoming
-                    // update outgoing columns of node
-                    node.graph.outgoingColumns.add(parent.graph.circleColumn); // TODO: is this correct?
+                    // maintain current columns: merges are when...
+                    if (!node.graph.outgoingColumns.contains(node.graph.circleColumn))
+                        currentColumns.remove(node.graph.circleColumn); // merge
                 }
-                // maintain current columns: merges are when...
-                if (!node.graph.outgoingColumns.contains(node.graph.circleColumn))
-                    currentColumns.remove(node.graph.circleColumn); // merge
             }
+
             // 4) mark active commits from IDs
             if (IDs.contains(LTCserverInterface.ON_DISK))
                 setFirstID(LTCserverInterface.ON_DISK);
@@ -182,6 +184,11 @@ public final class CommitTableModel extends AbstractTableModel {
         fireTableDataChanged();
     }
 
+    /**
+     * Update the first row with the given ID.  Should not be NULL but can be empty.
+     *
+     * @param ID String with revision information, which could be empty but not NULL
+     */
     public void setFirstID(String ID) {
         synchronized (commits) {
             updateFirstRow(
@@ -213,6 +220,12 @@ public final class CommitTableModel extends AbstractTableModel {
         }
     }
 
+    /**
+     * Whether given row is currently active or not.
+     *
+     * @param row which row is to be tested
+     * @return true, if given row is active and false otherwise
+     */
     public boolean isActive(int row) {
         return row >= 0 && getRow(row).isActive();
     }

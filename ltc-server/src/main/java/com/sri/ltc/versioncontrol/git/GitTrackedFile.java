@@ -30,6 +30,7 @@ import org.eclipse.jgit.errors.IncorrectObjectTypeException;
 import org.eclipse.jgit.errors.MissingObjectException;
 import org.eclipse.jgit.lib.Constants;
 import org.eclipse.jgit.lib.IndexDiff;
+import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.revwalk.RevCommit;
 import org.eclipse.jgit.revwalk.RevSort;
@@ -65,63 +66,53 @@ public class GitTrackedFile extends TrackedFile<GitRepository> {
     }
 
     @Override
-    public List<Commit> getCommits(@Nullable Date inclusiveLimitDate, @Nullable String inclusiveLimitRevision) throws IOException, VersionControlException {
+    public List<Commit> getCommits(@Nullable Date inclusiveLimitDate, @Nullable String inclusiveLimitRevision)
+            throws IOException, VersionControlException {
         // note: we could use the simpler LogCommand with add + addPath
 
         List<Commit> commits = new ArrayList<Commit>();
-
         Repository wrappedRepository = getRepository().getWrappedRepository();
-        RevWalk revWalk = new RevWalk(wrappedRepository);
-        revWalk.setTreeFilter(
-                AndTreeFilter.create(
-                        PathFilterGroup.createFromStrings(getRepositoryRelativeFilePath()),
-                        TreeFilter.ANY_DIFF)
-        );
 
         try {
-            RevCommit rootCommit = revWalk.parseCommit(wrappedRepository.resolve(Constants.HEAD));
+
+            // do we have a HEAD?
+            ObjectId head = wrappedRepository.resolve(Constants.HEAD);
+            if (head == null)
+                return commits;
+
+            RevWalk revWalk = new RevWalk(wrappedRepository);
+            revWalk.setTreeFilter(
+                    AndTreeFilter.create(
+                            PathFilterGroup.createFromStrings(getRepositoryRelativeFilePath()),
+                            TreeFilter.ANY_DIFF)
+            );
+            RevCommit rootCommit = revWalk.parseCommit(head);
             revWalk.sort(RevSort.COMMIT_TIME_DESC);
             revWalk.markStart(rootCommit);
+
+            RevCommit limitRevCommit = null;
+            if (inclusiveLimitRevision != null)
+                limitRevCommit = revWalk.parseCommit(wrappedRepository.resolve(inclusiveLimitRevision));
+
+            if (inclusiveLimitDate == null)
+                inclusiveLimitDate = new Date(0);
+
+            for (RevCommit revCommit : revWalk) {
+                // test limiting date first before adding commit
+                if (inclusiveLimitDate.compareTo(GitCommit.CommitDate(revCommit)) > 0) break;
+
+                commits.add(new GitCommit(getRepository(), this, revCommit));
+
+                // now test if this was the last commit we wanted
+                if (revCommit.getId().equals(limitRevCommit)) break;
+            }
+
         } catch (IncorrectObjectTypeException e) {
             throw new VersionControlException(e);
         } catch (AmbiguousObjectException e) {
             throw new VersionControlException(e);
         } catch (MissingObjectException e) {
             throw new VersionControlException(e);
-        }
-
-        RevCommit limitRevCommit = null;
-        if (inclusiveLimitRevision != null)
-            limitRevCommit = revWalk.parseCommit(wrappedRepository.resolve(inclusiveLimitRevision));
-
-        if (inclusiveLimitDate == null)
-            inclusiveLimitDate = new Date(0);
-
-        for (RevCommit revCommit : revWalk) {
-
-            // test limiting date first before adding commit
-            if (inclusiveLimitDate.compareTo(GitCommit.CommitDate(revCommit)) > 0) break;
-
-            commits.add(new GitCommit(getRepository(), this, revCommit));
-
-            // now test if this was the last commit we wanted
-            if (revCommit.getId().equals(limitRevCommit)) break;
-
-//            TreeWalk treeWalk = TreeWalk.forPath(wrappedRepository, getRepositoryRelativeFilePath(), revCommit.getTree());
-//            if (treeWalk != null) {
-//                treeWalk.setRecursive(true);
-//                treeWalk.setFilter(
-//                        AndTreeFilter.create(
-//                                PathFilterGroup.createFromStrings(getRepositoryRelativeFilePath()), TreeFilter.ANY_DIFF)
-//                );
-//
-//                CanonicalTreeParser canonicalTreeParser = treeWalk.getTree(0, CanonicalTreeParser.class);
-//
-//                while (!canonicalTreeParser.eof()) {
-//                    System.out.println("- found entry: " + canonicalTreeParser.getEntryPathString());
-//                    canonicalTreeParser.next(1);
-//                }
-//            }
         }
 
         return commits;
