@@ -118,12 +118,13 @@ public class LTCSession {
                 "Closing...", "<html>Closing track changes of file<br>"+getCanonicalPath()+"</html>", false) {
             @Override
             protected Map callLTCinBackground() throws XmlRpcException {
-                return LTC.close_session(ID, "", Collections.emptyList(), 0); // forget about any modifications
+                int lastID = ID;
+                ID = -1; // reset here as this is being accessed asynchronously and cannot wait for done() below
+                return LTC.close_session(lastID, "", Collections.emptyList(), 0); // forget about any modifications
             }
 
             @Override
             protected void done() {
-                ID = -1;
                 editor.finishClose();
             }
         });
@@ -187,7 +188,7 @@ public class LTCSession {
     }
 
     public void save(final String currentText, final List<Object[]> deletions) {
-        if (ID == -1) return;
+        if (!isValid()) return;
 
         // create new worker to save file in session
         executeWorkerAndWait(new LTCWorker<Void,Void>(editor.getFrame(), ID,

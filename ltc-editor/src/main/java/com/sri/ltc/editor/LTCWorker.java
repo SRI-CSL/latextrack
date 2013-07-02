@@ -52,9 +52,10 @@ public abstract class LTCWorker<T,V> extends SwingWorker<T,V> implements Progres
         addPropertyChangeListener(new PropertyChangeListener() {
             @Override
             public void propertyChange(PropertyChangeEvent e) {
-                if ("progress".equals(e.getPropertyName())) {
+                if ("progress".equals(e.getPropertyName()))
                     ProgressDialog.setProgress((Integer) e.getNewValue());
-                }
+                if ("state".equals(e.getPropertyName()) && StateValue.DONE.equals(e.getNewValue()))
+                    ProgressDialog.done(); // also covering any exceptions occurring here as well!
             }
         });
     }
@@ -68,7 +69,6 @@ public abstract class LTCWorker<T,V> extends SwingWorker<T,V> implements Progres
             LOGGER.log(Level.SEVERE, e.getMessage(), e);
             throw e;
         }
-        ProgressDialog.done();
         return result;
     }
 
