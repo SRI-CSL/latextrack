@@ -60,13 +60,12 @@ Figures~\ref{fig:svn-editor-filter-small} show that ``\textbackslash maketitle''
 
 \subsection{Understanding the Commit Graph}
 
-Now draw your attention back to the graph with the history of the current file under svn (located in the bottom-right panel).  In our current tutorial repository, there are no branches and the graph is a sequential line.  
-\begin{figure}[t]
+Now draw your attention back to the graph with the history of the current file under svn (located in the bottom-right panel). \begin{figure}[t]
 \centering
 \mygraphics{scale=.5}{figures/svn-commit-graph}
 \caption{Example of commit graph} \label{fig:svn-commit-graph}
 \end{figure}
-Refer to Figure~\ref{fig:svn-commit-graph} for a screen shot of the example file history. Versions that are included in the tracked changes are not printed in gray.  How far we go back in history depends on some filtering settings, which are discussed further in Section~\ref{sec:svn-limit-history} below.  By default, we first include all version of the current author at the top.  In our example with impersonating John Adams with the user name ``adams,'' there are currently no further recent commits of him.  Then, we continue down the path and collect all versions of different authors until we find the next version of John Adams in the commit with the message ``second version.''
+Refer to Figure~\ref{fig:svn-commit-graph} for a screen shot of the example file history. The first line always contains the current author as set in the text field labeled ``Self'' above.  Then, revisions that are included in the tracked changes are not printed in gray.  How far we go back in history depends on some filtering settings, which are discussed further in Section~\ref{sec:svn-limit-history} below.  By default, we first include all versions of the current author at the top.  In our example with impersonating John Adams with the user name ``adams,'' there are currently no further recent commits of him.  Then, we continue down the path and collect all versions of different authors until we find the next version of John Adams in the commit with the message ``second version.''
 
 \subsection{Limiting History} \label{sec:svn-limit-history}
 
@@ -167,7 +166,7 @@ See Figure~\ref{fig:svn-editor-condense-before-after} for an example of how cond
 
 \subsection{Editing and Saving} %\label{sec:svn-editor-editing}
 
-Let us start the next step by resetting all filters to the default configuration, i.e., no limit by authors, date, and revision.  Then, we will edit the text in the editor panel to see the latest changes.
+Let us start the next step by resetting all filters to the default configuration, i.e., no limit by authors, date, and revision.  Also make sure to turn ``condense authors'' off.  Then, we will edit the text in the editor panel to see the latest changes.
 
 Click into the text panel and enter some text, for example a LaTeX comment reminding John Adams to work on a list of charges against King George III in line nineteen:
 \begin{FileVerbatim}
@@ -189,7 +188,7 @@ Finally, you will want to click ``Save'' to save the current file to disk.  This
 
 In Subversion, your repository is a central entity that all collaborators commit to.  Therefore, unlike distributed version control systems such as git, the collaboration happens when users commit their version.  It is a good practice to update your working copy regularly to avoid conflicts during committing.  Furthermore, users should communicate with each other to decide who is editing what file at a time.
 
-The following assumes that you are working with a local svn repository per the setup in Sections~\ref{sec:example-svn-local} and {sec:svn-collaborating} above.  Next, we will simulate that Roger Sherman commits his modified version before John Adams can upload his version, resulting in a merge conflict.  To prepare this scenario, first commit the modifications from Roger Sherman's working copy:
+The following assumes that you are working with a local svn repository per the setup in Sections~\ref{sec:example-svn-local} and \ref{sec:svn-collaborating} above.  Next, we will simulate that Roger Sherman commits his modified version before John Adams can upload his version, resulting in a merge conflict.  To prepare this scenario, first commit the modifications from Roger Sherman's working copy:
 \begin{CodeVerbatim}[commandchars=\\\{\}]
 $> cd $TUTORIAL/independence-sherman/
 $> svn status
@@ -242,9 +241,10 @@ That to secure these rights, Governments are instituted among Men, [...]
 %TODO: indictment here
 
 >>>>>>> .r7
+\end{document}
 \end{CodeVerbatim}
 
-We decide that the comments in the version \Code{.mine} version means the same as the last comment in version \Code{.r7} so we modify the text in LTC Editor and save, so that it looks like this on the command line:
+We decide that the comments in the version \Code{.mine} version means the same as the last comment in version \Code{.r7} so we modify the text in LTC Editor and save, so that it looks like the following on the command line or as seen in the screen shot in Figure~\ref{fig:svn-editor-edit-conflict}.
 \begin{CodeVerbatim}
 $> cat independence.tex 
 [...]
@@ -253,6 +253,11 @@ That to secure these rights, Governments are instituted among Men, [...]
 
 % list charges against King George III
 \end{CodeVerbatim}
+\begin{figure}
+\centering
+\mygraphics{scale=.5}{figures/svn-editor-edit-conflict}
+\caption{Resolving subversion conflict through editing file} \label{fig:svn-editor-edit-conflict}
+\end{figure}
 It is important to remove the svn marker lines starting with \Code{<<<<<<<}, \Code{=======}, and \Code{>>>>>>>} for svn to recognize that we have resolved the conflicts. We also have to tell svn that the conflict has been resolved.  Then we can finally  perform the following commit command.  The two important commands are printed in bold below.  
 You may want to check the status of svn before and after the commit:
 \begin{CodeVerbatim}[commandchars=\\\{\}]
@@ -264,11 +269,10 @@ $> \textbf{svn commit -m "added comment about list of charges" --username adams}
 Sending        independence.tex
 Transmitting file data .
 Committed revision 8.
-$> svn status
 \end{CodeVerbatim}
 \begin{figure}
 \centering
 \mygraphics{scale=.35}{figures/svn-editor-merge-resolve}
 \caption{After resolving conflict and updating in LTC Editor} \label{fig:svn-editor-merge-resolve}
 \end{figure}
-Once we click the ``Update'' button in LTC Editor, we see the latest revision 8 in the commit graph and the marked up latest edits attributed to John Adams and Roger Sherman similar to Figure~\ref{fig:svn-editor-merge-resolve}.
+Once we click the ``Update'' button in LTC Editor, we see the latest revision 8 in the commit graph and the marked up latest edits attributed to John Adams and Roger Sherman similar to Figure~\ref{fig:svn-editor-merge-resolve}.  Also see that we still include all revisions up to John Adams' second revision a while ago---all revisions at the top of the graph before any other authors are skipped before looking for the default end point in history.  % TODO: is this a good place?
