@@ -162,7 +162,7 @@ public class SVNTrackedFile extends TrackedFile<SVNRepository> {
             getRepository().getClientManager().getLogClient()
                     .doLog(
                             new File[]{getFile()},
-                            SVNRevision.create(-1), SVNRevision.create(-1), false, false, limit, handler);
+                            SVNRevision.BASE, SVNRevision.UNDEFINED, false, false, limit, handler);
         } catch (SVNException e) {
             throw new VersionControlException(e);
         }
