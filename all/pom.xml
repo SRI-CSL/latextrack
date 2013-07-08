@@ -186,13 +186,33 @@
                 <executions>
                     <!-- ~~~ pre-site ~~~ -->
                     <execution>
-                        <id>generate-txt</id>
+                        <id>generate-txt-for-manual</id>
                         <phase>pre-site</phase>
                         <goals>
                             <goal>copy-resources</goal>
                         </goals>
                         <configuration>
                             <outputDirectory>${project.basedir}/src/site/tex/manual</outputDirectory>
+                            <resources>
+                                <resource>
+                                    <directory>src/site/resources</directory>
+                                    <includes>
+                                        <include>version.txt</include>
+                                        <include>baseurl.txt</include>
+                                    </includes>
+                                    <filtering>true</filtering>
+                                </resource>
+                            </resources>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>generate-txt-for-github-tutorial</id>
+                        <phase>pre-site</phase>
+                        <goals>
+                            <goal>copy-resources</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>${project.basedir}/src/site/tex/github-tutorial</outputDirectory>
                             <resources>
                                 <resource>
                                     <directory>src/site/resources</directory>
@@ -278,6 +298,18 @@
                         <configuration>
                             <executable>make</executable>
                             <workingDirectory>${project.basedir}/src/site/tex/manual/figures</workingDirectory>
+                        </configuration>
+                        <goals>
+                            <goal>exec</goal>
+                        </goals>
+                    </execution>
+                    <!-- converting images for github tutorial -->
+                    <execution>
+                        <id>pictures-for-github-tutorial</id>
+                        <phase>pre-site</phase>
+                        <configuration>
+                            <executable>make</executable>
+                            <workingDirectory>${project.basedir}/src/site/tex/github-tutorial/figures</workingDirectory>
                         </configuration>
                         <goals>
                             <goal>exec</goal>
@@ -409,6 +441,15 @@
                                 <include>baseurl.txt</include>
                                 <include>manual.pdf</include>
                                 <include>figures/LTC-logo.png</include>
+                            </includes>
+                        </fileset>
+                        <fileset>
+                            <directory>${project.basedir}/src/site/tex/github-tutorial</directory>
+                            <includes>
+                                <include>version.txt</include>
+                                <include>baseurl.txt</include>
+                                <include>github-tutorial.pdf</include>
+                                <!--<include>figures/LTC-logo.png</include>-->
                             </includes>
                         </fileset>
                     </filesets>
