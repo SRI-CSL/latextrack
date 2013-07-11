@@ -59,6 +59,11 @@
 
 %% figures under PDF
 \DeclareGraphicsExtensions{.png}
+\newcommand{\myscale}{0.4} % uniform scaling of screen shots
+
+%% let all wrapfigures protrude into margin and remove space on top and bottom
+%\setlength{\wrapoverhang}{0pt}
+\setlength{\intextsep}{0.5em}
 
 %% fancy headers and footers
 % clear default layout:
@@ -80,7 +85,7 @@
 
 
 % ----- title information
-\title{Using GitHub\textsuperscript{\textcopyright} with \LaTeX{} Track Changes \\ {\large LTC v\version}}
+\title{Using GitHub\textsuperscript{\textcopyright} for a Shared \LaTeX{} Writing Project}
 \author{%
 Linda Briesemeister\\
 \texttt{linda.briesemeister@sri.com}\\
@@ -93,16 +98,21 @@ SRI International
 \maketitle
 
 \begin{abstract}
-This is a short tutorial on how to use GitHub with LTC as it provides free hosting of git repositories, which may be sufficient when authors collaborate without having a common IT infrastructure.  Note that such repositories are by default public so your text is effectively public as well.  Private repositories in GitHub are a paid-for service.
+This is a short tutorial on how to use GitHub for shared LaTeX writing projects as it provides free hosting of git repositories, which may be sufficient when authors collaborate without having a common IT infrastructure.  Note that such repositories are by default public so your text is effectively public as well.  Private repositories in GitHub are a paid-for service.
+
+\textbf{Disclaimer:} This tutorial may be outdated if GitHub changes its user interface.  We tried to explain the steps needed based on how this service operates at the time of writing.  No warranty is provided.
 \end{abstract}
 
 \tableofcontents
 %\listoffigures
+%\thispagestyle{fancy}
 
-\thispagestyle{fancy}
+\clearpage
+
 \pagestyle{fancy}
 
-
+\input{github}
+\input{local}
 
 % ----- references 
 %
