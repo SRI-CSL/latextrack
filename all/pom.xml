@@ -218,7 +218,6 @@
                                     <directory>src/site/resources</directory>
                                     <includes>
                                         <include>version.txt</include>
-                                        <include>baseurl.txt</include>
                                     </includes>
                                     <filtering>true</filtering>
                                 </resource>
@@ -447,7 +446,6 @@
                             <directory>${project.basedir}/src/site/tex/github-tutorial</directory>
                             <includes>
                                 <include>version.txt</include>
-                                <include>baseurl.txt</include>
                                 <include>github-tutorial.pdf</include>
                                 <!--<include>figures/LTC-logo.png</include>-->
                             </includes>

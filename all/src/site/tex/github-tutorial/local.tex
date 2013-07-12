@@ -1,5 +1,4 @@
 % !TEX root = github-tutorial.tex
-
 \section{Adding Content}
 
 On your local machine, create a LaTeX file with the following minimal content in the directory where you cloned the repository.  We assume for the remainder of this tutorial that the file name is \Code{mydocument.tex} but feel free to change the name and adjust actions as necessary.
@@ -33,7 +32,7 @@ The sections below show how to add and commit the new file and any edits using t
 \begin{figure}
 \centering
 \includegraphics[scale=\myscale]{figures/github-mac-new-file}
-\caption{New and edit files with GitHub for Mac} \label{fig:github-mac-new-file}
+\caption{New and edited files with GitHub for Mac} \label{fig:github-mac-new-file}
 \end{figure}
 If you are using GitHub for Mac, the ``Changes'' tab when inside the repository becomes illuminated when we save the new file and edit the existing one.  Clicking shows a view similar to the one in Figure~\ref{fig:github-mac-new-file}.  
 
@@ -102,3 +101,36 @@ Even though the ``Sync'' button appears in the ``Unsynced Commits'' panel, click
 
 \subsection{Synchronizing with the Server with the Command Line}
 
+To upload your latest commits to the GitHub server, you use the \Code{push} command, for example:
+\begin{CodeVerbatim}
+$ git push
+Counting objects: 6, done.
+Delta compression using up to 8 threads.
+Compressing objects: 100% (4/4), done.
+Writing objects: 100% (4/4), 442 bytes | 0 bytes/s, done.
+Total 4 (delta 1), reused 0 (delta 0)
+To git@github.com:lilalinda/testLTC.git
+   387b684..672c28b  master -> master
+\end{CodeVerbatim}
+
+If you are working with git branches, you may have to specify the branch with this command but that is for more complicated scenarios (often not needed for writing projects).  
+
+The opposite command to obtain changes from the server, as a coauthor had pushed some edits to the text, use the \Code{pull} command, for example:
+\begin{CodeVerbatim}
+$ git pull
+remote: Counting objects: 5, done.
+remote: Compressing objects: 100% (1/1), done.
+remote: Total 3 (delta 2), reused 3 (delta 2)
+Unpacking objects: 100% (3/3), done.
+From github.com:lilalinda/testLTC
+   498aac2..70beabe  master     -> origin/master
+Updating 498aac2..70beabe
+Fast-forward
+ mydocument.tex | 1 +
+ 1 file changed, 1 insertion(+)
+\end{CodeVerbatim}
+
+As long as there are no conflicts that git cannot resolve, this command merges any remote changes with your working copy.  You should make sure to have no lingering changes waiting to be committed when you pull from the remote repository.  The man page for the \Code{git-pull} command says:
+\begin{quote}
+If any of the remote changes overlap with local uncommitted changes, the merge will be automatically cancelled and the work tree untouched. It is generally best to get any local changes in working order before pulling or stash them away with \Code{git-stash}.
+\end{quote}

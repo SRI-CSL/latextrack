@@ -26,7 +26,7 @@ Log into your GitHub account (or create one) and then click the icon on the top 
 When the repository is created, it shows the page at \url{https://github.com/lilalinda/testLTC}, where your user and repository names are replaced.  Now click on the link of the file \Code{.gitignore} to bring up the contents of this generated file as seen partly in Figure~\ref{fig:gitignore}.  This file lists all common helper file types to ignore in a LaTeX writing project under git version control.
 %\vspace{1in}
 
-\subsection{On Your Computer}
+\subsection{On Your Computer} \label{sec:cloning}
 
 Now it is time to clone the repository on GitHub to your local machine.  There are two recommended options for working with GitHub repositories.
 \begin{enumerate}
@@ -98,10 +98,10 @@ Here you can add the GitHub account names of coauthors who will be then able to 
 
 \subsection{Using an Existing Repository} \label{sec:existing}
 
-Now let us look at the situation when one author has already created a git repository on GitHub containing the files for a LaTeX project.  Your coauthor will give you a link to the repository that should be of the form \url{https://github.com/<username>/<reponame>}.  Once you are on this page, you will see again the button ``Clone in Desktop'' to be used with the GitHub for Mac application or you can copy the SSH clone URL from the text field (potentially clicking the link SSH first).  In the latter case, you would use the copied text with a the clone command from the command line after changing into the local directory where you want your working copy to reside.
+Now let us look at the situation when one author has already created a git repository on GitHub containing the files for a LaTeX project.  Your coauthor will give you a link to the repository that should be of the form \url{https://github.com/<username>/<reponame>}.  Once you are on this page, you will see again the button ``Clone in Desktop'' to be used with the GitHub for Mac application or you can copy the SSH clone URL from the text field (potentially clicking the link SSH first).  See Section~\ref{sec:cloning} above for more details on cloning.  In the latter case of copying the URL, you would use the copied text with a the clone command from the command line after changing into the local directory where you want your working copy to reside.
 
 \begin{CodeVerbatim}
-$ cd <dir>
+$ cd <dir>  # where you want your repository to be created
 $ git clone git@github.com:<username>/<reponame>.git
 \end{CodeVerbatim}
 

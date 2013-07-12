@@ -46,10 +46,6 @@
 \newcommand{\version}{}
 \input{version.txt}
 
-%% base URL of web site
-\newcommand{\baseurl}{}
-\input{baseurl.txt}
-
 %% custom verbatim commands and environments
 %\DefineVerbatimEnvironment{BaseVerbatim}{Verbatim}{fontsize=\normalsize} % common definitions to PDF and HTML
 \definecolor{BoxBackground}{gray}{0.1} % 10%
@@ -73,8 +69,7 @@
 \renewcommand{\headrulewidth}{0.2pt} 
 \renewcommand{\footrulewidth}{0pt}
 % custom header: chapter on left, section on right for odd; even reversed
-%\fancyhead[LE,RO]{\nouppercase\rightmark}
-%\fancyhead[LO,RE]{\nouppercase\leftmark}
+\fancyhead[LO,RE]{GitHub Tutorial for Shared LaTeX Projects}
 % custom footer: version -- copyright -- page number for odd; even reversed
 \fancyfoot[LO,RE]{\small{LTC v\version}}
 \fancyfoot[C]{\small{\textcopyright~SRI International}}
@@ -113,6 +108,7 @@ This is a short tutorial on how to use GitHub for shared LaTeX writing projects 
 
 \input{github}
 \input{local}
+\input{workcycle}
 
 % ----- references 
 %
