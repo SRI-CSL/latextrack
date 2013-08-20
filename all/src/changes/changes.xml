@@ -27,7 +27,7 @@
         <author email="lilalinda at users.sourceforge.net">Linda Briesemeister</author>
     </properties>
     <body>
-        <release version="1.0" date="2013-June">
+        <release version="1.0" date="2013-08-19">
             <action dev="lilalinda" type="fix" issue="38">
                 Fixed problem with limiting by revision under svn in Emacs.
             </action>
@@ -39,7 +39,6 @@
                 calls that interact with version control system.  Instead, users should use the regular tools for
                 their VCS such as the command line.  Adjusted tutorial sections in manual accordingly.
             </action>
-
         </release>
 
         <release version="0.9.15" date="2013-05-03">
