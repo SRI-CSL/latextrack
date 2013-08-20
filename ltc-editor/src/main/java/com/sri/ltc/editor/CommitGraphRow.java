@@ -99,8 +99,6 @@ public final class CommitGraphRow {
         public void paintIcon(Component c, Graphics g, int x, int y) {
             if (row == null) return;
 
-            // TODO: log character representation?
-
             // setup drawing
             Graphics2D g2d = (Graphics2D) g.create();
             g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);

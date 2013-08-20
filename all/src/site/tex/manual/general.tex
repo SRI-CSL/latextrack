@@ -1,0 +1,117 @@
+% !TEX root = manual.tex
+\section{General Usage} \label{sec:general-use}
+\newcommand{\generalscale}{0.9}  % scale for figures in the general section
+
+In this section we describe abstractly how one would use LTC as a pattern of a work cycle. See the tutorials for more concrete examples.  Also, the Sections~\ref{sec:emacs} and \ref{sec:java} below contain more details on the specific user interface of interest, namely Emacs and the LTC Editor, respectively.
+
+Typically, more than one author collaborate on a writing project that is kept under version control but it might be a good practice to put all your work under version control.  Especially git is a well suited version control system to run locally on your computer and keeping track of your own changes if you are just interested in how a .tex file evolves over time.
+
+We are assuming that the .tex file or files of interest are kept under version control so as to obtain a history of significant changes that have been made in the past.  Significant changes are usually made through a ``commit'' action to the version control system.  This is in contrast to merely saving edits to the file on the local file system.  Such an operation can be done many more times just to preserve your current work in case of a problem with the editor or computer.
+
+\begin{figure}[t]
+\centering
+  \subfloat{
+    \mygraphics{width=0.48\linewidth}{figures/work-cycle}}
+  \hfill %space{1em}
+  \subfloat{
+    \mygraphics{width=0.48\linewidth}{figures/work-cycle-with-LTC}}
+\caption{A typical work cycle for a version controlled file and when using LaTeX Track Changes} \label{fig:work-cycle}
+\end{figure}
+
+See Figure~\ref{fig:work-cycle} on the left hand side for a diagram that shows a typical work cycle for a version controlled file from the perspective of one author.  Often a user starts working by downloading changes that others have done---this step may be omitted if only one author is working with the revision control system, thus the action is drawn with dashed lines.  Then, an author may edit and save the file.  Finally, when significant changes have been made, it is often time to commit those and possibly upload them to a server where other authors can update from.
+
+Now look at the right hand side of Figure~\ref{fig:work-cycle}; here we added a state for tracking changes.  The user typically switches from editing and saving into tracking changes.  In this mode, one can still edit and save the file.  And also perform version control commands such as downloading and uploading changes.  While in track changes mode, the .tex file of interest is marked up with information about changes in past versions of the file, so the text looks busier and can be longer when displaying deletions.  Thus, most authors will want to switch in and out of tracking changes in order to work at times with only the latest version of the file to avoid being overwhelmed by the information shown.
+
+\subsection{Filtering What is Shown}
+
+Since the amount of change information displayed can be quite large, we offer a few switches to tailor the view for the user.  These switches can be turned on or off, meaning that certain changes are shown or hidden (not marked up or not included if deleted text).  We currently support the following five switches.
+
+{%
+\setlength{\intextsep}{0pt} % to make wrapped figures fit tighter into paragraphs
+
+% --- deletions
+\begin{wrapfigure}{r}{0pt}\centering%
+\begin{tabular}{|l|l}
+\cline{1-1}
+\Code{\textcolor{red}{\sout{my }}friend has} & (show) \\
+\hhline{=~}
+\Code{friend has} & (hide) \\
+\cline{1-1}
+\end{tabular}
+\end{wrapfigure}%
+\textbf{Deletions}\hspace{1em} %
+Deletions are text that was part of an earlier version but cannot be located in the latest version anymore.  If shown, the deleted text is inserted where it was found and marked up as a deletion; i.e., with strike-through font in the LTC Editor and (unless the user customizes this setting) with inverse colors in Emacs.  In the example on the right, the text ``my'' was deleted in the newer version.
+
+% --- small changes
+\begin{wrapfigure}{r}{0pt}\centering%
+\begin{tabular}{|l|l}
+\cline{1-1}
+\Code{my fr\textcolor{red}{\sout{e}}i\textcolor{red}{\underline{e}}nd has} & (show) \\
+\hhline{=~}
+\Code{my friend has} & (hide) \\
+\cline{1-1}
+\end{tabular}
+\end{wrapfigure}%
+\textbf{``Small'' Changes}\hspace{1em} %
+We employ the following heuristic to detect so-called ``small'' changes, which attempts to find things such as typographical error corrections.  If two lexemes\footnote{A \textit{lexeme} is an abstract unit of morphological analysis in linguistics, that roughly corresponds to a set of forms taken by a single word.} are being compared and their \textit{Levenshtein} distance\footnote{The \textit{Levenshtein distance} is a string metric for measuring the difference between two sequences. Informally, the Levenshtein distance between two words is the minimum number of single-character edits (insertion, deletion, substitution) required to change one word into the other.} is less than three and the shorter lexeme is longer than this metric, then we declare it a ``small'' change.  For example, let us consider the two words ``freind'' and ``friend'' with the former being part of an earlier version and the latter part of the current text version.  Someone had corrected the typographical error.  The Levenshtein distance between the two words is two, as one of the characters `e' and `i' has to be removed and inserted at the correct position to change the older version into the newer one.  Both words have length five, which is longer than two.  Hence, we would mark up only the character difference in these words rather than mark the whole word as a deletion and addition.  If  users want to omit seeing such small changes to focus on the bigger changes, they can switch off seeing these.  See the example on the right for how the markup on this small change looks.
+
+% --- in preamble
+\begin{wrapfigure}{r}{0pt}\centering%
+\begin{tabular}{|p{1.6in}|l}
+\cline{1-1}
+\Code{\textcolor{red}{\underline{\textbackslash{}usepackage\{something\}}}\newline\textbackslash{}begin\{document\}} & (show) \\ 
+\hhline{=~}
+\Code{\textbackslash{}usepackage\{something\}\newline\textbackslash{}begin\{document\}} & (hide) \\
+\cline{1-1}
+\end{tabular}
+\end{wrapfigure}%
+\textbf{In Preamble}\hspace{1em} %
+If the file of interest contains the LaTeX preamble and the text ``\textbackslash{}begin\{document\},'' this switch shows or hides any changes that occurs before this text.  If turned off, it will suppress any deleted text and not mark up additions at the beginning of the file.  If the file does not contain this marking text, the switch has no effect.  In the example on the right, the newest version added a new package ``something'' compared to a prior version.
+
+% --- in comments
+\begin{wrapfigure}{r}{0pt}\centering%
+\begin{tabular}{|l|l}
+\cline{1-1}
+\Code{\% a\textcolor{red}{\sout{ pet}\underline{ dog}}} & (show) \\
+\hhline{=~}
+\Code{\% a dog} & (hide) \\
+\cline{1-1}
+\end{tabular}
+\end{wrapfigure}%
+\textbf{In Comments}\hspace{1em} %
+If the file of interest contains comments (anything after a `\%' on the rest of the line), this switch controls whether the user wants to see any changes in those.  In the example on the right, someone replaced the word ``pet'' with ``dog'' inside the comment.  Note that comments, which have been deleted will not be affected by this switch.  The reason is that deletions are inserted for display into the latest version (if deletions are currently shown) but they do not necessarily end with a new line, therefore, if they contain the unescaped comment character `\%' they might render text that is following the deletion on the same line falsely as a comment.  
+
+% --- in commands
+\begin{wrapfigure}{r}{0pt}\centering%
+\begin{tabular}{|l|l}
+\cline{1-1}
+\Code{the\textcolor{red}{\underline{ \textbackslash{}textit\{}}important\textcolor{red}{\underline{\}}}} & (show) \\
+\hhline{=~}
+\Code{the \textbackslash{}textit\textcolor{red}{\underline{\{}}important\textcolor{red}{\underline{\}}}} & (hide) \\
+\cline{1-1}
+\end{tabular}
+\end{wrapfigure}%
+\textbf{In Commands}\hspace{1em} %
+When LTC parses text, it detects commands as any word following and including a `\textbackslash' but not any arguments that are declared in curly braces.  Here we wanted to offer another way of tailoring the display of changes by ignoring possibly uninteresting parts of the LaTeX source text.  On the other hand, our simple lexicographical analysis cannot count open and closing brackets, which may be nested inside the command's arguments.  Therefore, this switch may only be useful to blend out commands without arguments.  In the example on the right, an author has added a LaTeX command to emphasize text by typesetting it in italics.  Hiding this change will still result in showing the curly braces.
+
+} % where \intextsep = 0
+
+\subsection{History of a File}
+
+\begin{wrapfigure}{r}[0.3in]{2.2in}\centering%
+ \mygraphics{width=\linewidth}{figures/graph-traverse}
+ \caption{Traversing a history graph of revisions} \label{fig:graph-traverse}
+ \vspace{-\baselineskip}
+\end{wrapfigure}%
+LTC obtains the history of the file of interest from a version control system---currently either git or svn.  All version control systems maintain information about the file's contents at different points in time; normally when the user ``committed'' a revision.  Also, modern version control systems typically provide the option of branching away from the standard path of development.  For writing projects, this could be the case when two authors need to work concurrently on the same text file and decide to make a branch for one author for the time being.  Also, branching (and merging) is common in so-called \textit{distributed} version control systems such as git when different authors synchronize their work.
+
+In all cases, there exists a relationship of parent revision to a child revision imposing a graph structure on the revisions made at certain points of time.  When branching, there is more than one child, and, conversely, when merging there is more than one parent.  Thus, a history graph is a directed acyclic graph, which can be inferred from the revisions of a file in the past.  See Figure~\ref{fig:graph-traverse} for an example of such a history graph.  In version control systems, we typically draw the latest version as the top-most node.
+
+LTC needs to transform this graph into a sequence of revisions therefore traversing the graph from the latest version.  We do so by traversing the graph from the latest version to an oldest one in reverse direction.  When a revision is a merge and thus has multiple parents, we currently choose the oldest revision as the next one in the list leaving out any other branches.  However, we plan to make the branch selection the user's choice in future releases as this heuristic does not always apply.
+
+Figure~\ref{fig:graph-traverse} shows that LTC selects the shaded path on the left as revision $r_{i}$ happened at a later time than revision $r_{j}$.  It doesn't matter when the versions just after the branching event were committed as we are traversing the graph in opposite direction to obtain a path.
+
+Once we have a sequence of versions in LTC, we 
+
+condensing authors
+

@@ -55,9 +55,7 @@ public final class Author implements Comparable<Author> {
     public static Author fromList(Object[] list) {
         if (list == null || list.length < 1)
             throw new RuntimeException("Cannot create author from NULL or list with less than 1 entry");
-        return new Author((String) list[0],
-                list.length>1?(String) list[1]:null
-        );
+        return new Author((String) list[0], list.length>1?(String) list[1]:null);
     }
 
     public static Author parse(String string) throws ParseException {

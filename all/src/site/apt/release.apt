@@ -122,16 +122,16 @@ $> mvn clean deploy site site:deploy
 
 Finish Release Branch
 
-  After the upload, finish the release branch and push it to the remote master. During the finishing
+  After the upload, finish the release branch. During the finishing
   of the release, you can accept the default commit messages about merging and you want to supply a
   tag message.
 
 +---
 $> git flow release finish v1.0
-$> git push origin master
 +---
 
-  Then, checkout the <<<'develop'>>> branch, bump the version number and propagate this to the remote branch.
+  Then, make sure to be back on the <<<'develop'>>> branch to bump the version number and
+  propagate this to the remote branch.
 
 +---
 $> git checkout develop

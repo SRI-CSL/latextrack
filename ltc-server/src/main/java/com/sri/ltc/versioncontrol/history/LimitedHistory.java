@@ -21,6 +21,7 @@
  */
 package com.sri.ltc.versioncontrol.history;
 
+import com.google.common.collect.Lists;
 import com.sri.ltc.CommonUtils;
 import com.sri.ltc.filter.Author;
 import com.sri.ltc.latexdiff.CommitReaderWrapper;
@@ -68,33 +69,7 @@ public final class LimitedHistory extends FileHistory {
 
     @Override
     void transformGraph() {
-        // TODO: implement - maybe? (wasn't implemented pre git change)
-//        // reduce commit graph to authors
-//        commitGraph.reduceByAuthors(limitingAuthors);
-//
-//        // collapse sequences of same author
-//        if (commitGraph.vertexSet().size() > 0) {
-//            Author currentAuthor = Author.parse(gitCommits.get(0).getAuthor());
-//            for (ListIterator<GitLogResponse.Commit> i = gitCommits.listIterator(1); i.hasNext(); ) {
-//                Author a = Author.parse(i.next().getAuthor());
-//                if (a.equals(currentAuthor))
-//                    i.remove();
-//                else
-//                    currentAuthor = a;
-//            }
-//        }
-//
-//        // if no limiting date nor rev then reduce list until last commit of calling author (by name only)
-//        if ((limitingDate == null || "".equals(limitingDate)) &&
-//                (limitingRev == null || "".equals(limitingRev))) {
-//            int i = 0; // start with most current
-//            // ignore most recent commit(s) of self:
-//            for (; i < gitCommits.size() && self.name.equals(Author.parse(gitCommits.get(i).getAuthor()).name); i++);
-//            // keep all commits from other authors
-//            for (; i < gitCommits.size() && !self.name.equals(Author.parse(gitCommits.get(i).getAuthor()).name); i++);
-//            if (i < gitCommits.size())
-//                gitCommits.subList(i+1, gitCommits.size()).clear(); // remove all remaining commits
-//        }
+        // nothing to be done here
     }
 
     @Override
@@ -134,29 +109,11 @@ public final class LimitedHistory extends FileHistory {
         LOGGER.fine("Transformed list for \""+ trackedFile.getFile().getName()+"\" to "+commitList.size()+" commits");
     }
 
-    public final List<Commit> getCommitsList() {
-        return commitList;
-    }
-
-    public final List<Author> getAuthorsList() throws IOException, ParseException {
-        List<Author> authors = new ArrayList<Author>();
+    public final List<HistoryUnit> getHistoryUnits() {
+        List<HistoryUnit> units = Lists.newArrayList();
         for (Commit commit : commitList)
-            authors.add(commit.getAuthor());
-        return authors;
-    }
+            units.add(new HistoryUnit(commit.getAuthor(), commit.getId(), new CommitReaderWrapper(commit)));
+        return units;
 
-    public final List<ReaderWrapper> getReadersList() throws IOException, ParseException {
-        List<ReaderWrapper> readers = new ArrayList<ReaderWrapper>();
-        for (Commit commit : commitList)
-            // obtain string for readers
-            readers.add(new CommitReaderWrapper(commit));
-        return readers;
-    }
-
-    public final List<String> getIDs() {
-        List<String> ids = new ArrayList<String>();
-        for (Commit commit : commitList)
-            ids.add(commit.getId());
-        return ids;
     }
 }

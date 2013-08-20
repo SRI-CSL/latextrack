@@ -73,10 +73,17 @@ public abstract class LTCGui {
     private final static String KEY_LAST_Y = "last Y of window";
     static final Logger LOGGER = Logger.getLogger(LTCGui.class.getName());
 
+    final static String UPDATE_ACTION = "updateAction"; // action command to be used when binding keys in sub-classes
     private final JFrame frame;
     private final JPanel contentPane;
     private final JPanel lowerRightPane = new JPanel(new BorderLayout());
-    private final JButton updateButton = new JButton("Update");
+    private final JButton updateButton = new JButton();
+    {
+        // preparing update button for CTRL-U/CMD-U key stroke accelerator:
+        updateButton.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(
+                KeyStroke.getKeyStroke(KeyEvent.VK_U, Toolkit.getDefaultToolkit().getMenuShortcutKeyMask()),
+                UPDATE_ACTION);
+    }
 
     final LatexPane textPane;
 

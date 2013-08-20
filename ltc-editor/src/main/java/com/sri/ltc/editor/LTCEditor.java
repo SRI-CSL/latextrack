@@ -23,7 +23,6 @@ package com.sri.ltc.editor;
  */
 
 import com.sri.ltc.CommonUtils;
-import com.sri.ltc.versioncontrol.Remote;
 import com.sri.ltc.logging.LevelOptionHandler;
 import com.sri.ltc.logging.LogConfiguration;
 import com.sri.ltc.server.LTCserverImpl;
@@ -88,23 +87,18 @@ public final class LTCEditor extends LTCGui {
     // initializing GUI components
     private final AuthorListModel authorModel = new AuthorListModel(session);
     private final CommitTableModel commitModel = new CommitTableModel();
-    private final SelfComboBoxModel selfModel = new SelfComboBoxModel(textPane, authorModel, session);
-    private final JPanel cards = new JPanel(new CardLayout());
-    private final SelfTextField selfField = new SelfTextField(authorModel);
-    private final JButton pullButton = new JButton("Pull");
-    private final JButton pushButton = new JButton("Push");
-    private final RemoteComboBoxModel remoteModel = new RemoteComboBoxModel(session, pushButton, pullButton);
-    private final JPanel remotePane = new JPanel(new GridBagLayout());
+    private final SelfComboBoxModel selfModel = new SelfComboBoxModel(session);
     private final JFileChooser fileChooser = new JFileChooser();
     private final JTextField fileField = new JTextField();
-    private final Action updateAction = new AbstractAction("Update") {
-        private static final long serialVersionUID = -7081121785169995463L;
+    private final Action updateAction = new AbstractAction("Update ("+'\u2318'+"U)") {
+        @Override
         public void actionPerformed(ActionEvent event) {
             String path = fileField.getText();
             try {
-                // if empty path, close session (if any) and clear fields
+                // if empty path, try to close session (if any) and clear fields, then return
                 if ("".equals(path)) {
-                    close();
+                    if (!close())
+                        fileField.setText(session.getCanonicalPath()); // undo setting of file field
                     return;
                 }
                 // non-empty path: now look at current status of session
@@ -118,13 +112,14 @@ public final class LTCEditor extends LTCGui {
                             return;
                         }
                         clear();
-                        session.startInitAndUpdate(file, dateField.getText(), revField.getText(), textPane.getCaretPosition());
+                        session.startInit(file);
                     } else {
-                        session.startUpdate(dateField.getText(), revField.getText(), false, textPane.getText(), textPane.stopFiltering(), textPane.getCaretPosition());
+                        session.startUpdate(dateField.getText(), revField.getText(), saveButton.isEnabled(),
+                                textPane.getText(), textPane.stopFiltering(), textPane.getCaretPosition());
                     }
                 } else {
                     clear();
-                    session.startInitAndUpdate(file, dateField.getText(), revField.getText(), textPane.getCaretPosition());
+                    session.startInit(file);
                 }
                 // update file chooser and preference for next time:
                 fileChooser.setCurrentDirectory(file.getParentFile());
@@ -136,7 +131,7 @@ public final class LTCEditor extends LTCGui {
         }
     };
     private final BugReportPanel bugReportPanel = new BugReportPanel();
-    private final Action bugReportAction = new AbstractAction("Bug Report...") {
+    private final Action bugReportAction = new AbstractAction("Bug Report... ("+'\u2318'+"R)") {
         @Override
         public void actionPerformed(ActionEvent actionEvent) {
             if (session.isValid()) {
@@ -167,21 +162,20 @@ public final class LTCEditor extends LTCGui {
     };
     private final DateField dateField = new DateField();
     private final JTextField revField = new JTextField();
-    private final JTextField commitMsgField = new JTextField();
-    private final JButton saveButton = new JButton(new AbstractAction("Save") {
+    private final JButton saveButton = new JButton(new AbstractAction("Save ("+'\u2318'+"S)") {
         private static final long serialVersionUID = -6467093865092379559L;
         public void actionPerformed(ActionEvent event) {
             // disable editing and obtain current text/recent edits
             session.save(textPane.getText(), textPane.stopFiltering());
             textPane.getDocumentFilter().resetChanges(); // allow document listener to fire changes again
             // update commit list:
-            commitModel.addOnDisk();
+            commitModel.setFirstID(LTCserverInterface.ON_DISK);
             textPane.startFiltering();
             saveButton.setEnabled(false); // set modified = false
         }
     });
 
-    // return false if close was canceled by user
+    // return false if close was canceled by user; otherwise (YES or NO) return true to proceed
     private boolean close() throws XmlRpcException {
         if (saveButton.isEnabled()) {
             // dialog if unsaved edits
@@ -196,38 +190,24 @@ public final class LTCEditor extends LTCGui {
                     saveButton.doClick();
             }
         }
-        clear();
         session.close();
-        textPane.stopFiltering();
-        return true;
+        return true; // proceed with closing operation
     }
 
     protected void finishClose() {
-        saveButton.setEnabled(false);
+        clear(); // this will also try to stop filtering
     }
 
-    protected void finishInit(List<Object[]> authors, List<Object[]> commits, Object[] self, String VCS) {
-        // decide here whether we have SVN or GIT and change GUI elements accordingly
-        LTCserverInterface.VersionControlSystems vcs = null;
-        try {
-            vcs = LTCserverInterface.VersionControlSystems.valueOf(VCS);
-        } catch (IllegalArgumentException e) {
-            // VCS was not a proper name: make svn the default
-            vcs = LTCserverInterface.VersionControlSystems.SVN;
-        }
-        // switch self panel:
-        CardLayout cl = (CardLayout) cards.getLayout();
-        cl.show(cards, vcs.name());
-        // enable or disable remote panel
-        enableComponents(remotePane, LTCserverInterface.VersionControlSystems.GIT.equals(vcs));
-
+    protected void finishInit(List<Object[]> authors, Object[] self) {
         // other initializations:
         authorModel.init(authors);
-        commitModel.init(commits, true);
+        commitModel.init(self);
         selfModel.init(authors, self);
-        selfField.setSelf(self);
         saveButton.setEnabled(false); // start with modified = false
         setFile(session.getCanonicalPath(), false);
+
+        // start update:
+        getUpdateButton().doClick();
     }
 
     protected void finishUpdate(Map<Integer, Object[]> authors,
@@ -235,20 +215,16 @@ public final class LTCEditor extends LTCGui {
                                 List<Integer[]> styles,
                                 int caretPosition,
                                 List<String> orderedIDs,
-                                List<Object[]> commits,
-                                List<Object[]> remotes) {
+                                List<Object[]> commits) {
         // update list of authors
-        finishAuthors(new ArrayList<Object[]>(authors.values()));
+        finishAuthors(new ArrayList<Object[]>(authors.values()), false); // don't run another update
         // update and markup text
         Map<Integer,Color> colors = new HashMap<Integer,Color>();
         for (Map.Entry<Integer,Object[]> entry : authors.entrySet())
             colors.put(entry.getKey(), Color.decode((String) entry.getValue()[2]));
         textPane.updateFromMaps(text, styles, colors, caretPosition, orderedIDs);
         // update list of commits
-        commitModel.init(commits, false);
-        commitModel.update(new HashSet<String>(orderedIDs));
-        // update list of remotes
-        remoteModel.update(remotes);
+        commitModel.update(commits, new HashSet<String>(orderedIDs));
         // update date field
         String date = dateField.getText();
         if (!date.isEmpty())
@@ -260,18 +236,16 @@ public final class LTCEditor extends LTCGui {
             }
     }
 
-    protected void finishAuthors(List<Object[]> authors) {
+    protected void finishAuthors(List<Object[]> authors, boolean doUpdate) {
         authorModel.addAuthors(authors);
+        if (doUpdate)
+            getUpdateButton().doClick();
     }
 
-    protected void finishCommit(Object[] last_commit) {
-        commitMsgField.setText("");
-
-        // update list of commits:
-        if (last_commit == null)
-            return;
-        commitModel.removeOnDisk();
-        commitModel.add(last_commit);
+    protected void finishSetSelf(Object[] self) {
+        commitModel.setSelf(self);
+        // update authors and everything else:
+        session.getAuthors();
     }
 
     private void clear() {
@@ -282,9 +256,8 @@ public final class LTCEditor extends LTCGui {
             LOGGER.log(Level.SEVERE, e.getMessage(), e);
         }
         authorModel.clear();
-        commitModel.clear(true);
+        commitModel.clear(null);
         selfModel.clear();
-        selfField.setSelf(null);
         dateField.setText("");
         revField.setText("");
         saveButton.setEnabled(false); // start with modified = false        
@@ -293,6 +266,7 @@ public final class LTCEditor extends LTCGui {
     private void createUIComponents() {
         // add action to update button
         getUpdateButton().setAction(updateAction);
+        getUpdateButton().getActionMap().put(UPDATE_ACTION, updateAction);
 
         // file chooser
         fileChooser.setCurrentDirectory(new File(
@@ -387,16 +361,22 @@ public final class LTCEditor extends LTCGui {
         JPanel filePane = new JPanel(new BorderLayout(5, 0));
         filePane.add(new JLabel("File:"), BorderLayout.LINE_START);
         filePane.add(fileField, BorderLayout.CENTER);
-        filePane.add(new JButton(new AbstractAction("Choose...") {
+        JButton chooseButton = new JButton(new AbstractAction("Choose... ("+'\u2318'+"O)") {
             private static final long serialVersionUID = 138311848972917973L;
-
+            @Override
             public void actionPerformed(ActionEvent e) {
                 if (fileChooser.showOpenDialog(getFrame()) == JFileChooser.APPROVE_OPTION) {
                     File file = fileChooser.getSelectedFile();
                     LTCEditor.this.setFile(file.getAbsolutePath(), true);
                 }
             }
-        }), BorderLayout.LINE_END);
+        });
+        // configuring key binding to CMD-O / CTRL-O for choose button:
+        chooseButton.getActionMap().put("chooseAction", chooseButton.getAction());
+        chooseButton.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(
+                KeyStroke.getKeyStroke(KeyEvent.VK_O, Toolkit.getDefaultToolkit().getMenuShortcutKeyMask()),
+                "chooseAction");
+        filePane.add(chooseButton, BorderLayout.LINE_END);
         return filePane;
     }
 
@@ -529,90 +509,30 @@ public final class LTCEditor extends LTCGui {
         selfPane.add(new JLabel("Self: "), BorderLayout.LINE_START);
         final JComboBox selfCombo = new JComboBox(selfModel);
         selfCombo.setEditable(true);
-        selfCombo.setRenderer(new MyComboRenderer());
-        selfCombo.setEditor(new SelfComboBoxEditor(authorModel));
-        cards.add(selfCombo, LTCserverInterface.VersionControlSystems.GIT.name());
-        cards.add(selfField, LTCserverInterface.VersionControlSystems.SVN.name());
-        selfPane.add(cards, BorderLayout.CENTER);
-        contentTrackingPane.add(selfPane, BorderLayout.PAGE_START);
-
-        // 2) commit graph
-        JScrollPane scrollPane = new JScrollPane(new CommitTable(commitModel));
-        contentTrackingPane.add(scrollPane, BorderLayout.CENTER);
-
-        // 3) save and commit
-        final JButton commitButton = new JButton(new AbstractAction("Commit") {
-            private static final long serialVersionUID = -6467093865092379559L;
-            public void actionPerformed(ActionEvent e) {
-                session.commit(commitMsgField.getText(), saveButton);
-            }
-        });
-        commitButton.setEnabled(false);
-        commitMsgField.getDocument().addDocumentListener(new DocumentListener() {
-            public void insertUpdate(DocumentEvent e) {
-                commitButton.setEnabled(e.getDocument().getLength()>0);
-            }
-            public void removeUpdate(DocumentEvent e) {
-                commitButton.setEnabled(e.getDocument().getLength()>0);
-            }
-            public void changedUpdate(DocumentEvent e) {
-                commitButton.setEnabled(e.getDocument().getLength()>0);
-            }
-        });
-        commitMsgField.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                commitButton.doClick();
-            }
-        });
+        selfCombo.setRenderer(new SelfComboBoxRenderer());
+        selfCombo.setEditor(new SelfComboBoxEditor(authorModel, textPane));
+        selfPane.add(selfCombo, BorderLayout.CENTER);
         // enable save button upon first change
         saveButton.setEnabled(false);
         textPane.getDocumentFilter().addChangeListener(new ChangeListener() {
             public void stateChanged(ChangeEvent e) {
                 if (!saveButton.isEnabled()) {
                     saveButton.setEnabled(true);
-                    commitModel.updateFirst(LTCserverInterface.MODIFIED); // update commit list to "on disk" if not already
+                    commitModel.setFirstID(LTCserverInterface.MODIFIED); // update commit list to "modified" if not already
                 }
             }
         });
-        JPanel commitPane = new JPanel(new GridBagLayout());
-        GridBagConstraints c1 = new GridBagConstraints();
-        c1.gridx = 0;
-        commitPane.add(saveButton, c1);
-        c1.gridx = 1;
-        commitPane.add(commitButton, c1);
-        c1.fill = GridBagConstraints.HORIZONTAL;
-        c1.weightx = 1.0; // combo box gets all space
-        c1.gridx = 2;
-        commitPane.add(commitMsgField, c1);
+        // configuring key binding to CMD-S / CTRL-S for save button:
+        saveButton.getActionMap().put("saveAction", saveButton.getAction());
+        saveButton.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(
+                KeyStroke.getKeyStroke(KeyEvent.VK_S, Toolkit.getDefaultToolkit().getMenuShortcutKeyMask()),
+                "saveAction");
+        selfPane.add(saveButton, BorderLayout.LINE_END);
+        contentTrackingPane.add(selfPane, BorderLayout.PAGE_START);
 
-        // 4) remotes and push/pull
-        final JComboBox remoteCombo = new JComboBox(remoteModel);
-        remoteCombo.setEditable(true);
-        remoteCombo.setRenderer(new MyComboRenderer());
-        remoteCombo.setEditor(new RemoteComboBoxEditor());
-        GridBagConstraints c2 = new GridBagConstraints();
-        c2.gridx = 0;
-        remotePane.add(new JLabel("Remote: "), c2);
-        // two buttons:
-        pullButton.setAction(new PushOrPullAction("Pull", remoteCombo, true));
-        c2.gridx = 2;
-        remotePane.add(pullButton, c2);
-        pushButton.setAction(new PushOrPullAction("Push", remoteCombo, false));
-        c2.gridx = 3;
-        remotePane.add(pushButton, c2);
-        // combo box:
-        c2.fill = GridBagConstraints.HORIZONTAL;
-        c2.weightx = 1.0; // combo box gets all space
-        c2.gridx = 1;
-        remotePane.add(remoteCombo, c2);
-        enableComponents(remotePane, false); // by default disabled
-
-        // combine 3) and 4) into one pane using BoxLayout
-        JPanel boxedPane = new JPanel();
-        boxedPane.setLayout(new BoxLayout(boxedPane, BoxLayout.PAGE_AXIS));
-        boxedPane.add(commitPane);
-        boxedPane.add(remotePane);
-        contentTrackingPane.add(boxedPane, BorderLayout.PAGE_END);
+        // 2) commit graph
+        JScrollPane scrollPane = new JScrollPane(new CommitTable(commitModel));
+        contentTrackingPane.add(scrollPane, BorderLayout.CENTER);
 
         return contentTrackingPane;
     }
@@ -630,14 +550,6 @@ public final class LTCEditor extends LTCGui {
                 });
         splitPaneH.setBorder(null);
         panel.add(splitPaneH, BorderLayout.CENTER);
-    }
-
-    private void enableComponents(Container container, boolean enable) {
-        for (Component component : container.getComponents()) {
-            component.setEnabled(enable);
-            if (component instanceof Container)
-                enableComponents((Container) component, enable);
-        }
     }
 
     public LTCEditor() {
@@ -751,29 +663,6 @@ public final class LTCEditor extends LTCGui {
 
         @Argument(required=false, metaVar="FILE", usage="load given file to track changes")
         File file;
-    }
-
-    private class PushOrPullAction extends AbstractAction {
-
-        private final JComboBox comboBox;
-        private final boolean isPull;
-
-        PushOrPullAction(String s, JComboBox comboBox, boolean pull) {
-            super(s);
-            this.comboBox = comboBox;
-            isPull = pull;
-        }
-
-        @Override
-        public void actionPerformed(ActionEvent actionEvent) {
-            Object o = comboBox.getSelectedItem();
-            if (o instanceof Remote) {
-                Remote r = (Remote) o;
-                String repository = r.isAlias()?r.name:r.url;
-                session.pullOrPush(repository, isPull, dateField.getText(), revField.getText(),
-                        saveButton.isEnabled(), textPane.getText(), textPane.stopFiltering(), textPane.getCaretPosition());
-            }
-        }
     }
 
     private class DateField extends JTextField {

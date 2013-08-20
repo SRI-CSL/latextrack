@@ -86,6 +86,34 @@ testdir () # test given DIR ($1) for PERMISSIONS ($3)
     esac
 }
 
+makedir_absolute () # if DIR ($1) does not exist, ask whether to create dir or abort
+                    # then make absolute and set ABS_DIR
+{
+    if [ ! -e "$1" ]; then
+	while true; do
+	    printf " *** WARNING: The specified directory %s does not exist.\n" $1
+            printf "              Would you like to create it and continue (C) or abort the installation (A)?\n"
+	    read -n1 -p "Enter 'c' or 'a': " yn
+	    echo
+	    case $yn in
+		[Cc]* ) 
+		    mkdir -pv $1
+		    if [ $? -gt 0 ]; then
+			echo "Couldn't create directory $1; giving up."; exit 1
+		    fi 
+		    break
+		    ;;
+		[Aa]* ) 
+		    echo "Aborting..." 
+		    exit 5
+		    ;;
+		* ) echo "Please enter 'c' or 'a'.";;
+	    esac
+	done	
+    fi
+    ABS_DIR=$( cd $1 ; pwd -P )
+}
+
 findlatest () # find the latest LTC-<version>.jar in given DIR ($1) and set JAR_FILE
 {
     if [ ! -d "$1" ]; then
@@ -121,12 +149,14 @@ if [ $# -lt 1 ]; then
 fi
 
 # make absolut and test java directory
-JAVA_DIR=$( cd $1 ; pwd -P )
+makedir_absolute $1
+JAVA_DIR=$ABS_DIR
 testdir "$JAVA_DIR" "Java" "w"
 
 # test Emacs directory (if given)
 if [ $# -gt 1 ]; then
-    EMACS_DIR=$( cd $2 ; pwd -P )
+    makedir_absolute $2
+    EMACS_DIR=$ABS_DIR
     testdir "$EMACS_DIR" "Emacs" "w"
     which unzip &>/dev/null
     if [ $? -gt 0 ]; then

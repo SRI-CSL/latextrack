@@ -1,0 +1,119 @@
+\documentclass{article}
+
+% ----- useful packages
+\usepackage[letterpaper,verbose,pdftex]{geometry}
+%\usepackage[cc]{titlepic} % for picture in title
+\usepackage{graphicx} % for including figures
+\usepackage{tikz} % for portable graphics
+\usepackage{amssymb} % math symbols
+%\usepackage{hhline} % for double \cline's in tables
+\usepackage{fancyvrb,courier} % for more elaborate verbatim envs 
+                              % (and bold-face fonts)
+\usepackage[parfill]{parskip} % paragraphs begin with empty line rather than indent
+\usepackage{url} % for typesetting URL's
+\usepackage{color}
+\usepackage[%pdftex, % driver
+  hyperfootnotes=false, % if using "footnotes" package
+  colorlinks=true, 
+  bookmarks=true,bookmarksnumbered=true, % show numbered bookmarks
+  pdfsubject={},pdftitle={},pdfauthor={Linda Briesemeister} % document info
+]{hyperref} % more hyperlinks in PDF
+\usepackage{fancyhdr}
+%\usepackage{ulem} % for strike-out font
+%\usepackage{pbox} % for line breaks in table cells
+\usepackage{subfig}
+%\usepackage{xparse} % for \Menu command definition
+\usepackage{hanging} % for hanging paragraphs
+\usepackage{wrapfig}
+
+%% pgf/tikz customization
+%\usepgflibrary{shapes.arrows}
+%\usetikzlibrary{arrows,automata}
+%\usetikzlibrary{positioning}
+
+%% \nameref without hyperlink (to be used within \hyperref etc):
+\makeatletter
+\@ifdefinable\nolinknameref{%
+  \DeclareRobustCommand*\nolinknameref[1]{%
+    \csname @safe@activestrue\endcsname%
+    \expandafter\real@setref%
+    \csname r@#1\endcsname\@thirdoffive{#1}%
+    \csname @safe@activesfalse\endcsname}%
+}%
+\makeatother
+
+%% version string
+\newcommand{\version}{}
+\input{version.txt}
+
+%% custom verbatim commands and environments
+%\DefineVerbatimEnvironment{BaseVerbatim}{Verbatim}{fontsize=\normalsize} % common definitions to PDF and HTML
+\definecolor{BoxBackground}{gray}{0.1} % 10%
+\DefineVerbatimEnvironment{CodeVerbatim}{Verbatim}{fontsize=\small,frame=single}
+\DefineVerbatimEnvironment{FileVerbatim}{Verbatim}{fontsize=\small,frame=lines}
+\newcommand{\Code}[1]{{\small\tt #1}}
+
+%% figures under PDF
+\DeclareGraphicsExtensions{.png}
+\newcommand{\myscale}{0.4} % uniform scaling of screen shots
+
+%% let all wrapfigures protrude into margin and remove space on top and bottom
+%\setlength{\wrapoverhang}{0pt}
+\setlength{\intextsep}{0.5em}
+
+%% fancy headers and footers
+% clear default layout:
+\fancyhead{}
+\fancyfoot{}
+% remove lines:
+\renewcommand{\headrulewidth}{0.2pt} 
+\renewcommand{\footrulewidth}{0pt}
+% custom header: chapter on left, section on right for odd; even reversed
+\fancyhead[LO,RE]{GitHub Tutorial for Shared LaTeX Projects}
+% custom footer: version -- copyright -- page number for odd; even reversed
+\fancyfoot[LO,RE]{\small{LTC v\version}}
+\fancyfoot[C]{\small{\textcopyright~SRI International}}
+\fancyfoot[RO,LE]{\small{\thepage}}
+
+%% colors
+\definecolor{LightGray}{gray}{0.8}
+
+
+% ----- title information
+\title{Using GitHub\textsuperscript{\textcopyright} for a Shared \LaTeX{} Writing Project}
+\author{%
+Linda Briesemeister\\
+\texttt{linda.briesemeister@sri.com}\\
+SRI International
+}
+%\titlepic{\hlink{\baseurl /index.html}{../../index.html}{\includegraphics[width=2cm]{figures/LTC-logo.png}}}
+\date{\today} 
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+This is a short tutorial on how to use GitHub for shared LaTeX writing projects as it provides free hosting of git repositories, which may be sufficient when authors collaborate without having a common IT infrastructure.  Note that such repositories are by default public so your text is effectively public as well.  Private repositories in GitHub are a paid-for service.
+
+\textbf{Disclaimer:} This tutorial may be outdated if GitHub changes its user interface.  We tried to explain the steps needed based on how this service operates at the time of writing.  No warranty is provided.
+\end{abstract}
+
+\tableofcontents
+%\listoffigures
+%\thispagestyle{fancy}
+
+\clearpage
+
+\pagestyle{fancy}
+
+\input{github}
+\input{local}
+\input{workcycle}
+
+% ----- references 
+%
+%\bibliographystyle{plain}
+%\bibliography{ltc}
+%\addcontentsline{toc}{chapter}{Bibliography} 
+
+\end{document}

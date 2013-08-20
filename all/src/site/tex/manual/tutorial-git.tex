@@ -30,7 +30,7 @@ $> java -cp $LTC/LTC.jar \textbackslash
 \begin{figure}[t]
 \centering
 \mygraphics{width=\textwidth,height=.5\textheight,keepaspectratio}{figures/editor-open}
-\caption{Initial opening of tutorial file in LTC Editor} \label{fig:editor-open}
+\caption{Initial opening of tutorial file under git in LTC Editor} \label{fig:editor-open}
 \end{figure}
 In this figure, we see a panel at the bottom-right that resembles the upper part of the GitX graphical interface to git.  There, we display the history of the current LaTeX file under git.  We can also see what git currently perceives as the current user -- now John Adams because we had overridden the git settings in this tutorial repository.
 
@@ -38,7 +38,7 @@ In this figure, we see a panel at the bottom-right that resembles the upper part
 
 The bottom-left panels of the editor allows us to customize the way LTC displays the changes of the file.  Section~\ref{sec:general-use} contains all the details of how LTC displays the changes including limiting the file history and filtering.  In this tutorial, we will just use some of the options and see their effect.
 
-First, notice the list of known authors (as they are stored in the git repository) and the colors assigned to each of them.  Now perform a double-click on the colored square next to Roger Sherman to open a dialog and  choose a dark color such as brown (you will want something with contrast to the white background).  Notice how the text in the editor panel on the top changes color for those parts that are attributed to Roger Sherman's edits.
+First, notice the colors assigned to each of the authors.  To change an author color, for example Roger Sherman's,  perform a double-click on the colored square next to Roger Sherman in the list of authors to open a dialog and  choose a dark color such as brown (you will want something with contrast to the white background).  Notice how the text in the editor panel on the top changes color for those parts that are attributed to Roger Sherman's edits.
 
 Next, focus on the typographical errors in the command ``\textbackslash maketitle'' in line 11 and the beginning of the first paragraph in line thirteen as well as the spelling errors in the word ``political.''  If you first uncheck the box for ``small'' changes and second, also the box for deletions, notice how the text rendering in the editor panel changes.
 \begin{figure}[t]
@@ -54,20 +54,19 @@ Next, focus on the typographical errors in the command ``\textbackslash maketitl
   \subfloat{
     \label{subfig:editor-filter-small3} 
     \mygraphics{width=.25\textwidth}{figures/editor-filter-small3}}
-\caption{Effect of hiding ``small'' changes first (middle) and then also deletions (right)} \label{fig:editor-filter-small}
+\caption[Effect of hiding ``small'' changes and deletions]{Effect of hiding ``small'' changes first (middle) and then also deletions (right)} \label{fig:editor-filter-small}
 \end{figure}
 Figures~\ref{fig:editor-filter-small} show that ``\textbackslash maketitle'' as well as the typos in the word ``political'' are no longer marked up, and in the third image, the deletion beginning with ``If'' at the beginning of the paragraph is now omitted.
 
 \subsection{Understanding the Commit Graph}
 
-Now draw your attention back to the graph with the history of the current file under git (located in the bottom-right panel).  In our example repository, this graph is just a line as the authors committed their versions in sequential order.  For the tutorial example, in which the writing project contained only one .tex file, the history graph in the LTC Editor looks almost the same as viewing the git repository in a graphical tool such as GitX.  However, if the writing project contained more .tex files, these graphs would not look similar anymore.  The git repository is tracking the history of all files that have been added to it.  In contrast, the LTC Editor only displays the history of the current .tex file loaded.
-
+Now draw your attention back to the graph with the history of the current file under git (located in the bottom-right panel).  In our current tutorial repository, this graph is just a line as the authors committed their versions in sequential order.  %For the tutorial example, in which the writing project contained only one .tex file, the history graph in the LTC Editor looks almost the same as viewing the git repository in a graphical tool such as GitX.  However, if the writing project contained more .tex files, these graphs would not look similar anymore.  The git repository is tracking the history of all files that have been added to it.  In contrast, the LTC Editor only displays the history of the current .tex file loaded.
 \begin{figure}[t]
 \centering
 \mygraphics{scale=.5}{figures/commit-graph}
 \caption{Example of commit graph} \label{fig:commit-graph}
 \end{figure}
-In addition to taking only commits of the current file into account, the commit graph is traversed in a depth-first fashion to obtain one path from the current version of the file to some ancestor.  Refer to Figure~\ref{fig:commit-graph} for a screen shot of the example file history. How far we go back in history depends on some filtering settings, which are discussed further in Section~\ref{sec:limit-history} below.  By default, we first include all version of the current author at the top.  In our example with impersonating John Adams, there are currently no further recent commits of him.  Then, we continue down the path and collecting all versions of different authors until we find the next version of John Adams in the commit with the message ``second version.''
+Refer to Figure~\ref{fig:commit-graph} for a screen shot of the example file history. The first line always contains the current author.  Then, revisions that are included in the tracked changes are printed in black and denoted with a filled circle.  How far we go back in history depends on some filtering settings, which are discussed further in Section~\ref{sec:limit-history} below.  By default, we first include all versions of the current author at the top.  In our example with impersonating John Adams, there are currently no further recent commits of him.  Then, we continue down the path and collect all versions of different authors until we find the next version of John Adams in the commit with the message ``second version.''
 
 %After we have obtained an ordered sequence of commits by traversing the graph from the top down, we ignore subsequent commits of the same author---only the latest version of the same author is considered.  The idea behind this is that we do not want to penalize an author who commits often to the repository.  Instead, we treat all his or her changes from the time the file was changed by a different author as one big change event.  In our example, see that Roger Sherman committed version 5 and 6 to the repository, but version 5 is depicted in gray and not taken into account when displaying the changes.  
 
@@ -90,10 +89,10 @@ We allow the user to filter and customize how the potentially rich history of a 
   \begin{minipage}[t]{0.61\linewidth}
   \centering
   \mygraphics{scale=.5}{figures/editor-limit-authors}
-  \caption{Effect of limiting authors to Roger Sherman and Thomas Jefferson after clicking ``Update''} \label{fig:editor-limit-authors}
+  \caption[Effect of limiting authors]{Effect of limiting authors to Roger Sherman and Thomas Jefferson after clicking ``Update''} \label{fig:editor-limit-authors}
   \end{minipage}  
 \end{figure}
-To limit the history by \textbf{authors}, select both authors Roger Sherman and Thomas Jefferson through clicking while holding down the CTRL or CMD key in the list of authors in the middle lower panel.  Then, click the button ``Limit'' below the list, which will gray out the unselected authors.  For a limiting action to take effect, you need to click ``Update.''  This is different from showing and hiding various changes, which is applied instantly.
+To limit the history by \textbf{authors}, select both authors Roger Sherman and Thomas Jefferson through clicking while holding down the CTRL or CMD key in the list of authors in the middle lower panel.  Then, click the button ``Limit'' below the list, which will gray out the unselected authors.  For a limiting action to take effect, you need to click ``Update.''  This is different from showing and hiding various changes as well as changing author colors, which is applied instantly.
 
 Notice how any version by the ignored authors Benjamin Franklin and John Adams is now gray as only commits from the selected authors are considered.  Again, the history is only taken until the next revision of the current author but since he is being ignored, we go all the way back to the first revision. Compare your editor window with the screen shot in Figure~\ref{fig:editor-limit-authors} and see how the commit graph has changed.
 
@@ -116,7 +115,7 @@ Next, we apply limits on \textbf{revision} and \textbf{date} to control how far 
   \begin{minipage}[t]{0.61\linewidth}
   \centering
   \mygraphics{scale=.5}{figures/editor-limit-rev}
-  \caption{Effect of going back to first revision after clicking ``Update''} \label{fig:editor-limit-rev}
+  \caption[Effect of going back to first revision]{Effect of going back to first revision after clicking ``Update''} \label{fig:editor-limit-rev}
   \end{minipage}  
 \end{figure}
 
@@ -135,18 +134,48 @@ To remove the limit by revision number, simply erase the text in the field ``Sta
   \begin{minipage}[t]{0.61\linewidth}
   \centering
   \mygraphics{scale=.5}{figures/editor-limit-date}
-  \caption{Effect of limiting history to date of third version after clicking ``Update''} \label{fig:editor-limit-date}
+  \caption[Effect of limiting history to date of third version]{Effect of limiting history to date of third version after clicking ``Update''} \label{fig:editor-limit-date}
   \end{minipage}  
 \end{figure}
 
 Limiting the history by date works similarly.  You may drag a date from the commit graph on the right, for example the date of the third version commit, and drop it into the field ``Start at date:'' on the left.  Or, type a date such as \Code{Jul 23, 2010 1:11p} into the field.  We employ some software to process times and dates in natural language, and if successful, the field will contain the date string as it was understood translated into the format used in the commit tree.
 Again, you will need to click ``Update'' for the change to take effect or click RETURN while editing the text field.  See Figures~\ref{fig:editor-select-date} and \ref{fig:editor-limit-date} for screenshots. To remove the limit by date, erase all text in the text field and update.
 
+\subsection{Condensing History}
+
+Sometimes the list of commits considered is getting long and the resulting markup of the changes confusing.  One additional way to customize how the changes are displayed is a setting to ``condense authors.''  Find a check box with that name under the list of authors for filtering.  If checked, then only the latest version of an author of \textit{consecutive} commits is considered -- in our example, only the sixth version is shown in black while the fifth version by Roger Sherman is now grayed out as seen in Figure~\ref{fig:editor-condense-on}.
+\begin{figure}
+\centering
+  \begin{minipage}[b]{0.57\linewidth}
+    \centering
+    \mygraphics{scale=.5}{figures/editor-condense-on}
+    \ifpdf
+      \caption[Effect of condensing authors]{Effect of condensing authors:\\ ignoring the fifth version by Roger Sherman} 
+    \else
+      \caption[Effect of condensing authors]{Effect of condensing authors: ignoring the fifth version by Roger Sherman} 
+    \fi
+    \label{fig:editor-condense-on}  
+  \end{minipage}  
+\hspace{0.04\linewidth}%
+  \begin{minipage}[b]{0.38\linewidth}
+    \subfloat{
+      \label{subfig:editor-condense-before} 
+      \mygraphics{width=0.8\linewidth}{figures/editor-condense-before}}
+  \hspace{1em}
+    \subfloat{
+      \label{subfig:editor-condense-after} 
+      \mygraphics{width=0.8\linewidth}{figures/editor-condense-after}}
+    \caption[Example of condensing authors]{Example of markup change before (left) and after (right) condensing authors} \label{fig:editor-condense-before-after}
+  \end{minipage}%
+\end{figure}
+
+See Figure~\ref{fig:editor-condense-before-after} for an example of how condensing authors affects the markup.  Since we are only considering the changes that Roger Sherman made in the sixth version, his correction of the name is no longer shown.  Condensing authors makes sense when users commit versions often so that they do not loose too much history.  Their last version after a number of commits generally has the flavor of a ``final'' version, ready to be shared with others.  Hence, the changes made there compared to the last version of another author is commonly of most interest.
+
 \subsection{Editing, Saving, and Committing}
 
-Let us start the next step by resetting all filters to the default configuration, i.e., no limit by authors, date, and revision.  Then, we will edit the text in the editor panel to see the latest changes.
+Let us start the next step by resetting all filters to the default configuration, i.e., no limit by authors, date, and revision.  Also make sure to turn ``condense authors'' off.  Then, we will edit the text in the editor panel to see the latest changes.
 
-Click into the text field and enter some text, for example a LaTeX comment reminding John Adams to work on a list of charges against King George III in line nineteen:
+Click into the text panel and enter some text, for example a LaTeX comment reminding John Adams to work on a list of charges against King George III in line nineteen:
 \begin{FileVerbatim}
 % list charges against King George III here
 \end{FileVerbatim}
@@ -162,11 +191,28 @@ Now delete other characters that are either rendered black or a different color 
 
 Finally, you will want to click ``Save'' to save the current file to disk.  This will cause the label ``modified'' to change to ``on disk.''  If you would then again edit, the label would switch back to ``modified'' of course.
 
-Saving the file, however, does not tell git to create a new version under its management.  In order to commit the current file to git, you have to give it a commit message such as 
-\begin{FileVerbatim}
-added comment about list of charges
-\end{FileVerbatim}
-in the text field next to the ``Commit'' button.  Once the text field is not empty, the ``Commit'' button becomes enabled.  After you commit, the commit graph will list the new entry and the editor panel will be updated.  
+Saving the file, however, does not tell git to create a new version under its management.  In order to commit the current file to git, first, make sure that the .tex file is saved and  the first line in the commit graph is set to ``on disk.''  Then, on a command line, switch to the directory with the tutorial file and perform the following commit command (printed in bold below).  You may want to check the status of git before and after the commit:
+\begin{CodeVerbatim}[commandchars=\\\{\}]
+$> git status
+# On branch master
+# Changes not staged for commit:
+#   (use "git add <file>..." to update what will be committed)
+#   (use "git checkout -- <file>..." to discard changes in working directory)
+#
+#	modified:   independence.tex
+#
+no changes added to commit (use "git add" and/or "git commit -a")
+$> \textbf{git commit -am "added comment about list of charges"}
+[master 9438e4f] added comment about list of charges
+ 1 file changed, 3 insertions(+), 1 deletion(-)
+\end{CodeVerbatim}
+
+To make LTC Editor aware of the underlying commit from the command line, click the ``Update'' button.  Notice how the recent commit gets included at the top of the list as seen in Figure~\ref{fig:commit-cmd-line}.  Also see that we still include all revisions up to John Adams' second revision a while ago---all revisions at the top of the graph before any other authors are skipped before looking for the default end point in history.
+\begin{figure}[t]
+\centering
+\mygraphics{scale=.5}{figures/commit-cmd-line}
+\caption{Updated commit graph after command line commit} \label{fig:commit-cmd-line}
+\end{figure}
 
 Now two things can happen depending on your setting for showing changes in comments (lower-left most panel).  If the checkbox was off, the newly added comment is no longer marked up in red with underlining.  After updating the editor from the commit history, the settings of which changes to show influence the markup of the text.  Now the newly entered comment is recognized as such, and if we hide changes in comments, the markup will not show.  If the box for ``changes in comments'' is checked, you will see your latest text still marked up as an addition.  Your editor should now look similar to the part shown in either Figure~\ref{fig:commit-no-comment} or Figure~\ref{fig:commit-comment}.
 \begin{figure}
@@ -186,67 +232,76 @@ Now two things can happen depending on your setting for showing changes in comme
   \end{minipage}  
 \end{figure}
 
-The ``Commit'' button is an interface to the underlying git version control management, but you can also interact with git directly from the command line.  To exemplify this, we will add more text under the comment, for example
+\subsection{Collaborating with Roger Sherman} \label{sec:tutorial-git:collab}
+
+Next we perform an example collaboration with Roger Sherman's example repository as setup in Section~\ref{sec:collaborating} above. Remember that Roger Sherman's repository has had two more commits than the original one we used for John Adams.  Since we have made edits and commits as John Adams, both repositories have diverged.  To synchronize them, we first pull Roger Sherman's changes into our working copy using the \Code{git pull} command below:
 
 \begin{CodeVerbatim}
-\begin{itemize}
-  \item He has refused his Assent to Laws, the most wholesome and necessary 
-        for the public good.
-\end{itemize}
-\end{CodeVerbatim}
-    
-You will want to make sure to have changes saved and the first line in the commit graph set to ``on disk.''  Then, from the command line you would call something similar to
-\begin{CodeVerbatim}
-$> cd $TUTORIAL/independence
-$> git commit -m "first charge" -- independence.tex 
-[master 9d8dd3f] first charge
- 1 files changed, 5 insertions(+), 0 deletions(-)
-\end{CodeVerbatim}
-Now update your editor window and see the addition of the commit from the command line to the commit graph as seen in Figure~\ref{fig:commit-cmd-line}.
-\begin{figure}[t]
-\centering
-\mygraphics{scale=.5}{figures/commit-cmd-line}
-\caption{Updated commit graph after command line commit} \label{fig:commit-cmd-line}
-\end{figure}
-
-\subsection{Collaborating}
-
-Collaboration on your writing project mainly happens through git.  It depends on your setup how you exchange git repositories.  Whatever the configuration, it will probably show up under the list of registered remotes for your repository.  In the example, we cloned from the downloaded .bundle file, so looking at the remotes will look like this:
-\begin{CodeVerbatim}
-$> git remote -v
-origin	$TUTORIAL/independence.bundle (fetch)
-origin	$TUTORIAL/independence.bundle (push)
-\end{CodeVerbatim}
-
-If you need to declare a remote location to be used in your writing project, you can use a command similar to the following.  Make sure to replace all the relevant information about the \Code{alias} and \Code{URL} in this command.
-\begin{CodeVerbatim}
-$> git remote add alias user@server:path-to-git-repos/project.git
-\end{CodeVerbatim}
-
-As an example of interacting with another repository, let us create a second one on our local file system.  In practice, the remote repository will be on a different computer and accessed via certain network protocols reflected in the URL.  Feel free to adjust the file locations in the example below to your taste.
-\begin{CodeVerbatim}
-$> cd $TUTORIAL/independence
-$> git clone . ~/independence.git
-Cloning into ~/independence.git...
-done.
-$> git remote add philadelphia ~/independence.git
-$> git remote -v
-philadelphia	~/independence.git (fetch)
-philadelphia	~/independence.git (push)
-\end{CodeVerbatim}
-
-Now, you can pull and push from and to the remote repository using its alias ``philadelphia'' with the following commands.  At this point, the two repositories are synched so the operations do not perform any changes.  These two commands are also available through the LTC Editor user interface---after choosing the remote from the pull-down menu in the lower-right corner, click the ``Pull'' or ``Push'' buttons.  If the menu is empty you may have to update the editor to obtain the latest git changes that you may have performed on the command line or using a graphical git tool.
-\begin{CodeVerbatim}
-$> git push philadelphia master
-Everything up-to-date
-$> $ git pull philadelphia master
-From /Users/linda/git/independence
+$> git pull sherman master
+remote: Counting objects: 8, done.
+remote: Compressing objects: 100% (3/3), done.
+remote: Total 6 (delta 2), reused 5 (delta 1)
+Unpacking objects: 100% (6/6), done.
+From $TUTORIAL/independence-sherman
  * branch            master     -> FETCH_HEAD
-Already up-to-date.
+Auto-merging independence.tex
+CONFLICT (content): Merge conflict in independence.tex
+Automatic merge failed; fix conflicts and then commit the result.
 \end{CodeVerbatim}
 
-% TODO: create example that shows branches in commit graph => independence2.bundle?
+\begin{figure}
+\centering
+\mygraphics{scale=.4}{figures/editor-merge-conflict}
+\caption{Git conflict markers in merged file} \label{fig:editor-merge-conflict}
+\end{figure}
+Unfortunately, the two repositories have diverged too much and a so-called ``merge conflict'' has arisen.  Now we have to tell git how to fix this before we can proceed.  So we look at the markers that git has put into our file.  You can click the ``Update'' button in LTC Editor to see these markers there similar to Figure~\ref{fig:editor-merge-conflict}.  On the command line, the file looks similar to this:
+\begin{CodeVerbatim}
+$ cat independence.tex
+[...]
 
-%\subsection{Resolving Merge Conflicts}
+<<<<<<< HEAD
+% list charges against King George III
+=======
+That to secure these rights, Governments are instituted among Men, [...]
 
-%\section{Using Emacs with Example Git Repository}
+%TODO: indictment here
+>>>>>>> 39cd6172613d1065a4cddc854cf30067869fc727
+\end{CodeVerbatim}
+
+We decide that the comments in the \Code{HEAD} version means the same as the last comment in the merged version \Code{39cd617...} so we modify the text so that it looks like this:
+\begin{CodeVerbatim}
+$> cat independence.tex 
+[...]
+
+That to secure these rights, Governments are instituted among Men, [...]
+
+% list charges against King George III
+\end{CodeVerbatim}
+It is important to remove the git marker lines starting with \Code{<<<<<<<}, \Code{=======}, and \Code{>>>>>>>} for git to recognize that we have resolved the conflicts.  Notice that if you are editing in LTC Editor, all changes are currently marked up in the color of John Adams even though we imported a paragraph from Roger Sherman.  This is because we still have not committed the changes to git and the current version on disk is attributed to John Adams.  However, we now save and then commit on the command line:
+\begin{CodeVerbatim}
+$> git commit -am "merging Roger Sherman's edits"
+[master 474d53b] merging Roger Sherman's edits
+\end{CodeVerbatim}
+
+\begin{figure}
+\centering
+\mygraphics{scale=.4}{figures/editor-merge-resolve}
+\caption{After resolving conflict, committing, and updating in LTC Editor} \label{fig:editor-merge-resolve}
+\end{figure}
+This has resolved the conflict and incorporated Roger Sherman's prior changes, as a look at the git log with the graphing function reveals:
+\begin{CodeVerbatim}
+$> git log --oneline --graph --date-order
+*   474d53b merging Roger Sherman's edits
+|\  
+* | 9438e4f added comment about list of charges
+| * 39cd617 todo item for indictment
+| * 45710ff more text for preamble
+|/  
+* d3f904c sixth version
+* 203e0ce fifth version
+* 36eeab0 fourth version
+* fa2be39 third version
+* bac2f51 second version
+* d6d1cf8 first version
+\end{CodeVerbatim}
+Once we update LTC Editor, we see the paragraph that was part of the conflicting region now correctly attributed to Roger Sherman.  Furthermore, the git commit graph has gotten more interesting with the branching and merging in the first column of the commit graph.  Refer to Figure~\ref{fig:editor-merge-resolve} for a screen shot of the git commit graph and text changes after resolving the conflict, committing and updating LTC Editor.

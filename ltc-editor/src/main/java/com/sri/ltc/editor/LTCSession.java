@@ -61,8 +61,7 @@ public class LTCSession {
         return ID != -1;
     }
 
-    public void startInitAndUpdate(final File file,
-                                   final String date, final String rev, final int caretPosition)
+    public void startInit(final File file)
             throws IOException {
         canonicalPath = file.getCanonicalPath();
 
@@ -70,9 +69,7 @@ public class LTCSession {
         (new LTCWorker<Integer,Void>(editor.getFrame(), ID,
                 "Initializing...", "<html>Initializing track changes of file<br>"+canonicalPath+"</html>", true) {
             List<Object[]> authors = null;
-            java.util.List<Object[]> commits = null;
             Object[] self = null;
-            String VCS = null;
             int sessionID = -1;
 
             @SuppressWarnings("unchecked")
@@ -81,17 +78,11 @@ public class LTCSession {
                 setProgress(1);
                 sessionID = LTC.init_session(file.getAbsolutePath());
                 if (isCancelled()) return -1;
-                setProgress(25);
+                setProgress(35);
                 authors = LTC.get_authors(sessionID);
                 if (isCancelled()) return -1;
-                setProgress(50);
-                commits = LTC.get_commits(sessionID);
-                if (isCancelled()) return -1;
-                setProgress(75);
+                setProgress(70);
                 self = LTC.get_self(sessionID);
-                if (isCancelled()) return -1;
-                setProgress(95);
-                VCS = LTC.get_VCS(sessionID);
                 if (isCancelled()) return -1;
                 setProgress(100);
                 return sessionID;
@@ -101,19 +92,18 @@ public class LTCSession {
             protected void done() {
                 if (isCancelled()) {
                     ID = -1;
-                    editor.finishInit(null, null, null, null);
+                    editor.finishInit(null, null);
                 } else
                     try {
                         ID = get();
-                        editor.finishInit(authors, commits, self, VCS);
-                        startUpdate(date, rev, false, "", Collections.<Object[]>emptyList(), caretPosition);
+                        editor.finishInit(authors, self);
                     } catch (InterruptedException e) {
                         LOGGER.log(Level.SEVERE, e.getMessage(), e);
                     } catch (ExecutionException e) {
                         LOGGER.log(Level.SEVERE, e.getMessage(), e);
                         JOptionPane.showMessageDialog(editor.getFrame(),
                                 "An error occurred:\n"+e.getMessage(),
-                                "Error while updating",
+                                "Error while initializing",
                                 JOptionPane.ERROR_MESSAGE);
                     }
             }
@@ -128,12 +118,13 @@ public class LTCSession {
                 "Closing...", "<html>Closing track changes of file<br>"+getCanonicalPath()+"</html>", false) {
             @Override
             protected Map callLTCinBackground() throws XmlRpcException {
-                return LTC.close_session(ID, "", Collections.emptyList(), 0); // forget about any modifications
+                int lastID = ID;
+                ID = -1; // reset here as this is being accessed asynchronously and cannot wait for done() below
+                return LTC.close_session(lastID, "", Collections.emptyList(), 0); // forget about any modifications
             }
 
             @Override
             protected void done() {
-                ID = -1;
                 editor.finishClose();
             }
         });
@@ -148,7 +139,6 @@ public class LTCSession {
         (new LTCWorker<Map,Void>(editor.getFrame(), ID,
                 "Updating...", "<html>Updating changes of<br>"+getCanonicalPath()+"</html>", false) {
             java.util.List<Object[]> commits = null;
-            List<Object[]> remotes = null;
 
             @SuppressWarnings("unchecked")
             @Override
@@ -164,10 +154,7 @@ public class LTCSession {
                 if (isCancelled()) return null;
                 // update commit graph
                 commits = LTC.get_commits(sessionID);
-                setProgress(97);
-                if (isCancelled()) return null;
-                // update remotes
-                remotes = LTC.get_remotes(sessionID);
+                setProgress(99);
                 if (isCancelled()) return null;
                 return map;
             }
@@ -186,19 +173,22 @@ public class LTCSession {
                                 (List<Integer[]>) map.get(LTCserverInterface.KEY_STYLES),
                                 (Integer) map.get(LTCserverInterface.KEY_CARET),
                                 (List<String>) map.get(LTCserverInterface.KEY_REVS),
-                                commits, remotes);
+                                commits);
                     } catch (InterruptedException e) {
                         LOGGER.log(Level.SEVERE, e.getMessage(), e);
                     } catch (ExecutionException e) {
                         LOGGER.log(Level.SEVERE, e.getMessage(), e);
-                        e.printStackTrace();
+                        JOptionPane.showMessageDialog(editor.getFrame(),
+                                "An error occurred:\n"+e.getMessage(),
+                                "Error while updating",
+                                JOptionPane.ERROR_MESSAGE);
                     }
             }
         }).execute();
     }
 
     public void save(final String currentText, final List<Object[]> deletions) {
-        if (ID == -1) return;
+        if (!isValid()) return;
 
         // create new worker to save file in session
         executeWorkerAndWait(new LTCWorker<Void,Void>(editor.getFrame(), ID,
@@ -211,78 +201,31 @@ public class LTCSession {
         });
     }
 
-    public void commit(final String message, final JButton saveButton) {
+    public void setSelf(final Author self) {
         if (!isValid()) return;
 
         // create new worker to set self in session
-        (new LTCWorker<Integer,Void>(editor.getFrame(), ID,
+        (new LTCWorker<Object[],Void>(editor.getFrame(), ID,
                 "Setting...", "Setting current self", false) {
-            Object[] last_commit = null;
-
-            @SuppressWarnings("unchecked")
             @Override
-            protected Integer callLTCinBackground() throws XmlRpcException {
-                int code = 0;
-                try {
-                    LTC.commit_file(ID, message);
-                } catch (XmlRpcException e) {
-                    code = e.code;
-                }
-                if (code == 0) {
-                    setProgress(50);
-                    java.util.List<Object[]> commits = LTC.get_commits(sessionID);
-                    if (!commits.isEmpty())
-                        last_commit = commits.get(0);
-                }
-                setProgress(100);
-                return code;
+            protected Object[] callLTCinBackground() throws XmlRpcException {
+                Object[] author = null;
+                if (self == null)
+                    author = LTC.reset_self(ID);
+                else
+                    author = LTC.set_self(ID, self.name, self.email);
+                return author;
             }
 
             @Override
             protected void done() {
                 try {
-                    int code = get();
-                    if (code == 5) {
-                        if (saveButton.isEnabled()) {
-                            // dialog if nothing to commit && unsaved edits
-                            if (JOptionPane.YES_OPTION == JOptionPane.showConfirmDialog(editor.getFrame(),
-                                    "Save file first before committing?",
-                                    "Nothing to commit but unsaved edits",
-                                    JOptionPane.YES_NO_OPTION,
-                                    JOptionPane.WARNING_MESSAGE)) {
-                                saveButton.doClick();
-                                commit(message, saveButton);
-                            }
-                        } else
-                            JOptionPane.showMessageDialog(editor.getFrame(),
-                                    "Nothing to commit.",
-                                    "Nothing to commit",
-                                    JOptionPane.INFORMATION_MESSAGE);
-                    } else if (code == 0)
-                        editor.finishCommit(last_commit);
+                    editor.finishSetSelf(get());
                 } catch (InterruptedException e) {
                     LOGGER.log(Level.SEVERE, e.getMessage(), e);
                 } catch (ExecutionException e) {
                     LOGGER.log(Level.SEVERE, e.getMessage(), e);
                 }
-            }
-        }).execute();
-    }
-
-    public void setSelf(final Author self) {
-        if (!isValid()) return;
-
-        // create new worker to set self in session
-        (new LTCWorker<Void,Void>(editor.getFrame(), ID,
-                "Setting...", "Setting current self", false) {
-            @Override
-            protected Void callLTCinBackground() throws XmlRpcException {
-                if (self == null)
-                    LTC.reset_self(ID);
-                else {
-                    LTC.set_self(ID, self.name, self.email);
-                }
-                return null;
             }
         }).execute();
     }
@@ -319,59 +262,7 @@ public class LTCSession {
             @Override
             protected void done() {
                 try {
-                    editor.finishAuthors(get());
-                } catch (InterruptedException e) {
-                    LOGGER.log(Level.SEVERE, e.getMessage(), e);
-                } catch (ExecutionException e) {
-                    LOGGER.log(Level.SEVERE, e.getMessage(), e);
-                }
-            }
-        }).execute();
-    }
-
-    public void updateRemote(final String name, final String url, final boolean removeFirst) {
-        if (!isValid()) return;
-
-        // create new worker to add remote in session
-        (new LTCWorker<Void,Void>(editor.getFrame(), ID,
-                "Updating Remote...", "Updating remote alias", false) {
-            @Override
-            protected Void callLTCinBackground() throws XmlRpcException {
-                if (removeFirst)
-                    LTC.rm_remote(ID, name);
-                LTC.add_remote(ID, name, url);
-                return null;
-            }
-        }).execute();
-    }
-
-    public void pullOrPush(final String repository, final boolean usePull,
-                           final String date, final String rev,
-                           final boolean isModified, final String currentText, final List<Object[]> deletions, final int caretPosition) {
-        if (!isValid()) return;
-
-        // create new worker to add remote in session
-        final String verb = (usePull?"Pulling":"Pushing");
-        String preposition = (usePull?" from ":" to ");
-        (new LTCWorker<String,Void>(editor.getFrame(), ID,
-                verb+"...",
-                verb+preposition+"remote repository\n"+repository, false) {
-            @Override
-            protected String callLTCinBackground() throws XmlRpcException {
-                if (usePull)
-                    return LTC.pull(ID, repository);
-                else
-                    return LTC.push(ID, repository);
-            }
-
-            @Override
-            protected void done() {
-                try {
-                    String error = get();
-                    if ("".equals(error))
-                        startUpdate(date, rev, isModified, currentText, deletions, caretPosition);
-                    else
-                        JOptionPane.showMessageDialog(editor.getFrame(), error, verb+" Error", JOptionPane.ERROR_MESSAGE);
+                    editor.finishAuthors(get(), true); // signal to update
                 } catch (InterruptedException e) {
                     LOGGER.log(Level.SEVERE, e.getMessage(), e);
                 } catch (ExecutionException e) {

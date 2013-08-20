@@ -25,7 +25,6 @@ package com.sri.ltc.editor;
 import com.sri.ltc.filter.Author;
 
 import javax.swing.*;
-import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.SortedSet;
@@ -40,15 +39,11 @@ public final class SelfComboBoxModel extends AbstractListModel implements ComboB
     private final SortedSet<Author> authors = new TreeSet<Author>();
     private Author self = null;
 
-    private final LatexPane latexPane;
-    private final AuthorListModel authorModel;
     private final LTCSession session;
 
     private boolean updateLTC = true; // false to signal when NOT to update self
 
-    public SelfComboBoxModel(LatexPane latexPane, AuthorListModel authorModel, LTCSession session) {
-        this.latexPane = latexPane;
-        this.authorModel = authorModel;
+    public SelfComboBoxModel(LTCSession session) {
         this.session = session;
     }
 
@@ -70,16 +65,9 @@ public final class SelfComboBoxModel extends AbstractListModel implements ComboB
             else
                 fireContentsChanged(this, 0, 0);
             // update LTC accordingly (if not flagged to skip)
-            if (updateLTC && session.isValid()) {
+            if (updateLTC)
                 session.setSelf(self);
-                session.getAuthors();
-            }
             updateLTC = true; // reset flag
-            // tell document filter about it
-            if (self == null)
-                latexPane.getDocumentFilter().setColor(Color.black);
-            else
-                latexPane.getDocumentFilter().setColor(authorModel.getColorForAuthor(self));
         }
     }
 

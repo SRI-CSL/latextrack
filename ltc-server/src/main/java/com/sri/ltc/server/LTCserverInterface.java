@@ -161,21 +161,6 @@ public interface LTCserverInterface {
             throws XmlRpcException;
 
     /**
-     * Commit the current file on disk.  The file is indicated by the session ID.
-     * A non-null and non-empty message must be supplied.
-     *
-     * @param sessionID identifies the session
-     * @param message A non-null and not empty message for the commit
-     * @return 0
-     * @throws XmlRpcException <ul>
-     *   <li>with error code = 1 if the given identifier does not denote a known session.
-     *   <li>with error code = 2 if the given message is NULL or empty.
-     *   <li>with error code = 4 if an Exception occurred during committing.
-     * </ul>
-     */
-    public int commit_file(int sessionID, String message) throws XmlRpcException;
-
-    /**
      * Obtain the name of the version control system that tracks the current file of the given session.
      *
      * @param sessionID identifies the session
@@ -219,7 +204,7 @@ public interface LTCserverInterface {
     public List get_commits(int sessionID) throws XmlRpcException;
 
     /**
-     * Obtain the currently set author for the git repository indicated through the given session.
+     * Obtain the currently set author for the repository indicated through the given session.
      * If exists, the author is given as a 3-tuple of strings denoting the name (not empty), the
      * email address (possibly empty), and the color as obtained by {@link #get_color(String, String)}
      * with the name and email as the parameters.  If no author is set, the returned array is empty.
@@ -228,17 +213,16 @@ public interface LTCserverInterface {
      * @return 3-tuple of strings describing the current author or an empty array
      * @throws XmlRpcException <ul>
      *   <li>with error code = 1 if the given identifier does not denote a known session.
-     *   <li>with error code = 2 if a JavaGitException occurred during self retrieval.
-     *   <li>with error code = 3 if an IOException occurred during self retrieval.
+     *   <li>with error code = 2 if another unrecoverable exception occurred.
      * </ul>
      */
     public Object[] get_self(int sessionID) throws XmlRpcException;
 
     /**
-     * Set the current author to the given name and email for the git repository indicated
-     * by given session.  The name cannot be empty.  To unset any author for this git
-     * repository use {@link #reset_self(int)}.  The email address can be empty.  This
-     * function returns the newly set author as if calling {@link #get_self(int)}.
+     * Set the current author to the given name and email for the given session.
+     * The name cannot be empty.  To unset any author for this repository use {@link #reset_self(int)}.
+     * The email address can be empty.  This function returns the newly set author as if
+     * calling {@link #get_self(int)}.
      *
      * @param sessionID identifies the session
      * @param name non-empty String as the name of the current author
@@ -246,28 +230,20 @@ public interface LTCserverInterface {
      * @return 3-tuple of strings describing the current author
      * @throws XmlRpcException <ul>
      *   <li>with error code = 1 if the given identifier does not denote a known session.
-     *   <li>with error code = 2 if a JavaGitException occurred during self retrieval.
-     *   <li>with error code = 3 if an IOException occurred during self retrieval.
      *   <li>with error code = 4 if an author with the given arguments cannot be created.
-     *   <li>with error code = 5 if a JavaGitException occurred during setting self.
-     *   <li>with error code = 6 if an IOException occurred during setting self.
      * </ul>
      */
     public Object[] set_self(int sessionID, String name, String email) throws XmlRpcException;
 
     /**
-     * Unsets any current author for the git repository indicated by given session.
-     * This function returns the current notion of self if a global configuration of git
-     * has been made.
+     * Unsets any current author for the repository indicated by given session.
+     * This function returns the current notion of self before any calls to {@link #set_self(int, String, String)}.
      *
      * @param sessionID identifies the session
      * @return 3-tuple of strings describing the current author or an empty array
      * @throws XmlRpcException <ul>
      *   <li>with error code = 1 if the given identifier does not denote a known session.
-     *   <li>with error code = 2 if a JavaGitException occurred during self retrieval.
-     *   <li>with error code = 3 if an IOException occurred during self retrieval.
-     *   <li>with error code = 4 if a JavaGitException occurred during resetting self.
-     *   <li>with error code = 5 if an IOException occurred during resetting self.
+     *   <li>with error code = 5 if an Exception occurred during resetting self.
      * </ul>
      */
     public Object[] reset_self(int sessionID) throws XmlRpcException;
@@ -433,84 +409,6 @@ public interface LTCserverInterface {
      * @return An array of permissible boolean preference item names
      */
     public Object[] get_bool_pref_items();
-
-    /**
-     * Get currently set remote aliases from git.  The list can be empty.
-     *
-     * @param sessionID identifies the session
-     * @return a list of String[3] objects that each denote a remote: the first String is the
-     *   name of the alias, the second String is the URL, and the third String is either "true"
-     *   or "false" depending on whether the remote is read-only 
-     * @throws XmlRpcException <ul>
-     *   <li>with error code = 1 if the given identifier does not denote a known session.
-     *   <li>with error code = 2 if a JavaGitException occurs while running the git command
-     * </ul>
-     */
-    public List get_remotes(int sessionID) throws XmlRpcException;
-
-    /**
-     * Add a new alias to a given remote repository.  Both the alias and the given URL
-     * must be non-null and non-empty.  The operation typically fails when the given
-     * alias already exists.
-     *
-     * @param sessionID identifies the session
-     * @param name String for the alias
-     * @param url URL of the remote repository
-     * @return 0
-     * @throws XmlRpcException <ul>
-     *   <li>with error code = 1 if the given identifier does not denote a known session.
-     *   <li>with error code = 2 if a JavaGitException occurs while running the git command
-     *   <li>with error code = 3 if the underlying command exited with a non-null value
-     *         but did not generate and exception
-     * </ul>
-     */
-    public int add_remote(int sessionID, String name, String url) throws XmlRpcException;
-    
-    /**
-     * Remove an alias from a given remote repository.  The alias must be non-null and
-     * non-empty.  
-     *
-     * @param sessionID identifies the session
-     * @param name String for the alias
-     * @return 0
-     * @throws XmlRpcException <ul>
-     *   <li>with error code = 1 if the given identifier does not denote a known session.
-     *   <li>with error code = 2 if a JavaGitException occurs while running the git command
-     *   <li>with error code = 3 if the underlying command exited with a non-null value
-     *         but did not generate and exception
-     * </ul>
-     */
-    public int rm_remote(int sessionID, String name) throws XmlRpcException;
-
-    /**
-     * Push to a given remote repository.  The name must be non-null and
-     * non-empty.
-     *
-     * @param sessionID identifies the session
-     * @param repository describes the remote repository (alias or URL)
-     * @return an empty String when no exception nor error occurred during running the git
-     *   command.  If String is not empty, an error (but no exception) occurred.
-     * @throws XmlRpcException <ul>
-     *   <li>with error code = 1 if the given identifier does not denote a known session.
-     *   <li>with error code = 2 if a JavaGitException occurs while running the git command
-     * </ul>
-     */
-    public String push(int sessionID, String repository) throws XmlRpcException;
-
-    /**
-     * Pull from a given remote repository.  The name must be non-null and
-     * non-empty.
-     *
-     * @param sessionID identifies the session
-     * @param repository describes the remote repository (alias or URL)
-     * @return an empty String when no exception nor error occurred during running the git
-     *   command.  If String is not empty, an error (but no exception) occurred.
-     * @throws XmlRpcException <ul>
-     *   <li>with error code = 1 if the given identifier does not denote a known session.
-     *   <li>with error code = 2 if a JavaGitException occurs while running the git command
-     * </ul>
-     */
-    public String pull(int sessionID, String repository) throws XmlRpcException;
 
     /**
      * Get current color for given author as name and email.  The returned color is

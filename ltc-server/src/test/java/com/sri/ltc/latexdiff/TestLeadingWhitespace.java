@@ -38,7 +38,7 @@ import static org.junit.Assert.assertTrue;
  */
 public final class TestLeadingWhitespace {
 
-    private void matches(String s, int ending) { // TODO: later add ending index
+    private void matches(String s, int ending) {
         Matcher matcher = MarkedUpDocument.LEADING_WHITE.matcher(s);
         assertTrue("String \"" + s + "\" matches regex", matcher.matches());
         assertEquals("ending index is", ending, matcher.end(1));

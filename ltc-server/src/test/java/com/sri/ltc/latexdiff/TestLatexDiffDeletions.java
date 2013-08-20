@@ -126,7 +126,7 @@ public final class TestLatexDiffDeletions extends TestLatexDiff {
                 "Lorem  \\ipsum"
         );
         assertDeletion(0, 5, Lists.newArrayList(new IndexFlagsPair<String>(
-                ":", EnumSet.of(Change.Flag.DELETION)))); // TODO: or (7, 1)?
+                ":", EnumSet.of(Change.Flag.DELETION))));
     }
 
     @Test

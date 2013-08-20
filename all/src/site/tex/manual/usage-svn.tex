@@ -1,0 +1,64 @@
+% !TEX root = manual.tex
+\section{Using a Subversion Repository} \label{sec:svn-use}
+
+For each writing project, LTC expects the history of the .tex files managed by a version control system, for example contained in a svn repository.  As svn is a centralized version control system, the repository is typically in a remote location.  To use LTC meaningfully, it has to download the different versions of the file history so you will need constant connectivity with the server.  If you need to exchange data with a collaborating author, you will update from and commit to your remote repository, which also requires online access.
+
+This section only covers a small subset of what svn can do with respect to setting up a repository for your writing project.  Please refer to other svn documentation about general svn usage and how to further manage your writing project with svn.  Also note our suggestions for general, one-time svn configuration in Section~\ref{sec:svn-install}.
+
+\subsection{Initializing a Repository}
+
+To create a working copy of an existing svn repository your system administrator will tell you the URL where the repository is hosted.  Then, you will \textit{check out} a working copy in a directory, say \Code{\$PROJECT} with that URL, which we call \Code{\$REPOSITORY\_URL}.  From the directory where you want \Code{\$PROJECT} to reside, call:
+\begin{CodeVerbatim}
+$> svn checkout $REPOSITORY_URL $PROJECT
+\end{CodeVerbatim}
+
+If this a new writing project, you may want to perform some initializations.  For example, decide what the final build products in your project will be.  These should be ignored by svn so as not to complain every time you recompile your LaTeX project.  Let's assume your project will create a file called ``proposal.pdf,'' then perform the following.  First, we check whether there are already files ignored.  Then, we will set a property to ignore ``proposal.pdf'' using a few bash commands.  If you are running a different shell, you may have to adjust these commands.
+\begin{CodeVerbatim}[commandchars=\|\{\}]
+$> cd $PROJECT/
+$> svn propget svn:ignore .
+$> svn propedit svn:ignore .  # will open temporary editor in your terminal, \ 
+                                where you type |textbf{proposal.pdf}, save and exit
+Set new value for property 'svn:ignore' on '.'
+\end{CodeVerbatim}
+
+Setting or updating a property puts a modification flag on the current directory \Code{.}, which you will have to commit to the repository at the next opportunity for others to obtain this setting.  Also, check that the property is now active in your working copy.
+\begin{CodeVerbatim}
+$> svn status
+ M      .
+$> svn commit -m "ignoring build product proposal.pdf"
+Sending        .
+Committed revision XXX.
+$> svn propget svn:ignore .
+proposal.pdf
+\end{CodeVerbatim}
+
+\subsection{Other Typical Subversion Commands}
+
+If you have a new \Code{FILE.tex} file to add to the repository, do
+\begin{CodeVerbatim}
+$> $ svn st
+?       FILE.tex
+$> svn add FILE.tex
+A         FILE.tex
+$> svn commit -m "adding first version of FILE.tex"
+Adding         FILE.tex
+Transmitting file data ...
+Committed revision XXX.
+\end{CodeVerbatim}
+
+When editing a \Code{FILE.tex} file and saving it, it will have the modification flag set, which you can check using the \Code{status} command.  It is also a good idea to update your working copy before you start editing a file, in case others have committed any changes.
+\begin{CodeVerbatim}
+$> svn update
+[...]  # any potential updates
+At revision XXX.
+$> svn status
+M       FILE.tex
+$> svn commit -m "<message about recent edits in FILE.tex>"
+Sending        FILE.tex
+Transmitting file data ...
+Committed revision XXX.
+\end{CodeVerbatim}
+
+If you decide on more build products (e.g., files called ``proposal-vol1.pdf'' and ``proposal-vol2.pdf'') in the future, call \Code{svn propedit svn:ignore .} to edit the property and commit the changes to the svn repository.  Make sure to do this before using a command such as \Code{svn add *}, which would mark any existing build products for addition.
+
+With a centralized repository, it is even more important to coordinate writing and editing activities among collaborators.  Many say ``commit early, commit often'' and also make it a habit to update your working copy regularly and before beginning work.  LaTeX is very well suited to be managed under version control as you can split the writing document into various files and then assign writing tasks on a one-author-per-file-at-a-time to avoid merge conflicts.

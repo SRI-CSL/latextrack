@@ -1,0 +1,119 @@
+% !TEX root = manual.tex
+\section{Using a Git Repository} \label{sec:git-use}
+
+For each writing project, LTC expects the history of the .tex files managed by a version control system, for example contained in a git repository.  As git is a distributed version control system, this repository is local to your machine.  If you need to exchange data with a collaborating author, you will push your repository or pull their repository and merge it with your local copy.
+
+This section only covers a small subset of what git can do with respect to setting up a repository for your writing project.  Please refer to other git documentation about general git usage and how to further manage your writing project with git.  Also note our suggestions for general, one-time git configuration in Section~\ref{sec:git-install}.
+
+\subsection{Initializing a Local Repository}
+
+Assuming that your current LaTeX source files (and other files) are located in a directory structure called \Code{\$PROJECT}.  To initialize the top-level directory for git perform the following commands.
+\begin{CodeVerbatim}
+$> cd $PROJECT/
+$> git init 
+Initialized empty Git repository in $PROJECT
+\end{CodeVerbatim}
+
+Decide, what the final build products in your project will be.  These should be ignored by git so as not to complain every time you recompile your LaTeX project.  Let's assume your project will create a file called ``proposal.pdf,'' then create a file called \Code{.gitignore} in this directory that contains in each line the name of every build product.  In a bash shell, you can do the following.
+\begin{CodeVerbatim}
+$> cat > .gitignore <<EOF
+> proposal.pdf
+> EOF
+\end{CodeVerbatim}
+
+Then check the contents of the file:
+\begin{CodeVerbatim}
+$> less .gitignore
+proposal.pdf
+\end{CodeVerbatim}
+
+If you decide on more build products (e.g., files called ``proposal-vol1.pdf'' and ``proposal-vol2.pdf'') in the future, simply edit the \Code{.gitignore} file to include these file names in new lines.  Make sure to do this before using a command such as \Code{git add .}, which would mark any existing build products for addition.
+
+Checking the current status of git, the output should be similar to the following.
+
+\begin{CodeVerbatim}
+$> git status
+# On branch master
+#
+# Initial commit
+#
+# Untracked files:
+#   (use "git add <file>..." to include in what will be committed)
+#
+#	.gitignore
+#	proposal.tex
+nothing added to commit but untracked files present (use "git add" to track)
+\end{CodeVerbatim}
+
+Then, add the files already in your directory as well as the newly created file \Code{.gitignore} and commit the first version, for example this way:
+\begin{CodeVerbatim}
+$> git add .
+$> git commit -a -m "initial commit of project"
+[master (root-commit) dfbf239] initial commit of project
+ 2 files changed, 7 insertions(+), 0 deletions(-)
+ create mode 100644 .gitignore
+ create mode 100644 proposal.tex
+\end{CodeVerbatim}
+
+The option \Code{-m} stands for a brief message that you would like to attach to your commit. Note that you have to give some sort of message for every commit you make. Do \textit{not} try to skip the message part. Moreover, having meaningful one-line message for commit is always useful as other and you yourself can refer to later on to see what changes you made and why.
+
+\subsection{Uploading Your Initial Repository}\label{sec:upload-git}
+
+To share your local git repository, you can clone it to a shared file system or to a file server that each collaborator can access via \Code{ssh}.  Another option is that your system administrators provide you with a central git repository server.  Contact them for details on how to upload your git repository there.
+
+In the following commands, we are giving the remote repository the name \Code{project.git} but you can choose whatever you want.  The ending \Code{.git} is somewhat standard, though, so we advise to keep it.  
+
+To clone to a \textit{shared file system}, you will want to find a suitable directory \Code{\$SHARED\_PATH} where you want to create the shared repository. The following command is issued from inside your initial repository.
+
+\begin{CodeVerbatim}
+$> cd $PROJECT/
+$> git clone --bare . $SHARED_PATH/project.git
+\end{CodeVerbatim}
+
+To clone to a \textit{file server accessible via ssh and scp}, you would do the following from the top-level directory of your initial repository. The remote repository should be located under \Code{\$REMOTE\_PATH} on the server.  We assume that you have performed at least one commit since initializing the git repository.
+\begin{CodeVerbatim}
+$> cd $PROJECT/..
+$> git clone --bare $PROJECT project.git
+Cloning into bare repository 'project.git'...
+done.
+$ touch project.git/git-daemon-export-ok
+$ scp -rq project.git username@server:$REMOTE_PATH
+\end{CodeVerbatim}
+
+In either case, make sure that file permissions allow collaborators to access and read the files on the server.
+
+Next, you will want to add a short name for the newly designated shared location called ``origin'' so that the push and pull command below work as if you had cloned the repository from someone else.  If you used a git server, your system administrators can tell you how to configure your original repository to include the new remote location, or you can clone the remote repository anew as shown in the next section.
+\begin{CodeVerbatim}
+$> git remote add origin $SHARED_PATH/project.git
+\end{CodeVerbatim}
+or
+\begin{CodeVerbatim}
+$> git remote add origin username@server:$REMOTE_PATH/project.git
+\end{CodeVerbatim}
+
+Finally, your system administrator may already have a server for git repositories set up that you and your collaborators can use.  Refer to their instructions on how to upload or create an initial repository.
+
+\subsection{Cloning from a Remote Repository}
+
+To start a git repository from an existing one (either on a shared file server or a central repository), you want to clone it.  You need to know the remote location in terms of user name, server address and path to the git repository.  Your system administrator can tell you these in the form of \Code{username@server:path-to-git-repos/project.git}, or, if you used a shared file system as in Section~\ref{sec:upload-git}, you simply use \Code{\$SHARED\_PATH/project.git} instead of the address above. 
+
+Assuming that your local copy should be located in a directory \Code{my\_project}, you would need to execute the following command from the parent directory of \Code{my\_project}.  Feel free to call your new working directory something else by substituting the last argument.
+\begin{CodeVerbatim}
+$> git clone username@server:path-to-git-repos/project.git my_project
+Cloning into my_project...
+done.
+$> cd my_project
+$> git remote -v
+\end{CodeVerbatim}
+
+\subsection{Push and Pull}
+
+To exchange data with the central repository, you typically push and pull.  In the simplest case, the following should work (if this is the original and not a cloned repository, you must have added the new short name ``origin'' via the \Code{git remote add origin} command above).
+\begin{CodeVerbatim}
+$> git push origin master
+$> git pull origin master
+\end{CodeVerbatim}
+
+If git complains about uncommitted changes and that the working copy is not clean, you may have to commit or stash changes before these commands can run successfully.
+
+Please refer to the many online resources to learn more about git, or ask you system administrator.

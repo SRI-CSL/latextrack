@@ -49,7 +49,7 @@
 (require 'xml-rpc)
 (require 'versions)
 (require 'cl) ; for set operations
-(defconst min-xml-rpc-version "1.6.8.1" "minimum version requirement for xml-rpc mode")
+(defconst min-xml-rpc-version "1.6.8.2" "minimum version requirement for xml-rpc mode")
 
 ;;; ----------------------------------------------------------------------------
 ;;; constants
@@ -291,7 +291,8 @@
     (setq commit-graph (init-commit-graph))
     (setq self (ltc-method-call "get_self" session-id)) ; get current author and color
     ;; run first update
-    (ltc-update)))
+    (ltc-update))
+  ) ;ltc-mode-start
 
 (defun ltc-mode-stop ()
   "stop LTC mode"  
@@ -328,7 +329,7 @@
     (kill-buffer b)) ; kill temp buffer
   (setq ltc-info-buffer "")
   (font-lock-mode 1) ; turn latex font-lock mode back on
-  )
+  ) ;ltc-mode-stop
 
 (defun ltc-update ()
   "updating changes for current session"
@@ -373,7 +374,7 @@
 	(update-info-buffer)
 	(set-buffer-modified-p old-buffer-modified-p) ; restore modification flag
 	))
-  )
+  ) ;ltc-update
 
 ;;; --- capture save, close, and TODO: save-as (set-visited-file-name) operations 
 
@@ -408,7 +409,7 @@
   "Set or reset limiting AUTHORS for commit graph.  If empty list, no limit is used.  Updates automatically unless user chooses to quit input."
   (interactive
    (if ltc-mode
-       (let ((completion-list (cons "" (mapcar 'author-to-string (mapcar 'caddr (cdr commit-graph)))))
+       (let ((completion-list (cons "" (mapcar 'author-to-string (mapcar 'caddr commit-graph))))
 	     (author-list nil)
 	     (n 1)
 	     (old-spc (lookup-key minibuffer-local-completion-map " "))
@@ -477,9 +478,10 @@
   (interactive
    (if ltc-mode
        (let ((revs (mapcar (apply-partially 'shorten 7) (mapcar 'car (cdr commit-graph)))))
-	 (list (completing-read (concat "Limit by revision (eg. \""
-					(substring (car revs) 0 2)
-					"\" and TAB completion; empty to reset): ")
+	 (list (completing-read (concat "Limit by revision ("
+					(if (> (length (car revs)) 1)
+					    (concat "eg. \"" (substring (car revs) 0 2)	"\" and TAB completion; "))
+					"empty to reset): ")
 				(cons "" revs)
 				nil nil)))
      '(nil))) ; sets rev = nil
@@ -556,22 +558,6 @@
     (message "Created bug report at %s" file)
     ))
 
-;;; --- other interactive functions
-
-(defun ltc-commit (msg)
-  "Commit file to git if user interactively provides a commit message."
-  ;; TODO: throw error message if ltc-mode not running
-  (interactive
-   (if ltc-mode
-       (list (read-string "Commit message: "))
-     '(nil))) ; sets msg = nil
-  (if msg 
-      (condition-case err
-	  (ltc-method-call "commit_file" session-id msg)
-	('error 
-	 ;; TODO: handle 'Nothing to commit' && buffer-modified-p
-	 (message "Error while committing file: %s" (error-message-string err)))))
-  )
 
 ;;; --- info buffer functions
 
@@ -586,7 +572,6 @@ Each entry in the commit graph that is returned, contains a list with the follow
     (let ((commits (ltc-method-call "get_commits" session-id)) ; list of 6-tuple strings
 	  (authors (mapcar (lambda (v) (cons (list (car v) (cadr v)) (nth 2 v))) 
 			   (ltc-method-call "get_authors" session-id)))
-	  (self (ltc-method-call "get_self" session-id))
 	  (parents-alist nil)
 	  (children-alist nil)
 	  (circle-alist '((0 0))) ; index -> circle column, start with 0 -> 0
@@ -733,7 +718,8 @@ Each entry in the commit graph that is returned, contains a list with the follow
 		     (cdr (assoc index passing-alist)) ; passing columns
 		     ))))
 	       commits)))
-    nil)) ; LTC session not valid: return NIL
+    nil) ; LTC session not valid: return NIL
+  ) ;init-commit-graph
 
 (defun get-lowest-not-in (s)
   "Get the lowest number that is not in sorted set S, starting from 0."
@@ -821,7 +807,8 @@ The remaining arguments *-STRING denote the string representation of the charact
 	     (member col passing)) ; and passing column
 	(setq c (string #x2502)))
     (setq graph-fmt (concat graph-fmt c)))
-  (concat front graph-fmt back)) ; add front and back around line with characters
+  (concat front graph-fmt back) ; add front and back around line with characters
+  ) ;draw-branches
 
 (defun pretty-print-commit-graph ()
   "Create string representation with text properties from current commit graph."
@@ -915,9 +902,9 @@ The remaining arguments *-STRING denote the string representation of the charact
 				   (format (concat "%-" (number-to-string (+ 2 max-author)) "s") 
 					   author)
 				   'mouse-face 'highlight
-				   'help-echo (if is-active "mouse-1: change color")
+				   'help-echo "mouse-1: set color"
 				   'keymap author-map
-				   'action (if is-active (cons "textColor" (nth 2 commit)))
+				   'action (cons "textColor" (nth 2 commit))
 				   'face (list :foreground (if is-active (nth 5 commit) disabledcolor)))
 				  (propertize 
 				   (format "%s" (nth 3 commit)) ; message
@@ -931,9 +918,10 @@ The remaining arguments *-STRING denote the string representation of the charact
 		   commit-graph 
 		   "\n")
 	)
-    "<commit graph is empty>"))
+    "<commit graph is empty>")
+  ) ;pretty-print-commit-graph
 
-;;; --- set author color functions
+;;; --- set author color and name functions
 
 (defun ltc-select-color (event)
   "Select color for indicated author in mouse event.  Updates automatically."
@@ -947,16 +935,18 @@ The remaining arguments *-STRING denote the string representation of the charact
     (select-color (cadr action) (caddr action) old-color)))
 
 (defun ltc-set-color (author) 
-  "Select and set color for given AUTHOR.  Updates automatically unless user aborts by not chosing a valid author."
+  "Select and set color for given AUTHOR.  Updates automatically unless user aborts by entering an empty name."
   (interactive
    (if ltc-mode
        (list (completing-read "Author, for whom to set color (abort with empty value or C-g): " 
-			      (mapcar 'author-to-string (mapcar 'caddr (cdr commit-graph)))
+			      (mapcar 'author-to-string (mapcar 'caddr commit-graph))
 			      nil t))
      '(nil))) ; sets author = nil
   (if (and author (string< "" author))
-      (let ((author-list (string-to-author author)))
-	(select-color (nth 0 author-list) (nth 1 author-list) nil))))
+      (let* ((author-list (string-to-author author))
+	     (name (nth 0 author-list))
+	     (email (nth 1 author-list)))
+	(select-color name email (ltc-method-call "get_color" name email)))))
 
 (defun select-color (name email old-color)
   "Select and set color for author with given NAME and EMAIL.  If given OLD-COLOR is not nil, 
@@ -966,20 +956,37 @@ it will only set the new, chosen color if it is different than the old one."
     (list-colors-display)
     (condition-case nil
 	(let* ((new-color 
-		(read-color (format "Color for %s (name or #RGB; abort with empty input): " (author-to-string (list name email))) t))
+		(read-color (format "Color for %s (name or #RGB; abort with empty input): " 
+				    (author-to-string (list name email)))
+			    t))
 	       (new-color-short 
 		(concat "#" (substring new-color 1 3) (substring new-color 5 7) (substring new-color 9 11)))
 	       )
-	  (if (not (string= old-color new-color-short))
-	      (ltc-method-call "set_color" name email new-color-short))
+	  (when (not (string= (downcase old-color) (downcase new-color-short)))
+	    (ltc-method-call "set_color" name email new-color-short)
+	    (ltc-update))
 	  )	
-      (error nil)) ; no handlers
+      (error nil)) ; no handlers as we simply abort if empty color name given
     ;; remove *Colors* buffer if still visible
     (when (setq b (get-buffer "*Colors*"))
       (delete-windows-on b t)
       (kill-buffer b))
-    (ltc-update) ; not only applies new color (if any) but also resizes temp info buffer
-    ))
+    (update-info-buffer)))
+
+(defun ltc-set-self (author) 
+  "Set current self to given AUTHOR.  Updates automatically unless user aborts by entering an empty name."
+  (interactive
+   (if ltc-mode
+       (list (completing-read "New current self in format \"name [<email>]\" (abort with empty value or C-g): " 
+			      (mapcar 'author-to-string (mapcar 'caddr commit-graph))
+			      nil t))
+     '(nil))) ; sets author = nil
+  (if (and author (string< "" author))
+      (let* ((author-list (string-to-author author))
+	     (name (nth 0 author-list))
+	     (email (nth 1 author-list)))
+	(setq self (ltc-method-call "set_self" session-id name email))
+	(ltc-update))))
 
 ;;; --- functions to handle online editing
 

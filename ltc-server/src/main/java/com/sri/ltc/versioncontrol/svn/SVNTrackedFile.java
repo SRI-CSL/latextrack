@@ -21,10 +21,12 @@
  */
 package com.sri.ltc.versioncontrol.svn;
 
+import com.google.common.collect.Sets;
 import com.sri.ltc.versioncontrol.Commit;
 import com.sri.ltc.versioncontrol.TrackedFile;
 import com.sri.ltc.versioncontrol.VersionControlException;
 import org.tmatesoft.svn.core.*;
+import org.tmatesoft.svn.core.wc.SVNClientManager;
 import org.tmatesoft.svn.core.wc.SVNRevision;
 import org.tmatesoft.svn.core.wc.SVNStatus;
 import org.tmatesoft.svn.core.wc.SVNStatusType;
@@ -34,6 +36,7 @@ import java.io.File;
 import java.util.*;
 
 public class SVNTrackedFile extends TrackedFile<SVNRepository> {
+
     private class SVNLogEntryHandler implements ISVNLogEntryHandler {
         private SVNTrackedFile trackedFile = null;
         private List<Commit> commits = new ArrayList<Commit>();
@@ -119,6 +122,12 @@ public class SVNTrackedFile extends TrackedFile<SVNRepository> {
         //        public static final SVNStatusType STATUS_MERGED = new SVNStatusType(8, "merged", 'G');
         //        public static final SVNStatusType NO_MERGE = new SVNStatusType(14, "no_merge");
     };
+    private final static Set<SVNStatusType> STATE_WITH_LOG = Collections.unmodifiableSet(Sets.newHashSet(
+            SVNStatusType.STATUS_NORMAL,
+            SVNStatusType.STATUS_MODIFIED,
+            SVNStatusType.STATUS_CONFLICTED,
+            SVNStatusType.STATUS_REPLACED
+    ));
 
     public SVNTrackedFile(SVNRepository repository, File file) {
         super(repository, file);
@@ -159,10 +168,11 @@ public class SVNTrackedFile extends TrackedFile<SVNRepository> {
                 (inclusiveLimitRevision == null) ? null : Long.parseLong(inclusiveLimitRevision));
 
         try {
-            getRepository().getClientManager().getLogClient()
-                    .doLog(
-                            new File[]{getFile()},
-                            SVNRevision.create(-1), SVNRevision.create(-1), false, false, limit, handler);
+            SVNClientManager manager = getRepository().getClientManager();
+            SVNStatus status = manager.getStatusClient().doStatus(getFile(), false);
+            if (STATE_WITH_LOG.contains(status.getContentsStatus()))
+                manager.getLogClient().doLog(new File[]{getFile()},
+                        SVNRevision.UNDEFINED, SVNRevision.UNDEFINED, false, false, limit, handler);
         } catch (SVNException e) {
             throw new VersionControlException(e);
         }

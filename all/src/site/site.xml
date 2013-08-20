@@ -60,6 +60,7 @@
                 <item name="Manual (all in window)" href="html_singlepage/manual/manual.html" collapse="false"/>
                 <item name="Manual (browse tree)" href="html_multipage/manual/manual.html" collapse="false"/>
                 <item name="Manual as PDF" href="manual/manual.pdf" collapse="false"/>
+                <item name="GitHub Tutorial (PDF)" href="github-tutorial/github-tutorial.pdf" collapse="false"/>
             </item>
             <item name="FAQ" href="faq.html" />
             <item name="Changes" href="changes-report.html"/>

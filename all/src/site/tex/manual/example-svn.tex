@@ -1,13 +1,30 @@
 % !TEX root = manual.tex
 \section{Creating the Example Subversion Repository} \label{sec:example-svn}
 
-This tutorial uses an example svn repository, which is hosted on the Internet.  To create the example file that is under svn version control, go into a directory of your choice (say \Code{\$TUTORIAL}) and do the following.
+This tutorial uses an example svn repository, which is either hosted on the Internet or on your local computer.  The first Section~\ref{sec:example-svn-remote} shows how to use a publicly accessible repository with an example file.  This is the quickest way to try out LTC with Subversion but you cannot commit new versions to this repository so we cannot go through such advanced topics in the later parts of the tutorial.  The second Section~\ref{sec:example-svn-local} shows how to create a local svn server and populates it with an example repository.  This takes a bit more time to setup but then you can go through more advanced topics such as committing to the repository.
 
-\begin{CodeVerbatim}
+\subsection{Using the Remote Subversion Repository} \label{sec:example-svn-remote}
+
+To create the example file that is under remote svn version control, go into a directory of your choice (say \Code{\$TUTORIAL}) and do the following.  If the server causes a certificate alert, you can accept it permanently by using \Code{p} as shown in bold below.
+
+\begin{CodeVerbatim}[commandchars=\\\{\}]
 $> cd $TUTORIAL
-$> svn co https://spartan.csl.sri.com/svn/public/LTC/tutorial-svn independence
+$> svn co https://spartan.csl.sri.com/svn/public/LTC/tutorial-svn independence 
+Error validating server certificate for 'https://spartan.csl.sri.com:443':
+ - The certificate is not issued by a trusted authority. Use the
+   fingerprint to validate the certificate manually!
+Certificate information:
+ - Hostname: spartan.csl.sri.com
+ - Valid: from Fri, 03 May 2013 00:00:00 GMT until Sat, 03 May 2014 23:59:59 GMT
+ - Issuer: Thawte, Inc., US
+ - Fingerprint: f9:3f:b3:27:65:89:c9:af:bf:05:1b:5f:60:f0:8c:df:4d:bc:47:7e
+(R)eject, accept (t)emporarily or accept (p)ermanently? \textbf{p}
 A    independence/independence.tex
 Checked out revision 6.
+\end{CodeVerbatim}
+
+Now change into the new directory and confirm that the file has six revisions in its history
+\begin{CodeVerbatim}
 $> cd independence/
 $> svn log -q independence.tex 
 ------------------------------------------------------------------------
@@ -25,3 +42,135 @@ r1 | jefferson | 2012-11-13 12:51:35 -0600 (Tue, 13 Nov 2012)
 ------------------------------------------------------------------------
 \end{CodeVerbatim}
 
+Unfortunately, we cannot accept changes to this repository so the tutorials based on svn do not cover how to commit new revisions and how to collaborate.  We advise to install a local svn server and repository per the instructions below or to go through the git-based tutorial to cover those points.
+
+\subsection{Using a Local Subversion Repository} \label{sec:example-svn-local}
+
+The following will show you how to run a local subversion server on your machine.  Then, we will create a subversion repository there and add a few users to it, so that you can impersonate different users throughout the later parts of the tutorial below.
+
+First, perform the following steps from a directory of your choice.  We assume that this is again \Code{\$TUTORIAL}.  There, you will create the root location of your tutorial repositories called \Code{svnrepos}.  You may choose another name but will then have to adjust the commands accordingly.
+\begin{CodeVerbatim}
+$> cd $TUTORIAL
+$> svnadmin create svnrepos
+\end{CodeVerbatim}
+
+Now edit the two files 
+\begin{itemize}
+\item \Code{\$TUTORIAL/svnrepos/conf/svnserve.conf} 
+\item \Code{\$TUTORIAL/svnrepos/conf/passwd} 
+\end{itemize}
+to contain the following lines: 
+\begin{CodeVerbatim}
+$> grep -v "^#" svnrepos/conf/svnserve.conf | sed '/^$/d'
+[general]
+anon-access = none
+auth-access = write
+password-db = passwd
+[sasl]
+$> grep -v "^#" svnrepos/conf/passwd | sed '/^$/d'
+[users]
+franklin = ltc
+adams = ltc
+sherman = ltc
+jefferson = ltc
+\end{CodeVerbatim}
+
+Finally, start the SVN server in daemon mode using:
+\begin{CodeVerbatim}
+$> svnserve -d -r svnrepos
+\end{CodeVerbatim}
+
+Now download the file \Code{tutorialsvn.dump} from \url{http://sourceforge.net/projects/latextrack/files/examples/} to, say, directory \Code{\$TUTORIAL} and load the repository into your server:
+\begin{CodeVerbatim}
+$> svnadmin load svnrepos < tutorialsvn.dump
+<<< Started new transaction, based on original revision 1
+     * adding path : tutorial-svn ... done.
+     * adding path : tutorial-svn/independence.tex ... done.
+
+------- Committed revision 1 >>>
+
+<<< Started new transaction, based on original revision 2
+     * editing path : tutorial-svn/independence.tex ... done.
+
+------- Committed revision 2 >>>
+
+<<< Started new transaction, based on original revision 3
+     * editing path : tutorial-svn/independence.tex ... done.
+
+------- Committed revision 3 >>>
+
+<<< Started new transaction, based on original revision 4
+     * editing path : tutorial-svn/independence.tex ... done.
+
+------- Committed revision 4 >>>
+
+<<< Started new transaction, based on original revision 5
+     * editing path : tutorial-svn/independence.tex ... done.
+
+------- Committed revision 5 >>>
+
+<<< Started new transaction, based on original revision 6
+     * editing path : tutorial-svn/independence.tex ... done.
+
+------- Committed revision 6 >>>
+\end{CodeVerbatim}
+
+Now, we will check out from this repository in a new directory, say \Code{independence}.  If you see a message \Code{svn: Can't connect to host 'localhost': Connection refused} then most like the SVN server process is not running.  Restart the server with the \Code{svnserve} command above.
+\begin{CodeVerbatim}[commandchars=\\\{\}]
+$> svn co --username adams svn://localhost/tutorial-svn independence
+A    independence/independence.tex
+Checked out revision 6.
+$> cd independence
+$> svn log -q
+------------------------------------------------------------------------
+r6 | sherman | 2012-11-13 13:01:00 -0600 (Tue, 13 Nov 2012)
+------------------------------------------------------------------------
+r5 | sherman | 2012-11-13 13:00:35 -0600 (Tue, 13 Nov 2012)
+------------------------------------------------------------------------
+r4 | jefferson | 2012-11-13 12:59:45 -0600 (Tue, 13 Nov 2012)
+------------------------------------------------------------------------
+r3 | franklin | 2012-11-13 12:59:03 -0600 (Tue, 13 Nov 2012)
+------------------------------------------------------------------------
+r2 | adams | 2012-11-13 12:58:04 -0600 (Tue, 13 Nov 2012)
+------------------------------------------------------------------------
+r1 | jefferson | 2012-11-13 12:51:35 -0600 (Tue, 13 Nov 2012)
+------------------------------------------------------------------------
+\end{CodeVerbatim}
+
+%Later on, during the tutorial, you will be able to commit new versions using the credentials for the various user names with the password \Code{ltc}.  In the example below, the password is shown in bold but will not appear on the screen.
+%\begin{CodeVerbatim}[commandchars=\\\{\}]
+%$> svn commit --username adams
+%\textbf{ltc}
+%\end{CodeVerbatim}
+
+\subsection{Collaborating Using the Local Repository} \label{sec:svn-collaborating}
+
+\textbf{Collaboration} on your writing project happens through the subversion repository so here we show you how to set up an example with a secondary checkout that Roger Sherman uses.  You will need to download an additional file \Code{independence-sherman.tex} from \url{http://sourceforge.net/projects/latextrack/files/examples/}, for example to the directory \Code{\$TUTORIAL}.
+
+Now do the following to create the secondary repository with a new version of the file that is not yet committed.
+\begin{CodeVerbatim}
+$> cd $TUTORIAL/
+$> svn co --username sherman svn://localhost/tutorial-svn independence-sherman
+A    independence-sherman/independence.tex
+Checked out revision 6.
+$> cd independence-sherman/
+$> cp ../independence-sherman.tex independence.tex
+$> svn status
+M       independence.tex
+\end{CodeVerbatim}
+
+\subsection{Cleaning Up the Local Repository}
+
+To clean up when you are done with the tutorial, you should stop the running svn server process by finding out the process ID \Code{<PID>} as seen below.  Then, replace it in the \Code{kill} command before deleting the files associated with the repository.
+\begin{CodeVerbatim}[commandchars=\\\{\}]
+$> ps ax | grep svnserve
+ <PID>   ??  Ss     0:00.00 svnserve -d -r svnrepos
+$> kill <PID>
+$> rm -rf $TUTORIAL/svnrepos
+\end{CodeVerbatim}
+
+Finally, you will also want to remove the working copies you had made from the now deleted local repository:
+\begin{CodeVerbatim}
+$> rm -rf $TUTORIAL/independence
+$> rm -rf $TUTORIAL/independence-sherman
+\end{CodeVerbatim}

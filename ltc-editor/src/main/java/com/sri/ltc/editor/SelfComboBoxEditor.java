@@ -27,10 +27,13 @@ import com.sri.ltc.filter.Author;
 import javax.swing.*;
 import javax.swing.event.ListDataEvent;
 import javax.swing.event.ListDataListener;
+import javax.swing.text.*;
 import java.awt.*;
 import java.awt.datatransfer.DataFlavor;
 import java.awt.datatransfer.UnsupportedFlavorException;
 import java.awt.event.ActionListener;
+import java.awt.event.FocusEvent;
+import java.awt.event.FocusListener;
 import java.io.IOException;
 import java.text.ParseException;
 import java.util.logging.Level;
@@ -55,14 +58,49 @@ public final class SelfComboBoxEditor implements ComboBoxEditor, ListDataListene
             LOGGER.log(Level.SEVERE, e.getMessage(), e);
         }
     }
-    private final JFormattedTextField delegate = new JFormattedTextField(new AuthorFormatter());
+    private final static String TEXT_HINT = "name [<email>]";
+    private final JFormattedTextField delegate = new JFormattedTextField(new AuthorFormatter()) {
+        @Override
+        public Object getValue() {
+            Object value = super.getValue();
+            // update color for text field and text pane:
+            Color color = Color.black;
+            if (value instanceof Author)
+                color = authorModel.getColorForAuthor((Author) value);
+            setForeground(color);
+            if (latexPane != null)
+                latexPane.getDocumentFilter().setColor(color);
+            return value;
+        }
+    };
     {
-        delegate.setFocusLostBehavior(JFormattedTextField.COMMIT);
+        delegate.setFocusLostBehavior(JFormattedTextField.REVERT);
         delegate.setTransferHandler(new AuthorTransferHandler()); // customized drag 'n drop
+        delegate.addFocusListener(new FocusListener() {
+            @Override
+            public void focusGained(FocusEvent focusEvent) {
+                delegate.setCaretPosition(0); // start at beginning
+                delegate.setText(""); // to make the prior statement work
+                delegate.setForeground(Color.gray); // display temporary text in gray
+                delegate.setText(TEXT_HINT);
+                Document document = delegate.getDocument();
+                if (document instanceof AbstractDocument)
+                    ((AbstractDocument) document).setDocumentFilter(new FocusGainedFilter());
+            }
+
+            @Override
+            public void focusLost(FocusEvent focusEvent) {
+                Document document = delegate.getDocument();
+                if (document instanceof AbstractDocument)
+                    ((AbstractDocument) document).setDocumentFilter(null);
+            }
+        });
     }
     private final AuthorListModel authorModel;
+    private final LatexPane latexPane;
 
-    public SelfComboBoxEditor(AuthorListModel authorModel) {
+    public SelfComboBoxEditor(AuthorListModel authorModel, LatexPane latexPane) {
+        this.latexPane = latexPane;
         this.authorModel = authorModel;
         authorModel.addListDataListener(this);
     }
@@ -72,10 +110,6 @@ public final class SelfComboBoxEditor implements ComboBoxEditor, ListDataListene
     }
 
     public void setItem(Object anObject) {
-        if (anObject instanceof Author) 
-            delegate.setForeground(authorModel.getColorForAuthor((Author) anObject));
-        else
-            delegate.setForeground(Color.black);
         delegate.setValue(anObject);
     }
 
@@ -84,8 +118,7 @@ public final class SelfComboBoxEditor implements ComboBoxEditor, ListDataListene
     }
 
     public void selectAll() {
-        delegate.setForeground(Color.black); // start editing
-        // don't select all text to prevent deleting everything upon hitting ENTER
+        delegate.selectAll();
     }
 
     public void addActionListener(ActionListener l) {
@@ -97,7 +130,7 @@ public final class SelfComboBoxEditor implements ComboBoxEditor, ListDataListene
     }
 
     private void triggerForegroundUpdate() {
-        setItem(getItem());
+        delegate.getValue(); // this will trigger the color updates
     }
 
     public void intervalAdded(ListDataEvent e) {
@@ -159,6 +192,46 @@ public final class SelfComboBoxEditor implements ComboBoxEditor, ListDataListene
                 LOGGER.log(Level.SEVERE, e.getMessage(), e);
             }
             return false;
+        }
+    }
+
+    private class FocusGainedFilter extends DocumentFilter {
+        private boolean startEditing = true;
+
+        private synchronized int startEditing(FilterBypass fb, int offset) {
+            if (startEditing) {
+                delegate.setForeground(Color.black); // start edit in black
+                try {
+                    fb.remove(0, fb.getDocument().getLength()); // erase any text hint
+                } catch (BadLocationException e) {
+                    LOGGER.log(Level.SEVERE, "while start editing: "+e.getMessage(), e);
+                }
+                startEditing = false;
+                return 0; // reset prior offset
+            }
+            return offset;
+        }
+
+        @Override
+        public void insertString(FilterBypass fb, int offset, String text, AttributeSet attributeSet) throws BadLocationException {
+            if ("".equals(text)) return;
+
+            offset = startEditing(fb, offset);
+            fb.insertString(offset, text, attributeSet);
+        }
+
+        @Override
+        public void remove(FilterBypass fb, int offset, int length) throws BadLocationException {
+            if (length == 0) return;
+
+            offset = startEditing(fb, offset);
+            fb.remove(offset, length);
+        }
+
+        @Override
+        public void replace(FilterBypass fb, int offset, int length, String text, AttributeSet attributeSet) throws BadLocationException {
+            this.remove(fb, offset, length);
+            this.insertString(fb, offset, text, attributeSet);
         }
     }
 }

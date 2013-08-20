@@ -190,8 +190,6 @@ public final class TestAccumulate {
                 null, null);
     }
 
-    // TODO: exercise various filters with small and large changes (2 and 3 versions)
-
     @Test
     public void threeVersions() throws Exception {
         // small changes accumulate: positioning!
@@ -475,7 +473,6 @@ public final class TestAccumulate {
                 null);
     }
 
-    // TODO: adjust the following tests once we solved the leading whitespace problem through version attribution!
     @Test
     public void testAttributionOfChange() throws Exception {
         map = perform(0, EnumSet.of(Change.Flag.COMMENT),
