@@ -45,17 +45,6 @@
 
     <mailingLists>
         <mailingList>
-            <name>LTC Forum</name>
-            <subscribe>http://lists.sourceforge.net/lists/listinfo/latextrack-support</subscribe>
-            <unsubscribe>http://lists.sourceforge.net/lists/listinfo/latextrack-support</unsubscribe>
-            <post>latextrack-support@lists.sourceforge.net</post>
-            <archive>http://sourceforge.net/mailarchive/forum.php?forum_name=latextrack-support</archive>
-        </mailingList>
-        <mailingList>
-            <name>LTC Bug Reports</name>
-            <post>latextrack-bugs@lists.sourceforge.net</post>
-        </mailingList>
-        <mailingList>
             <name>LTC Announcements</name>
             <subscribe>http://lists.sourceforge.net/lists/listinfo/latextrack-announce</subscribe>
             <unsubscribe>http://lists.sourceforge.net/lists/listinfo/latextrack-announce</unsubscribe>
