@@ -555,7 +555,7 @@
      '(nil nil nil))) ; sets directory = nil and msg = nil and includeSrc = nil
   (when directory
     (setq file (ltc-method-call "create_bug_report" session-id msg includeSrc (expand-file-name directory)))
-    (message "Created bug report at %s" file)
+    (message "Created bug report at %s (please email to lilalinda@users.sourceforge.net)" file)
     ))
 
 
