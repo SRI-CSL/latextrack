@@ -245,7 +245,7 @@ public final class LTCFileViewer extends LTCGui implements ListSelectionListener
                                 (java.util.List<Integer[]>) map.get(LTCserverInterface.KEY_STYLES),
                                 colors,
                                 (Integer) map.get(LTCserverInterface.KEY_CARET),
-                                null);
+                                null, null);
                     } catch (Exception e) {
                         LOGGER.log(Level.SEVERE, e.getMessage(), e);
                     }

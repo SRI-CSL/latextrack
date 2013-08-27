@@ -222,7 +222,7 @@ public final class LTCEditor extends LTCGui {
         Map<Integer,Color> colors = new HashMap<Integer,Color>();
         for (Map.Entry<Integer,Object[]> entry : authors.entrySet())
             colors.put(entry.getKey(), Color.decode((String) entry.getValue()[2]));
-        textPane.updateFromMaps(text, styles, colors, caretPosition, orderedIDs);
+        textPane.updateFromMaps(text, styles, colors, caretPosition, orderedIDs, commits);
         // update list of commits
         commitModel.update(commits, new HashSet<String>(orderedIDs));
         // update date field

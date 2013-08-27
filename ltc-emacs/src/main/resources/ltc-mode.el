@@ -288,7 +288,7 @@
     (add-hook 'write-file-functions 'ltc-hook-before-save nil t) ; add (local) hook to intercept saving to file
     (add-hook 'kill-buffer-hook 'ltc-hook-before-kill nil t) ; add hook to intercept closing buffer
     ;; initialize known authors, commit graph and self
-    (setq commit-graph (init-commit-graph))
+    (setq commit-graph (init-commit-graph (ltc-method-call "get_commits" session-id)))
     (setq self (ltc-method-call "get_self" session-id)) ; get current author and color
     ;; run first update
     (ltc-update))
@@ -348,6 +348,7 @@
 				  (cdr (assoc-string "authors" map))))
 	     (styles (cdr (assoc-string "styles" map)))
 	     (revisions (cdr (assoc-string "revs" map)))
+	     (commits (ltc-method-call "get_commits" session-id)) ; list of 6-tuple strings
 	     )
 	(message "LTC updates received") ; TODO: change cursor back (or later?)
 	(ltc-remove-edit-hooks) ; remove (local) hooks to capture user's edits temporarily
@@ -357,20 +358,30 @@
 	(goto-char (1+ (cdr (assoc-string "caret" map)))) ; Emacs starts counting from 1!
 	;; apply styles to new buffer
 	(if (and styles (car styles))  ; sometimes STYLES = '(nil)
-	    (mapc (lambda (style) 
-		    (set-text-properties (1+ (car style)) (1+ (nth 1 style)) ; Emacs starts counting from 1!
-					 (list
-					  'face 
-					  (list 
-					   (if (= '1 (nth 2 style)) 'ltc-addition 'ltc-deletion) 
+	    (mapc (lambda (style)
+		    (let* ((revision (nth (nth 4 style) revisions))
+			   ;; now find revision in commits for extracting date:
+			   (date (catch 'findID
+				   (mapc (lambda (commit) 
+					   (if (string= (car commit) revision) 
+					       (throw 'findID (nth 4 commit)))) ; found ID, so stop loop
+					 commits)
+				   nil))) ; ID was not found
+		      (set-text-properties (1+ (car style)) (1+ (nth 1 style)) ; Emacs starts counting from 1!
 					   (list
-					    :foreground (cdr (assoc (nth 3 style) color-table))))
-					  'help-echo
-					  (concat "rev: " (shorten 8 (nth (nth 4 style) revisions)))))
-		    ) styles))
+					    'face 
+					    (list 
+					     (if (= '1 (nth 2 style)) 'ltc-addition 'ltc-deletion) 
+					     (list
+					      :foreground (cdr (assoc (nth 3 style) color-table))))
+					    'help-echo
+					    (concat "rev: " (shorten 8 revision) 
+						    (if date (concat "\ndate: " date) nil))))
+					; (if date (concat "\ndate: " date) ""))
+		      )) styles))
 	(ltc-add-edit-hooks) ; add (local) hooks to capture user's edits
 	;; update commit graph in temp info buffer
-	(setq commit-graph (init-commit-graph (cdr (assoc-string "revs" map))))
+	(setq commit-graph (init-commit-graph commits revisions))
 	(update-info-buffer)
 	(set-buffer-modified-p old-buffer-modified-p) ; restore modification flag
 	))
@@ -561,16 +572,15 @@
 
 ;;; --- info buffer functions
 
-(defun init-commit-graph (&optional ids)
-  "Init commit graph.  If a list of IDS is given (optional), those will be used to determine the activation state.  In this case, the first entry of the list is left untouched if it exists.  The author in the first entry in the list will be the current self in either case.
+(defun init-commit-graph (commits &optional ids)
+  "Init commit graph from given COMMITS.  If a list of IDS is given (optional), those will be used to determine the activation state.  In this case, the first entry of the list is left untouched if it exists.  The author in the first entry in the list will be the current self in either case.
 
 Each entry in the commit graph that is returned, contains a list with the following elements:
  (ID date (name email) message isActive color (column (incoming-columns) (outgoing-columns) (passing-columns)))
 "
   (if ltc-mode
-    ;; build commit graph from LTC session
-    (let ((commits (ltc-method-call "get_commits" session-id)) ; list of 6-tuple strings
-	  (authors (mapcar (lambda (v) (cons (list (car v) (cadr v)) (nth 2 v))) 
+    ;; build commit graph 
+    (let ((authors (mapcar (lambda (v) (cons (list (car v) (cadr v)) (nth 2 v))) 
 			   (ltc-method-call "get_authors" session-id)))
 	  (parents-alist nil)
 	  (children-alist nil)

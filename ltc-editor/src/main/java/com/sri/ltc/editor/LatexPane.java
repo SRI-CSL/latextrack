@@ -24,6 +24,7 @@ package com.sri.ltc.editor;
 
 import articles.showpar.ShowParEditorKit;
 import com.google.common.collect.Lists;
+import com.sri.ltc.CommonUtils;
 
 import javax.swing.*;
 import javax.swing.text.*;
@@ -31,6 +32,8 @@ import java.awt.*;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseEvent;
+import java.text.ParseException;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
@@ -46,6 +49,7 @@ public final class LatexPane extends JTextPane {
     private static final Logger LOGGER = Logger.getLogger(LatexPane.class.getName());
     private static final String KEY_SHOW_PARAGRAPHS = "showParagraphs";
     private static final String REVISION_ATTR = "revision attribute";
+    private static final String DATE_ATTR = "date attribute";
     protected final static String STYLE_PREFIX = "style no. ";
 
     private final LatexDocumentFilter documentFilter = new LatexDocumentFilter(this);
@@ -104,8 +108,11 @@ public final class LatexPane extends JTextPane {
         int line = root.getElementIndex(offset);
         int col = offset - root.getElement(line).getStartOffset();
         Object revision = getStyledDocument().getCharacterElement(offset).getAttributes().getAttribute(REVISION_ATTR);
-        return "("+(line+1)+","+(col+1)+")@"+offset+
-                (revision==null?"":" rev: "+revision.toString().substring(0, Math.min(8, revision.toString().length())));
+        Object date = getStyledDocument().getCharacterElement(offset).getAttributes().getAttribute(DATE_ATTR);
+        return "<html>("+(line+1)+", "+(col+1)+") @ "+offset+
+                (revision==null?"":"<br><b>rev:</b> "+revision.toString().substring(0, Math.min(8, revision.toString().length())))+
+                (date==null?"":"<br><b>date:</b> "+CommonUtils.serializeDate((Date) date))+
+                "</html>";
     }
 
     @Override
@@ -200,7 +207,7 @@ public final class LatexPane extends JTextPane {
     }
 
     public void updateFromMaps(String text, List<Integer[]> styles, Map<Integer, Color> colors,
-                               int caretPosition, List<String> orderedIDs) {
+                               int caretPosition, List<String> orderedIDs, List<Object[]> commits) {
         try {
             StyledDocument document = clearAndGetDocument();
             if (text != null)
@@ -211,8 +218,22 @@ public final class LatexPane extends JTextPane {
                     if (tuple != null && tuple.length >= 5) {
                         style = document.getStyle(STYLE_PREFIX+tuple[2]);
                         StyleConstants.setForeground(style, colors.get(tuple[3]));
-                        style.addAttribute(REVISION_ATTR,
-                                orderedIDs==null ? tuple[4] : orderedIDs.get(tuple[4]));
+                        if (orderedIDs != null) {  // add meta data about this change
+                            String revision = orderedIDs.get(tuple[4]);
+                            style.addAttribute(REVISION_ATTR, revision);
+                            if (commits != null) {
+                                for (Object[] commit : commits)
+                                    if (revision.equals(commit[0])) {
+                                        try {
+                                            style.addAttribute(DATE_ATTR,
+                                                    CommonUtils.deSerializeDate(commit[4].toString()));
+                                        } catch (ParseException e) {
+                                            LOGGER.log(Level.SEVERE, "while parsing date for revision", e);
+                                        }
+                                        break;
+                                    }
+                            }
+                        }
                         document.setCharacterAttributes(tuple[0], tuple[1]-tuple[0],
                                 style,
                                 true);
