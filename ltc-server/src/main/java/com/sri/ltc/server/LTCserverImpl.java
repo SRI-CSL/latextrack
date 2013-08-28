@@ -32,6 +32,7 @@ import com.sri.ltc.versioncontrol.history.HistoryUnit;
 import com.sri.ltc.versioncontrol.history.LimitedHistory;
 import com.sri.ltc.latexdiff.*;
 import com.sri.ltc.versioncontrol.*;
+import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.xmlrpc.XmlRpcException;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -611,7 +612,13 @@ public final class LTCserverImpl implements LTCserverInterface {
     }
 
     private String getColorKey(Author author) {
-        return KEY_COLOR + author;
+        String key = KEY_COLOR + author;
+        if (key.length() > Preferences.MAX_KEY_LENGTH) {
+            // hash and truncate for preferences
+            String hashedKey = DigestUtils.sha512Hex(key);
+            key = hashedKey.substring(0, Preferences.MAX_KEY_LENGTH);
+        }
+        return key;
     }
 
     public static String convertToHex(Color color) {
