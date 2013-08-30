@@ -21,6 +21,7 @@
  */
 package com.sri.ltc.server;
 
+import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.sri.ltc.filter.Author;
 import com.sri.ltc.versioncontrol.VersionControlException;
@@ -28,10 +29,13 @@ import com.sri.ltc.versioncontrol.history.CompleteHistory;
 import com.sri.ltc.versioncontrol.Remotes;
 import com.sri.ltc.latexdiff.Accumulate;
 import com.sri.ltc.versioncontrol.TrackedFile;
+import com.sri.ltc.versioncontrol.history.LimitedHistory;
 
+import java.awt.*;
 import java.io.IOException;
 import java.text.ParseException;
 import java.util.*;
+import java.util.List;
 
 /**
  * @author linda
@@ -42,13 +46,11 @@ public final class Session {
 
     final int ID;
     private final TrackedFile trackedFile;
-    private final CompleteHistory completeHistory;
-    private final Remotes remotes;
+    private final Accumulate accumulate = new Accumulate();
     private final Set<Author> knownAuthors = Sets.newHashSet();
     private final Set<Author> limitedAuthors = Sets.newHashSet();
     private String limit_date = "";
     private String limit_rev = "";
-    private final Accumulate accumulate = new Accumulate();
 
     protected Session(TrackedFile trackedFile) throws IOException, ParseException, VersionControlException {
         ID = generateID();
@@ -56,10 +58,8 @@ public final class Session {
             throw new IllegalArgumentException("cannot create session with NULL as tracked file");
         this.trackedFile = trackedFile;
         // initializations based on tracked file:
-        completeHistory = new CompleteHistory(trackedFile);
-        addAuthors(completeHistory.getAuthors());
+        addAuthors(new CompleteHistory(trackedFile).getAuthors());
         addAuthors(Collections.singleton(trackedFile.getRepository().getSelf()));
-        remotes = trackedFile.getRepository().getRemotes();
     }
 
     public TrackedFile getTrackedFile() {
@@ -75,50 +75,49 @@ public final class Session {
         return accumulate;
     }
 
-    public Remotes getRemotes() {
-        return remotes;
-    }
+    // synchronize all the following accessor methods to the data sets in this session:
 
-    public List<Object[]> getCommitGraphAsList() throws Exception {
-        return completeHistory.update();
-    }
+    // --- known authors ---  TODO: make colors unique?
 
-    // --- known authors ---
-
-    public Set<Author> getAuthors() {
+    public synchronized Set<Author> getAuthors() {
         return knownAuthors;
     }
-    public void addAuthors(Collection<? extends Author> newAuthors) {
+    public synchronized void addAuthors(Collection<? extends Author> newAuthors) {
         knownAuthors.addAll(newAuthors);
+    }
+
+    // --- create limited history ---
+    public synchronized LimitedHistory createLimitedHistory(boolean collapseAuthors) throws Exception {
+        return new LimitedHistory(trackedFile, limitedAuthors, limit_date, limit_rev, collapseAuthors);
     }
 
     // --- limited authors ---
 
-    public Set<Author> getLimitedAuthors() {
+    public synchronized Set<Author> getLimitedAuthors() {
         return limitedAuthors;
     }
-    public boolean addLimitedAuthor(Author author) {
+    public synchronized boolean addLimitedAuthor(Author author) {
         return limitedAuthors.add(author);
     }
-    public void resetLimitedAuthors() {
+    public synchronized void resetLimitedAuthors() {
         limitedAuthors.clear();
     }
 
     // --- limited date ---
 
-    public void setLimitDate(String date) {
+    public synchronized void setLimitDate(String date) {
         limit_date = date==null?"":date;
     }
-    public String getLimitDate() {
+    public synchronized String getLimitDate() {
         return limit_date;
     }
 
     // --- limited revision ---
 
-    public void setLimitRev(String limit_rev) {
+    public synchronized void setLimitRev(String limit_rev) {
         this.limit_rev = limit_rev==null?"":limit_rev;
     }
-    public String getLimitRev() {
+    public synchronized String getLimitRev() {
         return limit_rev;
     }
 }

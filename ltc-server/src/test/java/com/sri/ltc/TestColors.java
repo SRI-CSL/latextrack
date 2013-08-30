@@ -21,6 +21,7 @@
  */
 package com.sri.ltc;
 
+import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.sri.ltc.git.TemporaryGitRepository;
 import com.sri.ltc.server.LTCserverImpl;
@@ -30,6 +31,7 @@ import org.junit.*;
 
 import java.awt.*;
 import java.io.File;
+import java.util.Map;
 import java.util.Set;
 
 import static org.junit.Assert.assertEquals;
@@ -83,34 +85,53 @@ public final class TestColors {
     @Test
     public void resetColor() throws XmlRpcException {
         Color firstColor = Color.decode(API.get_color(TEST_NAME, TEST_EMAIL));
+        for (int i = 0; i < LTCserverImpl.NUM_DEFAULT_COLORS; i++) {
+            API.reset_color(TEST_NAME, TEST_EMAIL);
+            API.get_color(TEST_NAME, TEST_EMAIL);
+        }
         API.reset_color(TEST_NAME, TEST_EMAIL);
         assertFalse("random new color is different", firstColor.equals(Color.decode(API.get_color(TEST_NAME, TEST_EMAIL))));
     }
 
-    @Ignore //Test
+    @SuppressWarnings("unchecked")
+    @Test
     public void clashingColors() throws Exception {
         // implement with setting switch to allow similar colors to FALSE
         boolean oldSetting = API.get_bool_pref(LTCserverInterface.BoolPrefs.ALLOW_SIMILAR_COLORS.name());
         API.set_bool_pref(LTCserverInterface.BoolPrefs.ALLOW_SIMILAR_COLORS.name(), false);
 
         // all authors are blue
-        String[] authorNames = new String[] {"Anna", "Berta"};
+        java.util.List<String> authorNames = Lists.newArrayList("Anna", "Berta");
         for (String name : authorNames)
             API.set_color(name, "", "#0000ff");
+        authorNames.addAll(Lists.newArrayList("Dora", "Emily", "Frances", "Georgia", "Haley")); // some without stored colors
 
+        // create some history and get changes:
         File file = Utils.createGitRepository(temporaryGitRepository1,
-                new String[]{"content of first file", "more content of file", "a third content of file"},
-                authorNames);
+                new String[]{"content of first file", "more content of file", "a third content of file", "content of file", "coontent of file", "again content of file", "file file file", "more, more file file file"},
+                authorNames.toArray(new String[authorNames.size()]));
         int sessionID = API.init_session(file.getPath());
-        API.get_changes(sessionID, false, "", null, 0);
+        // add another self in blue:
+        String self = "Carla";
+        API.set_color(self, "", "#0000ff"); // use blue as well
+        API.set_self(sessionID, self, "");
+        authorNames.add(self);
+        Map map = API.get_changes(sessionID, false, "", null, 0);
 
-        // TODO: assert that authors have different colors
+        // assert that all authors from change set and self have different colors
+        Map<Integer,Object[]> authors = (Map<Integer,Object[]>) map.get(LTCserverInterface.KEY_AUTHORS);
         Set<Color> colors = Sets.newHashSet();
-        for (String name : authorNames) {
+        for (Map.Entry<Integer,Object[]> entry : authors.entrySet()) {
+            String name = (String) entry.getValue()[0];
             Color color = Color.decode(API.get_color(name, ""));
-            assertTrue("new color is different from other colors", !colors.contains(color));
+            for (Color other : colors)
+                assertTrue("color of author "+name+" is different from other colors", !CommonUtils.isSimilarTo(color, other));
             colors.add(color);
         }
+        // also self:
+        Color color = Color.decode(API.get_color(self, ""));
+        for (Color other : colors)
+            assertTrue("color of self "+self+" is different from other colors", !CommonUtils.isSimilarTo(color, other));
 
         // unset color for all authors and setting
         for (String name : authorNames)
@@ -152,8 +173,8 @@ public final class TestColors {
 
         assertTrue("blue is similar to blue", CommonUtils.isSimilarTo(color1, Color.blue));
         // five colors around it:
-        for (String c : new String[] {"#000099", "#0000CC", "#3333FF", "#3366FF", "#0066FF", "#0033CC", "#3333CC", "#0066CC"})
-            assertTrue("blue is similar to circle around blue", CommonUtils.isSimilarTo(color1, Color.decode(c)));
+        for (String c : new String[] {"#0000CC", "#3333FF", "#0033CC", "#3333CC"})
+            assertTrue("blue is similar to "+c, CommonUtils.isSimilarTo(color1, Color.decode(c)));
 
         // all predefined colors:
         assertFalse("blue is not similar to red", CommonUtils.isSimilarTo(color1, Color.red));

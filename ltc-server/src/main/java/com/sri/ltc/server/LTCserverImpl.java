@@ -24,10 +24,12 @@ package com.sri.ltc.server;
 import com.google.common.base.Function;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import com.sri.ltc.CommonUtils;
 import com.sri.ltc.ProgressReceiver;
 import com.sri.ltc.filter.Author;
 import com.sri.ltc.filter.Filtering;
+import com.sri.ltc.versioncontrol.history.CompleteHistory;
 import com.sri.ltc.versioncontrol.history.HistoryUnit;
 import com.sri.ltc.versioncontrol.history.LimitedHistory;
 import com.sri.ltc.latexdiff.*;
@@ -37,6 +39,7 @@ import org.apache.xmlrpc.XmlRpcException;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import javax.swing.text.BadLocationException;
 import javax.xml.parsers.DocumentBuilder;
@@ -67,6 +70,7 @@ public final class LTCserverImpl implements LTCserverInterface {
     private final Preferences preferences = Preferences.userNodeForPackage(this.getClass());
     private final static List<Color> defaultColors = new ArrayList<Color>(Arrays.asList(
             Color.blue, Color.red, Color.green, Color.magenta, Color.orange, Color.cyan));
+    public final static int NUM_DEFAULT_COLORS = defaultColors.size();
     private final static String KEY_COLOR = "author-color:";
     private final ProgressReceiver progressReceiver;
 
@@ -246,21 +250,17 @@ public final class LTCserverImpl implements LTCserverInterface {
         updateProgress(10);
 
         Filtering filter = Filtering.getInstance();
+        Author self = session.getTrackedFile().getRepository().getSelf();
 
         // obtain file history from version control, disk, and session (obeying any filters):
         List<HistoryUnit> units = new ArrayList<HistoryUnit>();
         try {
             // create history with limits and obtain revision IDs, authors, and readers:
-            LimitedHistory history = new LimitedHistory(session.getTrackedFile(),
-                    session.getLimitedAuthors(),
-                    session.getLimitDate(),
-                    session.getLimitRev(),
-                    filter.getStatus(BoolPrefs.COLLAPSE_AUTHORS)); // whether to condense authors or not
+            LimitedHistory history = session.createLimitedHistory(filter.getStatus(BoolPrefs.COLLAPSE_AUTHORS)); // whether to condense authors or not
             updateProgress(12);
             units = history.getHistoryUnits();
             updateProgress(45);
 
-            Author self = session.getTrackedFile().getRepository().getSelf();
             // add file on disk to list, if modified or new but not committed yet
             switch (session.getTrackedFile().getStatus()) {
                 case Added:
@@ -303,7 +303,9 @@ public final class LTCserverImpl implements LTCserverInterface {
             logAndThrow(7,"General Exception during log retrieval: "+e.getMessage());
         }
 
-        // compute indices of authors:
+        // compute colors and indices of authors:
+        List<Color> defaultColors = Lists.newArrayList(LTCserverImpl.defaultColors); // copy default colors
+        Set<Color> currentColors = Sets.newHashSet(); // keep track of current colors if we need to be unique
         List<Author> authors = Lists.transform(units, new Function<HistoryUnit, Author>() {
             @Nullable
             @Override
@@ -311,18 +313,32 @@ public final class LTCserverImpl implements LTCserverInterface {
                 return unit.author;
             }
         });
-        session.addAuthors(new HashSet<Author>());
+        session.addAuthors(new HashSet<Author>(authors));
         Map<Integer,Object[]> mappedAuthors = new HashMap<Integer,Object[]>();
         List<Integer> indices = new ArrayList<Integer>();
         if (authors != null && authors.size() > 0) {
             List<Author> sortedAuthors = new ArrayList<Author>(new TreeSet<Author>(authors));
+            // assign color (if unique colors requested) and then
             // build up map: index -> author and color (as list)
-            for (Author a : sortedAuthors)
+            for (Author a : sortedAuthors) {
+                if (!filter.getStatus(BoolPrefs.ALLOW_SIMILAR_COLORS))  // create unique colors for all authors + self
+                    try {
+                        computeUniqueColor(a, defaultColors, currentColors);
+                    } catch (BackingStoreException e) {
+                        logAndThrow(8,"Cannot obtain preferences for author "+a+" while getting changes: "+e.getMessage());
+                    }
                 mappedAuthors.put(sortedAuthors.indexOf(a), concatAuthorAndColor(a));
+            }
             // build up list of indices 
             for (Author a : authors)
                 indices.add(sortedAuthors.indexOf(a));
         }
+        if (!filter.getStatus(BoolPrefs.ALLOW_SIMILAR_COLORS))  // create unique colors for all authors + self
+            try {
+                computeUniqueColor(self, defaultColors, currentColors);
+            } catch (BackingStoreException e) {
+                logAndThrow(8,"Cannot obtain preferences for author (self) "+self+" while getting changes: "+e.getMessage());
+            }
         updateProgress(50);
 
         // do diffs and accumulate changes:
@@ -375,6 +391,44 @@ public final class LTCserverImpl implements LTCserverInterface {
         return map;
     }
 
+    private void computeUniqueColor(Author a, List<Color> defaultColors, Set<Color> currentColors) throws BackingStoreException, XmlRpcException {
+        // obtain any stored color from preferences
+        Color storedColor = null;
+        synchronized (preferences) {
+            String authorKey = getColorKey(a);
+            if (Sets.newHashSet(preferences.keys()).contains(authorKey))
+                storedColor = new Color(preferences.getInt(authorKey, 0));
+        }
+        if (storedColor == null)
+            storedColor = getDefaultOrRandom(defaultColors);
+        // test that the current one is unique enough:
+        int i = 0;
+        for (; i < CommonUtils.MAX_TRIES_COLOR && isSimilarTo(storedColor, currentColors); i++) {
+            storedColor = getDefaultOrRandom(defaultColors);
+            LOGGER.info("Replacing color for author "+a+" with color "+storedColor);
+        }
+        if (i == CommonUtils.MAX_TRIES_COLOR)
+            LOGGER.warning("Couldn't replace color for author "+a+" with a random one that is unique.");
+        set_color(a.name, a.email, convertToHex(storedColor));
+        currentColors.add(storedColor);
+    }
+    private Color getDefaultOrRandom(@Nonnull List<Color> defaultColors) {
+        Color color = Color.getHSBColor((float) Math.random(), 0.85f, 1.0f);
+        if (!defaultColors.isEmpty()) {
+            color = defaultColors.get(0);
+            defaultColors.remove(0);
+        }
+        return color;
+    }
+
+    // test whether given color has a similar one in given set
+    private boolean isSimilarTo(@Nonnull Color color, @Nonnull Set<Color> colors) {
+        for (Color other : colors)
+            if (CommonUtils.isSimilarTo(color, other))
+                return true;
+        return false;
+    }
+
     public String get_VCS(int sessionID) throws XmlRpcException {
         Session session = getSession(sessionID);
 
@@ -399,7 +453,7 @@ public final class LTCserverImpl implements LTCserverInterface {
     public List get_commits(int sessionID) throws XmlRpcException {
         Session session = getSession(sessionID);
         try {
-            return session.getCommitGraphAsList();
+            return new CompleteHistory(session.getTrackedFile()).update();
         } catch (ParseException e) {
             logAndThrow(2, "ParseException during retrieval of commit graph: "+e.getMessage()+" (offset = "+e.getErrorOffset()+")");
         } catch (IOException e) {
@@ -788,11 +842,7 @@ public final class LTCserverImpl implements LTCserverInterface {
 
             LimitedHistory history = null;
             try {
-                history = new LimitedHistory(session.getTrackedFile(),
-                        session.getLimitedAuthors(),
-                        session.getLimitDate(),
-                        session.getLimitRev(),
-                        get_bool_pref(BoolPrefs.COLLAPSE_AUTHORS.name()));
+                history = session.createLimitedHistory(get_bool_pref(BoolPrefs.COLLAPSE_AUTHORS.name()));
             } catch (Exception e) {
                 logAndThrow(3, "Could not create LimitedHistory:" + e.getMessage());
             }

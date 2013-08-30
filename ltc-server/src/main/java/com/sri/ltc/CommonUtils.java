@@ -47,7 +47,8 @@ import java.util.logging.Logger;
 public final class CommonUtils {
 
     private static final Logger LOGGER = Logger.getLogger(CommonUtils.class.getName());
-    public static final double COLOR_SIMILARITY = 125;
+    public static final double COLOR_SIMILARITY = 100;
+    public static final int MAX_TRIES_COLOR = 50; // only try 50 times to find a new color at random
 
     public final static FilenameFilter LOG_FILE_FILTER = new FilenameFilter() {
         @Override

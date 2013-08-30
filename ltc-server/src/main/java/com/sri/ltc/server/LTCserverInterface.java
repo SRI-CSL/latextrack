@@ -155,6 +155,7 @@ public interface LTCserverInterface {
      *   <li>with error code = 5 if an IOException occurred during log retrieval.
      *   <li>with error code = 6 if a ParseException occurred during log retrieval.
      *   <li>with error code = 7 if a BadLocationException occurs while removing deletions from current text.
+     *   <li>with error code = 8 if a BackingStoreException occurs while dealing with author colors.
      * </ul>
      */
     public Map get_changes(int sessionID, boolean isModified, String currentText, List deletions, int caretPosition)
