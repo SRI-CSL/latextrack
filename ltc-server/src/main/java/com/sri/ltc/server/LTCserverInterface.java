@@ -40,7 +40,7 @@ public interface LTCserverInterface {
     public final static String KEY_AUTHORS = "authors";
     public final static String KEY_CARET = "caret";
     public final static String KEY_REVS = "revs";
-    public static enum BoolPrefs {SMALL, DELETIONS, PREAMBLE, COMMANDS, COMMENTS, COLLAPSE_AUTHORS};
+    public static enum BoolPrefs {SMALL, DELETIONS, PREAMBLE, COMMANDS, COMMENTS, COLLAPSE_AUTHORS, ALLOW_SIMILAR_COLORS};
     public final static String ON_DISK = "on disk"; // special name for version on disk (if file modified and not committed)
     public final static String MODIFIED = "modified"; // special name for text modified in editor
     public static enum VersionControlSystems {GIT, SVN};
