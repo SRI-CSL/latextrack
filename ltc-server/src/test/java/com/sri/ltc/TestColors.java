@@ -128,10 +128,6 @@ public final class TestColors {
                 assertTrue("color of author "+name+" is different from other colors", !CommonUtils.isSimilarTo(color, other));
             colors.add(color);
         }
-        // also self:
-        Color color = Color.decode(API.get_color(self, ""));
-        for (Color other : colors)
-            assertTrue("color of self "+self+" is different from other colors", !CommonUtils.isSimilarTo(color, other));
 
         // unset color for all authors and setting
         for (String name : authorNames)

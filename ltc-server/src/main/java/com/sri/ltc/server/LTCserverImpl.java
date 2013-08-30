@@ -329,13 +329,15 @@ public final class LTCserverImpl implements LTCserverInterface {
                     }
                 mappedAuthors.put(sortedAuthors.indexOf(a), concatAuthorAndColor(a));
             }
-            // build up list of indices 
+            // build up list of indices
             for (Author a : authors)
                 indices.add(sortedAuthors.indexOf(a));
         }
-        if (!filter.getStatus(BoolPrefs.ALLOW_SIMILAR_COLORS))  // create unique colors for all authors + self
+        // handle self if not already computed:
+        if (!authors.contains(self) && !filter.getStatus(BoolPrefs.ALLOW_SIMILAR_COLORS))  // create unique colors for all authors + self
             try {
                 computeUniqueColor(self, defaultColors, currentColors);
+                mappedAuthors.put(-1, concatAuthorAndColor(self));
             } catch (BackingStoreException e) {
                 logAndThrow(8,"Cannot obtain preferences for author (self) "+self+" while getting changes: "+e.getMessage());
             }
@@ -412,6 +414,7 @@ public final class LTCserverImpl implements LTCserverInterface {
         set_color(a.name, a.email, convertToHex(storedColor));
         currentColors.add(storedColor);
     }
+
     private Color getDefaultOrRandom(@Nonnull List<Color> defaultColors) {
         Color color = Color.getHSBColor((float) Math.random(), 0.85f, 1.0f);
         if (!defaultColors.isEmpty()) {
