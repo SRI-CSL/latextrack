@@ -130,7 +130,10 @@ public interface LTCserverInterface {
      * <p>
      * Furthermore, the return value under {@link #KEY_AUTHORS} also contains a map of
      * numbers to authors and their color, which are given as an array of 3 Strings
-     * containing name, email address, and color name.
+     * containing name, email address, and color name.  If this map contains the key -1,
+     * then this denotes the current author ("self"), which may have changed if
+     * {@link BoolPrefs.ALLOW_SIMILAR_COLORS} is set to <code>false</code> and a new color
+     * for the current author had to be found.
      * <p>
      * The value under {@link #KEY_CARET} contains the transformed cursor
      * position into the new text of the one given as an argument to the method.
@@ -205,7 +208,7 @@ public interface LTCserverInterface {
     public List get_commits(int sessionID) throws XmlRpcException;
 
     /**
-     * Obtain the currently set author for the repository indicated through the given session.
+     * Obtain the current author for the given session.
      * If exists, the author is given as a 3-tuple of strings denoting the name (not empty), the
      * email address (possibly empty), and the color as obtained by {@link #get_color(String, String)}
      * with the name and email as the parameters.  If no author is set, the returned array is empty.

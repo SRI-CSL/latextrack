@@ -102,6 +102,7 @@
 (defvar ltc-show-comments nil "Show changes in comments")
 (defvar ltc-show-commands t "Show changes in commands")
 (defvar ltc-condense-authors nil "Condense authors in file history")
+(defvar ltc-allow-similar-colors nil "Allow similar colors for different authors")
 (defconst show-map
   '((ltc-show-deletions . "DELETIONS")
     (ltc-show-small . "SMALL")
@@ -110,7 +111,8 @@
     (ltc-show-comments . "COMMENTS"))
   "define mappings from custom options to show/hide changes to the string used in API call.")
 (defconst other-settings-map
-  '((ltc-condense-authors . "COLLAPSE_AUTHORS"))
+  '((ltc-condense-authors . "COLLAPSE_AUTHORS")
+    (ltc-allow-similar-colors . "ALLOW_SIMILAR_COLORS"))
   "define mapping from other boolean settings to the string used in API call.")
 ;;; the following filters are buffer-local:
 (defvar ltc-limiting-authors nil "Set of authors to limit commit graph.")
@@ -231,13 +233,22 @@
 			"..."
 		      (concat " [" (shorten 7 ltc-limiting-rev) "]...")))]
     )
-   ["Condense authors" 
-    (list 
-     (setq ltc-condense-authors (not ltc-condense-authors))
-     (ltc-method-call "set_bool_pref" (cdr (assoc 'ltc-condense-authors other-settings-map)) ltc-condense-authors)
-     (ltc-update)
-     )
-    :style toggle :selected ltc-condense-authors :key-sequence nil]
+   ("Other settings"
+    ["Condense authors" 
+     (list 
+      (setq ltc-condense-authors (not ltc-condense-authors))
+      (ltc-method-call "set_bool_pref" (cdr (assoc 'ltc-condense-authors other-settings-map)) ltc-condense-authors)
+      (ltc-update)
+      )
+     :style toggle :selected ltc-condense-authors :key-sequence nil]
+    ["Allow similar colors" 
+     (list 
+      (setq ltc-allow-similar-colors (not ltc-allow-similar-colors))
+      (ltc-method-call "set_bool_pref" (cdr (assoc 'ltc-allow-similar-colors other-settings-map)) ltc-allow-similar-colors)
+      (ltc-update)
+      )
+     :style toggle :selected ltc-allow-similar-colors :key-sequence nil]
+    )
    "--"
    "MOVE CURSOR"
    ["To previous change" ltc-prev-change]
@@ -281,21 +292,20 @@
     (mapc (lambda (show-var) 
 	    (set show-var (ltc-method-call "get_bool_pref" (cdr (assoc show-var show-map))))) (mapcar 'car show-map))
     (setq ltc-condense-authors (ltc-method-call "get_bool_pref" (cdr (assoc 'ltc-condense-authors other-settings-map))))
+    (setq ltc-allow-similar-colors (ltc-method-call "get_bool_pref" (cdr (assoc 'ltc-allow-similar-colors other-settings-map))))
     (mapc (lambda (var) 
 	    (set var 'nil)) 
 	  limit-vars)
     (font-lock-mode 0) ; turn-off latex font-lock mode
     (add-hook 'write-file-functions 'ltc-hook-before-save nil t) ; add (local) hook to intercept saving to file
     (add-hook 'kill-buffer-hook 'ltc-hook-before-kill nil t) ; add hook to intercept closing buffer
-    ;; initialize known authors, commit graph and self
-    (setq commit-graph (init-commit-graph (ltc-method-call "get_commits" session-id)))
-    (setq self (ltc-method-call "get_self" session-id)) ; get current author and color
     ;; run first update
     (ltc-update))
   ) ;ltc-mode-start
 
 (defun ltc-mode-stop ()
   "stop LTC mode"  
+  (setq commit-graph nil) ; reset commit graph
   (setq self nil) ; reset information about current author
   (ltc-remove-edit-hooks) ; remove (local) hooks to capture user's edits
   (remove-hook 'write-file-functions 'ltc-hook-before-save t) ; remove (local) hook to intercept saving to file
@@ -350,6 +360,7 @@
 	     (revisions (cdr (assoc-string "revs" map)))
 	     (commits (ltc-method-call "get_commits" session-id)) ; list of 6-tuple strings
 	     )
+	(setq self (ltc-method-call "get_self" session-id)) ; get current author and color
 	(message "LTC updates received") ; TODO: change cursor back (or later?)
 	(ltc-remove-edit-hooks) ; remove (local) hooks to capture user's edits temporarily
 	;; replace text in buffer and update cursor position
@@ -377,7 +388,6 @@
 					    'help-echo
 					    (concat "rev: " (shorten 8 revision) 
 						    (if date (concat "\ndate: " date) nil))))
-					; (if date (concat "\ndate: " date) ""))
 		      )) styles))
 	(ltc-add-edit-hooks) ; add (local) hooks to capture user's edits
 	;; update commit graph in temp info buffer
