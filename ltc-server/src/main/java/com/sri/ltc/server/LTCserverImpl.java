@@ -376,14 +376,14 @@ public final class LTCserverImpl implements LTCserverInterface {
                             filter.getStatus(BoolPrefs.COMMANDS)),
                     caretPosition);
             map.put(LTCserverInterface.KEY_AUTHORS, mappedAuthors); // add current author map
-            map.put(LTCserverInterface.KEY_REVS, Lists.transform(units,
+            map.put(LTCserverInterface.KEY_REVS, Lists.transform(units.subList(1, units.size()),
                     new Function<HistoryUnit, String>() {
                         @Nullable
                         @Override
                         public String apply(@Nullable HistoryUnit unit) {
                             return unit.revision;
                         }
-                    })); // add list of revisions used in accumulation
+                    })); // add list of revisions used in accumulation: remove the base version!
             session.getAccumulate().removePropertyChangeListener(listener);
         } catch (Exception e) {
             logAndThrow(2,"Exception during change accumulation: "+e.getMessage());
