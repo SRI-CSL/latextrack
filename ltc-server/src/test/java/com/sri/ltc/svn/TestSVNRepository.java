@@ -98,6 +98,24 @@ public class TestSVNRepository {
         }
     }
 
+    @Test
+    public void testLimits() {
+        try {
+            TrackedFile trackedFile = temporarySVNRepository.getTrackedFile();
+            assertTrue("tracked file is not NULL", trackedFile != null);
+
+            // TODO: test date limit
+
+            // TODO: test revision limit
+            List<Commit> commits = trackedFile.getCommits(null, "4"); // this should actually return commits until r3!
+            assertTrue("list of commits is not NULL", commits != null);
+            assertEquals("list of commits has length 4", 4, commits.size());
+
+        } catch (Exception e) {
+            fail(e.getMessage());
+        }
+    }
+
     @Test(expected = VersionControlException.class)
     public void badThingsWithRepo() throws VersionControlException, IOException {
         assertTrue(toBeRemoved.getRoot().exists());
