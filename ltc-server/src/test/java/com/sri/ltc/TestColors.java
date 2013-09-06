@@ -125,7 +125,7 @@ public final class TestColors {
             String name = (String) entry.getValue()[0];
             Color color = Color.decode(API.get_color(name, ""));
             for (Color other : colors)
-                assertTrue("color of author "+name+" is different from other colors", !CommonUtils.isSimilarTo(color, other));
+                assertTrue("color of author "+name+" is different from other colors", !color.equals(other));
             colors.add(color);
         }
 
