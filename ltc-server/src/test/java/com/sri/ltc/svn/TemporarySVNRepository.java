@@ -40,7 +40,7 @@ import static org.junit.Assert.assertTrue;
  */
 public class TemporarySVNRepository extends TemporaryFolder{
 
-    private final static String TEST_URL = "https://spartan.csl.sri.com/svn/public/LTC/";
+    private final static String TEST_URL = "https://rfs.csl.sri.com/svn/public/LTC/";
     private final static String TEST_REPO = "tutorial-svn";
     private final static String FILE_NAME = "independence.tex";
 
