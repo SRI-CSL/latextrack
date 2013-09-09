@@ -116,7 +116,7 @@ public final class TestColors {
         API.set_color(self, "", "#0000ff"); // use blue as well
         API.set_self(sessionID, self, "");
         authorNames.add(self);
-        Map map = API.get_changes(sessionID, false, "", null, 0);
+        Map map = API.get_changes(sessionID, false, new byte[0], null, 0);
 
         // assert that all authors from change set and self have different colors
         Map<Integer,Object[]> authors = (Map<Integer,Object[]>) map.get(LTCserverInterface.KEY_AUTHORS);
@@ -150,7 +150,7 @@ public final class TestColors {
                 new String[]{"content of first file", "more content of file", "a third content of file"},
                 authorNames);
         int sessionID = API.init_session(file.getPath());
-        API.get_changes(sessionID, false, "", null, 0);
+        API.get_changes(sessionID, false, new byte[0], null, 0);
 
         // assert that authors can have similar colors
         assertTrue("both colors are the same", CommonUtils.isSimilarTo(

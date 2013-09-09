@@ -22,6 +22,7 @@
 package com.sri.ltc.latexdiff;
 
 import com.sri.ltc.server.LTCserverInterface;
+import org.apache.commons.codec.binary.Base64;
 import org.junit.Test;
 
 import java.awt.*;
@@ -66,7 +67,7 @@ public final class TestAccumulate {
     private void assertMap(String text, int styles, int caretPosition) {
         assertNotNull(map);
         assertTrue("Map has 3 entries", map.size() == 3);
-        assertEquals("Text is equal to", text, map.get(LTCserverInterface.KEY_TEXT));
+        assertEquals("Text is equal to", text, new String(Base64.decodeBase64((byte[]) map.get(LTCserverInterface.KEY_TEXT))));
         assertEquals("Number of styles", styles, ((List<Integer[]>) map.get(LTCserverInterface.KEY_STYLES)).size());
         assertEquals("Caret position", caretPosition, map.get(LTCserverInterface.KEY_CARET));
     }
@@ -620,34 +621,5 @@ public final class TestAccumulate {
                 "the EcoCyc project.  EcoCyc is a {\\em model-organism database} (MOD)\r\n" +
                 "\\cite{MODWork98} for {\\em Escherichia coli} K--12.  In addition, we propose to extend the scope of the project to cover the Gram-positive model organism Bacillus subtilis \\bacsub.\r\n" +
                 "The project will be carried out by SRI International", 4, 0);
-    }
-
-    // render given text as HTML, so as to cut and paste into a browser
-    @SuppressWarnings("unchecked")
-    private static void renderHTML(Map map) {
-        String text = (String) map.get(LTCserverInterface.KEY_TEXT);
-        List<Integer[]> styles = (List<Integer[]>) map.get(LTCserverInterface.KEY_STYLES);
-
-        System.out.format("\n<html><head>\n");
-
-        int start = 0;
-
-        if (styles.isEmpty())
-            System.out.format("%s", text.replaceAll("\n", "<br>"));
-        else {
-            for (Integer[] tuple : styles) {
-                if (tuple[0] > start)
-                    System.out.format("%s",text.substring(start, tuple[0]).replaceAll("\n","<br>"));
-                start = tuple[1];
-                System.out.format("<font color=\"#%s\"><%c>%s</%c></font>",
-                        Integer.toHexString((colors.get(tuple[3]).getRGB() & 0xffffff) | 0x1000000).substring(1),
-                        HTML_STYLES[tuple[2]-1],
-                        text.substring(tuple[0], tuple[1]).replaceAll("\n", "<br>"),
-                        HTML_STYLES[tuple[2]-1]);
-            }
-            System.out.format("%s",text.substring(Math.min(start, text.length())).replaceAll("\n","<br>")); // any remaining unstyled text
-        }
-
-        System.out.format("\n</body></html>\n\n");
     }
 }

@@ -34,6 +34,7 @@ import com.sri.ltc.versioncontrol.history.HistoryUnit;
 import com.sri.ltc.versioncontrol.history.LimitedHistory;
 import com.sri.ltc.latexdiff.*;
 import com.sri.ltc.versioncontrol.*;
+import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.xmlrpc.XmlRpcException;
 import org.w3c.dom.Document;
@@ -163,10 +164,13 @@ public final class LTCserverImpl implements LTCserverInterface {
     }
 
     @SuppressWarnings("unchecked")
-    public Map close_session(int sessionID, String currentText, List deletions, int caretPosition) throws XmlRpcException {
+    public Map close_session(int sessionID, byte[] currentText64, List deletions, int caretPosition) throws XmlRpcException {
         Session session = SessionManager.finishSession(sessionID);
         if (session == null)
             logAndThrow(1,"Cannot close session with given ID");
+
+        // translate current text
+        String currentText = new String(Base64.decodeBase64(currentText64));
 
         LOGGER.info("Server: close_session for file \""+session.getTrackedFile().getFile().getAbsolutePath()+"\", "+
                 "text with "+currentText.length()+" characters, "+
@@ -189,7 +193,7 @@ public final class LTCserverImpl implements LTCserverInterface {
 
         // create return value
         Map map = new HashMap();
-        map.put(LTCserverInterface.KEY_TEXT, currentText);
+        map.put(LTCserverInterface.KEY_TEXT, Base64.encodeBase64(currentText.getBytes()));
         map.put(LTCserverInterface.KEY_CARET, caretPosition);
         return map;
     }
@@ -227,12 +231,15 @@ public final class LTCserverImpl implements LTCserverInterface {
     }
 
     @SuppressWarnings (value={"unchecked","fallthrough"})
-    public Map get_changes(int sessionID, boolean isModified, String currentText, List deletions, int caretPosition) throws XmlRpcException {
+    public Map get_changes(int sessionID, boolean isModified, byte[] currentText64, List deletions, int caretPosition) throws XmlRpcException {
         Session session = getSession(sessionID);
+
+        // translate current text
+        String currentText = new String(Base64.decodeBase64(currentText64));
 
         LOGGER.info("Server: get_changes for file \""+session.getTrackedFile().getFile().getAbsolutePath()+"\", "+
                 (isModified?"":"not ")+"modified, "+
-                "text with "+currentText.length()+" characters, "+
+                "text with "+ currentText.length()+" characters, "+
                 (deletions != null?
                         deletions.size()+" deletions, ":
                         "")+

@@ -35,7 +35,7 @@ public interface LTCserverInterface {
     public final static int PORT = 7777;
 
     /** Constants */
-    public final static String KEY_TEXT = "text";
+    public final static String KEY_TEXT = "text64";
     public final static String KEY_STYLES = "styles";
     public final static String KEY_AUTHORS = "authors";
     public final static String KEY_CARET = "caret";
@@ -74,13 +74,15 @@ public interface LTCserverInterface {
      * current text.  These are needed to properly convert the given caret position to
      * one in the newly computed text.
      * <p>
-     * The return value contains the text without any changes under the key {@link #KEY_TEXT}.
+     * The return value contains the text encoded in Base64 without any changes under
+     * the key {@link #KEY_TEXT}.
      * The value under {@link #KEY_CARET} contains the cursor position transformed from
      * the one given as an argument to the method to the new text.
      *
      *
+     *
      * @param sessionID identifies the session
-     * @param currentText current text in editor
+     * @param currentText64 current text in editor in Base64 encoding or empty (cannot be <code>null</code>)
      * @param deletions list of pairs with start and end position of deletions in <code>currentText</code> if any
      * @param caretPosition current cursor position to be transformed into new one
      * @return Map that contains the text without changes and the updated caret position
@@ -89,7 +91,7 @@ public interface LTCserverInterface {
      *   <li>with error code = 2 if a BadLocationException occurs while removing deletions from current text.
      * </ul>
      */
-    public Map close_session(int sessionID, String currentText, List deletions, int caretPosition)
+    public Map close_session(int sessionID, byte[] currentText64, List deletions, int caretPosition)
             throws XmlRpcException;
 
     /**
@@ -120,7 +122,8 @@ public interface LTCserverInterface {
      * current text.  These are needed to properly convert the given caret position to
      * one in the newly computed text.
      * <p>
-     * The return value contains the text including the changes (for example, deletions)
+     * The return value contains the text encoded in Base64 (you will need to decode this
+     * from byte[] into String) including the changes (for example, deletions)
      * under the key {@link #KEY_TEXT} and the list of styles to be used under the key
      * {@link #KEY_STYLES}.  Each style is a 5-tuple of numbers that denote start and
      * end position as well as style (1 - addition, 2 - deletion), an author index and
@@ -141,9 +144,10 @@ public interface LTCserverInterface {
      * Finally, an entry under {@link #KEY_REVS} in the returned map is a list of revision
      * names from newest to oldest that have been used to obtain the changes.
      *
+     *
      * @param sessionID identifies the session
      * @param isModified whether the text has been modified since the last save operation
-     * @param currentText current text in editor (cannot be <code>null</code>)
+     * @param currentText64 current text in editor in Base64 encoding or empty (cannot be <code>null</code>)
      * @param deletions list of pairs with start and end position of deletions in <code>currentText</code> if any;
      *                  <code>null</code> or empty list if no deletions
      * @param caretPosition current cursor position to be transformed into new one (should be a valid position in
@@ -161,7 +165,7 @@ public interface LTCserverInterface {
      *   <li>with error code = 8 if a BackingStoreException occurs while dealing with author colors.
      * </ul>
      */
-    public Map get_changes(int sessionID, boolean isModified, String currentText, List deletions, int caretPosition)
+    public Map get_changes(int sessionID, boolean isModified, byte[] currentText64, List deletions, int caretPosition)
             throws XmlRpcException;
 
     /**
