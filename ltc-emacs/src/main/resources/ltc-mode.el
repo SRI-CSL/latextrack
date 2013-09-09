@@ -134,6 +134,9 @@
 (defvar self nil "3-tuple of current author when session is initialized.")
 (make-variable-buffer-local 'self)
 
+(defvar orig-coding-sytem nil "Keep information on original coding system.")
+(make-variable-buffer-local 'orig-coding-sytem)
+
 ;; Defining key maps with prefix
 (defvar ltc-prefix-map nil "LTC mode prefix keymap.")
 (define-prefix-command 'ltc-prefix-map)
@@ -296,6 +299,8 @@
     (mapc (lambda (var) 
 	    (set var 'nil)) 
 	  limit-vars)
+    (setq orig-coding-sytem buffer-file-coding-system)
+    (setq buffer-file-coding-system 'no-conversion)
     (font-lock-mode 0) ; turn-off latex font-lock mode
     (add-hook 'write-file-functions 'ltc-hook-before-save nil t) ; add (local) hook to intercept saving to file
     (add-hook 'kill-buffer-hook 'ltc-hook-before-kill nil t) ; add hook to intercept closing buffer
@@ -339,6 +344,9 @@
     (kill-buffer b)) ; kill temp buffer
   (setq ltc-info-buffer "")
   (font-lock-mode 1) ; turn latex font-lock mode back on
+  (setq buffer-file-coding-system orig-coding-sytem)
+  (setq orig-coding-sytem nil)
+  (message "LTC stop: coding = %S" buffer-file-coding-system)
   ) ;ltc-mode-stop
 
 (defun ltc-update ()
@@ -366,6 +374,8 @@
 	;; replace text in buffer and update cursor position
 	(erase-buffer)
 	(insert (cdr (assoc-string "text" map)))
+	(if (> (length (cdr (assoc-string "text" map))) 380)
+	    (message "TEXT at 280: %S" (substring (cdr (assoc-string "text" map)) 280 380))) ;; TODO: REMOVE
 	(goto-char (1+ (cdr (assoc-string "caret" map)))) ; Emacs starts counting from 1!
 	;; apply styles to new buffer
 	(if (and styles (car styles))  ; sometimes STYLES = '(nil)

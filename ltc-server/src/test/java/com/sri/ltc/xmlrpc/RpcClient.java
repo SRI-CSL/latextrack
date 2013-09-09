@@ -19,7 +19,7 @@
  * <http://www.gnu.org/licenses/gpl-3.0.html>.
  * #L%
  */
-package com.sri.ltc;
+package com.sri.ltc.xmlrpc;
 
 import com.sri.ltc.filter.Author;
 import com.sri.ltc.server.HelloLTC;

@@ -599,6 +599,29 @@ public final class TestAccumulate {
         assertEquals("Style count without preamble", 1, styleCountWithPreamble - styleCountWithoutPreamble);
     }
 
+    @Test
+    public void textWithBackspace() throws Exception {
+        // as submitted by Peter Karp on Aug 22
+        String version1 = "This application requests continued support for\r\n" +
+                "the EcoCyc project.  EcoCyc is a {\\em model-organism database} (MOD)\r\n" +
+                "\\cite{MODWork98} for {\\em Escherichia coli} K--12.  \r\n" +
+                "The project will be carried out by SRI International";
+        String version2 = "This application requests continued support for\r\n" +
+                "the EcoCyc project.  EcoCyc is a {\\em model-organism database} (MOD)\r\n" +
+                "\\cite{MODWork98} for {\\em Escherichia coli} K--12.  In addition, we propose to extend the scope of the project to cover the Gram-positive model organism Bacillus subtilis.\r\n" +
+                "The project will be carried out by SRI International";
+        String version3 = "This application requests continued support for\r\n" +
+                "the EcoCyc project.  EcoCyc is a {\\em model-organism database} (MOD)\r\n" +
+                "\\cite{MODWork98} for {\\em Escherichia coli} K--12.  In addition, we propose to extend the scope of the project to cover the Gram-positive model organism \\bacsub.\r\n" +
+                "The project will be carried out by SRI International";
+
+        map = perform(0, version1, version2, version3);
+        assertMap("This application requests continued support for\r\n" +
+                "the EcoCyc project.  EcoCyc is a {\\em model-organism database} (MOD)\r\n" +
+                "\\cite{MODWork98} for {\\em Escherichia coli} K--12.  In addition, we propose to extend the scope of the project to cover the Gram-positive model organism Bacillus subtilis \\bacsub.\r\n" +
+                "The project will be carried out by SRI International", 4, 0);
+    }
+
     // render given text as HTML, so as to cut and paste into a browser
     @SuppressWarnings("unchecked")
     private static void renderHTML(Map map) {
