@@ -27,6 +27,20 @@
         <author email="lilalinda at users.sourceforge.net">Linda Briesemeister</author>
     </properties>
     <body>
+        <release version="1.0.1" date="2013-09-27">
+            <action dev="lilalinda" type="add" issue="4">
+                A new setting whether to allow similar colors for authors guides the color selection upon an LTC update.
+            </action>
+            <action dev="lilalinda" type="update">
+                Thanks to various beta-testers we fixed a number of small bugs such as: (1) logging from XML-RPC was
+                using a hardcoded path, which did not exist for most users, resulting in an exception thrown from the
+                LTC server and confusing users, (2) making it easier to email bug reports, (3) adding a date to all tool
+                tips when hovering over a marked up change so that it is easier to match it to the list of changes, (4)
+                fixed bug when author name and email was too long to be stored in Java Preferences, and (5) handling
+                MS-DOS encoded newlines in Emacs mode.
+            </action>
+        </release>
+
         <release version="1.0" date="2013-08-19">
             <action dev="lilalinda" type="fix" issue="38">
                 Fixed problem with limiting by revision under svn in Emacs.
