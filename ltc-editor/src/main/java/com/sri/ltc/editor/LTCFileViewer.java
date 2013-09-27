@@ -32,6 +32,7 @@ import com.sri.ltc.latexdiff.FileReaderWrapper;
 import com.sri.ltc.latexdiff.ReaderWrapper;
 import com.sri.ltc.logging.LogConfiguration;
 import com.sri.ltc.server.LTCserverInterface;
+import org.apache.commons.codec.binary.Base64;
 import org.kohsuke.args4j.*;
 
 import javax.swing.*;
@@ -241,11 +242,11 @@ public final class LTCFileViewer extends LTCGui implements ListSelectionListener
                                 textPane.getCaretPosition()
                         );
                         textPane.updateFromMaps(
-                                (String) map.get(LTCserverInterface.KEY_TEXT),
+                                new String(Base64.decodeBase64((byte[]) map.get(LTCserverInterface.KEY_TEXT))),
                                 (java.util.List<Integer[]>) map.get(LTCserverInterface.KEY_STYLES),
                                 colors,
                                 (Integer) map.get(LTCserverInterface.KEY_CARET),
-                                null);
+                                null, null);
                     } catch (Exception e) {
                         LOGGER.log(Level.SEVERE, e.getMessage(), e);
                     }

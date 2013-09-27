@@ -23,6 +23,7 @@ package com.sri.ltc.latexdiff;
 
 import com.sri.ltc.CommonUtils;
 import com.sri.ltc.server.LTCserverInterface;
+import org.apache.commons.codec.binary.Base64;
 
 import javax.swing.text.*;
 import java.awt.*;
@@ -94,7 +95,7 @@ public final class Accumulate {
 
         // init return value:
         Map map = new HashMap();
-        map.put(LTCserverInterface.KEY_TEXT, "");
+        map.put(LTCserverInterface.KEY_TEXT, new byte[0]);
         map.put(LTCserverInterface.KEY_CARET, caretPosition);
         map.put(LTCserverInterface.KEY_STYLES, new ArrayList<Integer[]>());
 
@@ -182,7 +183,7 @@ public final class Accumulate {
         progress = updateProgress(0.9f, 0.05f);
 
         // create return value:
-        map.put(LTCserverInterface.KEY_TEXT, document.getText(0, document.getLength()));
+        map.put(LTCserverInterface.KEY_TEXT, Base64.encodeBase64(document.getText(0, document.getLength()).getBytes()));
         map.put(LTCserverInterface.KEY_STYLES, document.getStyles());
         map.put(LTCserverInterface.KEY_CARET, caretPosition);
 

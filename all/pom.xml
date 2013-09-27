@@ -7,11 +7,10 @@
     <parent>
         <groupId>com.sri.ltc</groupId>
         <artifactId>LTC</artifactId>
-        <version>1.0</version>
+        <version>1.0.1</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
-    <groupId>com.sri.ltc</groupId>
     <artifactId>all</artifactId>
     <name>LaTeX Track Changes</name>
     <description>
@@ -42,26 +41,6 @@
         <!--<connection>scm:git:http://git.code.sf.net/p/latextrack/code</connection>-->
         <url>http://sourceforge.net/p/latextrack/code/</url>
     </scm>
-
-    <mailingLists>
-        <mailingList>
-            <name>LTC Forum</name>
-            <subscribe>http://lists.sourceforge.net/lists/listinfo/latextrack-support</subscribe>
-            <unsubscribe>http://lists.sourceforge.net/lists/listinfo/latextrack-support</unsubscribe>
-            <post>latextrack-support@lists.sourceforge.net</post>
-            <archive>http://sourceforge.net/mailarchive/forum.php?forum_name=latextrack-support</archive>
-        </mailingList>
-        <mailingList>
-            <name>LTC Bug Reports</name>
-            <post>latextrack-bugs@lists.sourceforge.net</post>
-        </mailingList>
-        <mailingList>
-            <name>LTC Announcements</name>
-            <subscribe>http://lists.sourceforge.net/lists/listinfo/latextrack-announce</subscribe>
-            <unsubscribe>http://lists.sourceforge.net/lists/listinfo/latextrack-announce</unsubscribe>
-            <archive>http://sourceforge.net/mailarchive/forum.php?forum_name=latextrack-announce</archive>
-        </mailingList>
-    </mailingLists>
 
     <dependencies>
         <dependency>
@@ -99,7 +78,7 @@
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>license-maven-plugin</artifactId>
-                <version>1.3</version>
+                <version>1.5</version>
                 <configuration>
                     <licenseName>gpl_v3</licenseName>
                     <licenseFile>LICENSE</licenseFile>
@@ -381,45 +360,8 @@
                 <configuration>
                     <skip>false</skip>
                     <skipDeploy>false</skipDeploy>
-                    <reportPlugins>
-                        <plugin>
-                            <groupId>org.apache.maven.plugins</groupId>
-                            <artifactId>maven-project-info-reports-plugin</artifactId>
-                            <version>2.6</version>
-                            <configuration>
-                                <dependencyDetailsEnabled>false</dependencyDetailsEnabled>
-                                <dependencyLocationsEnabled>false</dependencyLocationsEnabled>
-                            </configuration>
-                            <reportSets>
-                                <reportSet>
-                                    <reports>
-                                        <report>index</report>
-                                        <report>project-team</report>
-                                        <report>license</report>
-                                        <report>dependencies</report>
-                                        <!-- TODO: decide about additional reports: -->
-                                        <!--<report>dependency-convergence</report>-->
-                                        <!--<report>scm</report>-->
-                                        <report>mailing-list</report>
-                                        <report>issue-tracking</report>
-                                        <report>summary</report>
-                                    </reports>
-                                </reportSet>
-                            </reportSets>
-                        </plugin>
-                        <plugin>
-                            <groupId>org.apache.maven.plugins</groupId>
-                            <artifactId>maven-changes-plugin</artifactId>
-                            <version>2.8</version>
-                            <reportSets>
-                                <reportSet>
-                                    <reports>
-                                        <report>changes-report</report>
-                                    </reports>
-                                </reportSet>
-                            </reportSets>
-                        </plugin>
-                    </reportPlugins>
+                    <!-- while they are fixing the new configuration of the maven-site-plugin,
+                         we need to use the classic style; so removed <reportPlugins> here! -->
                 </configuration>
             </plugin>
 
@@ -456,4 +398,47 @@
         </plugins>
     </build>
 
+    <!-- while they are fixing the new configuration of the maven-site-plugin, we need to use the classic style: -->
+    <reporting>
+        <excludeDefaults>true</excludeDefaults>
+        <outputDirectory>${project.build.directory}/site</outputDirectory>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-project-info-reports-plugin</artifactId>
+                <version>2.6</version>
+                <configuration>
+                    <dependencyDetailsEnabled>false</dependencyDetailsEnabled>
+                    <dependencyLocationsEnabled>false</dependencyLocationsEnabled>
+                </configuration>
+                <reportSets>
+                    <reportSet>
+                        <reports>
+                            <report>index</report>
+                            <report>project-team</report>
+                            <report>license</report>
+                            <report>dependencies</report>
+                            <!-- TODO: decide about additional reports: -->
+                            <!--<report>dependency-convergence</report>-->
+                            <!--<report>scm</report>-->
+                            <report>issue-tracking</report>
+                            <report>summary</report>
+                        </reports>
+                    </reportSet>
+                </reportSets>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-changes-plugin</artifactId>
+                <version>2.8</version>
+                <reportSets>
+                    <reportSet>
+                        <reports>
+                            <report>changes-report</report>
+                        </reports>
+                    </reportSet>
+                </reportSets>
+            </plugin>
+        </plugins>
+    </reporting>
 </project>

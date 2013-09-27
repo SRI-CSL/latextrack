@@ -222,7 +222,7 @@ public final class LTCEditor extends LTCGui {
         Map<Integer,Color> colors = new HashMap<Integer,Color>();
         for (Map.Entry<Integer,Object[]> entry : authors.entrySet())
             colors.put(entry.getKey(), Color.decode((String) entry.getValue()[2]));
-        textPane.updateFromMaps(text, styles, colors, caretPosition, orderedIDs);
+        textPane.updateFromMaps(text, styles, colors, caretPosition, orderedIDs, commits);
         // update list of commits
         commitModel.update(commits, new HashSet<String>(orderedIDs));
         // update date field
@@ -467,15 +467,19 @@ public final class LTCEditor extends LTCGui {
         filteringPane.add(new BoolPrefCheckBox("condense authors",
                 LTCserverInterface.BoolPrefs.COLLAPSE_AUTHORS,
                 getUpdateButton()), c);
+        c.gridy = 2;
+        filteringPane.add(new BoolPrefCheckBox("allow similar colors",
+                LTCserverInterface.BoolPrefs.ALLOW_SIMILAR_COLORS,
+                getUpdateButton()), c);
 
         c.weightx = 0.8;
-        c.gridy = 2;
+        c.gridy = 3;
         filteringPane.add(datePane, c);
 
-        c.gridy = 3;
+        c.gridy = 4;
         filteringPane.add(revPane, c);
 
-        c.gridy = 4;
+        c.gridy = 5;
         c.weightx = 0.0;
         c.fill = GridBagConstraints.NONE;
         filteringPane.add(getUpdateButton(), c);

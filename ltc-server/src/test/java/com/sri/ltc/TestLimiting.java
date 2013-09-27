@@ -30,6 +30,7 @@ import com.sri.ltc.server.LTCserverImpl;
 import com.sri.ltc.server.LTCserverInterface;
 import com.sri.ltc.versioncontrol.Commit;
 import com.sri.ltc.versioncontrol.TrackedFile;
+import org.apache.commons.codec.binary.Base64;
 import org.apache.xmlrpc.XmlRpcException;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -127,7 +128,7 @@ public final class TestLimiting {
 
     @SuppressWarnings("unchecked")
     private List<String> getRevs() throws XmlRpcException {
-        Map map = API.get_changes(sessionID, false, fileTexts[fileTexts.length-1], null, 0);
+        Map map = API.get_changes(sessionID, false, Base64.encodeBase64(fileTexts[fileTexts.length - 1].getBytes()), null, 0);
         List<String> revs = (List<String>) map.get(LTCserverInterface.KEY_REVS);
         // print revisions:
         System.out.println(" active revisions:");

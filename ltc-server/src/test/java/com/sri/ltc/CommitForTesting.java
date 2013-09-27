@@ -28,14 +28,14 @@ import java.io.InputStream;
 import java.util.Date;
 import java.util.List;
 
-public class TestCommit extends Commit {
+public class CommitForTesting extends Commit {
     private String id;
     private String authorName;
     private String authorEmail;
     private String message;
     private Date date;
 
-    public TestCommit(String id, Date date, String authorName, String authorEmail, String message) {
+    public CommitForTesting(String id, Date date, String authorName, String authorEmail, String message) {
         super(null, null);
         this.id = id;
         this.date = date;

@@ -27,6 +27,7 @@ import com.joestelmach.natty.Parser;
 import com.sri.ltc.xplatform.AppInterface;
 
 import javax.swing.*;
+import java.awt.*;
 import java.io.*;
 import java.net.URL;
 import java.text.DateFormat;
@@ -46,6 +47,8 @@ import java.util.logging.Logger;
 public final class CommonUtils {
 
     private static final Logger LOGGER = Logger.getLogger(CommonUtils.class.getName());
+    public static final double COLOR_SIMILARITY = 100;
+    public static final int MAX_TRIES_COLOR = 50; // only try 50 times to find a new color at random
 
     public final static FilenameFilter LOG_FILE_FILTER = new FilenameFilter() {
         @Override
@@ -217,5 +220,24 @@ public final class CommonUtils {
             buffer.append((char) c);
         reader.close();
         return buffer.toString();
+    }
+
+    /**
+     * Compare whether the given colors are similar with respect to the threshold
+     * {@link #COLOR_SIMILARITY} using the simple approach in
+     * {@link http://stackoverflow.com/questions/15262258/how-could-i-compare-colors-in-java}.
+     *
+     * @param color1 First color to compare
+     * @param color2 Second color to compare
+     * @return true, if the two colors are similar and false otherwise
+     */
+    public static boolean isSimilarTo(Color color1, Color color2) {
+        double distance = Math.sqrt(Math.pow(color1.getRed() - color2.getRed(), 2d)  +
+                        Math.pow(color1.getGreen() - color2.getGreen(), 2d) +
+                        Math.pow(color1.getBlue() - color2.getBlue(), 2d));
+        if (distance < COLOR_SIMILARITY)
+            return true;
+        else
+            return false;
     }
 }

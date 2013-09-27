@@ -66,7 +66,7 @@ public final class AuthorListModel extends AbstractListModel {
 
     public void init(List<Object[]> list) {
         synchronized (authors) {
-            clear();            
+            clear();
             if (list != null && !list.isEmpty()) {
                 for (Object[] authorAsList : list) {
                     authors.add(new AuthorCell(
@@ -81,10 +81,14 @@ public final class AuthorListModel extends AbstractListModel {
     public void addAuthors(List<Object[]> list) {
         synchronized (authors) {
             if (list != null && !list.isEmpty()) {
-                for (Object[] authorAsList : list)
-                    authors.add(new AuthorCell(
+                for (Object[] authorAsList : list) {
+                    // to update: remove first and then add again
+                    AuthorCell authorCell = new AuthorCell(
                             Author.fromList(authorAsList),
-                            Color.decode((String) authorAsList[2])));
+                            Color.decode((String) authorAsList[2]));
+                    authors.remove(authorCell);
+                    authors.add(authorCell);
+                }
                 fireContentsChanged(this, 0, getSize() - 1);
             }
         }

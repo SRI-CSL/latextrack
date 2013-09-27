@@ -24,11 +24,15 @@ package com.sri.ltc.editor;
 
 import com.sri.ltc.filter.Author;
 import com.sri.ltc.server.LTCserverInterface;
+import org.apache.commons.codec.binary.Base64;
 import org.apache.xmlrpc.XmlRpcException;
 
 import javax.swing.*;
+import java.awt.*;
 import java.io.File;
 import java.io.IOException;
+import java.net.URI;
+import java.net.URLEncoder;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -120,7 +124,7 @@ public class LTCSession {
             protected Map callLTCinBackground() throws XmlRpcException {
                 int lastID = ID;
                 ID = -1; // reset here as this is being accessed asynchronously and cannot wait for done() below
-                return LTC.close_session(lastID, "", Collections.emptyList(), 0); // forget about any modifications
+                return LTC.close_session(lastID, new byte[0], Collections.emptyList(), 0); // forget about any modifications
             }
 
             @Override
@@ -149,7 +153,7 @@ public class LTCSession {
                 setProgress(1);
                 if (isCancelled()) return null;
                 // get changes
-                Map map = LTC.get_changes(sessionID, isModified, currentText, deletions, caretPosition);
+                Map map = LTC.get_changes(sessionID, isModified, Base64.encodeBase64(currentText.getBytes()), deletions, caretPosition);
                 setProgress(90);
                 if (isCancelled()) return null;
                 // update commit graph
@@ -169,7 +173,7 @@ public class LTCSession {
                         Map map = get();
                         editor.finishUpdate(
                                 (Map<Integer,Object[]>) map.get(LTCserverInterface.KEY_AUTHORS),
-                                (String) map.get(LTCserverInterface.KEY_TEXT),
+                                new String(Base64.decodeBase64((byte[]) map.get(LTCserverInterface.KEY_TEXT))),
                                 (List<Integer[]>) map.get(LTCserverInterface.KEY_STYLES),
                                 (Integer) map.get(LTCserverInterface.KEY_CARET),
                                 (List<String>) map.get(LTCserverInterface.KEY_REVS),
@@ -195,7 +199,7 @@ public class LTCSession {
                 "Saving...", "<html>Saving file<br>"+getCanonicalPath()+"</html>", false) {
             @Override
             protected Void callLTCinBackground() throws XmlRpcException {
-                LTC.save_file(ID, currentText, deletions);
+                LTC.save_file(ID, Base64.encodeBase64(currentText.getBytes()), deletions);
                 return null;
             }
         });
@@ -314,14 +318,41 @@ public class LTCSession {
             protected void done() {
                 try {
                     String file = get();
-                    JOptionPane.showMessageDialog(editor.getFrame(),
-                            "The bug report has been filed under\n"+file,
-                            "Bug Report Created",
-                            JOptionPane.INFORMATION_MESSAGE);
+                    String message = "<html>The bug report has been filed under<pre>  "+file+
+                            "</pre>Please attach it to an email and send it to"+
+                            "<pre>  lilalinda@users.sourceforge.net</pre></html>";
+                    if (Desktop.isDesktopSupported()) {
+                        // add button to invoke email client with mailto: URI
+                        // see: http://stackoverflow.com/questions/527719/how-to-add-hyperlink-in-jlabel
+                        Object[] options = {"Email", "OK"};
+                        if (JOptionPane.showOptionDialog(editor.getFrame(),
+                                message,
+                                "Bug Report Created",
+                                JOptionPane.YES_NO_OPTION,
+                                JOptionPane.INFORMATION_MESSAGE,
+                                null, // no custom icon
+                                options, options[0]) == JOptionPane.YES_OPTION) {
+                            String subject = URLEncoder.encode("LTC bug report", "utf-8").replace("+", "%20");
+                            String body = URLEncoder.encode("Please attach the file "+file, "utf-8").replace("+", "%20");
+                            String email = "lilalinda@users.sourceforge.net".replace("+", "%2B");
+                            String link = String.format("mailto:%s?subject=%s&body=%s", email, subject, body);
+                            Desktop.getDesktop().mail(URI.create(link));
+                        }
+                    } else
+                        JOptionPane.showMessageDialog(editor.getFrame(),
+                                message,
+                                "Bug Report Created",
+                                JOptionPane.INFORMATION_MESSAGE);
                 } catch (InterruptedException e) {
                     LOGGER.log(Level.SEVERE, e.getMessage(), e);
                 } catch (ExecutionException e) {
                     LOGGER.log(Level.SEVERE, e.getMessage(), e);
+                } catch (IOException e) {
+                    LOGGER.log(Level.SEVERE, e.getMessage(), e);
+                    JOptionPane.showMessageDialog(editor.getFrame(),
+                            "An error occurred:\n"+e.getMessage(),
+                            "Error while opening email client",
+                            JOptionPane.ERROR_MESSAGE);
                 }
             }
         }).execute();

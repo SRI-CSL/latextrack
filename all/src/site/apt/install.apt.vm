@@ -54,7 +54,7 @@ To start LTC server with default options, use the following command:
   * Subversion: In a directory of your choice, do
 
 +----
-svn checkout https://spartan.csl.sri.com/svn/public/LTC/tutorial-svn independence
+svn checkout https://rfs.csl.sri.com/svn/public/LTC/tutorial-svn independence
 +----
 
   []

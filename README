@@ -190,6 +190,16 @@ c) obtaining git tree by hand (for specified file):
              --format=format:"commit %H%nAuthor: %an <%ae>%nDate: %ad%nParents: %P%n%s%n" \
              <RELATIVE-PATH-TO-TEX-FILE>
 
+d) if extracting 'bundle.git' from a bug report:
+  $> git clone report/bundle.git
+  Cloning into 'bundle.git'...
+  ...
+  warning: remote HEAD refers to nonexistent ref, unable to checkout.
+  $> cd bundle.git/
+  $> git checkout -b master origin/master
+  Branch master set up to track remote branch master from origin.
+  Already on 'master'
+
 
 Building manual by hand
 -----------------------

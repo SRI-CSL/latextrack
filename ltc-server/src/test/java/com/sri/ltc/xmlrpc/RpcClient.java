@@ -19,11 +19,12 @@
  * <http://www.gnu.org/licenses/gpl-3.0.html>.
  * #L%
  */
-package com.sri.ltc;
+package com.sri.ltc.xmlrpc;
 
 import com.sri.ltc.filter.Author;
 import com.sri.ltc.server.HelloLTC;
 import com.sri.ltc.server.LTCserverInterface;
+import org.apache.commons.codec.binary.Base64;
 import org.apache.xmlrpc.XmlRpcException;
 
 import java.io.BufferedReader;
@@ -109,15 +110,15 @@ public class RpcClient {
                             System.out.println("Session ID = "+server.init_session(tokens[1]));
                             break;
                         case 'C':
-                            map = server.close_session(Integer.parseInt(tokens[1]), "", Collections.emptyList(), 0);
-                            String text = (String) map.get(LTCserverInterface.KEY_TEXT);
+                            map = server.close_session(Integer.parseInt(tokens[1]), new byte[0], Collections.emptyList(), 0);
+                            String text = new String(Base64.decodeBase64((byte[]) map.get(LTCserverInterface.KEY_TEXT)));
                             if (text != null)
                                 text = text.substring(0,text.length()>20?20:text.length());
                             System.out.println("Session text = "+text);
                             break;
                         case 'G':
-                            map = server.get_changes(Integer.parseInt(tokens[1]), false, "", Collections.emptyList(), 0);
-                            System.out.println("text = "+map.get(LTCserverInterface.KEY_TEXT));
+                            map = server.get_changes(Integer.parseInt(tokens[1]), false, new byte[0], Collections.emptyList(), 0);
+                            System.out.println("text = "+new String(Base64.decodeBase64((byte[]) map.get(LTCserverInterface.KEY_TEXT))));
                             System.out.println("styles = ");
                             Object[] list = (Object[]) map.get(LTCserverInterface.KEY_STYLES);
                             if (list != null)

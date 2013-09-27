@@ -81,6 +81,7 @@ public final class Filtering {
         defaultsShow.put(LTCserverInterface.BoolPrefs.COMMENTS, false);
         // default values for other boolean preferences
         defaultsShow.put(LTCserverInterface.BoolPrefs.COLLAPSE_AUTHORS, false);
+        defaultsShow.put(LTCserverInterface.BoolPrefs.ALLOW_SIMILAR_COLORS, false);
     }
 
     public boolean getStatus(LTCserverInterface.BoolPrefs key) {

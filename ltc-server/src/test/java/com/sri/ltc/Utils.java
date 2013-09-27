@@ -21,6 +21,10 @@
  */
 package com.sri.ltc;
 
+import com.sri.ltc.filter.Author;
+import com.sri.ltc.git.TemporaryGitRepository;
+import com.sri.ltc.versioncontrol.TrackedFile;
+
 import java.io.File;
 
 /**
@@ -39,11 +43,36 @@ public class Utils {
                 if (f.isDirectory())
                     deleteFolder(f);
                 else
-                    if (!f.delete())
-                        throw new RuntimeException("Cannot delete file "+f.getAbsolutePath());
+                if (!f.delete())
+                    throw new RuntimeException("Cannot delete file "+f.getAbsolutePath());
             }
         if (!folder.delete())
             throw new RuntimeException("Cannot delete folder "+folder.getAbsolutePath());
     }
 
+    public static File createGitRepository(TemporaryGitRepository temporaryGitRepository, String[] contentArray, String[] authorNames) throws Exception {
+        if (contentArray == null)
+            throw new IllegalArgumentException("cannot create temporary git repository without contents");
+        if (authorNames == null || "".equals(authorNames[0]))
+            throw new IllegalArgumentException("cannot create temporary git repository without authors");
+
+        // create git repository with first author and first contents; commit file
+        Author firstAuthor = new Author(authorNames[0], "");
+        temporaryGitRepository.setAuthor(firstAuthor);
+        TrackedFile file = temporaryGitRepository.createTestFileInRepository("file-", ".txt", contentArray[0], true);
+        file.commit("first commit");
+
+        // now go through the rest of the contents and possibly authors (otherwise use first author)
+        for (int i = 1; i < contentArray.length; i++) {
+            // modify and commit file:
+            if (i < authorNames.length)
+                temporaryGitRepository.setAuthor(new Author(authorNames[i], ""));
+            else
+                temporaryGitRepository.setAuthor(firstAuthor);
+            temporaryGitRepository.modifyTestFileInRepository(file, contentArray[i], false);
+            file.commit("commit of version "+(i+1));
+        }
+
+        return file.getFile();
+    }
 }

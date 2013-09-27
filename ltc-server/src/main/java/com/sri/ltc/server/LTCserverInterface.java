@@ -35,12 +35,12 @@ public interface LTCserverInterface {
     public final static int PORT = 7777;
 
     /** Constants */
-    public final static String KEY_TEXT = "text";
+    public final static String KEY_TEXT = "text64";
     public final static String KEY_STYLES = "styles";
     public final static String KEY_AUTHORS = "authors";
     public final static String KEY_CARET = "caret";
     public final static String KEY_REVS = "revs";
-    public static enum BoolPrefs {SMALL, DELETIONS, PREAMBLE, COMMANDS, COMMENTS, COLLAPSE_AUTHORS};
+    public static enum BoolPrefs {SMALL, DELETIONS, PREAMBLE, COMMANDS, COMMENTS, COLLAPSE_AUTHORS, ALLOW_SIMILAR_COLORS};
     public final static String ON_DISK = "on disk"; // special name for version on disk (if file modified and not committed)
     public final static String MODIFIED = "modified"; // special name for text modified in editor
     public static enum VersionControlSystems {GIT, SVN};
@@ -74,13 +74,15 @@ public interface LTCserverInterface {
      * current text.  These are needed to properly convert the given caret position to
      * one in the newly computed text.
      * <p>
-     * The return value contains the text without any changes under the key {@link #KEY_TEXT}.
+     * The return value contains the text encoded in Base64 without any changes under
+     * the key {@link #KEY_TEXT}.
      * The value under {@link #KEY_CARET} contains the cursor position transformed from
      * the one given as an argument to the method to the new text.
      *
      *
+     *
      * @param sessionID identifies the session
-     * @param currentText current text in editor
+     * @param currentText64 current text in editor in Base64 encoding or empty (cannot be <code>null</code>)
      * @param deletions list of pairs with start and end position of deletions in <code>currentText</code> if any
      * @param caretPosition current cursor position to be transformed into new one
      * @return Map that contains the text without changes and the updated caret position
@@ -89,15 +91,16 @@ public interface LTCserverInterface {
      *   <li>with error code = 2 if a BadLocationException occurs while removing deletions from current text.
      * </ul>
      */
-    public Map close_session(int sessionID, String currentText, List deletions, int caretPosition)
+    public Map close_session(int sessionID, byte[] currentText64, List deletions, int caretPosition)
             throws XmlRpcException;
 
     /**
      * Save the current text (after removing any deletions given) to the file indicated
      * by the given session ID.
      *
+     *
      * @param sessionID identifies the session
-     * @param currentText current text in editor
+     * @param currentText64 current text in editor in Base64 encoding or empty (cannot be <code>null</code>)
      * @param deletions list of pairs with start and end position of deletions in <code>currentText</code> if any
      * @return 0
      * @throws XmlRpcException <ul>
@@ -107,7 +110,7 @@ public interface LTCserverInterface {
      *   <li>with error code = 4 if a FileNotFoundException occurred during saving the file.
      * </ul>
      */
-    public int save_file(int sessionID, String currentText, List deletions) throws XmlRpcException;
+    public int save_file(int sessionID, byte[] currentText64, List deletions) throws XmlRpcException;
     
     /**
      * Obtains the changes of the file indicated by the session ID.
@@ -120,7 +123,8 @@ public interface LTCserverInterface {
      * current text.  These are needed to properly convert the given caret position to
      * one in the newly computed text.
      * <p>
-     * The return value contains the text including the changes (for example, deletions)
+     * The return value contains the text encoded in Base64 (you will need to decode this
+     * from byte[] into String) including the changes (for example, deletions)
      * under the key {@link #KEY_TEXT} and the list of styles to be used under the key
      * {@link #KEY_STYLES}.  Each style is a 5-tuple of numbers that denote start and
      * end position as well as style (1 - addition, 2 - deletion), an author index and
@@ -130,7 +134,10 @@ public interface LTCserverInterface {
      * <p>
      * Furthermore, the return value under {@link #KEY_AUTHORS} also contains a map of
      * numbers to authors and their color, which are given as an array of 3 Strings
-     * containing name, email address, and color name.
+     * containing name, email address, and color name.  If this map contains the key -1,
+     * then this denotes the current author ("self"), which may have changed if
+     * {@link BoolPrefs.ALLOW_SIMILAR_COLORS} is set to <code>false</code> and a new color
+     * for the current author had to be found.
      * <p>
      * The value under {@link #KEY_CARET} contains the transformed cursor
      * position into the new text of the one given as an argument to the method.
@@ -138,9 +145,10 @@ public interface LTCserverInterface {
      * Finally, an entry under {@link #KEY_REVS} in the returned map is a list of revision
      * names from newest to oldest that have been used to obtain the changes.
      *
+     *
      * @param sessionID identifies the session
      * @param isModified whether the text has been modified since the last save operation
-     * @param currentText current text in editor (cannot be <code>null</code>)
+     * @param currentText64 current text in editor in Base64 encoding or empty (cannot be <code>null</code>)
      * @param deletions list of pairs with start and end position of deletions in <code>currentText</code> if any;
      *                  <code>null</code> or empty list if no deletions
      * @param caretPosition current cursor position to be transformed into new one (should be a valid position in
@@ -155,9 +163,10 @@ public interface LTCserverInterface {
      *   <li>with error code = 5 if an IOException occurred during log retrieval.
      *   <li>with error code = 6 if a ParseException occurred during log retrieval.
      *   <li>with error code = 7 if a BadLocationException occurs while removing deletions from current text.
+     *   <li>with error code = 8 if a BackingStoreException occurs while dealing with author colors.
      * </ul>
      */
-    public Map get_changes(int sessionID, boolean isModified, String currentText, List deletions, int caretPosition)
+    public Map get_changes(int sessionID, boolean isModified, byte[] currentText64, List deletions, int caretPosition)
             throws XmlRpcException;
 
     /**
@@ -204,7 +213,7 @@ public interface LTCserverInterface {
     public List get_commits(int sessionID) throws XmlRpcException;
 
     /**
-     * Obtain the currently set author for the repository indicated through the given session.
+     * Obtain the current author for the given session.
      * If exists, the author is given as a 3-tuple of strings denoting the name (not empty), the
      * email address (possibly empty), and the color as obtained by {@link #get_color(String, String)}
      * with the name and email as the parameters.  If no author is set, the returned array is empty.
