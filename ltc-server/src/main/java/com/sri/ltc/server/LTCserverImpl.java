@@ -199,11 +199,14 @@ public final class LTCserverImpl implements LTCserverInterface {
     }
 
     @SuppressWarnings("unchecked")
-    public int save_file(int sessionID, String currentText, List deletions) throws XmlRpcException {
+    public int save_file(int sessionID, byte[] currentText64, List deletions) throws XmlRpcException {
         Session session = getSession(sessionID);
 
+        // translate current text
+        String currentText = new String(Base64.decodeBase64(currentText64));
+
         LOGGER.info("Server: save_file to file \""+session.getTrackedFile().getFile().getAbsolutePath()+"\" "+
-                "text with "+currentText.length()+" characters"+
+                "text with "+ currentText.length()+" characters"+
                 (deletions != null?
                         " and "+deletions.size()+" deletions":
                         "")+

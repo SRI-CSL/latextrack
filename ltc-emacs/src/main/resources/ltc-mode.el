@@ -330,7 +330,7 @@
 		  (old-buffer-modified-p (buffer-modified-p))) ; maintain modified flag
 	      ;; replace text in buffer with return value from closing session
 	      (erase-buffer)
-	      (insert (base64-decode-string (nth 1 (cdr (assoc-string "text64" map))))) ;TODO: does this work with newline characters?
+	      (insert (base64-decode-string (nth 1 (cdr (assoc-string "text64" map))))) 
 	      (goto-char (1+ (cdr (assoc-string "caret" map)))) ; Emacs starts counting from 1!
 	      (set-buffer-modified-p old-buffer-modified-p))
 	  ('error 
@@ -416,8 +416,7 @@
       nil
 ;    (message "Before saving file %s for session %d" (buffer-file-name) session-id)
     (ltc-method-call "save_file" session-id
-; TODO: after fix! 		     (list :base64 (base64-encode-string (buffer-string) t))
-		     (buffer-string) 
+ 		     (list :base64 (base64-encode-string (buffer-string) t))
 		     (compile-deletions))
     (clear-visited-file-modtime) ; prevent Emacs from complaining about modtime diff's as we are writing file from Java
     (set-buffer-modified-p nil) ; reset modification flag

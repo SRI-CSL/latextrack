@@ -98,8 +98,9 @@ public interface LTCserverInterface {
      * Save the current text (after removing any deletions given) to the file indicated
      * by the given session ID.
      *
+     *
      * @param sessionID identifies the session
-     * @param currentText current text in editor
+     * @param currentText64 current text in editor in Base64 encoding or empty (cannot be <code>null</code>)
      * @param deletions list of pairs with start and end position of deletions in <code>currentText</code> if any
      * @return 0
      * @throws XmlRpcException <ul>
@@ -109,7 +110,7 @@ public interface LTCserverInterface {
      *   <li>with error code = 4 if a FileNotFoundException occurred during saving the file.
      * </ul>
      */
-    public int save_file(int sessionID, String currentText, List deletions) throws XmlRpcException;
+    public int save_file(int sessionID, byte[] currentText64, List deletions) throws XmlRpcException;
     
     /**
      * Obtains the changes of the file indicated by the session ID.

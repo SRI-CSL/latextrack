@@ -199,7 +199,7 @@ public class LTCSession {
                 "Saving...", "<html>Saving file<br>"+getCanonicalPath()+"</html>", false) {
             @Override
             protected Void callLTCinBackground() throws XmlRpcException {
-                LTC.save_file(ID, currentText, deletions);
+                LTC.save_file(ID, Base64.encodeBase64(currentText.getBytes()), deletions);
                 return null;
             }
         });
