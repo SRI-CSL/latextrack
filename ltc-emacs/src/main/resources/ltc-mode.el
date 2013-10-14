@@ -49,7 +49,7 @@
 (require 'xml-rpc)
 (require 'versions)
 (require 'cl) ; for set operations
-(defconst min-xml-rpc-version "1.6.8.2" "minimum version requirement for xml-rpc mode")
+(defconst min-xml-rpc-version "1.6.8.3" "minimum version requirement for xml-rpc mode")
 
 ;;; ----------------------------------------------------------------------------
 ;;; constants
@@ -133,6 +133,9 @@
 
 (defvar self nil "3-tuple of current author when session is initialized.")
 (make-variable-buffer-local 'self)
+
+(defvar orig-coding-sytem nil "Keep information on original coding system.")
+(make-variable-buffer-local 'orig-coding-sytem)
 
 ;; Defining key maps with prefix
 (defvar ltc-prefix-map nil "LTC mode prefix keymap.")
@@ -271,36 +274,41 @@
 
 (defun ltc-mode-start ()
   "start LTC mode"
-  (message "Starting LTC mode for file \"%s\"..." (buffer-file-name))
-  (if (not (condition-case err 
-	       (progn
-		 ;; testing xml-rpc version
-		 (message "Using `xml-rpc' package version: %s" xml-rpc-version)
-		 (and (version< xml-rpc-version min-xml-rpc-version)
-		      (error "`ltc-mode' requires `xml-rpc' package v%s or later" min-xml-rpc-version))
-		 ;; init session with file name
-		 (setq session-id (ltc-method-call "init_session" (buffer-file-name))))
-	     ;; handling any initialization errors
-	     ('error 
-	      (message "Error while initializing session: %s" (error-message-string err))
-	      nil))) ; 
-      (ltc-mode 0) ; an error occurred: toggle mode off again
-    ;; else-forms: initialization of session was successful:
-    (message "LTC session ID = %d" session-id)
-    (setq ltc-info-buffer (concat "LTC info (session " (number-to-string session-id) ")"))
-    ;; update boolean settings
-    (mapc (lambda (show-var) 
-	    (set show-var (ltc-method-call "get_bool_pref" (cdr (assoc show-var show-map))))) (mapcar 'car show-map))
-    (setq ltc-condense-authors (ltc-method-call "get_bool_pref" (cdr (assoc 'ltc-condense-authors other-settings-map))))
-    (setq ltc-allow-similar-colors (ltc-method-call "get_bool_pref" (cdr (assoc 'ltc-allow-similar-colors other-settings-map))))
-    (mapc (lambda (var) 
-	    (set var 'nil)) 
-	  limit-vars)
-    (font-lock-mode 0) ; turn-off latex font-lock mode
-    (add-hook 'write-file-functions 'ltc-hook-before-save nil t) ; add (local) hook to intercept saving to file
-    (add-hook 'kill-buffer-hook 'ltc-hook-before-kill nil t) ; add hook to intercept closing buffer
-    ;; run first update
-    (ltc-update))
+  (if (not (buffer-file-name))
+      (message "Error while starting LTC: Buffer has no file name associated")
+    ;; else-forms:
+    (message "Starting LTC mode for file \"%s\"..." (buffer-file-name))
+    (if (not (condition-case err 
+		 (progn
+		   ;; testing xml-rpc version
+		   (message "Using `xml-rpc' package version: %s" xml-rpc-version)
+		   (and (version< xml-rpc-version min-xml-rpc-version)
+			(error "`ltc-mode' requires `xml-rpc' package v%s or later" min-xml-rpc-version))
+		   ;; init session with file name
+		   (setq session-id (ltc-method-call "init_session" (buffer-file-name))))
+	       ;; handling any initialization errors
+	       ('error 
+		(message "Error while initializing session: %s" (error-message-string err))
+		nil))) ; 
+	(ltc-mode 0) ; an error occurred: toggle mode off again
+      ;; else-forms: initialization of session was successful:
+      (message "LTC session ID = %d" session-id)
+      (setq ltc-info-buffer (concat "LTC info (session " (number-to-string session-id) ")"))
+      ;; update boolean settings
+      (mapc (lambda (show-var) 
+	      (set show-var (ltc-method-call "get_bool_pref" (cdr (assoc show-var show-map))))) (mapcar 'car show-map))
+      (setq ltc-condense-authors (ltc-method-call "get_bool_pref" (cdr (assoc 'ltc-condense-authors other-settings-map))))
+      (setq ltc-allow-similar-colors (ltc-method-call "get_bool_pref" (cdr (assoc 'ltc-allow-similar-colors other-settings-map))))
+      (mapc (lambda (var) 
+	      (set var 'nil)) 
+	    limit-vars)
+      (setq orig-coding-sytem buffer-file-coding-system)
+      (setq buffer-file-coding-system 'no-conversion)
+      (font-lock-mode 0) ; turn-off latex font-lock mode
+      (add-hook 'write-file-functions 'ltc-hook-before-save nil t) ; add (local) hook to intercept saving to file
+      (add-hook 'kill-buffer-hook 'ltc-hook-before-kill nil t) ; add hook to intercept closing buffer
+      ;; run first update
+      (ltc-update)))
   ) ;ltc-mode-start
 
 (defun ltc-mode-stop ()
@@ -316,13 +324,13 @@
 	(message "Stopping LTC mode for file \"%s\"..." (buffer-file-name))
 	(condition-case err 
 	    (let ((map (ltc-method-call "close_session" session-id 
-					(buffer-string) 
+					(list :base64 (base64-encode-string (buffer-string) t))
 					(compile-deletions)
 					(1- (point))))
 		  (old-buffer-modified-p (buffer-modified-p))) ; maintain modified flag
 	      ;; replace text in buffer with return value from closing session
 	      (erase-buffer)
-	      (insert (cdr (assoc-string "text" map)))
+	      (insert (base64-decode-string (nth 1 (cdr (assoc-string "text64" map))))) 
 	      (goto-char (1+ (cdr (assoc-string "caret" map)))) ; Emacs starts counting from 1!
 	      (set-buffer-modified-p old-buffer-modified-p))
 	  ('error 
@@ -339,6 +347,8 @@
     (kill-buffer b)) ; kill temp buffer
   (setq ltc-info-buffer "")
   (font-lock-mode 1) ; turn latex font-lock mode back on
+  (setq buffer-file-coding-system orig-coding-sytem)
+  (setq orig-coding-sytem nil)
   ) ;ltc-mode-stop
 
 (defun ltc-update ()
@@ -348,10 +358,11 @@
   (if ltc-mode
       (let* ((map (ltc-method-call "get_changes" session-id 
 				   (buffer-modified-p) 
-				   (buffer-string) 
+				   (list :base64 (base64-encode-string (buffer-string) t))
 				   (compile-deletions)
 				   (1- (point))))
 	     (old-buffer-modified-p (buffer-modified-p)) ; maintain modified flag
+	     (newtext (base64-decode-string (nth 1 (cdr (assoc-string "text64" map)))))
 	     ;; build color table for this update: int -> color name
 	     (color-table (mapcar (lambda (four-tuple)
 				    (cons (string-to-number (nth 0 four-tuple)) (nth 3 four-tuple)))
@@ -365,7 +376,7 @@
 	(ltc-remove-edit-hooks) ; remove (local) hooks to capture user's edits temporarily
 	;; replace text in buffer and update cursor position
 	(erase-buffer)
-	(insert (cdr (assoc-string "text" map)))
+	(insert newtext)
 	(goto-char (1+ (cdr (assoc-string "caret" map)))) ; Emacs starts counting from 1!
 	;; apply styles to new buffer
 	(if (and styles (car styles))  ; sometimes STYLES = '(nil)
@@ -405,7 +416,7 @@
       nil
 ;    (message "Before saving file %s for session %d" (buffer-file-name) session-id)
     (ltc-method-call "save_file" session-id
-		     (buffer-string) 
+ 		     (list :base64 (base64-encode-string (buffer-string) t))
 		     (compile-deletions))
     (clear-visited-file-modtime) ; prevent Emacs from complaining about modtime diff's as we are writing file from Java
     (set-buffer-modified-p nil) ; reset modification flag

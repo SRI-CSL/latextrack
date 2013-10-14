@@ -24,6 +24,7 @@ package com.sri.ltc.editor;
 
 import com.sri.ltc.filter.Author;
 import com.sri.ltc.server.LTCserverInterface;
+import org.apache.commons.codec.binary.Base64;
 import org.apache.xmlrpc.XmlRpcException;
 
 import javax.swing.*;
@@ -123,7 +124,7 @@ public class LTCSession {
             protected Map callLTCinBackground() throws XmlRpcException {
                 int lastID = ID;
                 ID = -1; // reset here as this is being accessed asynchronously and cannot wait for done() below
-                return LTC.close_session(lastID, "", Collections.emptyList(), 0); // forget about any modifications
+                return LTC.close_session(lastID, new byte[0], Collections.emptyList(), 0); // forget about any modifications
             }
 
             @Override
@@ -152,7 +153,7 @@ public class LTCSession {
                 setProgress(1);
                 if (isCancelled()) return null;
                 // get changes
-                Map map = LTC.get_changes(sessionID, isModified, currentText, deletions, caretPosition);
+                Map map = LTC.get_changes(sessionID, isModified, Base64.encodeBase64(currentText.getBytes()), deletions, caretPosition);
                 setProgress(90);
                 if (isCancelled()) return null;
                 // update commit graph
@@ -172,7 +173,7 @@ public class LTCSession {
                         Map map = get();
                         editor.finishUpdate(
                                 (Map<Integer,Object[]>) map.get(LTCserverInterface.KEY_AUTHORS),
-                                (String) map.get(LTCserverInterface.KEY_TEXT),
+                                new String(Base64.decodeBase64((byte[]) map.get(LTCserverInterface.KEY_TEXT))),
                                 (List<Integer[]>) map.get(LTCserverInterface.KEY_STYLES),
                                 (Integer) map.get(LTCserverInterface.KEY_CARET),
                                 (List<String>) map.get(LTCserverInterface.KEY_REVS),
@@ -198,7 +199,7 @@ public class LTCSession {
                 "Saving...", "<html>Saving file<br>"+getCanonicalPath()+"</html>", false) {
             @Override
             protected Void callLTCinBackground() throws XmlRpcException {
-                LTC.save_file(ID, currentText, deletions);
+                LTC.save_file(ID, Base64.encodeBase64(currentText.getBytes()), deletions);
                 return null;
             }
         });

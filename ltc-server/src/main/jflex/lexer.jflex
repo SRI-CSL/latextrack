@@ -152,7 +152,7 @@ space       = [ \t\f]
   /* commands that are one non-whitespace character after backslash */
 
 <YYINITIAL,PREAMBLE_SEEN>
-  [+\-]{0,1} [0-9] ([A-Za-z0-9] | [,\.][0-9])+ 
+  [+\-]{0,1} [0-9] ([A-Za-z0-9]* | [,\.][0-9]+) 
                       { return Lists.newArrayList(
                           new Lexeme(LexemeType.NUMERAL, yytext(), yychar, preambleSeen)); }
   /* numerals start with an optional minus or plus and one digit, then almost anything goes */ 

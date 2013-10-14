@@ -12,9 +12,9 @@
 ;; Created: May 13 2001
 ;; Keywords: xml rpc network
 ;; URL: http://launchpad.net/xml-rpc-el
-;; Last Modified: <2010-12-03 10:39:20 linda>
+;; Last Modified: <Thu Sep 26 10:49:41 CDT 2013 linda>
 
-(defconst xml-rpc-version "1.6.8.2"
+(defconst xml-rpc-version "1.6.8.3"
   "Current version of xml-rpc.el")
 
 ;; This file is NOT (yet) part of GNU Emacs.
@@ -73,9 +73,10 @@
 ;;          int:  42
 ;; float/double:  42.0
 ;;       string:  "foo"
+;;       base64:  (list :base64 (base64-encode-string "hello" t)) '(:base64 "aGVsbG8=")
 ;;        array:  '(1 2 3 4)   '(1 2 3 (4.1 4.2))  [ ]  '(:array (("not" "a") ("struct" "!")))
 ;;       struct:  '(("name" . "daniel") ("height" . 6.1))
-;;    dateTime:   (:datetime (1234 124))
+;;     dateTime:  '(:datetime (1234 124))
 
 
 ;;; Examples
@@ -123,6 +124,8 @@
 
 
 ;;; History:
+
+;; 1.6.8.3 - [linda] Support for explicitly passing 'base64 data types.
 
 ;; 1.6.8.2 - [linda] Fixed bug that empty values were translated into a boolean (nil)
 ;;           instead of an empty string "" when turning XML into an Emacs list.
@@ -227,7 +230,7 @@ utf-8 coding system."
 (defcustom xml-rpc-debug 0
   "Set this to 1 or greater to avoid killing temporary buffers.
 Set it higher to get some info in the *Messages* buffer"
-  :type 'integerp :group 'xml-rpc)
+  :type 'integer :group 'xml-rpc)
 
 (defvar xml-rpc-fault-string nil
   "Contains the fault string if a fault is returned")
@@ -270,12 +273,13 @@ Set it higher to get some info in the *Messages* buffer"
 ;; A somewhat lazy predicate for arrays
 (defsubst xml-rpc-value-arrayp (value)
   "Return t if VALUE is an XML-RPC array - specified by keyword :array or
-a list that is not datetime or struct."
+a list that is not datetime, base64 or struct."
   (and (listp value)
        (or
 	(eq (car value) :array)
 	(and
 	 (not (xml-rpc-value-datetimep value))
+	 (not (xml-rpc-value-base64p value))
 	 (not (xml-rpc-value-structp value))))))
 
 (defsubst xml-rpc-value-vectorp (value)
@@ -315,6 +319,13 @@ time, or it will be confused for a list."
   (and (listp value)
        (eq (car value) :datetime)))
 
+(defun xml-rpc-value-base64p (value)
+  "Return t if VALUE is a base64 byte array.  For Emacs XML-RPC
+implementation, you must put keyword :base64 before the
+sequence, or it will be confused for a list."
+  (and (listp value)
+       (eq (car value) :base64)))
+
 (defun xml-rpc-string-to-boolean (value)
   "Return t if VALUE is a boolean"
   (or (string-equal value "true") (string-equal value "1")))
@@ -336,11 +347,9 @@ interpreting and simplifying it while retaining its structure."
       (setq valtype (car (caddar xml-list))
             valvalue (caddr (caddar xml-list)))
       (cond
-       ;; Base64
+       ;; base64
        ((eq valtype 'base64)
-        (if xml-rpc-base64-decode-unicode
-            (decode-coding-string (base64-decode-string valvalue) 'utf-8)
-          (base64-decode-string valvalue)))
+        (list :base64 (base64-decode-string valvalue))) ; for some reason, Emacs wraps this in a second encoding
        ;; Boolean
        ((eq valtype 'boolean)
         (xml-rpc-string-to-boolean valvalue))
@@ -399,6 +408,9 @@ functions in xml.el."
    ;; Date
    ((xml-rpc-value-datetimep value)
     `((value nil (dateTime.iso8601 nil ,(xml-rpc-datetime-to-string value)))))
+   ;; base64 (explicit)
+   ((xml-rpc-value-base64p value)
+    `((value nil (base64 nil ,(base64-encode-string (cadr value)))))) ; strip keyword; for some reason, Emacs decodes this twice
    ;; array as vector (for empty lists)
    ((xml-rpc-value-vectorp value)
     (let ((result nil)
@@ -437,7 +449,7 @@ functions in xml.el."
                    (eq 'ascii (car charset-list)))
               (not xml-rpc-base64-encode-unicode))
           `((value nil (string nil ,value)))
-        `((value nil (base64 nil ,(if xml-rpc-base64-encode-unicode
+        `((value nil (string nil ,(if xml-rpc-base64-encode-unicode
                                       (base64-encode-string
                                        (encode-coding-string
                                         value xml-rpc-use-coding-system))
@@ -445,7 +457,7 @@ functions in xml.el."
    ((xml-rpc-value-doublep value)
     `((value nil (double nil ,(number-to-string value)))))
    (t
-    `((value nil (base64 nil ,(base64-encode-string value)))))))
+    `((value nil (string nil ,(base64-encode-string value)))))))
 
 (defun xml-rpc-xml-to-string (xml)
   "Return a string representation of the XML tree as valid XML markup."
