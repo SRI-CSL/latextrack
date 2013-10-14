@@ -91,6 +91,7 @@ public class GitTrackedFile extends TrackedFile<GitRepository> {
             revWalk.markStart(rootCommit);
 
             RevCommit limitRevCommit = null;
+            // TODO: add a parent of 'limitRevCommit' (which parent if more than 1?)
             if (inclusiveLimitRevision != null)
                 limitRevCommit = revWalk.parseCommit(wrappedRepository.resolve(inclusiveLimitRevision));
 
@@ -99,6 +100,7 @@ public class GitTrackedFile extends TrackedFile<GitRepository> {
 
             for (RevCommit revCommit : revWalk) {
                 // test limiting date first before adding commit
+                // TODO: add a parent if first time crossing the threshold (which parent if more than 1?)
                 if (inclusiveLimitDate.compareTo(GitCommit.CommitDate(revCommit)) > 0) break;
 
                 commits.add(new GitCommit(getRepository(), this, revCommit));
