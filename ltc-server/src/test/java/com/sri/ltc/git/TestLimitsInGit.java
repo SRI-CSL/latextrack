@@ -87,7 +87,7 @@ public class TestLimitsInGit {
             assertTrue("list of commits is not NULL", commits != null);
             assertEquals("list of commits has length 3", 3, commits.size());
             // TODO: test date limit: date exactly r4 => 4 commits
-            commits = trackedFile.getCommits(CommonUtils.deSerializeDate("2010-07-23 13:12:42 -0600"), null);
+            commits = trackedFile.getCommits(CommonUtils.deSerializeDate("2010-07-23 13:12:42 -0500"), null);
             assertTrue("list of commits is not NULL", commits != null);
             assertEquals("list of commits has length 4", 4, commits.size());
 
