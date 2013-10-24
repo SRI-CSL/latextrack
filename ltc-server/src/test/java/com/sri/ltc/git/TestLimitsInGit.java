@@ -26,6 +26,7 @@ import com.sri.ltc.categories.IntegrationTests;
 import com.sri.ltc.versioncontrol.Commit;
 import com.sri.ltc.versioncontrol.Remote;
 import com.sri.ltc.versioncontrol.TrackedFile;
+
 import org.junit.ClassRule;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -70,7 +71,8 @@ public class TestLimitsInGit {
         }
     }
 
-    @Ignore  // TODO: once this is implemented, set to @Test
+    @SuppressWarnings({ "rawtypes", "unchecked" })
+	@Test
     public void testLimits() {
         try {
             TrackedFile trackedFile = clonedRepository.getTrackedFile();
