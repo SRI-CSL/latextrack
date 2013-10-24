@@ -145,6 +145,7 @@
 (define-key ltc-prefix-map (kbd "la") 'ltc-limit-authors)
 (define-key ltc-prefix-map (kbd "ld") 'ltc-limit-date)
 (define-key ltc-prefix-map (kbd "lr") 'ltc-limit-rev)
+(define-key ltc-prefix-map (kbd "z") 'ltc-undo-change)
 (define-key ltc-prefix-map (kbd ">") 'ltc-next-change)
 (define-key ltc-prefix-map (kbd "<") 'ltc-prev-change)
 (define-key ltc-prefix-map (kbd "c") 'ltc-set-color)
@@ -253,9 +254,10 @@
      :style toggle :selected ltc-allow-similar-colors :key-sequence nil]
     )
    "--"
-   "MOVE CURSOR"
-   ["To previous change" ltc-prev-change]
-   ["To next change" ltc-next-change]
+   "CHANGES"
+   ["Undo" ltc-undo-change]
+   ["Move to previous" ltc-prev-change]
+   ["Move to next" ltc-next-change]
    "--"
    ["Set author color..." ltc-set-color]
    "--"
@@ -398,7 +400,9 @@
 					      :foreground (cdr (assoc (nth 3 style) color-table))))
 					    'help-echo
 					    (concat "rev: " (shorten 8 revision) 
-						    (if date (concat "\ndate: " date) nil))))
+						    (if date (concat "\ndate: " date) nil))
+					    'ltc-change-rev  ; only revision info for undoing changes
+					    (shorten 8 revision)))
 		      )) styles))
 	(ltc-add-edit-hooks) ; add (local) hooks to capture user's edits
 	;; update commit graph in temp info buffer
@@ -1059,7 +1063,7 @@ it will only set the new, chosen color if it is different than the old one."
 
 (defun ltc-hook-after-change (beg end len)
   "Hook to capture user's insertions while LTC mode is running."
-  ;(message " --- LTC: after change with beg=%d and end=%d and len=%d" beg end len)
+  (message " --- LTC: after change with beg=%d and end=%d and len=%d" beg end len)
   (when (and self (= 0 len))
     ;; color text and use addition face
     (add-text-properties beg end (list 'face 
@@ -1068,7 +1072,7 @@ it will only set the new, chosen color if it is different than the old one."
 
 (defun ltc-hook-before-change (beg end)
   "Hook to capture user's deletions while LTC mode is running."
-  ;(message " --- LTC: before change with beg=%d and end=%d" beg end)
+  (message " --- LTC: before change with beg=%d and end=%d" beg end)
   ;; if first change (buffer-modified-p == nil) then update commit graph
   (when (and (not (buffer-modified-p)) commit-graph)
     ;; manipulate commit graph: if at least one entry and the first element is "" or "on disk" then replace first ID with "modified"
@@ -1109,6 +1113,47 @@ it will only set the new, chosen color if it is different than the old one."
 	    ))
     (insert insstring) ; this moves point to end of insertion
     (if (eq 'backspace last-input-char) (goto-char beg)) ; if last key was BACKSPACE, move point to beginning
+    ))
+
+;;; --- undo change
+
+(defun ltc-undo-change ()
+  "Undo change at current pointer (if any)."
+  (interactive)
+  (setq faceid (car (get-text-property (point) 'face)))
+  (setq revid (get-text-property (point) 'ltc-change-rev))
+  (if (not faceid)
+      (message "Cannot undo at %d as there is no change found." (point))
+    ; else forms:
+    ;; find left and right border of change:
+    (setq borders (mapcar (lambda (dir)
+			    (setq index (point))
+			    ;; repeat..until loop: go through all characters with the *same* change ID
+			    (while (progn
+				     (setq index (+ index dir)) ; increment or decrement index
+				     ;; the "end-test" is the last item in progn:
+				     (and (not (is-buf-border index dir))
+					  (equal faceid
+						 (car (get-text-property index 'face)))
+					  (equal revid
+						 (get-text-property index 'ltc-change-rev)))))
+			    ; final border value: dir = -1 -> index + 1 and dir = 1 -> index
+			    (truncate (+ index (+ 0.5 (* dir -0.5)))))
+			  '(-1 1)))
+    ;; TODO: hook into edit system...
+    (message "change at %s is %S with face=%s rev=%s" (point) borders faceid revid)
+    (cond ((equal 'ltc-addition faceid) ; found addition: delete it
+	   (message "delete change in [%d %d]" (nth 0 borders) (nth 1 borders))
+	   ; move point to beginning of region:
+	   ;(setq origpoint (point))
+	   ;(goto-char (nth 0 borders))
+	   (delete-region (nth 0 borders) (nth 1 borders))
+	   ; move point back to old location in region (only if deleted text wasn't in color!!):
+	   ;(goto-char origpoint)
+	   )
+	  ((equal 'ltc-deletion faceid) ; found deletion: add it
+	   (message "add change"))
+	  (t (message "Cannot undo change at %d as neither addition nor deletion found." (point))))
     ))
 
 ;;; --- accessing API of base system
