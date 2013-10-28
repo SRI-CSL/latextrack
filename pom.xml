@@ -232,7 +232,7 @@
                 </configuration>
             </plugin>
             <!-- Testing approach:
-                1) unit tests are not annotated with SlowTests.class category
+                1) unit tests are not annotated with IntegrationTests.class category
                 2) slow test and descendants are carried out in "integration-tests" phase -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -255,6 +255,10 @@
                     </execution>
                 </executions>
                 <configuration>
+                    <!-- we have to explicitly add the Java files otherwise they don't get picked up: -->
+                    <includes>
+                        <include>**/*.java</include>
+                    </includes>
                     <groups>com.sri.ltc.categories.IntegrationTests</groups>
                 </configuration>
             </plugin>
