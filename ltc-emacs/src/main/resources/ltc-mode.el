@@ -783,8 +783,8 @@ Each entry in the commit graph that is returned, contains a list with the follow
 	  (set-buffer temp-buffer)
 	  (set (make-variable-buffer-local 'parent-window) old-window)
 	  (insert temp-output)
-	  (setq-default line-spacing nil) ; no extra height between lines in this buffer
-	  (setq-default truncate-lines t) ; no line wrap
+	  (setq line-spacing nil) ; no extra height between lines in this buffer
+	  (setq truncate-lines t) ; no line wrap
 	  (setq truncate-partial-width-windows nil) ; no truncate for vertically-split windows
 	  (set-buffer old-buffer)
 	  ))
@@ -1052,7 +1052,7 @@ it will only set the new, chosen color if it is different than the old one."
 (defun ltc-add-edit-hooks ()
   "Add hooks to capture user's edits."
   (add-hook 'before-change-functions 'ltc-hook-before-change nil t)
-  (add-hook 'after-change-functions 'ltc-hook-after-change nil t)  
+  (add-hook 'after-change-functions 'ltc-hook-after-change nil t)
   )
 
 (defun ltc-remove-edit-hooks ()
@@ -1063,57 +1063,98 @@ it will only set the new, chosen color if it is different than the old one."
 
 (defun ltc-hook-after-change (beg end len)
   "Hook to capture user's insertions while LTC mode is running."
-  (message " --- LTC: after change with beg=%d and end=%d and len=%d" beg end len)
+  (message "\n --- LTC: after change with beg=%d and end=%d and len=%d" beg end len)
   (when (and self (= 0 len))
     ;; color text and use addition face
+    (message " ------ marking as added: \"%s\" between %d and %d" (buffer-substring beg end) beg end)
     (add-text-properties beg end (list 'face 
-				       (list 'ltc-addition (list :foreground (car (last self))))))
-    ))
+				       (list 'ltc-addition (list :foreground (car (last self))))
+				       'help-echo "rev: modified"
+				       'ltc-change-rev modified)))
+  (when (and (> len 0)
+	     (string< "" insstring))
+    (message " ------ inserting: \"%s\" at %d" insstring (point))
+    (let ((inhibit-modification-hooks t)) ; temporarily disable modification hooks
+      (insert insstring)) ; this moves point to end of insertion
+    (message " ------ last char: %S" last-input-char)
+    (cond ((eq 'backspace last-input-char) ; if last key was BACKSPACE, move point to beginning
+	   (goto-char beg))
+	  ((eq 'kp-delete last-input-char) ; if last key was FORWARD DELETE, move point to end of inserted string
+	   (goto-char (+ beg (length insstring))))
+	  (t ; move point back to original location in region (possibly adjusted)
+	   (message " ------ now moving back from %d to %d " (point) origpoint)
+	   (goto-char origpoint)) ; adjust original point
+	  ))
+  (message " ------ point is %d " (point))
+  )
 
 (defun ltc-hook-before-change (beg end)
   "Hook to capture user's deletions while LTC mode is running."
-  (message " --- LTC: before change with beg=%d and end=%d" beg end)
-  ;; if first change (buffer-modified-p == nil) then update commit graph
-  (when (and (not (buffer-modified-p)) commit-graph)
+  (message "\n --- LTC: before change with beg=%d and end=%d" beg end)
+  ;; if modified but first row does not show this then update commit graph
+  (if (and (buffer-modified-p) commit-graph)
     ;; manipulate commit graph: if at least one entry and the first element is "" or "on disk" then replace first ID with "modified"
     (let ((head (car commit-graph)))
       (when (and head (or (string= "" (car head)) (string= on_disk (car head))))
 	(setcar head modified)
 	(setcar commit-graph head)
 	(update-info-buffer))))
-  (when (and self (not (= beg end)))
-    (setq self-color (caddr self))
-    ;; use idiom to manipulate deletion string in temp buffer before returning to current buffer
-    (setq delstring (buffer-substring beg end)) ; string /w text props about to be deleted
-    (setq insstring  ; calculate insertion string
-	  (with-temp-buffer
-	    (insert delstring)
-	    ;; prepare new text properties for characters that are inserted by other or not marked up:
-	    (setq newface (list 'ltc-deletion (list :foreground self-color)))
-	    ;; collect indices which need new text properties here:
-	    (setq newindices nil)
-	    ;; go through upcoming deletion's characters one-by-one
-	    (setq index 1)
-	    (while (< index (point-max))
-	      (let ((delface (get-text-property index 'face))) ; face properties (if any)
-		(if (member 'ltc-deletion delface)
-		    ;; character already deleted: keep with same properties
-		    (setq index (1+ index)) ; advance index
-		  (if (and (member 'ltc-addition delface)
-			   (equal (color-values (mapconcat (function (lambda (x) (plist-get x :foreground)))
-							   delface "")) ; obtain foreground color (if any)
-				  (color-values self-color))) ; text is addition with color for self
-		      ;; text inserted by self: remove character
-		      (delete-region index (1+ index)) ; delete character and don't advance index in this branch!
-		    ;; text inserted by other or not marked up:
-		    (put-text-property index (1+ index) 'face newface) ; replace with new mark-up 
-		    (setq index (1+ index)) ; advance index
-		    ))))
-	    (buffer-string) ; return the contents of the temp buffer
-	    ))
-    (insert insstring) ; this moves point to end of insertion
-    (if (eq 'backspace last-input-char) (goto-char beg)) ; if last key was BACKSPACE, move point to beginning
-    ))
+  (message " ------ point is %d " (point))
+  (if (or (not self) (= beg end))
+      (setq insstring "") ; no deletion or no information about self: nothing to insert after change
+    ; else forms: we have a deletion by SELF
+    (let ((offset (if (>= (point) beg) (1+ (- (point) beg)) 0)) ; calculate offset of point in temp buffer
+	  (self-color (caddr self)) ; obtain color for upcoming change
+	  (delstring (buffer-substring beg end)) ; string /w text props about to be deleted
+	  )
+      (message " ------ offset is %d " offset)
+      (message " ------ deleting: \"%s\"" delstring)
+      ;; calculate string (/w properties) to insert after change
+      ;; use idiom to manipulate deletion string in temp buffer before returning to current buffer
+      (setq insstring  ; calculate insertion string
+	    (with-temp-buffer
+	      (insert delstring)
+	      (if (and (> offset 0)
+		       (< offset (point-max)))
+		  (goto-char offset))
+	      (message " ---temp--- point after inserting is: %d" (point))
+	      ;; go through upcoming deletion's characters one-by-one
+	      (let ((newface (list 'ltc-deletion (list :foreground self-color))) ; new face properties for characters that are inserted by other or not marked up
+		    (newindices nil) ; collect indices which need new text properties here
+		    )
+		(setq index 1)
+		(while (< index (point-max))
+		  (let ((delface (get-text-property index 'face))) ; face properties (if any)
+		    (if (member 'ltc-deletion delface)
+			;; character already deleted: keep with same properties
+			(setq index (1+ index)) ; advance index
+		      (if (and (member 'ltc-addition delface)
+			       (equal (color-values (mapconcat (function (lambda (x) (plist-get x :foreground)))
+							       delface "")) ; obtain foreground color (if any)
+				      (color-values self-color))) ; text is addition with color for self
+			  ;; text inserted by self: remove character
+			  (delete-region index (1+ index)) ; delete character and don't advance index in this branch!
+			;; text inserted by other or not marked up: replace with new mark-up 
+			(add-text-properties index (1+ index) (list 'face newface
+								    'help-echo "rev: modified"
+								    'ltc-change-rev modified))
+			(setq index (1+ index)) ; advance index
+			)))))
+	      (message " ---temp--- point after going through buffer is: %d" (point))
+	      (setq deltapoint (1- (point))) ; calculate delta for real buffer
+	      (buffer-string))) ; return the contents of the temp buffer
+      ;; calculate original point for after-change
+      (if (= offset 0)
+	  (setq origpoint (point)) ; keep original point
+	; else-forms:
+	(if (> (point) end) 
+	    ; point is past region to be deleted 
+	    (setq origpoint (+ (+ beg deltapoint) (- (point) end)))
+	  ; else-forms: point is inside region to be deleted (including borders)
+	  (setq origpoint (+ beg deltapoint))
+	  ))
+      (message " ------ orig point is %d " origpoint)
+      )))
 
 ;;; --- undo change
 
@@ -1140,21 +1181,28 @@ it will only set the new, chosen color if it is different than the old one."
 			    ; final border value: dir = -1 -> index + 1 and dir = 1 -> index
 			    (truncate (+ index (+ 0.5 (* dir -0.5)))))
 			  '(-1 1)))
-    ;; TODO: hook into edit system...
+    ;; now perform the switch:
+    (ltc-add-edit-hooks) ; just in case there was a problem, re-enable the edit hooks as we are depending on them
     (message "change at %s is %S with face=%s rev=%s" (point) borders faceid revid)
-    (cond ((equal 'ltc-addition faceid) ; found addition: delete it
-	   (message "delete change in [%d %d]" (nth 0 borders) (nth 1 borders))
-	   ; move point to beginning of region:
-	   ;(setq origpoint (point))
-	   ;(goto-char (nth 0 borders))
-	   (delete-region (nth 0 borders) (nth 1 borders))
-	   ; move point back to old location in region (only if deleted text wasn't in color!!):
-	   ;(goto-char origpoint)
-	   )
-	  ((equal 'ltc-deletion faceid) ; found deletion: add it
-	   (message "add change"))
-	  (t (message "Cannot undo change at %d as neither addition nor deletion found." (point))))
-    ))
+    (let ((origpoint (point))) ; remember original point
+      (cond ((equal 'ltc-addition faceid) ; found addition: delete it
+	     (message " == delete change in [%d %d]" (nth 0 borders) (nth 1 borders))
+	     (delete-region (nth 0 borders) (nth 1 borders)) ; this DOES trigger modification hooks
+	     (message " == now back at point %d " (point))
+	     )
+	    ((equal 'ltc-deletion faceid) ; found deletion: add it
+	     (message " == add change ")
+	     ;; remove deletion without change hooks, then insert
+	     (let ((delstring (buffer-substring (nth 0 borders) (nth 1 borders))))
+	       (let ((inhibit-modification-hooks t)) ; temporarily disable modification hooks
+		 (delete-region (nth 0 borders) (nth 1 borders))) ; this DOES NOT trigger modification hooks
+	       (insert delstring)) ; this DOES trigger modification hooks
+	     (goto-char origpoint)
+	     (message " == now back at point %d " (point))
+	     )
+	    (t (message "Cannot undo change at %d as neither addition nor deletion found." (point)))
+	    )
+      )))
 
 ;;; --- accessing API of base system
 
