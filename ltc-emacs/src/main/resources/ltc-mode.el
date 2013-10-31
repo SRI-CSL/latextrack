@@ -145,7 +145,8 @@
 (define-key ltc-prefix-map (kbd "la") 'ltc-limit-authors)
 (define-key ltc-prefix-map (kbd "ld") 'ltc-limit-date)
 (define-key ltc-prefix-map (kbd "lr") 'ltc-limit-rev)
-(define-key ltc-prefix-map (kbd "z") 'ltc-undo-change)
+(define-key ltc-prefix-map (kbd "z") 'ltc-undo-change-at-point)
+(define-key ltc-prefix-map (kbd "r") 'ltc-undo-changes-in-region)
 (define-key ltc-prefix-map (kbd ">") 'ltc-next-change)
 (define-key ltc-prefix-map (kbd "<") 'ltc-prev-change)
 (define-key ltc-prefix-map (kbd "c") 'ltc-set-color)
@@ -201,7 +202,6 @@
  '("LTC"
    ["Update buffer" ltc-update]
    "--"
-   "FILTERING"
    ("Show/Hide" :filter (lambda (ignored)  
     			  (mapcar (lambda (show-var) (vector  
 						      (documentation-property show-var 'variable-documentation) 
@@ -254,8 +254,8 @@
      :style toggle :selected ltc-allow-similar-colors :key-sequence nil]
     )
    "--"
-   "CHANGES"
-   ["Undo" ltc-undo-change]
+   ["Undo change at point" ltc-undo-change-at-point]
+   ["Undo changes in region" ltc-undo-changes-in-region]
    ["Move to previous" ltc-prev-change]
    ["Move to next" ltc-next-change]
    "--"
@@ -572,7 +572,7 @@
 	(goto-char index)))))
 
 (defun is-buf-border (index dir)
-  "Whether given INDEX is at the beginning or end of buffer determined by DIR."
+  "Whether given INDEX is at the beginning or end of (possibly narrowed) buffer determined by DIR."
   (if (> dir 0)
       (not (< index (point-max))) ; index >= (point-max)
     (< index (point-min))) ; index < (point-min)
@@ -1063,7 +1063,7 @@ it will only set the new, chosen color if it is different than the old one."
 
 (defun ltc-hook-after-change (beg end len)
   "Hook to capture user's insertions while LTC mode is running."
-  (message "\n --- LTC: after change with beg=%d and end=%d and len=%d" beg end len)
+  (message " --- LTC: after change with beg=%d and end=%d and len=%d" beg end len)
   (when (and self (= 0 len))
     ;; color text and use addition face
     (message " ------ marking as added: \"%s\" between %d and %d" (buffer-substring beg end) beg end)
@@ -1076,7 +1076,7 @@ it will only set the new, chosen color if it is different than the old one."
     (message " ------ inserting: \"%s\" at %d" insstring (point))
     (let ((inhibit-modification-hooks t)) ; temporarily disable modification hooks
       (insert insstring)) ; this moves point to end of insertion
-    (message " ------ last char: %S" last-input-char)
+;    (message " ------ last char: %S" last-input-char)
     (cond ((eq 'backspace last-input-char) ; if last key was BACKSPACE, move point to beginning
 	   (goto-char beg))
 	  ((eq 'kp-delete last-input-char) ; if last key was FORWARD DELETE, move point to end of inserted string
@@ -1090,7 +1090,7 @@ it will only set the new, chosen color if it is different than the old one."
 
 (defun ltc-hook-before-change (beg end)
   "Hook to capture user's deletions while LTC mode is running."
-  (message "\n --- LTC: before change with beg=%d and end=%d" beg end)
+  (message "\n --- LTC: before change with beg=%d and end=%d at point %d" beg end (point))
   ;; if modified but first row does not show this then update commit graph
   (if (and (buffer-modified-p) commit-graph)
     ;; manipulate commit graph: if at least one entry and the first element is "" or "on disk" then replace first ID with "modified"
@@ -1099,7 +1099,6 @@ it will only set the new, chosen color if it is different than the old one."
 	(setcar head modified)
 	(setcar commit-graph head)
 	(update-info-buffer))))
-  (message " ------ point is %d " (point))
   (if (or (not self) (= beg end))
       (setq insstring "") ; no deletion or no information about self: nothing to insert after change
     ; else forms: we have a deletion by SELF
@@ -1158,52 +1157,82 @@ it will only set the new, chosen color if it is different than the old one."
 
 ;;; --- undo change
 
-(defun ltc-undo-change ()
-  "Undo change at current pointer (if any)."
-  (interactive)
-  (let* ((face (get-text-property (point) 'face))
+(defun undo-change (start &optional from-undo-in-region)
+  "Undo change at given location START. The optional argument FROM-UNDO-IN-REGION causes the pointer 
+to move to the end of an addition change to maintain the location after turning it into a deletion. 
+This function returns the end position after the change was undone."
+  (let* ((face (get-text-property start 'face))
 	 (faceid (car face)) ; face ID is nil, 'ltc-addition or 'ltc-deletion
 	 (faceclr (plist-get (nth 1 face) :foreground))) ; color or nil
+    ;; find left and right border of change:
+    (setq borders (mapcar (lambda (dir)
+			    (setq index start)
+			    ;; repeat..until loop: go through all characters with the *same* face ID and author color
+			    (while (progn
+				     (setq index (+ index dir)) ; increment or decrement index
+				     ;; the "end-test" is the last item in progn:
+				     (and (not (is-buf-border index dir))
+					  (equal faceid
+						 (car (get-text-property index 'face)))
+					  (equal faceclr
+						 (plist-get (nth 1 (get-text-property index 'face)) :foreground)))))
+			    ;; final border value: dir = -1 -> index + 1 and dir = 1 -> index
+			    (truncate (+ index (+ 0.5 (* dir -0.5)))))
+			  '(-1 1)))
+    ;; now perform the switch:
+    (ltc-add-edit-hooks) ; just in case there was a problem, re-enable the edit hooks as we are depending on them
+    (message " == change at %s is %S with face=%s and clr=%s" start borders faceid faceclr)
+    (let ((origpoint start)) ; remember original start
+      (cond ((equal 'ltc-addition faceid) ; found addition: delete it
+	     (message " == delete change in [%d %d]" (nth 0 borders) (nth 1 borders))
+	     (save-excursion
+	       (if from-undo-in-region
+		   (goto-char (nth 1 borders))) ; calc return value as end of deletion
+	       (delete-region (nth 0 borders) (nth 1 borders)) ; this DOES trigger modification hooks
+	       (message " == now at point %d " (point))
+	       (point))) ; return current position
+	    ((equal 'ltc-deletion faceid) ; found deletion: add it
+	     (message " == add change again")
+	     ;; remove deletion without change hooks, then insert
+	     (let ((delstring (buffer-substring (nth 0 borders) (nth 1 borders))))
+	       (let ((inhibit-modification-hooks t)) ; temporarily disable modification hooks
+		 (delete-region (nth 0 borders) (nth 1 borders))) ; this DOES NOT trigger modification hooks
+	       (goto-char (nth 0 borders)) ; do insertion from beginning of region
+	       (insert delstring)) ; this DOES trigger modification hooks
+	     (goto-char origpoint)
+	     (message " == now back at point %d " (point))
+	     (nth 1 borders)) ; return end of inserted string
+	    (t (nth 1 borders)) ; return end of no change
+	    ))))
+
+(defun ltc-undo-change-at-point ()
+  "Undo change at current pointer (if any)."
+  (interactive)
+  (let ((faceid (car (get-text-property (point) 'face)))) ; face ID is nil, 'ltc-addition or 'ltc-deletion
     (if (not faceid)
 	(message "Cannot undo at %d as there is no change found." (point))
-      ; else forms:
-      ;; find left and right border of change:
-      (setq borders (mapcar (lambda (dir)
-			      (setq index (point))
-			      ;; repeat..until loop: go through all characters with the *same* face ID and author color
-			      (while (progn
-				       (setq index (+ index dir)) ; increment or decrement index
-				       ;; the "end-test" is the last item in progn:
-				       (and (not (is-buf-border index dir))
-					    (equal faceid
-						   (car (get-text-property index 'face)))
-					    (equal faceclr
-						   (plist-get (nth 1 (get-text-property index 'face)) :foreground)))))
-			      ;; final border value: dir = -1 -> index + 1 and dir = 1 -> index
-			      (truncate (+ index (+ 0.5 (* dir -0.5)))))
-			    '(-1 1)))
-      ;; now perform the switch:
-      (ltc-add-edit-hooks) ; just in case there was a problem, re-enable the edit hooks as we are depending on them
-      (message "change at %s is %S with face=%s and clr=%s" (point) borders faceid faceclr)
-      (let ((origpoint (point))) ; remember original point
-	(cond ((equal 'ltc-addition faceid) ; found addition: delete it
-	       (message " == delete change in [%d %d]" (nth 0 borders) (nth 1 borders))
-	       (delete-region (nth 0 borders) (nth 1 borders)) ; this DOES trigger modification hooks
-	       (message " == now back at point %d " (point))
-	       )
-	      ((equal 'ltc-deletion faceid) ; found deletion: add it
-	       (message " == add change ")
-	       ;; remove deletion without change hooks, then insert
-	       (let ((delstring (buffer-substring (nth 0 borders) (nth 1 borders))))
-		 (let ((inhibit-modification-hooks t)) ; temporarily disable modification hooks
-		   (delete-region (nth 0 borders) (nth 1 borders))) ; this DOES NOT trigger modification hooks
-		 (insert delstring)) ; this DOES trigger modification hooks
-	       (goto-char origpoint)
-	       (message " == now back at point %d " (point))
-	       )
-	      (t (message "Cannot undo change at %d as neither addition nor deletion found." (point)))
-	      )
-	))))
+      (undo-change (point))
+      )))
+
+(defun ltc-undo-changes-in-region (start end)
+  "Undo all changes in currently marked region (if any) between START and END."
+  (interactive "r")
+  ;; do we have a region marked?
+  (if (= start end)
+      (message "Cannot undo in region as the length is 0.")
+    ; else-forms:
+    (message " ~~ region is [%d, %d] and point is %d" start end (point))
+    ;; narrow to region and then go through changes from beginning to end and flip them:
+    (save-restriction
+      (narrow-to-region start end)
+      (setq startindex start)
+      (while (< startindex (point-max))
+	(let ((nextindex (undo-change startindex t)))
+	  (if (= 0 nextindex)
+	      (setq startindex (1+ startindex)) ; advance index by 1
+	    (setq startindex nextindex))))) ; advance index to next possible change
+    (message " ~~ now at point %d " (point))
+    ))
 
 ;;; --- accessing API of base system
 
