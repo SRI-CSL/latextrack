@@ -1161,48 +1161,49 @@ it will only set the new, chosen color if it is different than the old one."
 (defun ltc-undo-change ()
   "Undo change at current pointer (if any)."
   (interactive)
-  (setq faceid (car (get-text-property (point) 'face)))
-  (setq revid (get-text-property (point) 'ltc-change-rev))
-  (if (not faceid)
-      (message "Cannot undo at %d as there is no change found." (point))
-    ; else forms:
-    ;; find left and right border of change:
-    (setq borders (mapcar (lambda (dir)
-			    (setq index (point))
-			    ;; repeat..until loop: go through all characters with the *same* change ID
-			    (while (progn
-				     (setq index (+ index dir)) ; increment or decrement index
-				     ;; the "end-test" is the last item in progn:
-				     (and (not (is-buf-border index dir))
-					  (equal faceid
-						 (car (get-text-property index 'face)))
-					  (equal revid
-						 (get-text-property index 'ltc-change-rev)))))
-			    ; final border value: dir = -1 -> index + 1 and dir = 1 -> index
-			    (truncate (+ index (+ 0.5 (* dir -0.5)))))
-			  '(-1 1)))
-    ;; now perform the switch:
-    (ltc-add-edit-hooks) ; just in case there was a problem, re-enable the edit hooks as we are depending on them
-    (message "change at %s is %S with face=%s rev=%s" (point) borders faceid revid)
-    (let ((origpoint (point))) ; remember original point
-      (cond ((equal 'ltc-addition faceid) ; found addition: delete it
-	     (message " == delete change in [%d %d]" (nth 0 borders) (nth 1 borders))
-	     (delete-region (nth 0 borders) (nth 1 borders)) ; this DOES trigger modification hooks
-	     (message " == now back at point %d " (point))
-	     )
-	    ((equal 'ltc-deletion faceid) ; found deletion: add it
-	     (message " == add change ")
-	     ;; remove deletion without change hooks, then insert
-	     (let ((delstring (buffer-substring (nth 0 borders) (nth 1 borders))))
-	       (let ((inhibit-modification-hooks t)) ; temporarily disable modification hooks
-		 (delete-region (nth 0 borders) (nth 1 borders))) ; this DOES NOT trigger modification hooks
-	       (insert delstring)) ; this DOES trigger modification hooks
-	     (goto-char origpoint)
-	     (message " == now back at point %d " (point))
-	     )
-	    (t (message "Cannot undo change at %d as neither addition nor deletion found." (point)))
-	    )
-      )))
+  (let* ((face (get-text-property (point) 'face))
+	 (faceid (car face)) ; face ID is nil, 'ltc-addition or 'ltc-deletion
+	 (faceclr (plist-get (nth 1 face) :foreground))) ; color or nil
+    (if (not faceid)
+	(message "Cannot undo at %d as there is no change found." (point))
+      ; else forms:
+      ;; find left and right border of change:
+      (setq borders (mapcar (lambda (dir)
+			      (setq index (point))
+			      ;; repeat..until loop: go through all characters with the *same* face ID and author color
+			      (while (progn
+				       (setq index (+ index dir)) ; increment or decrement index
+				       ;; the "end-test" is the last item in progn:
+				       (and (not (is-buf-border index dir))
+					    (equal faceid
+						   (car (get-text-property index 'face)))
+					    (equal faceclr
+						   (plist-get (nth 1 (get-text-property index 'face)) :foreground)))))
+			      ;; final border value: dir = -1 -> index + 1 and dir = 1 -> index
+			      (truncate (+ index (+ 0.5 (* dir -0.5)))))
+			    '(-1 1)))
+      ;; now perform the switch:
+      (ltc-add-edit-hooks) ; just in case there was a problem, re-enable the edit hooks as we are depending on them
+      (message "change at %s is %S with face=%s and clr=%s" (point) borders faceid faceclr)
+      (let ((origpoint (point))) ; remember original point
+	(cond ((equal 'ltc-addition faceid) ; found addition: delete it
+	       (message " == delete change in [%d %d]" (nth 0 borders) (nth 1 borders))
+	       (delete-region (nth 0 borders) (nth 1 borders)) ; this DOES trigger modification hooks
+	       (message " == now back at point %d " (point))
+	       )
+	      ((equal 'ltc-deletion faceid) ; found deletion: add it
+	       (message " == add change ")
+	       ;; remove deletion without change hooks, then insert
+	       (let ((delstring (buffer-substring (nth 0 borders) (nth 1 borders))))
+		 (let ((inhibit-modification-hooks t)) ; temporarily disable modification hooks
+		   (delete-region (nth 0 borders) (nth 1 borders))) ; this DOES NOT trigger modification hooks
+		 (insert delstring)) ; this DOES trigger modification hooks
+	       (goto-char origpoint)
+	       (message " == now back at point %d " (point))
+	       )
+	      (t (message "Cannot undo change at %d as neither addition nor deletion found." (point)))
+	      )
+	))))
 
 ;;; --- accessing API of base system
 
