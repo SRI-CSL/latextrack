@@ -25,7 +25,6 @@ import com.sri.ltc.CommonUtils;
 import com.sri.ltc.Utils;
 import com.sri.ltc.categories.IntegrationTests;
 import com.sri.ltc.versioncontrol.*;
-import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -45,13 +44,11 @@ import static org.junit.Assert.fail;
  */
 @Category(IntegrationTests.class)
 public class TestSVNRepository {
-    @ClassRule
-    public static TemporarySVNRepository temporarySVNRepository = new TemporarySVNRepository();
-
+    // a fresh repository for each test:
     @Rule
-    public TemporarySVNRepository toBeRemoved = new TemporarySVNRepository();
+    public TemporarySVNRepository temporarySVNRepository = new TemporarySVNRepository();
 
-    @Test
+    @Test //(expected = SVNException.class)
     public void testUntracked() {
         assertTrue(temporarySVNRepository.getRoot().exists());
 
@@ -75,7 +72,7 @@ public class TestSVNRepository {
     @SuppressWarnings("unchecked")
     @Test
     public void testRemotes() {
-        Set<Remote> remotes = temporarySVNRepository.getRepository().getRemotes().get();
+        Set remotes = temporarySVNRepository.getRepository().getRemotes().get();
         assertTrue("set of remotes is not NULL", remotes != null);
         assertTrue("set of remotes has one element", remotes.size() == 1);
     }
@@ -134,7 +131,7 @@ public class TestSVNRepository {
 
     @Test(expected = VersionControlException.class)
     public void badThingsWithRepo() throws VersionControlException, IOException {
-        assertTrue(toBeRemoved.getRoot().exists());
+        assertTrue(temporarySVNRepository.getRoot().exists());
         TrackedFile trackedFile = null;
 
         try {
