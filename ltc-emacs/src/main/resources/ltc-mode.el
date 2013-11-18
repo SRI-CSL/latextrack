@@ -135,16 +135,16 @@
 (mapc 'make-variable-buffer-local limit-vars)
 
 ;;; regular and debugging output
-(defun ltc-log (formatstr &optional args)
+(defun ltc-log (formatstr &rest args)
   "Produce consistent output in *Messages* buffer using ORMATSTR with ARGS like the function `message`"
-  (message (concat  "LTC: " formatstr) args))
-(defun ltc-error (formatstr &optional args)
+  (apply 'message (concat  "LTC: " formatstr) args))
+(defun ltc-error (formatstr &rest args)
   "Produce consistent error messages in *Messages* buffer using FORMATSTR with ARGS like the function `message`"
-  (message (concat  "LTC Error: " formatstr) args))
-(defun ltc-debug (formatstr &optional args)
+  (apply 'message (concat  "LTC Error: " formatstr) args))
+(defun ltc-log-debug (formatstr &rest args)
   "Produce consistent debug output in *Messages* buffer using FORMATSTR with ARGS like the function `message`"
   (if ltc-debug
-      (message (concat "LTC debug: " formatstr) args)))
+      (apply 'message (concat  "LTC debug: " formatstr) args)))
 
 (defvar session-id nil "current LTC session ID.")
 (make-variable-buffer-local 'session-id)
@@ -446,7 +446,7 @@
   "Let LTC base system save the correct text to file."
   (if (not ltc-mode)
       nil
-    (ltc-debug "Before saving file %s for session %d" (buffer-file-name) session-id)
+    (ltc-log-debug "Before saving file %s for session %d" (buffer-file-name) session-id)
     (ltc-method-call "save_file" session-id
  		     (list :base64 (base64-encode-string (buffer-string) t))
 		     (compile-deletions))
@@ -463,7 +463,7 @@
 
 (defun ltc-hook-before-kill ()
   "Close session before killing."
-  (ltc-debug "Before killing buffer in session %d for file %s" session-id (buffer-file-name))
+  (ltc-log-debug "Before killing buffer in session %d for file %s" session-id (buffer-file-name))
   (if ltc-mode (ltc-mode 0)) ; turn LTC mode off (includes closing session)
   nil)
 
@@ -1079,7 +1079,7 @@ it will only set the new, chosen color if it is different than the old one."
       (setq index (1+ index)))) ; advance index
   (if (> start 0) ; we ended with a deletion region
       (setq deletions (append deletions (list (list (1- start) (1- index)))))) ; Emacs positions are +1
-  (ltc-debug "Compiled deletions are: %S" (if (> (length deletions) 20) (format "<list has %d elements>" (length deletions)) deletions))
+  (ltc-log-debug "Compiled deletions are: %S" (if (> (length deletions) 20) (format "<list has %d elements>" (length deletions)) deletions))
   (if deletions
       (list :array deletions) ; return deletions as a labeled :array
     [])) ; return empty list
@@ -1098,34 +1098,40 @@ it will only set the new, chosen color if it is different than the old one."
 
 (defun ltc-hook-after-change (beg end len)
   "Hook to capture user's insertions while LTC mode is running."
-  (ltc-debug " --- after change with beg=%d and end=%d and len=%d" beg end len)
+  (ltc-log-debug " --- after change with beg=%d and end=%d and len=%d" beg end len)
   (when (and self (= 0 len))
     ;; color text and use addition face
-    (ltc-debug " ------ marking as added: \"%s\" between %d and %d" (buffer-substring beg end) beg end)
+    (ltc-log-debug " ------ marking as added: \"%s\" between %d and %d" (buffer-substring beg end) beg end)
     (add-text-properties beg end (list 'face 
 				       (list 'ltc-addition (list :foreground (car (last self))))
 				       'help-echo "rev: modified"
 				       'ltc-change-rev modified)))
   (when (and (> len 0)
 	     (string< "" insstring))
-    (ltc-debug " ------ inserting: \"%s\" at %d" insstring (point))
+    (ltc-log-debug " ------ inserting: \"%s\" at %d" insstring (point))
     (let ((inhibit-modification-hooks t)) ; temporarily disable modification hooks
       (insert insstring)) ; this moves point to end of insertion
-    (ltc-debug " ------ last char: %S" last-input-char)
-    (cond ((eq 'backspace last-input-char) ; if last key was BACKSPACE, move point to beginning
+    (ltc-log-debug " ------ last char: %S" last-input-event)
+    (cond ((or (eq 'backspace last-input-event) ; if last key was BACKSPACE, move point to beginning
+	       (eq 'M-backspace last-input-event))
+	   (ltc-log-debug " -------- moving to beginning of deleted string")
 	   (goto-char beg))
-	  ((eq 'kp-delete last-input-char) ; if last key was FORWARD DELETE, move point to end of inserted string
+	  ((or (eq 'kp-delete last-input-event) ; if last key was FORWARD DELETE, move point to end of inserted string
+	       (eq 134217828 last-input-event)  ; M-d (delete word forward)
+	       (eq 4 last-input-event)          ; C-d (delete char forward)
+	       (eq 11 last-input-event))        ; C-k (delete forward rest of line)
+	   (ltc-log-debug " -------- moving to end of deleted string")
 	   (goto-char (+ beg (length insstring))))
 	  (t ; move point back to original location in region (possibly adjusted)
-	   (ltc-debug " ------ now moving back from %d to %d " (point) origpoint)
+	   (ltc-log-debug " ------ now moving back from %d to %d " (point) origpoint)
 	   (goto-char origpoint)) ; adjust original point
 	  ))
-  (ltc-debug " ------ point is %d " (point))
+  (ltc-log-debug " ------ point is %d " (point))
   )
 
 (defun ltc-hook-before-change (beg end)
   "Hook to capture user's deletions while LTC mode is running."
-  (ltc-debug " --- before change with beg=%d and end=%d at point %d" beg end (point))
+  (ltc-log-debug " --- before change with beg=%d and end=%d at point %d" beg end (point))
   ;; if modified but first row does not show this then update commit graph
   (if (and (buffer-modified-p) commit-graph)
     ;; manipulate commit graph: if at least one entry and the first element is "" or "on disk" then replace first ID with "modified"
@@ -1141,8 +1147,8 @@ it will only set the new, chosen color if it is different than the old one."
 	  (self-color (caddr self)) ; obtain color for upcoming change
 	  (delstring (buffer-substring beg end)) ; string /w text props about to be deleted
 	  )
-      (ltc-debug " ------ offset is %d " offset)
-      (ltc-debug " ------ deleting: \"%s\"" delstring)
+      (ltc-log-debug " ------ offset is %d " offset)
+      (ltc-log-debug " ------ deleting: \"%s\"" delstring)
       ;; calculate string (/w properties) to insert after change
       ;; use idiom to manipulate deletion string in temp buffer before returning to current buffer
       (setq insstring  ; calculate insertion string
@@ -1151,7 +1157,7 @@ it will only set the new, chosen color if it is different than the old one."
 	      (if (and (> offset 0)
 		       (< offset (point-max)))
 		  (goto-char offset))
-	      (ltc-debug " ---temp--- point after inserting is: %d" (point))
+	      (ltc-log-debug " ---temp--- point after inserting is: %d" (point))
 	      ;; go through upcoming deletion's characters one-by-one
 	      (let ((newface (list 'ltc-deletion (list :foreground self-color))) ; new face properties for characters that are inserted by other or not marked up
 		    (newindices nil) ; collect indices which need new text properties here
@@ -1174,7 +1180,7 @@ it will only set the new, chosen color if it is different than the old one."
 								    'ltc-change-rev modified))
 			(setq index (1+ index)) ; advance index
 			)))))
-	      (ltc-debug " ---temp--- point after going through buffer is: %d" (point))
+	      (ltc-log-debug " ---temp--- point after going through buffer is: %d" (point))
 	      (setq deltapoint (1- (point))) ; calculate delta for real buffer
 	      (buffer-string))) ; return the contents of the temp buffer
       ;; calculate original point for after-change
@@ -1187,7 +1193,7 @@ it will only set the new, chosen color if it is different than the old one."
 	  ; else-forms: point is inside region to be deleted (including borders)
 	  (setq origpoint (+ beg deltapoint))
 	  ))
-      (ltc-debug " ------ orig point is %d " origpoint)
+      (ltc-log-debug " ------ orig point is %d " origpoint)
       )))
 
 ;;; --- undo change
@@ -1228,15 +1234,15 @@ This function returns the end position after the change was undone."
 			    '(-1 1)))) ; go backward and forward if looking for change at point
     ;; now perform the switch:
     (ltc-add-edit-hooks) ; just in case there was a problem, re-enable the edit hooks as we are depending on them
-    (ltc-debug " == change at %s is %S with face=%s rev=%s clr=%s" start borders faceid revid faceclr)
+    (ltc-log-debug " == change at %s is %S with face=%s rev=%s clr=%s" start borders faceid revid faceclr)
     (let ((origpoint start)) ; remember original start
       (cond ((equal 'ltc-addition faceid) ; found addition: delete it
-	     (ltc-debug " == delete change: \"%s\"" (buffer-substring (nth 0 borders) (nth 1 borders)))
+	     (ltc-log-debug " == delete change: \"%s\"" (buffer-substring (nth 0 borders) (nth 1 borders)))
 	     (save-excursion
 	       (if from-undo-in-region
 		   (goto-char (nth 1 borders))) ; calc return value as end of deletion
 	       (delete-region (nth 0 borders) (nth 1 borders)) ; this DOES trigger modification hooks
-	       (ltc-debug " == now at point %d " (point))
+	       (ltc-log-debug " == now at point %d " (point))
 	       (point))) ; return current position
 	    ((equal 'ltc-deletion faceid) ; found deletion: add it
 	     ;; remove deletion without change hooks, then insert
@@ -1244,10 +1250,10 @@ This function returns the end position after the change was undone."
 	       (let ((inhibit-modification-hooks t)) ; temporarily disable modification hooks
 		 (delete-region (nth 0 borders) (nth 1 borders))) ; this DOES NOT trigger modification hooks
 	       (goto-char (nth 0 borders)) ; do insertion from beginning of region
-	       (ltc-debug " == add change again: \"%s\" at %d" delstring (point))
+	       (ltc-log-debug " == add change again: \"%s\" at %d" delstring (point))
 	       (insert delstring)) ; this DOES trigger modification hooks
 	     (goto-char origpoint)
-	     (ltc-debug " == now back at point %d " (point))
+	     (ltc-log-debug " == now back at point %d " (point))
 	     (nth 1 borders)) ; return end of inserted string
 	    (t (nth 1 borders)) ; return end of no change
 	    ))))
@@ -1278,7 +1284,7 @@ This function returns the end position after the change was undone."
   (if (= start end)
       (ltc-log "Cannot undo changes in region as the region's length is 0.")
     ; else-forms:
-    (ltc-debug " ~~ region is [%d, %d] and point is %d" start end (point))
+    (ltc-log-debug " ~~ region is [%d, %d] and point is %d" start end (point))
     ;; narrow to region and then go through changes from beginning to end and flip them:
     (save-restriction
       (narrow-to-region start end)
@@ -1288,7 +1294,7 @@ This function returns the end position after the change was undone."
 	  (if (= 0 nextindex)
 	      (setq startindex (1+ startindex)) ; advance index by 1
 	    (setq startindex nextindex))))) ; advance index to next possible change
-    (ltc-debug " ~~ now at point %d " (point))
+    (ltc-log-debug " ~~ now at point %d " (point))
     ))
 
 ;;; --- accessing API of base system

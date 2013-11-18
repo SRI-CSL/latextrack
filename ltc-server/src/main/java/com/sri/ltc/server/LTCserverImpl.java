@@ -70,7 +70,11 @@ public final class LTCserverImpl implements LTCserverInterface {
 
     private final Preferences preferences = Preferences.userNodeForPackage(this.getClass());
     private final static List<Color> defaultColors = new ArrayList<Color>(Arrays.asList(
-            Color.blue, Color.red, Color.green, Color.magenta, Color.orange, Color.cyan));
+            Color.blue, Color.red,
+            Color.decode("#009900"), // darker green
+            Color.decode("#990066"), // darker magenta
+            Color.decode("#FF6600"), // darker orange
+            Color.decode("#00CCFF"))); // darker cyan/light blue
     public final static int NUM_DEFAULT_COLORS = defaultColors.size();
     private final static String KEY_COLOR = "author-color:";
     private final ProgressReceiver progressReceiver;
