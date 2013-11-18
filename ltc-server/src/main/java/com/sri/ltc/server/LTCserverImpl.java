@@ -651,12 +651,23 @@ public final class LTCserverImpl implements LTCserverInterface {
             // add log file(s), if they exist
             File[] logFiles = new File(System.getProperty("user.home")).listFiles(CommonUtils.LOG_FILE_FILTER);
             if (logFiles != null)
-                for (File logFile : logFiles)
+                for (File logFile : logFiles) {
+                    LOGGER.fine("Adding log file " + logFile.getName() + " to bug report");
                     copyToZip(zos, logFile, logFile.getName().substring(1)); // remove leading "." from name
+                }
 
             // add bundle file (if exists)
-            if (bundle != null)
+            if (bundle != null) {
+                LOGGER.fine("Adding bundle " + bundle.getName() + " to bug report");
                 copyToZip(zos, bundle, bundle.getName());
+            }
+
+            // add Messages.txt (*+if exists)
+            File msgFile = new File(outputDirectory, "Messages.txt");
+            if (msgFile.exists()) {
+                LOGGER.fine("Adding Emacs *Messages* " + msgFile.getName() + " to bug report");
+                copyToZip(zos, msgFile, msgFile.getName());
+            }
 
             zos.close();
         } catch (FileNotFoundException e) {
