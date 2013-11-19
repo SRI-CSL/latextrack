@@ -135,7 +135,7 @@ public final class Accumulate {
 
             // prepare styles with color and author index and revision number
             int authorIndex = authorIndices[index];
-            document.updateStyles(authorIndex, colors[authorIndex], index);
+            document.updateStyles(authorIndex, colors[authorIndex], index - 1);
 
             int current_offset = 0;
 

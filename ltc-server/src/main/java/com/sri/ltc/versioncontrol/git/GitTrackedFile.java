@@ -91,20 +91,45 @@ public class GitTrackedFile extends TrackedFile<GitRepository> {
             revWalk.markStart(rootCommit);
 
             RevCommit limitRevCommit = null;
+
             if (inclusiveLimitRevision != null)
                 limitRevCommit = revWalk.parseCommit(wrappedRepository.resolve(inclusiveLimitRevision));
 
             if (inclusiveLimitDate == null)
                 inclusiveLimitDate = new Date(0);
 
+            boolean stopOnNextItr = false;
+            Date lastDateItr = null;
             for (RevCommit revCommit : revWalk) {
-                // test limiting date first before adding commit
-                if (inclusiveLimitDate.compareTo(GitCommit.CommitDate(revCommit)) > 0) break;
 
+                // if lastDateItr is set, then we want to keep adding until the current commit date is
+                // earlier than the last one. see explanation below.
+                if (lastDateItr != null && lastDateItr.compareTo(GitCommit.CommitDate(revCommit)) > 0)
+                    break;
+
+                // need to add the current rev
                 commits.add(new GitCommit(getRepository(), this, revCommit));
 
-                // now test if this was the last commit we wanted
-                if (revCommit.getId().equals(limitRevCommit)) break;
+                // if we were told to stop last itr, then stop!
+                if (stopOnNextItr)
+                    break;
+
+                // now test if this was the last commit we wanted, we need to include one more commit then stop.
+                if (revCommit.getId().equals(limitRevCommit))
+                    stopOnNextItr = true;
+
+
+                // check to see if we are past the first date threshold, if yes we want to keep going until
+                // the times after the crossing aren't equal...
+                //      consider:  [ 10, 9, 8, 7'', 7', 7, 6'', 6', 6, 5, 4 ]
+                // if threshold is 7, we need to include 10:6
+                // if threshold is 8, we need to include 10:7
+                // if threshold is 6, we need to include 10:5
+                if (inclusiveLimitDate.compareTo(GitCommit.CommitDate(revCommit)) > 0) {
+                    if (lastDateItr == null) {
+                        lastDateItr =  GitCommit.CommitDate(revCommit);
+                    }
+                }
             }
 
         } catch (IncorrectObjectTypeException e) {

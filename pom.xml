@@ -50,6 +50,15 @@
                 <role>Developer</role>
             </roles>
         </developer>
+        <developer>
+            <name>Jim Klo</name>
+            <email>jim.klo at sri dot com</email>
+            <organization>SRI International</organization>
+            <organizationUrl>http://www.sri.com</organizationUrl>
+            <roles>
+                <role>Developer</role>
+            </roles>
+        </developer>
     </developers>
 
     <contributors>

@@ -490,7 +490,7 @@ public final class TestAccumulate {
                 new int[]{1},
                 new int[][]{{0, 1}},
                 new int[]{1},
-                new int[]{1});
+                new int[]{0});
         map = perform(0, EnumSet.of(Change.Flag.COMMENT),
                 "oldest",
                 "% oldest comment",
@@ -500,7 +500,7 @@ public final class TestAccumulate {
                 new int[]{1},
                 new int[][]{{0, 7}},
                 new int[]{2},
-                new int[]{2});
+                new int[]{1});
         map = perform(2, EnumSet.of(Change.Flag.COMMENT),
                 "oldest",
                 "pretty % oldest comment",
@@ -510,7 +510,7 @@ public final class TestAccumulate {
                 new int[]{2, 1},
                 new int[][]{{0, 6}, {6, 8}},
                 new int[]{2, 1},
-                new int[]{2, 1});
+                new int[]{1, 0});
         map = perform(0, EnumSet.of(Change.Flag.COMMENT),
                 "oldest",
                 "pretty \n  % oldest comment",
@@ -520,7 +520,7 @@ public final class TestAccumulate {
                 new int[]{2},
                 new int[][]{{0, 10}},
                 new int[]{2},
-                new int[]{2}
+                new int[]{1}
         );
     }
 

@@ -21,6 +21,7 @@
  */
 package com.sri.ltc.svn;
 
+import com.sri.ltc.CommonUtils;
 import com.sri.ltc.Utils;
 import com.sri.ltc.categories.IntegrationTests;
 import com.sri.ltc.versioncontrol.*;
@@ -68,6 +69,7 @@ public class TestSVNRepository {
         }
     }
 
+    @SuppressWarnings("unchecked")
     @Test
     public void testRemotes() {
         Set remotes = temporarySVNRepository.getRepository().getRemotes().get();
@@ -75,6 +77,7 @@ public class TestSVNRepository {
         assertTrue("set of remotes has one element", remotes.size() == 1);
     }
 
+    @SuppressWarnings("unchecked")
     @Test
     public void testCommits() {
         try {
@@ -90,6 +93,37 @@ public class TestSVNRepository {
             assertEquals("commit message of 4th version",
                     "fourth version",
                     commits.get(2).getMessage().trim());
+        } catch (Exception e) {
+            fail(e.getMessage());
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    @Test
+    public void testLimits() {
+        try {
+            TrackedFile trackedFile = temporarySVNRepository.getTrackedFile();
+            assertTrue("tracked file is not NULL", trackedFile != null);
+            List<Commit> commits;
+
+            // test date limit: date somewhere between r5 and r4 => 3 commits
+            commits = trackedFile.getCommits(CommonUtils.deSerializeDate("2012-11-13 13:00:05 -0600"), null);
+            assertTrue("list of commits is not NULL", commits != null);
+            assertEquals("list of commits has length 3", 3, commits.size());
+            // test date limit: date exactly r4 => 4 commits
+            commits = trackedFile.getCommits(CommonUtils.deSerializeDate("2012-11-13 12:59:45 -0600"), null);
+            assertTrue("list of commits is not NULL", commits != null);
+            assertEquals("list of commits has length 4", 4, commits.size());
+
+            // test revision limit
+            commits = trackedFile.getCommits(null, "4"); // this should return commits until r3!
+            assertTrue("list of commits is not NULL", commits != null);
+            assertEquals("list of commits has length 4", 4, commits.size());
+
+            // test both limits at the same time
+            commits = trackedFile.getCommits(CommonUtils.deSerializeDate("2012-11-13 12:59 -0600"), "2");
+            assertTrue("list of commits is not NULL", commits != null);
+            assertEquals("list of commits has length 5", 5, commits.size());
         } catch (Exception e) {
             fail(e.getMessage());
         }
