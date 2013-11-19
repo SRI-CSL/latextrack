@@ -29,7 +29,7 @@ and then browse
 
 To perform tests labeled as
 @Category(IntegrationTests.class)
-either run goal "integration-test" or "verify" (which will call "integration-test")
+run goal "verify" (not "integration-test" to allow post integration test phase be run)
 
 To create the site:
 
@@ -162,7 +162,7 @@ For unit tests:
 
 For integration tests (labeled with IntegrationTests category):
 
-  $> mvn integration-test
+  $> mvn verify
 
 To skip all tests:
 

@@ -144,7 +144,7 @@ public class TestGitRepository {
         }
     }
 
-    @Test(expected = NullPointerException.class)
+    @Test
     public void badThingsWithRepo() throws VersionControlException, IOException {
         // do bad things to repo such as removing .git or the whole tree...
 
@@ -181,5 +181,6 @@ public class TestGitRepository {
 
         assert trackedFile != null;
         commits = trackedFile.getCommits();
+        assertEquals("no commits", 0, commits.size());
     }
 }

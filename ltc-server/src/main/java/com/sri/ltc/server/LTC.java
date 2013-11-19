@@ -93,6 +93,7 @@ public final class LTC {
 
     private void init() {
         logger.config("LTC version: " + CommonUtils.getVersion() + " (" + CommonUtils.getBuildInfo() + ")");
+        logger.config("Java version: " + System.getProperty("java.version"));
 
         try {
             // set up RPC server - this will enable us to receive XML-RPC calls

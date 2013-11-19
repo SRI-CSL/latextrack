@@ -10,7 +10,7 @@
 
     <groupId>com.sri.ltc</groupId>
     <artifactId>LTC</artifactId>
-    <version>1.0.1</version>
+    <version>1.0.2</version>
     <packaging>pom</packaging>
     <inceptionYear>2009</inceptionYear>
     <properties>
@@ -47,6 +47,15 @@
             <organizationUrl>http://www.sri.com</organizationUrl>
             <roles>
                 <role>Maintainer</role>
+                <role>Developer</role>
+            </roles>
+        </developer>
+        <developer>
+            <name>Jim Klo</name>
+            <email>jim.klo at sri dot com</email>
+            <organization>SRI International</organization>
+            <organizationUrl>http://www.sri.com</organizationUrl>
+            <roles>
                 <role>Developer</role>
             </roles>
         </developer>
@@ -110,7 +119,7 @@
         <dependency>
             <groupId>args4j</groupId>
             <artifactId>args4j</artifactId>
-            <version>2.0.25</version>
+            <version>2.0.26</version>
         </dependency>
         <dependency>
             <groupId>junit</groupId>
@@ -232,7 +241,7 @@
                 </configuration>
             </plugin>
             <!-- Testing approach:
-                1) unit tests are not annotated with SlowTests.class category
+                1) unit tests are not annotated with IntegrationTests.class category
                 2) slow test and descendants are carried out in "integration-tests" phase -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -255,6 +264,10 @@
                     </execution>
                 </executions>
                 <configuration>
+                    <!-- we have to explicitly add the Java files otherwise they don't get picked up: -->
+                    <includes>
+                        <include>**/*.java</include>
+                    </includes>
                     <groups>com.sri.ltc.categories.IntegrationTests</groups>
                 </configuration>
             </plugin>

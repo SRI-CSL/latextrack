@@ -21,10 +21,10 @@
  */
 package com.sri.ltc.svn;
 
+import com.sri.ltc.CommonUtils;
 import com.sri.ltc.Utils;
 import com.sri.ltc.categories.IntegrationTests;
 import com.sri.ltc.versioncontrol.*;
-import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -44,13 +44,11 @@ import static org.junit.Assert.fail;
  */
 @Category(IntegrationTests.class)
 public class TestSVNRepository {
-    @ClassRule
-    public static TemporarySVNRepository temporarySVNRepository = new TemporarySVNRepository();
-
+    // a fresh repository for each test:
     @Rule
-    public TemporarySVNRepository toBeRemoved = new TemporarySVNRepository();
+    public TemporarySVNRepository temporarySVNRepository = new TemporarySVNRepository();
 
-    @Test
+    @Test //(expected = SVNException.class)
     public void testUntracked() {
         assertTrue(temporarySVNRepository.getRoot().exists());
 
@@ -71,13 +69,15 @@ public class TestSVNRepository {
         }
     }
 
+    @SuppressWarnings("unchecked")
     @Test
     public void testRemotes() {
-        Set<Remote> remotes = temporarySVNRepository.getRepository().getRemotes().get();
+        Set remotes = temporarySVNRepository.getRepository().getRemotes().get();
         assertTrue("set of remotes is not NULL", remotes != null);
         assertTrue("set of remotes has one element", remotes.size() == 1);
     }
 
+    @SuppressWarnings("unchecked")
     @Test
     public void testCommits() {
         try {
@@ -98,9 +98,40 @@ public class TestSVNRepository {
         }
     }
 
+    @SuppressWarnings("unchecked")
+    @Test
+    public void testLimits() {
+        try {
+            TrackedFile trackedFile = temporarySVNRepository.getTrackedFile();
+            assertTrue("tracked file is not NULL", trackedFile != null);
+            List<Commit> commits;
+
+            // test date limit: date somewhere between r5 and r4 => 3 commits
+            commits = trackedFile.getCommits(CommonUtils.deSerializeDate("2012-11-13 13:00:05 -0600"), null);
+            assertTrue("list of commits is not NULL", commits != null);
+            assertEquals("list of commits has length 3", 3, commits.size());
+            // test date limit: date exactly r4 => 4 commits
+            commits = trackedFile.getCommits(CommonUtils.deSerializeDate("2012-11-13 12:59:45 -0600"), null);
+            assertTrue("list of commits is not NULL", commits != null);
+            assertEquals("list of commits has length 4", 4, commits.size());
+
+            // test revision limit
+            commits = trackedFile.getCommits(null, "4"); // this should return commits until r3!
+            assertTrue("list of commits is not NULL", commits != null);
+            assertEquals("list of commits has length 4", 4, commits.size());
+
+            // test both limits at the same time
+            commits = trackedFile.getCommits(CommonUtils.deSerializeDate("2012-11-13 12:59 -0600"), "2");
+            assertTrue("list of commits is not NULL", commits != null);
+            assertEquals("list of commits has length 5", 5, commits.size());
+        } catch (Exception e) {
+            fail(e.getMessage());
+        }
+    }
+
     @Test(expected = VersionControlException.class)
     public void badThingsWithRepo() throws VersionControlException, IOException {
-        assertTrue(toBeRemoved.getRoot().exists());
+        assertTrue(temporarySVNRepository.getRoot().exists());
         TrackedFile trackedFile = null;
 
         try {

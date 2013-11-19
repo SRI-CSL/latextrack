@@ -27,6 +27,22 @@
         <author email="lilalinda at users.sourceforge.net">Linda Briesemeister</author>
     </properties>
     <body>
+        <release version="1.0.2" date="2013-11-19">
+            <action dev="lilalinda" type="add" due-to="Peter">
+                New Emacs function to undo-change at point or all changes by the same author or in region.  (Needs to
+                be documented soon.)
+            </action>
+            <action dev="jim_klo" type="add" due-to="Peter">
+                The coloring of the revision history is now more intuitive -- the first version with changes is now
+                shown as the first active/colored one instead of the base version with which to compare.
+            </action>
+            <action dev="lilalinda" issue="17">
+                Better control of debug and log output in Emacs.  Now there is a customizable toggle in the "ltc" group
+                that governs the amount of output in *Messages*.  The contents of the *Messages* buffer is also copied
+                into the bug report.
+            </action>
+        </release>
+
         <release version="1.0.1" date="2013-09-27">
             <action dev="lilalinda" type="add" issue="4">
                 A new setting whether to allow similar colors for authors guides the color selection upon an LTC update.

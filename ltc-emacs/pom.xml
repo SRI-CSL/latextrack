@@ -7,10 +7,9 @@
     <parent>
         <groupId>com.sri.ltc</groupId>
         <artifactId>LTC</artifactId>
-        <version>1.0.1</version>
+        <version>1.0.2</version>
     </parent>
 
-    <groupId>com.sri.ltc</groupId>
     <artifactId>ltc-emacs</artifactId>
     <name>ltc-mode</name>
     <description>A minor mode for Emacs to interact with LTC.</description>

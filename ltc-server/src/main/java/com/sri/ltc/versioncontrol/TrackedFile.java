@@ -45,7 +45,13 @@ public abstract class TrackedFile<RepositoryClass extends Repository> {
         Unchanged,
         Unknown
     }
-    
+
+    /**
+     * Obtain list of commits in topological order.  The list could be empty but not NULL.
+     * @return List of commits in topological order (could be empty)
+     * @throws VersionControlException
+     * @throws IOException
+     */
     abstract public List<Commit> getCommits() throws VersionControlException, IOException;
     // Note: must support/default to the following options or their equivalent
     //    options.setOptFormatDate("iso8601");

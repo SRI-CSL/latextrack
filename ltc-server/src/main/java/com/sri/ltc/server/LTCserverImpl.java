@@ -70,7 +70,11 @@ public final class LTCserverImpl implements LTCserverInterface {
 
     private final Preferences preferences = Preferences.userNodeForPackage(this.getClass());
     private final static List<Color> defaultColors = new ArrayList<Color>(Arrays.asList(
-            Color.blue, Color.red, Color.green, Color.magenta, Color.orange, Color.cyan));
+            Color.blue, Color.red,
+            Color.decode("#009900"), // darker green
+            Color.decode("#990066"), // darker magenta
+            Color.decode("#FF6600"), // darker orange
+            Color.decode("#00CCFF"))); // darker cyan/light blue
     public final static int NUM_DEFAULT_COLORS = defaultColors.size();
     private final static String KEY_COLOR = "author-color:";
     private final ProgressReceiver progressReceiver;
@@ -386,14 +390,14 @@ public final class LTCserverImpl implements LTCserverInterface {
                             filter.getStatus(BoolPrefs.COMMANDS)),
                     caretPosition);
             map.put(LTCserverInterface.KEY_AUTHORS, mappedAuthors); // add current author map
-            map.put(LTCserverInterface.KEY_REVS, Lists.transform(units,
+            map.put(LTCserverInterface.KEY_REVS, Lists.transform(units.subList(1, units.size()),
                     new Function<HistoryUnit, String>() {
                         @Nullable
                         @Override
                         public String apply(@Nullable HistoryUnit unit) {
                             return unit.revision;
                         }
-                    })); // add list of revisions used in accumulation
+                    })); // add list of revisions used in accumulation: remove the base version!
             session.getAccumulate().removePropertyChangeListener(listener);
         } catch (Exception e) {
             logAndThrow(2,"Exception during change accumulation: "+e.getMessage());
@@ -651,12 +655,23 @@ public final class LTCserverImpl implements LTCserverInterface {
             // add log file(s), if they exist
             File[] logFiles = new File(System.getProperty("user.home")).listFiles(CommonUtils.LOG_FILE_FILTER);
             if (logFiles != null)
-                for (File logFile : logFiles)
+                for (File logFile : logFiles) {
+                    LOGGER.fine("Adding log file " + logFile.getName() + " to bug report");
                     copyToZip(zos, logFile, logFile.getName().substring(1)); // remove leading "." from name
+                }
 
             // add bundle file (if exists)
-            if (bundle != null)
+            if (bundle != null) {
+                LOGGER.fine("Adding bundle " + bundle.getName() + " to bug report");
                 copyToZip(zos, bundle, bundle.getName());
+            }
+
+            // add Messages.txt (*+if exists)
+            File msgFile = new File(outputDirectory, "Messages.txt");
+            if (msgFile.exists()) {
+                LOGGER.fine("Adding Emacs *Messages* " + msgFile.getName() + " to bug report");
+                copyToZip(zos, msgFile, msgFile.getName());
+            }
 
             zos.close();
         } catch (FileNotFoundException e) {

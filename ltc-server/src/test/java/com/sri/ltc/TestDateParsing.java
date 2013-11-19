@@ -21,6 +21,7 @@
  */
 package com.sri.ltc;
 
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.text.ParseException;
@@ -52,7 +53,7 @@ public final class TestDateParsing {
         return result;
     }
 
-    @Test
+    @Ignore
     public void naturalLanguageDates() throws ParseException {
         // use "Epoch dates for the start and end of the year/month/day" with local time
         // and add 1000 to each number in seconds at

@@ -7,10 +7,9 @@
     <parent>
         <groupId>com.sri.ltc</groupId>
         <artifactId>LTC</artifactId>
-        <version>1.0.1</version>
+        <version>1.0.2</version>
     </parent>
 
-    <groupId>com.sri.ltc</groupId>
     <artifactId>ltc-server</artifactId>
     <packaging>jar</packaging>
     <name>LTC Server</name>
@@ -61,7 +60,7 @@
         <dependency>
             <groupId>com.google.code.findbugs</groupId>
             <artifactId>jsr305</artifactId>
-            <version>2.0.1</version>
+            <version>2.0.2</version>
             <scope>provided</scope>
         </dependency>
 
@@ -69,7 +68,7 @@
         <dependency>
             <groupId>org.eclipse.jgit</groupId>
             <artifactId>org.eclipse.jgit</artifactId>
-            <version>3.0.0.201306101825-r</version>
+            <version>3.1.0.201310021548-r</version>
         </dependency>
 
         <!-- SVN Kit dependencies -->
@@ -83,7 +82,7 @@
         <dependency>
             <groupId>com.joestelmach</groupId>
             <artifactId>natty</artifactId>
-            <version>0.7</version>
+            <version>0.8</version>
         </dependency>
     </dependencies>
 

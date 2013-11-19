@@ -38,24 +38,32 @@ import java.util.*;
 public class SVNTrackedFile extends TrackedFile<SVNRepository> {
 
     private class SVNLogEntryHandler implements ISVNLogEntryHandler {
-        private SVNTrackedFile trackedFile = null;
-        private List<Commit> commits = new ArrayList<Commit>();
-        private Date inclusiveLimitDate;
-        private Long inclusiveLimitRevision;
+        private final SVNTrackedFile trackedFile;
+        private final List<Commit> commits = new ArrayList<Commit>();
+        private final Date inclusiveLimitDate;
+        private final Long inclusiveLimitRevision;
+        private boolean firstTime = true; // track whether we cross the date threshold for the first time
 
-        public SVNLogEntryHandler(SVNTrackedFile trackedFile, @Nullable Date exclusiveLimitDate, @Nullable Long exclusiveLimitRevision) {
+        public SVNLogEntryHandler(SVNTrackedFile trackedFile, @Nullable Date inclusiveLimitDate, @Nullable Long inclusiveLimitRevision) {
             this.trackedFile = trackedFile;
-            this.inclusiveLimitDate = exclusiveLimitDate;
-            this.inclusiveLimitRevision = exclusiveLimitRevision;
+            this.inclusiveLimitDate = inclusiveLimitDate;
+            this.inclusiveLimitRevision = inclusiveLimitRevision;
         }
 
         @Override
         public void handleLogEntry(SVNLogEntry logEntry) throws SVNException {
-            if ((inclusiveLimitDate != null) && (inclusiveLimitDate.compareTo(logEntry.getDate()) > 0)) {
-                return;
+            // add one more parent after crossing the date threshold for the first time
+            if (inclusiveLimitDate != null) {
+                long logTime = (logEntry.getDate().getTime()/1000L)*1000L; // down to the lower full second
+                if (inclusiveLimitDate.getTime() - logTime > 0) {
+                    if (!firstTime)
+                        return;
+                    firstTime = false; // we crossed the date threshold for the first time
+                }
             }
 
-            if ((inclusiveLimitRevision != null) && (inclusiveLimitRevision > logEntry.getRevision())) {
+            // add one more parent when limiting by revision:
+            if ((inclusiveLimitRevision != null) && ((inclusiveLimitRevision - 1L) > logEntry.getRevision())) {
                 return;
             }
 
@@ -158,26 +166,23 @@ public class SVNTrackedFile extends TrackedFile<SVNRepository> {
 
     @Override
     public List<Commit> getCommits(@Nullable Date inclusiveLimitDate, @Nullable String inclusiveLimitRevision) throws VersionControlException {
-        return getCommits(inclusiveLimitDate, inclusiveLimitRevision, 0);
-    }
-
-    private List<Commit> getCommits(@Nullable Date inclusiveLimitDate, @Nullable String inclusiveLimitRevision, int limit) throws VersionControlException {
         SVNLogEntryHandler handler = new SVNLogEntryHandler(
                 this,
                 inclusiveLimitDate,
                 (inclusiveLimitRevision == null) ? null : Long.parseLong(inclusiveLimitRevision));
 
+        List<Commit> commits = null;
         try {
             SVNClientManager manager = getRepository().getClientManager();
             SVNStatus status = manager.getStatusClient().doStatus(getFile(), false);
             if (STATE_WITH_LOG.contains(status.getContentsStatus()))
                 manager.getLogClient().doLog(new File[]{getFile()},
-                        SVNRevision.UNDEFINED, SVNRevision.UNDEFINED, false, false, limit, handler);
+                        SVNRevision.UNDEFINED, SVNRevision.UNDEFINED, false, false, 0, handler);
+            commits = handler.getCommits();
         } catch (SVNException e) {
             throw new VersionControlException(e);
         }
-
-        return handler.getCommits();
+        return commits;
     }
 
     @Override
