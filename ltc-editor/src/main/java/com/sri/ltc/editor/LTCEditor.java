@@ -160,6 +160,7 @@ public final class LTCEditor extends LTCGui {
             }
         }
     };
+    private final JTextField authorField = new JTextField(); // TODO: customize this!
     private final DateField dateField = new DateField();
     private final JTextField revField = new JTextField();
     private final JButton saveButton = new JButton(new AbstractAction("Save ("+'\u2318'+"S)") {
@@ -380,113 +381,42 @@ public final class LTCEditor extends LTCGui {
         return filePane;
     }
 
+    // for label + text field
+    private JPanel createTextInputPane(String label, JTextField field) {
+        JPanel panel = new JPanel(new BorderLayout(5,0));
+        panel.add(new JLabel(label), BorderLayout.LINE_START);
+        panel.add(field, BorderLayout.CENTER);
+        return panel;
+    }
+
     private JPanel createFilteringPane() {
+        JPanel filteringPane = new JPanel(new BorderLayout());
 
-        // 2) authors panel
-        JPanel authorPane = new JPanel(new BorderLayout(0,5));
-        authorPane.add(new JLabel("Authors:"), BorderLayout.PAGE_START);
-        final JList authorList = new JList(authorModel);
-        authorList.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
-        authorList.setVisibleRowCount(5);
-        authorList.setCellRenderer(new AuthorCellRenderer());
-        authorList.addMouseListener(new MouseAdapter() {
-            public void mouseClicked(MouseEvent e) {
-                if (e.getClickCount() == 2) {
-                    Object o = authorModel.getElementAt(authorList.locationToIndex(e.getPoint()));
-                    if (o instanceof AuthorCell) {
-                        AuthorCell ac = (AuthorCell) o;
-                        Color newColor = JColorChooser.showDialog(getFrame(),
-                                "Choose Author Color",
-                                ac.getColor());
-                        if (newColor != null) {
-                            boolean changed = ac.setColor(newColor);
-                            if (changed) {
-                                session.colors(ac.author.name, ac.author.email, LTCserverImpl.convertToHex(newColor));
-                                authorModel.fireChanged(ac); // propagate update to self combo
-                                getUpdateButton().doClick();
-                            }
-                        }
-                    }
-                }
-            }
-        });
-        JScrollPane scrollPane = new JScrollPane(authorList);
-        authorPane.add(scrollPane, BorderLayout.CENTER);
-        final JPanel authorButtons = new JPanel();
-        JButton button = (JButton) authorButtons.add(new JButton(new AbstractAction("Reset") {
-            private static final long serialVersionUID = -7513335226809639324L;
-            public void actionPerformed(ActionEvent e) {
-                authorModel.resetAll();
-                authorList.clearSelection();
-            }
-        }));
-        button.setToolTipText("Reset All");
-        final Component limitButton = authorButtons.add(new LimitingButton(
-                "Limit", authorList, authorModel, true));
-        final Component unlimitButton = authorButtons.add(new LimitingButton(
-                "Unlimit", authorList, authorModel, false));
-        limitButton.setEnabled(false);
-        unlimitButton.setEnabled(false);
-        authorList.addListSelectionListener(new ListSelectionListener() {
-            public void valueChanged(ListSelectionEvent e) {
-                if (!e.getValueIsAdjusting()) {
-                    // enable or disable buttons based on whether anything selected
-                    limitButton.setEnabled(authorList.getSelectedIndices().length > 0);
-                    unlimitButton.setEnabled(authorList.getSelectedIndices().length > 0);
-                }
-            }
-        });
-        authorPane.add(authorButtons, BorderLayout.PAGE_END);
+        // center pane: text boxes /w labels to limit by
+        JPanel limitPane = new JPanel();
+        limitPane.setLayout(new BoxLayout(limitPane, BoxLayout.PAGE_AXIS));
+        limitPane.add(createTextInputPane("Limit to:", authorField));
+        limitPane.add(createTextInputPane("Start at date:", dateField));
+        limitPane.add(createTextInputPane("Start at revision:", revField));
+        filteringPane.add(limitPane, BorderLayout.CENTER);
 
-        // 3) date panel
-        JPanel datePane = new JPanel(new BorderLayout(5,0));
-        datePane.add(new JLabel("Start at date:"), BorderLayout.LINE_START);
-        datePane.add(dateField, BorderLayout.CENTER);
-
-        // 4) rev panel
-        JPanel revPane = new JPanel(new BorderLayout(5,0));
-        revPane.add(new JLabel("Start at revision:"), BorderLayout.LINE_START);
-        revPane.add(revField, BorderLayout.CENTER);
-
-        // layout
-        JPanel filteringPane = new JPanel(new GridBagLayout());
-        filteringPane.setBorder(BorderFactory.createTitledBorder(" Filtering "));
-        GridBagConstraints c = new GridBagConstraints();
-        c.insets = new Insets(0, 5, 0, 5);
-        c.fill = GridBagConstraints.BOTH;
-
-        c.gridwidth = 1;
-        c.gridx = 0;
-        c.gridy = 0;
-        c.weighty = 1.0;
-        filteringPane.add(authorPane, c);
-
-        c.weightx = 0.0;
-        c.weighty = 0.0;
-        c.gridy = 1;
-        filteringPane.add(new BoolPrefCheckBox("condense authors",
+        // line end pane: check boxes
+        JPanel checkboxesPane = new JPanel();
+        checkboxesPane.setLayout(new BoxLayout(checkboxesPane, BoxLayout.PAGE_AXIS));
+        checkboxesPane.add(new BoolPrefCheckBox("condense authors",
                 LTCserverInterface.BoolPrefs.COLLAPSE_AUTHORS,
-                getUpdateButton()), c);
-        c.gridy = 2;
-        filteringPane.add(new BoolPrefCheckBox("allow similar colors",
+                getUpdateButton()));
+        checkboxesPane.add(new BoolPrefCheckBox("allow similar colors",
                 LTCserverInterface.BoolPrefs.ALLOW_SIMILAR_COLORS,
-                getUpdateButton()), c);
+                getUpdateButton()));
+        filteringPane.add(checkboxesPane, BorderLayout.LINE_END);
 
-        c.weightx = 0.8;
-        c.gridy = 3;
-        filteringPane.add(datePane, c);
-
-        c.gridy = 4;
-        filteringPane.add(revPane, c);
-
-        c.gridy = 5;
-        c.weightx = 0.0;
-        c.fill = GridBagConstraints.NONE;
-        filteringPane.add(getUpdateButton(), c);
-
-        // pane to include filtering and bug report button
-        JPanel leftPane = new JPanel(new BorderLayout()); // no gaps
-        leftPane.add(filteringPane, BorderLayout.CENTER);
+        // page end pane: buttons
+        JPanel buttonPane = new JPanel();
+        buttonPane.setLayout(new BoxLayout(buttonPane, BoxLayout.LINE_AXIS));
+        // --- UPDATE button:
+        buttonPane.add(getUpdateButton(), BorderLayout.LINE_START);
+        // --- BUG REPORT button:
         // configuring key binding to CMD-R / CTRL-R for bug report button:
         bugReportAction.putValue(Action.ACCELERATOR_KEY,
                 KeyStroke.getKeyStroke(KeyEvent.VK_R, Toolkit.getDefaultToolkit().getMenuShortcutKeyMask()));
@@ -495,27 +425,8 @@ public final class LTCEditor extends LTCGui {
         bugReportButton.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(
                 (KeyStroke) bugReportAction.getValue(Action.ACCELERATOR_KEY),
                 "createBugReport");
-
-        leftPane.add(bugReportButton, BorderLayout.PAGE_END);
-
-        return leftPane;
-    }
-
-    @SuppressWarnings("unchecked")
-    private JPanel createContentTrackingPane() {
-        JPanel contentTrackingPane = new JPanel(new BorderLayout(0,5));
-        contentTrackingPane.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createTitledBorder(" Content Tracking "),
-                BorderFactory.createEmptyBorder(0, 5, 0, 5)));
-
-        // 1) self combo box/label: as card layout
-        final JPanel selfPane = new JPanel(new BorderLayout(0, 0));
-        selfPane.add(new JLabel("Self: "), BorderLayout.LINE_START);
-        final JComboBox selfCombo = new JComboBox(selfModel);
-        selfCombo.setEditable(true);
-        selfCombo.setRenderer(new SelfComboBoxRenderer());
-        selfCombo.setEditor(new SelfComboBoxEditor(authorModel, textPane));
-        selfPane.add(selfCombo, BorderLayout.CENTER);
+        buttonPane.add(bugReportButton, BorderLayout.LINE_END);
+        // --- SAVE button:
         // enable save button upon first change
         saveButton.setEnabled(false);
         textPane.getDocumentFilter().addChangeListener(new ChangeListener() {
@@ -531,29 +442,84 @@ public final class LTCEditor extends LTCGui {
         saveButton.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(
                 KeyStroke.getKeyStroke(KeyEvent.VK_S, Toolkit.getDefaultToolkit().getMenuShortcutKeyMask()),
                 "saveAction");
-        selfPane.add(saveButton, BorderLayout.LINE_END);
-        contentTrackingPane.add(selfPane, BorderLayout.PAGE_START);
+        buttonPane.add(saveButton);
+        filteringPane.add(buttonPane, BorderLayout.PAGE_END);
 
-        // 2) commit graph
-        JScrollPane scrollPane = new JScrollPane(new CommitTable(commitModel));
-        contentTrackingPane.add(scrollPane, BorderLayout.CENTER);
+        // 2) authors panel
+//        authorList.addMouseListener(new MouseAdapter() {
+//            public void mouseClicked(MouseEvent e) {
+//                if (e.getClickCount() == 2) {
+//                    Object o = authorModel.getElementAt(authorList.locationToIndex(e.getPoint()));
+//                    if (o instanceof AuthorCell) {
+//                        AuthorCell ac = (AuthorCell) o;
+//                        Color newColor = JColorChooser.showDialog(getFrame(),
+//                                "Choose Author Color",
+//                                ac.getColor());
+//                        if (newColor != null) {
+//                            boolean changed = ac.setColor(newColor);
+//                            if (changed) {
+//                                session.colors(ac.author.name, ac.author.email, LTCserverImpl.convertToHex(newColor));
+//                                authorModel.fireChanged(ac); // propagate update to self combo
+//                                getUpdateButton().doClick();
+//                            }
+//                        }
+//                    }
+//                }
+//            }
+//        });
+
+//        JButton button = (JButton) authorButtons.add(new JButton(new AbstractAction("Reset") {
+//            private static final long serialVersionUID = -7513335226809639324L;
+//            public void actionPerformed(ActionEvent e) {
+//                authorModel.resetAll();
+//                authorList.clearSelection();
+//            }
+//        }));
+
+//        final Component limitButton = authorButtons.add(new LimitingButton(
+//                "Limit", authorList, authorModel, true));
+//        final Component unlimitButton = authorButtons.add(new LimitingButton(
+//                "Unlimit", authorList, authorModel, false));
+//        limitButton.setEnabled(false);
+//        unlimitButton.setEnabled(false);
+//        authorList.addListSelectionListener(new ListSelectionListener() {
+//            public void valueChanged(ListSelectionEvent e) {
+//                if (!e.getValueIsAdjusting()) {
+//                    // enable or disable buttons based on whether anything selected
+//                    limitButton.setEnabled(authorList.getSelectedIndices().length > 0);
+//                    unlimitButton.setEnabled(authorList.getSelectedIndices().length > 0);
+//                }
+//            }
+//        });
+//        authorPane.add(authorButtons, BorderLayout.PAGE_END);
+
+        return filteringPane;
+    }
+
+    @SuppressWarnings("unchecked")
+    private JPanel createContentTrackingPane() {
+        JPanel contentTrackingPane = new JPanel(new BorderLayout(0,5));
+
+        // 1) self combo box/label: as card layout
+        final JPanel selfPane = new JPanel(new BorderLayout(0, 0));
+        selfPane.add(new JLabel("Self: "), BorderLayout.LINE_START);
+        final JComboBox selfCombo = new JComboBox(selfModel);
+        selfCombo.setEditable(true);
+        selfCombo.setRenderer(new SelfComboBoxRenderer());
+        selfCombo.setEditor(new SelfComboBoxEditor(authorModel, textPane));
+        selfPane.add(selfCombo, BorderLayout.CENTER);
+        contentTrackingPane.add(selfPane, BorderLayout.PAGE_START);
 
         return contentTrackingPane;
     }
 
     private void createLowerRightPane(JPanel panel) {
-        final JSplitPane splitPaneH = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT,
-                createFilteringPane(), createContentTrackingPane());
-        splitPaneH.setDividerLocation(preferences.getInt(KEY_LAST_DIVIDER_H, 0));
-        splitPaneH.addPropertyChangeListener(JSplitPane.DIVIDER_LOCATION_PROPERTY,
-                new PropertyChangeListener() {
-                    public void propertyChange(PropertyChangeEvent e) {
-                        preferences.putInt(KEY_LAST_DIVIDER_H, splitPaneH.getDividerLocation());
-                        LOGGER.config("Divider location: " + splitPaneH.getDividerLocation());
-                    }
-                });
-        splitPaneH.setBorder(null);
-        panel.add(splitPaneH, BorderLayout.CENTER);
+        panel.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createTitledBorder(" Content Tracking & Filtering "),
+                BorderFactory.createEmptyBorder(0, 5, 0, 5)));
+        panel.setLayout(new BorderLayout(0, 5));
+        panel.add(new JScrollPane(new CommitTable(commitModel, authorModel)), BorderLayout.CENTER);
+        panel.add(createFilteringPane(), BorderLayout.PAGE_END);
     }
 
     public LTCEditor() {

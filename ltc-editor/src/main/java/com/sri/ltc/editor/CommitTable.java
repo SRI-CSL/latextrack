@@ -49,8 +49,10 @@ public final class CommitTable extends JTable {
 
     private final static Logger LOGGER = Logger.getLogger(CommitTable.class.getName());
 
-    public CommitTable(CommitTableModel model) {
+    public CommitTable(CommitTableModel model, final AuthorListModel authorModel) {
         super(model);
+        if (authorModel == null)
+            throw new IllegalArgumentException("Cannot create commit table with NULL as author model");
 
         setFillsViewportHeight(true);
         getTableHeader().setReorderingAllowed(false);
@@ -86,7 +88,11 @@ public final class CommitTable extends JTable {
         setDefaultRenderer(Author.class, new CommitTableRenderer() {
             @Override
             String renderText(Object object) {
-                return ((Author) object).name;
+                return object.toString(); // name and email
+            }
+            @Override
+            Color renderColor(Object object) {
+                return authorModel.getColorForAuthor((Author) object);
             }
         });
 

@@ -43,23 +43,20 @@ public final class AuthorCellRenderer extends JLabel implements ListCellRenderer
         if (value instanceof AuthorCell) {
             AuthorCell author = (AuthorCell) value;
             setText(author.label);
-            Icon icon = new ColorIcon(author.getColor());
-            setIcon(icon);
-            setDisabledIcon(icon);
+            setForeground(author.getColor());
             setEnabled(author.limited);
         } else {
             setText(value.toString());
-            setIcon(null);
-        }
-
-        // deal with default colors
-        if (isSelected) {
-            setBackground(list.getSelectionBackground());
-            setForeground(list.getSelectionForeground());
-        } else {
-            setBackground(list.getBackground());
             setForeground(list.getForeground());
         }
+        setIcon(null);
+        setBackground(list.getBackground());
+
+        // handle selection
+        if (isSelected)
+            setBorder(BorderFactory.createLineBorder(list.getSelectionBackground()));
+        else
+            setBorder(BorderFactory.createEmptyBorder());
 
         return this;
     }

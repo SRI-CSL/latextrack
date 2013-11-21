@@ -48,16 +48,21 @@ public class CommitTableRenderer extends JLabel implements TableCellRenderer {
         return null;
     }
 
+    Color renderColor(Object object) {
+        return null;
+    }
+
     @Override
     public Component getTableCellRendererComponent(JTable table, Object object,
                                                    boolean isSelected, boolean hasFocus,
                                                    int row, int column) {
-        // foreground determined by active status
+        // foreground determined by active status and rendering
         TableModel model = table.getModel();
         if (model instanceof CommitTableModel) {
+            Color fg = object==null?null:renderColor(object);
             setForeground(
                     ((CommitTableModel) model).isActive(row)?
-                            table.getForeground():
+                            (fg==null?table.getForeground():fg) :
                             INACTIVE_COLOR
             );
         } else
@@ -70,7 +75,7 @@ public class CommitTableRenderer extends JLabel implements TableCellRenderer {
         // keep background
         setBackground(table.getBackground());
 
-        // handle selection
+        // handle selection: draw only a thin border
         if (isSelected)
             setBorder(BorderFactory.createLineBorder(table.getSelectionBackground()));
         else
