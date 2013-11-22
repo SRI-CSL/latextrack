@@ -234,7 +234,7 @@ public class LTCSession {
         }).execute();
     }
 
-    public void setLimitedAuthors(final boolean allLimited, final List<String[]> limitedAuthors) {
+    public void setLimitedAuthors(final List<String[]> limitedAuthors) {
         if (!isValid()) return;
 
         // create new worker to set limited authors in session
@@ -242,7 +242,7 @@ public class LTCSession {
                 "Setting...", "Setting limited authors", false) {
             @Override
             protected Void callLTCinBackground() throws XmlRpcException {
-                if (allLimited)
+                if (limitedAuthors == null || limitedAuthors.isEmpty())
                     LTC.reset_limited_authors(ID);
                 else
                     LTC.set_limited_authors(ID, limitedAuthors);

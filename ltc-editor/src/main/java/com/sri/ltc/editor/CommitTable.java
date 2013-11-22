@@ -64,7 +64,7 @@ public final class CommitTable extends JTable {
         setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         setColumnSelectionAllowed(true);
         setRowSelectionAllowed(true);
-        setDragEnabled(true); 
+        setDragEnabled(true);
         setTransferHandler(new CommitTransferHandler()); // customized drag 'n drop
 
         // renderer

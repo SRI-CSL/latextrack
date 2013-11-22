@@ -23,6 +23,7 @@ package com.sri.ltc.editor;
  */
 
 import com.sri.ltc.CommonUtils;
+import com.sri.ltc.filter.Author;
 import com.sri.ltc.logging.LevelOptionHandler;
 import com.sri.ltc.logging.LogConfiguration;
 import com.sri.ltc.server.LTCserverImpl;
@@ -41,8 +42,6 @@ import java.awt.datatransfer.DataFlavor;
 import java.awt.datatransfer.Transferable;
 import java.awt.datatransfer.UnsupportedFlavorException;
 import java.awt.event.*;
-import java.beans.PropertyChangeEvent;
-import java.beans.PropertyChangeListener;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
@@ -71,12 +70,19 @@ public final class LTCEditor extends LTCGui {
     }
     private final Preferences preferences = Preferences.userRoot().node(this.getClass().getCanonicalName().replaceAll("\\.","/"));
     private final static String KEY_LAST_DIR = "last directory";
-    private final static String KEY_LAST_DIVIDER_H = "last H divider location";
     static final Logger LOGGER = Logger.getLogger(LTCEditor.class.getName());
     private static DataFlavor DATE_FLAVOR;
     static {
         try {
             DATE_FLAVOR = new DataFlavor(javaJVMLocalObjectMimeType + ";class=java.util.Date");
+        } catch (ClassNotFoundException e) {
+            LOGGER.log(Level.SEVERE, e.getMessage(), e);
+        }
+    }
+    private static DataFlavor AUTHOR_FLAVOR;
+    static {
+        try {
+            AUTHOR_FLAVOR = new DataFlavor(javaJVMLocalObjectMimeType + ";class=com.sri.ltc.filter.Author");
         } catch (ClassNotFoundException e) {
             LOGGER.log(Level.SEVERE, e.getMessage(), e);
         }
@@ -160,7 +166,7 @@ public final class LTCEditor extends LTCGui {
             }
         }
     };
-    private final JTextField authorField = new JTextField(); // TODO: customize this!
+    private final JTextField authorField = new AuthorSetField(authorModel);
     private final DateField dateField = new DateField();
     private final JTextField revField = new JTextField();
     private final JButton saveButton = new JButton(new AbstractAction("Save ("+'\u2318'+"S)") {
@@ -279,6 +285,53 @@ public final class LTCEditor extends LTCGui {
                 getUpdateButton().doClick();
             }
         });
+        authorField.setEnabled(false); // TODO: re-enable once figuring out the editing!
+        authorField.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                getUpdateButton().doClick();
+            }
+        });
+        authorField.setTransferHandler(new TransferHandler() {
+            @Override
+            public boolean canImport(TransferSupport support) {
+                if (support.isDataFlavorSupported(AUTHOR_FLAVOR) ||
+                        support.isDataFlavorSupported(DataFlavor.stringFlavor))
+                    return true;
+                return false;
+            }
+            @Override
+            public boolean importData(TransferSupport support) {
+                if (!canImport(support))
+                    return false;
+                // Fetch the Transferable and its data
+                try {
+                    Transferable t = support.getTransferable();
+                    DataFlavor[] flavors = t.getTransferDataFlavors();
+                    if (flavors == null || flavors.length < 1)
+                        return false; // cannot get flavor
+                    Class representationClass = flavors[0].getRepresentationClass();
+                    String authorName = "";
+                    // first try author representation:
+                    if (Author.class.equals(representationClass))
+                        authorName = ((Author) t.getTransferData(AUTHOR_FLAVOR)).name;
+                    // now try text representations:
+                    DataFlavor bestTextFlavor = DataFlavor.selectBestTextFlavor(flavors);
+                    if (bestTextFlavor != null)
+                        authorName = ((String) t.getTransferData(stringFlavor)).trim();
+                    // update text field if anything was successfully transfered:
+                    if (!"".equals(authorName)) {
+                        String currentText = authorField.getText().trim();
+                        authorField.setText("".equals(currentText)?authorName:currentText+", "+authorName);
+                        return true; // signal success
+                    }
+                } catch (UnsupportedFlavorException e) {
+                    LOGGER.log(Level.SEVERE, e.getMessage(), e);
+                } catch (IOException e) {
+                    LOGGER.log(Level.SEVERE, e.getMessage(), e);
+                }
+                return false;
+            }
+        });
         dateField.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 getUpdateButton().doClick();
@@ -382,10 +435,10 @@ public final class LTCEditor extends LTCGui {
     }
 
     // for label + text field
-    private JPanel createTextInputPane(String label, JTextField field) {
+    private JPanel createTextInputPane(String label, Component component) {
         JPanel panel = new JPanel(new BorderLayout(5,0));
         panel.add(new JLabel(label), BorderLayout.LINE_START);
-        panel.add(field, BorderLayout.CENTER);
+        panel.add(component, BorderLayout.CENTER);
         return panel;
     }
 
@@ -446,27 +499,6 @@ public final class LTCEditor extends LTCGui {
         filteringPane.add(buttonPane, BorderLayout.PAGE_END);
 
         // 2) authors panel
-//        authorList.addMouseListener(new MouseAdapter() {
-//            public void mouseClicked(MouseEvent e) {
-//                if (e.getClickCount() == 2) {
-//                    Object o = authorModel.getElementAt(authorList.locationToIndex(e.getPoint()));
-//                    if (o instanceof AuthorCell) {
-//                        AuthorCell ac = (AuthorCell) o;
-//                        Color newColor = JColorChooser.showDialog(getFrame(),
-//                                "Choose Author Color",
-//                                ac.getColor());
-//                        if (newColor != null) {
-//                            boolean changed = ac.setColor(newColor);
-//                            if (changed) {
-//                                session.colors(ac.author.name, ac.author.email, LTCserverImpl.convertToHex(newColor));
-//                                authorModel.fireChanged(ac); // propagate update to self combo
-//                                getUpdateButton().doClick();
-//                            }
-//                        }
-//                    }
-//                }
-//            }
-//        });
 
 //        JButton button = (JButton) authorButtons.add(new JButton(new AbstractAction("Reset") {
 //            private static final long serialVersionUID = -7513335226809639324L;
@@ -491,7 +523,6 @@ public final class LTCEditor extends LTCGui {
 //                }
 //            }
 //        });
-//        authorPane.add(authorButtons, BorderLayout.PAGE_END);
 
         return filteringPane;
     }
@@ -514,11 +545,40 @@ public final class LTCEditor extends LTCGui {
     }
 
     private void createLowerRightPane(JPanel panel) {
+        // commit table
+        final JTable table = new CommitTable(commitModel, authorModel);
+        // listen to double-clicks in the author column:
+        table.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent event) {
+                if (event.getClickCount() > 1) {
+                    Point p = event.getPoint();
+                    Object o = table.getValueAt(table.rowAtPoint(p), table.columnAtPoint(p));
+                    if (o instanceof Author) {
+                        Author author = (Author) o;
+                        AuthorCell ac = authorModel.getCellForAuthor(author);
+                        Color newColor = JColorChooser.showDialog(event.getComponent(),
+                                "Choose Author Color",
+                                ac.getColor());
+                        if (newColor != null) {
+                            boolean changed = ac.setColor(newColor);
+                            if (changed) {
+                                session.colors(ac.author.name, ac.author.email, LTCserverImpl.convertToHex(newColor));
+                                authorModel.fireChanged(ac); // propagate update to self combo
+                                getUpdateButton().doClick();
+                            }
+                        }
+                    }
+                }
+//                super.mouseClicked(event);  // TODO: let others handle the event?
+            }
+        });
+
         panel.setBorder(BorderFactory.createCompoundBorder(
                 BorderFactory.createTitledBorder(" Content Tracking & Filtering "),
                 BorderFactory.createEmptyBorder(0, 5, 0, 5)));
         panel.setLayout(new BorderLayout(0, 5));
-        panel.add(new JScrollPane(new CommitTable(commitModel, authorModel)), BorderLayout.CENTER);
+        panel.add(new JScrollPane(table), BorderLayout.CENTER);
         panel.add(createFilteringPane(), BorderLayout.PAGE_END);
     }
 

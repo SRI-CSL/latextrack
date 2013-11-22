@@ -40,7 +40,7 @@ public final class AuthorCell implements Comparable<AuthorCell> {
         if (author == null)
             throw new IllegalArgumentException("Cannot create author cell with NULL author");
         this.author = author;
-        this.label = author.toString();
+        this.label = author.name; // use short form
         this.color = color;
     }
 
@@ -62,7 +62,7 @@ public final class AuthorCell implements Comparable<AuthorCell> {
 
     @Override
     public String toString() {
-        return label+" -> "+color;
+        return author+" -> "+color;
     }
 
     @Override

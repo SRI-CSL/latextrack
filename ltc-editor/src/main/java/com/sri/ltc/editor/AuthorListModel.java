@@ -99,11 +99,18 @@ public final class AuthorListModel extends AbstractListModel {
     }
 
     public Color getColorForAuthor(Author author) {
-        synchronized (authors) {
-            int index =  getIndex(new AuthorCell(author, null));
-            if (index == -1)
+        AuthorCell ac = getCellForAuthor(author);
+        if (ac == null)
                 return Color.black; // given author is not yet known
-            return ((AuthorCell) getElementAt(index)).getColor();
+        return ac.getColor();
+    }
+
+    public AuthorCell getCellForAuthor(Author author) {
+        synchronized (authors) {
+            int index = getIndex(new AuthorCell(author, null));
+            if (index == -1)
+                return null; // given author is not yet known
+            return (AuthorCell) getElementAt(index);
         }
     }
 
@@ -127,7 +134,7 @@ public final class AuthorListModel extends AbstractListModel {
                 authorCell.limited = true;
             fireAllChanged();
         }
-        session.setLimitedAuthors(true, null);
+        session.setLimitedAuthors(null);
     }
 
     public void setLimited(int[] indices, boolean limited) {
@@ -149,6 +156,6 @@ public final class AuthorListModel extends AbstractListModel {
             }
             fireAllChanged();
         }
-        session.setLimitedAuthors(allLimited, limitedAuthors);
+        session.setLimitedAuthors(allLimited?null:limitedAuthors);
     }
 }
