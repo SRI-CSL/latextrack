@@ -118,12 +118,23 @@ public final class CommitTable extends JTable {
                     builder.append(width);
                     if (i < tcm.getColumnCount() - 1)
                         builder.append(", ");
-                    preferences.putInt(KEY_PREF_WIDTH+i, width);
+                    preferences.putInt(KEY_PREF_WIDTH + i, width);
                 }
                 builder.append("]");
                 LOGGER.config(builder.toString());
             }
         });
+    }
+
+    @Override
+    public boolean isCellEditable(int row, int col) {
+        // only the first row with authors is editable!
+        if (row > 0)
+            return false;
+        Object o = getValueAt(row, col);
+        if (o instanceof Author)
+            return true;
+        return false;
     }
 
     private class CommitTransferHandler extends TransferHandler {

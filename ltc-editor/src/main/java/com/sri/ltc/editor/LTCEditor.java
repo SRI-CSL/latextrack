@@ -35,6 +35,7 @@ import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
 
 import javax.swing.*;
+import javax.swing.Timer;
 import javax.swing.event.*;
 import javax.swing.text.BadLocationException;
 import java.awt.*;
@@ -87,6 +88,8 @@ public final class LTCEditor extends LTCGui {
             LOGGER.log(Level.SEVERE, e.getMessage(), e);
         }
     }
+    private final static int CLICK_INTERVAL = (Integer)Toolkit.getDefaultToolkit().
+            getDesktopProperty("awt.multiClickInterval");
 
     private final LTCSession session = new LTCSession(this);
 
@@ -527,50 +530,60 @@ public final class LTCEditor extends LTCGui {
         return filteringPane;
     }
 
-    @SuppressWarnings("unchecked")
-    private JPanel createContentTrackingPane() {
-        JPanel contentTrackingPane = new JPanel(new BorderLayout(0,5));
-
-        // 1) self combo box/label: as card layout
-        final JPanel selfPane = new JPanel(new BorderLayout(0, 0));
-        selfPane.add(new JLabel("Self: "), BorderLayout.LINE_START);
-        final JComboBox selfCombo = new JComboBox(selfModel);
-        selfCombo.setEditable(true);
-        selfCombo.setRenderer(new SelfComboBoxRenderer());
-        selfCombo.setEditor(new SelfComboBoxEditor(authorModel, textPane));
-        selfPane.add(selfCombo, BorderLayout.CENTER);
-        contentTrackingPane.add(selfPane, BorderLayout.PAGE_START);
-
-        return contentTrackingPane;
-    }
-
     private void createLowerRightPane(JPanel panel) {
         // commit table
         final JTable table = new CommitTable(commitModel, authorModel);
+        table.putClientProperty("JTable.autoStartsEdit", Boolean.FALSE);
+        // provide editing of authors (only first row though!)
+        JComboBox selfCombo = new JComboBox(selfModel);
+        selfCombo.setEditable(true);
+        selfCombo.setRenderer(new SelfComboBoxRenderer());
+        selfCombo.setEditor(new SelfComboBoxEditor(authorModel, textPane));
+        selfCombo.setBorder(BorderFactory.createEmptyBorder());
+        table.setDefaultEditor(Author.class, new DefaultCellEditor(selfCombo) {
+            Timer timer;
+            boolean wasDoubleClick = false;
+
+            @Override
+            public boolean isCellEditable(final EventObject e) {
+                if (e instanceof MouseEvent) {
+                    final MouseEvent event = (MouseEvent) e;
+                    if (event.getClickCount() == 2) {
+                        wasDoubleClick = true;
+                        return true;
+                    } else {
+                        timer = new Timer(CLICK_INTERVAL, new ActionListener() {
+                            @Override
+                            public void actionPerformed(ActionEvent evt) {
+                                if (wasDoubleClick) {
+                                    wasDoubleClick = false; // reset flag
+                                } else {
+                                    int row = ((JTable) event.getSource()).rowAtPoint(event.getPoint());
+                                    int col = ((JTable) event.getSource()).columnAtPoint(event.getPoint());
+                                    chooseAuthorColor(event.getComponent(), (Author) table.getValueAt(row, col));
+                                }
+                            }
+                        });
+                        timer.setRepeats(false);
+                        timer.start();
+                    }
+                    return false;
+                }
+                return false;
+            }
+        });
         // listen to double-clicks in the author column:
         table.addMouseListener(new MouseAdapter() {
             @Override
-            public void mouseClicked(MouseEvent event) {
-                if (event.getClickCount() > 1) {
-                    Point p = event.getPoint();
-                    Object o = table.getValueAt(table.rowAtPoint(p), table.columnAtPoint(p));
-                    if (o instanceof Author) {
-                        Author author = (Author) o;
-                        AuthorCell ac = authorModel.getCellForAuthor(author);
-                        Color newColor = JColorChooser.showDialog(event.getComponent(),
-                                "Choose Author Color",
-                                ac.getColor());
-                        if (newColor != null) {
-                            boolean changed = ac.setColor(newColor);
-                            if (changed) {
-                                session.colors(ac.author.name, ac.author.email, LTCserverImpl.convertToHex(newColor));
-                                authorModel.fireChanged(ac); // propagate update to self combo
-                                getUpdateButton().doClick();
-                            }
-                        }
-                    }
+            public void mouseClicked(final MouseEvent event) {
+                Point p = event.getPoint();
+                int row = table.rowAtPoint(p);
+                int col = table.columnAtPoint(p);
+                final Object o = table.getValueAt(row, col);
+                if (o instanceof Author) {
+                    if (!table.isCellEditable(row, col) && event.getClickCount() == 1)
+                        chooseAuthorColor(event.getComponent(), (Author) o);
                 }
-//                super.mouseClicked(event);  // TODO: let others handle the event?
             }
         });
 
@@ -580,6 +593,21 @@ public final class LTCEditor extends LTCGui {
         panel.setLayout(new BorderLayout(0, 5));
         panel.add(new JScrollPane(table), BorderLayout.CENTER);
         panel.add(createFilteringPane(), BorderLayout.PAGE_END);
+    }
+
+    private void chooseAuthorColor(Component component, Author author) {
+        AuthorCell ac = authorModel.getCellForAuthor(author);
+        Color newColor = JColorChooser.showDialog(component,
+                "Choose Author Color",
+                ac.getColor());
+        if (newColor != null) {
+            boolean changed = ac.setColor(newColor);
+            if (changed) {
+                session.colors(ac.author.name, ac.author.email, LTCserverImpl.convertToHex(newColor));
+                authorModel.fireChanged(ac); // propagate update to self combo
+                getUpdateButton().doClick();
+            }
+        }
     }
 
     public LTCEditor() {
