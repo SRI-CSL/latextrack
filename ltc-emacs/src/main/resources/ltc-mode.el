@@ -151,7 +151,7 @@
 
 (defvar commit-graph nil 
   "Commit graph structure containing one element per commit: 
-(id date (author-name author email) message isActive (list-of-parents) (list-of-children))")
+(id date (author-name author email) message isActive isLast color (columns....)? OR: (list-of-parents) (list-of-children))")
 (make-variable-buffer-local 'commit-graph)
 
 (defvar self nil "3-tuple of current author when session is initialized.")
@@ -399,6 +399,7 @@
 				  (cdr (assoc-string "authors" map))))
 	     (styles (cdr (assoc-string "styles" map)))
 	     (revisions (cdr (assoc-string "revs" map)))
+	     (last (cdr (assoc-string "last_rev" map)))
 	     (commits (ltc-method-call "get_commits" session-id)) ; list of 6-tuple strings
 	     )
 	(setq self (ltc-method-call "get_self" session-id)) ; get current author and color
@@ -434,7 +435,7 @@
 		      )) styles))
 	(ltc-add-edit-hooks) ; add (local) hooks to capture user's edits
 	;; update commit graph in temp info buffer
-	(setq commit-graph (init-commit-graph commits revisions))
+	(setq commit-graph (init-commit-graph commits revisions last))
 	(update-info-buffer)
 	(set-buffer-modified-p old-buffer-modified-p) ; restore modification flag
 	))
@@ -618,7 +619,7 @@
 	(y-or-n-p "Include repository? "))x1 
      '(nil nil nil))) ; sets directory = nil and msg = nil and includeSrc = nil
   (when directory
-    ;; TODO: copy current contents of *Messages* buffer to a new file Messages.txt in the directory
+    ;; copy current contents of *Messages* buffer to a new file Messages.txt in the directory
     (let ((mbuf (get-buffer "*Messages*"))
 	  (filename (concat directory "Messages.txt")))
       (if mbuf
@@ -632,11 +633,15 @@
 
 ;;; --- info buffer functions
 
-(defun init-commit-graph (commits &optional ids)
-  "Init commit graph from given COMMITS.  If a list of IDS is given (optional), those will be used to determine the activation state.  In this case, the first entry of the list is left untouched if it exists.  The author in the first entry in the list will be the current self in either case.
+(defun init-commit-graph (commits &optional ids last)
+  "Init commit graph from given COMMITS.  
+
+If a list of IDS is given (optional), those will be used to determine the activation state.  In this case, the first entry of the list is left untouched if it exists.  The author in the first entry in the list will be the current self in either case.
+
+If LAST is given, use this revision to set 'isLast' of the respective entry to t.
 
 Each entry in the commit graph that is returned, contains a list with the following elements:
- (ID date (name email) message isActive color (column (incoming-columns) (outgoing-columns) (passing-columns)))
+ (ID date (name email) message isActive isLast color (column (incoming-columns) (outgoing-columns) (passing-columns)))
 "
   (if ltc-mode
     ;; build commit graph 
@@ -754,7 +759,7 @@ Each entry in the commit graph that is returned, contains a list with the follow
 	    commits)
       ;; 4) prepend first row and assemble graph structure in list as return value:
       ;; each row:
-      ;;  (id date (name email) msg isActive color graph)
+      ;;  (id date (name email) msg isActive isLast color graph)
       ;;  where GRAPH is:
       ;;   (column incoming-columns outgoing-columns passing-columns)
       (cons 
@@ -767,7 +772,7 @@ Each entry in the commit graph that is returned, contains a list with the follow
 	    (concat "" (car (member (car (last ids)) (list modified on_disk))))
 	  (if commit-graph (caar commit-graph) "")) ; keep first ID if prior graph exists
 	;; set rest of first item to empty and self:
-	"" (list (car self) (nth 1 self)) "" t (nth 2 self) '(0 nil nil nil))
+	"" (list (car self) (nth 1 self)) "" t nil (nth 2 self) '(0 nil nil nil))
        ;; assemble rest of graph from list of commits and other data structures above:
        (mapcar (lambda (raw-commit)
 		 (let* ((id (car raw-commit))
@@ -779,13 +784,15 @@ Each entry in the commit graph that is returned, contains a list with the follow
 		    author ; (author-name author-email)
 		    ; limit message to first full stop, question or exclamation mark (followed by space) or newline (if any):
 		    (car (split-string (nth 1 raw-commit) "\\([.?!][:space:]+\\)\\|\n" t)) ; shortened message 
-		    (or (not ids) (not (not (member id ids)))) ; isActive: if no IDS, then t, otherwise look up 
+		    (or (not ids) (not (not (member id ids))))  ; isActive: if no IDS, then t, otherwise look up
+		    (if last  ; isLast: if no LAST, then nil, otherwise compare ID with LAST
+			(string= last id))
 		    (cdr (assoc author authors)) ; color of author
 		    (list ; graph:
-		     (cadr (assoc index circle-alist)) ; circle column
+		     (cadr (assoc index circle-alist))  ; circle column
 		     (cdr (assoc index incoming-alist)) ; incoming columns
 		     (cdr (assoc index outgoing-alist)) ; outgoing columns
-		     (cdr (assoc index passing-alist)) ; passing columns
+		     (cdr (assoc index passing-alist))  ; passing columns
 		     ))))
 	       commits)))
     nil) ; LTC session not valid: return NIL
@@ -890,6 +897,9 @@ The remaining arguments *-STRING denote the string representation of the charact
 	    (commit-top-bottom #x255e) ;#x251d)
 	    (commit-top #x2558) ;#x2515)
 	    (commit-bottom #x2552) ;#x250d)
+	    (commit-top-bottom-last #x256a)
+	    (commit-top-last #x2567)
+	    (commit-bottom-last #x2564)
 	    )
 	(define-key rev-map (kbd "<mouse-1>") 'ltc-select-rev)
 	(define-key date-map (kbd "<mouse-1>") 'ltc-select-date)
@@ -913,11 +923,14 @@ The remaining arguments *-STRING denote the string representation of the charact
 	;; second loop: build return value
 	(mapconcat (function (lambda (commit) 
 			       (let* ((is-active (nth 4 commit))
+				      (is-last (nth 5 commit))
 				      (author (author-to-string (nth 2 commit)))
 				      (disabledcolor "#7f7f7f")
-				      (facevalue (if is-active nil (list :foreground disabledcolor)))
+				      (facevalue (append 
+						  (if is-active nil (list :foreground disabledcolor))
+						  (if is-last (list :slant 'italic) nil)))
 				      (id (shorten 8 (car commit)))
-				      (graph (nth 6 commit))
+				      (graph (nth 7 commit))
 				      (circle (car graph))
 				      (incoming (nth 1 graph))
 				      (outgoing (nth 2 graph))
@@ -947,10 +960,14 @@ The remaining arguments *-STRING denote the string representation of the charact
 					  (mapconcat (lambda (x) (if (member x passing-after) "%c" " ")) after-seq "")
 					  " ")
 					 (append (make-list (length passing-before) #x2502) ; passing lines before
-						 ; circle column: depends on incoming and outgoing:
+						 ; circle column: depends on incoming and outgoing, as well as whether last:
 						 (list (if (member circle incoming)
-							   (if outgoing commit-top-bottom commit-top)
-							 (if outgoing commit-bottom ?\s)))
+							   (if outgoing 
+							       (if is-last commit-top-bottom-last commit-top-bottom)
+							     (if is-last commit-top-last commit-top))
+							 (if outgoing 
+							     (if is-last commit-bottom-last commit-bottom)
+							   ?\s)))
 						 (make-list (length passing-after) #x2502))) ; passing lines after
 				  (propertize 
 				   (format "%8s" id) ; short revision
@@ -975,7 +992,9 @@ The remaining arguments *-STRING denote the string representation of the charact
 				   'help-echo "mouse-1: set color"
 				   'keymap author-map
 				   'action (cons "textColor" (nth 2 commit))
-				   'face (list :foreground (if is-active (nth 5 commit) disabledcolor)))
+				   'face (append 
+					  (list :foreground (if is-active (nth 6 commit) disabledcolor))
+					  (if is-last (list :slant 'italic) nil)))
 				  (propertize 
 				   (format "%s" (nth 3 commit)) ; message
 				   'face facevalue)
