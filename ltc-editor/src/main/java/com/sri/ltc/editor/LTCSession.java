@@ -177,6 +177,7 @@ public class LTCSession {
                                 (List<Integer[]>) map.get(LTCserverInterface.KEY_STYLES),
                                 (Integer) map.get(LTCserverInterface.KEY_CARET),
                                 (List<String>) map.get(LTCserverInterface.KEY_REVS),
+                                (String) map.get(LTCserverInterface.KEY_LAST),
                                 commits);
                     } catch (InterruptedException e) {
                         LOGGER.log(Level.SEVERE, e.getMessage(), e);

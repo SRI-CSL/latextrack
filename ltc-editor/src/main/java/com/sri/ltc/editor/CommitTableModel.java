@@ -103,7 +103,7 @@ public final class CommitTableModel extends AbstractTableModel {
         return lowest;
     }
 
-    public void update(List<Object[]> rawCommits, Set<String> IDs) {
+    public void update(List<Object[]> rawCommits, Set<String> IDs, String lastID) {
         synchronized (commits) {
             clear(firstRow.author); // keep author in first row but delete the revision ID
 
@@ -178,8 +178,10 @@ public final class CommitTableModel extends AbstractTableModel {
                 setFirstID(LTCserverInterface.ON_DISK);
             if (IDs.contains(LTCserverInterface.MODIFIED))
                 setFirstID(LTCserverInterface.MODIFIED);
-            for (CommitTableRow row : commits)
+            for (CommitTableRow row : commits) {
                 row.setActive(IDs.contains(row.ID));
+                row.setLast(row.ID.equals(lastID));
+            }
         }
         fireTableDataChanged();
     }

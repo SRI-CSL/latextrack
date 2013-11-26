@@ -224,7 +224,7 @@ public final class LTCEditor extends LTCGui {
                                 String text,
                                 List<Integer[]> styles,
                                 int caretPosition,
-                                List<String> orderedIDs,
+                                List<String> orderedIDs, String lastID,
                                 List<Object[]> commits) {
         // update list of authors
         finishAuthors(new ArrayList<Object[]>(authors.values()), false); // don't run another update
@@ -234,7 +234,7 @@ public final class LTCEditor extends LTCGui {
             colors.put(entry.getKey(), Color.decode((String) entry.getValue()[2]));
         textPane.updateFromMaps(text, styles, colors, caretPosition, orderedIDs, commits);
         // update list of commits
-        commitModel.update(commits, new HashSet<String>(orderedIDs));
+        commitModel.update(commits, new HashSet<String>(orderedIDs), lastID);
         // update date field
         String date = dateField.getText();
         if (!date.isEmpty())

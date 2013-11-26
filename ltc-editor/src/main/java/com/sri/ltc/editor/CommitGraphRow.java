@@ -216,7 +216,11 @@ public final class CommitGraphRow {
             g2d.draw(circle);
             if (row.isActive())
                 g2d.fill(circle);
-
+            if (row.isLast())
+                g2d.draw(new Line2D.Float(
+                        xCircle + 1f, yCircle + diameter/2f, // start
+                        xCircle + diameter - 1f, yCircle + diameter/2f
+                ));
         }
 
         @Override

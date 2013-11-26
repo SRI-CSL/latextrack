@@ -40,6 +40,7 @@ public interface LTCserverInterface {
     public final static String KEY_AUTHORS = "authors";
     public final static String KEY_CARET = "caret";
     public final static String KEY_REVS = "revs";
+    public final static String KEY_LAST = "last_rev";
     public static enum BoolPrefs {SMALL, DELETIONS, PREAMBLE, COMMANDS, COMMENTS, COLLAPSE_AUTHORS, ALLOW_SIMILAR_COLORS};
     public final static String ON_DISK = "on disk"; // special name for version on disk (if file modified and not committed)
     public final static String MODIFIED = "modified"; // special name for text modified in editor
@@ -142,8 +143,11 @@ public interface LTCserverInterface {
      * The value under {@link #KEY_CARET} contains the transformed cursor
      * position into the new text of the one given as an argument to the method.
      * <p>
-     * Finally, an entry under {@link #KEY_REVS} in the returned map is a list of revision
-     * names from newest to oldest that have been used to obtain the changes.
+     * An entry under {@link #KEY_REVS} in the returned map is a list of revision
+     * names from newest to oldest that have been used to obtain the changes.  Also, the
+     * String under {@link #KEY_LAST} contains the revision name of the base version used
+     * in computing the difference, which can be mark as the last or limiting revision to
+     * the user.
      *
      *
      * @param sessionID identifies the session

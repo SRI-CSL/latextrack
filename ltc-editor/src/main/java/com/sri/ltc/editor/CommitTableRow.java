@@ -53,6 +53,7 @@ public final class CommitTableRow {
     final List<CommitTableRow> parents = new ArrayList<CommitTableRow>();
     final List<CommitTableRow> children = new ArrayList<CommitTableRow>();
     private boolean isActive = true;
+    private boolean isLast = false;
 
     public CommitTableRow(Object[] array) throws ParseException {
         if (array == null)
@@ -80,6 +81,14 @@ public final class CommitTableRow {
 
     public void setActive(boolean active) {
         isActive = active;
+    }
+
+    public boolean isLast() {
+        return isLast;
+    }
+
+    public void setLast(boolean last) {
+        isLast = last;
     }
 
     public Object getColumn(int column) {
