@@ -578,14 +578,17 @@
   (setq index (if (> dir 0) index (1- index))) ; if looking for previous change start with previous char
   (if (is-buf-border index dir)
       (ltc-log "No change until %s of document found" (if (> dir 0) "end" "beginning"))
-    (setq currface (get-text-property index 'face))
-    ;; repeat..until loop: go through all characters with the *same* face
+    (setq currface (car (get-text-property index 'face)))      ; nil, 'ltc-addition, or 'ltc-deletion
+    (setq currrevid (get-text-property index 'ltc-change-rev)) ; nil or revision ID
+    ;; repeat..until loop: go through all characters with the *same* face and revision ID to skip the current change
     (while (progn
 	     (setq index (+ index dir)) ; increment or decrement index
 	     ;; the "end-test" is the last item in progn:
 	     (and (not (is-buf-border index dir))
 		  (equal currface
-			 (get-text-property index 'face)))))
+			 (car (get-text-property index 'face)))
+		  (equal currrevid
+			 (get-text-property index 'ltc-change-rev)))))
     (if (is-buf-border index dir)
 	(ltc-log "No change until %s of document found" (if (> dir 0) "end" "beginning"))
       ;; else-form: now find the next char face with addition or deletion
@@ -1224,7 +1227,6 @@ change in both directions.  The optional argument FROM-UNDO-IN-REGION causes the
 to move to the end of an addition change to maintain the location after turning it into a deletion. 
 This function returns the end position after the change was undone."
   (let ((faceid (car (get-text-property start 'face)))) ; face ID is nil, 'ltc-addition or 'ltc-deletion
-	 ;(faceclr (plist-get (nth 1 face) :foreground))) ; color or nil
     ;; find left and right border of change:
     ;; compare with FACEID, and also REVID and FACECLR, if not nil
     (setq borders (mapcar (lambda (dir)
