@@ -24,18 +24,18 @@ package com.sri.ltc.editor;
 
 import articles.showpar.ShowParEditorKit;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import com.sri.ltc.CommonUtils;
 
 import javax.swing.*;
 import javax.swing.text.*;
 import java.awt.*;
-import java.awt.event.KeyAdapter;
-import java.awt.event.KeyEvent;
-import java.awt.event.MouseEvent;
+import java.awt.event.*;
 import java.text.ParseException;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.prefs.Preferences;
@@ -55,6 +55,7 @@ public final class LatexPane extends JTextPane {
     private final LatexDocumentFilter documentFilter = new LatexDocumentFilter(this);
     protected int last_key_pressed = -1;
     private final boolean editable;
+    private Point clickLocation = new Point();
 
     public LatexPane(boolean editable) {
         this.editable = editable;
@@ -95,6 +96,36 @@ public final class LatexPane extends JTextPane {
         // show tool tips almost immediately
         ToolTipManager.sharedInstance().setInitialDelay(100);
         ToolTipManager.sharedInstance().setReshowDelay(100);
+
+        // popup menu for move and undo actions (only if editable)
+        final JPopupMenu popupMenu = new JPopupMenu();
+        JMenuItem item;
+        item = popupMenu.add(new MoveToAction("Move to previous change", this, false, clickLocation));
+        item = popupMenu.add(new MoveToAction("Move to next change", this, true, clickLocation));
+        // if editable, then also allow "Undo" actions:
+        if (editable) {
+            popupMenu.addSeparator();
+            // TODO: implement actions
+            popupMenu.add(new JMenuItem("Undo this change"));
+            popupMenu.add(new JMenuItem("Undo changes by same author"));
+            popupMenu.add(new JMenuItem("Undo all changes in region"));
+        }
+        this.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mousePressed(MouseEvent e) {
+                maybeShowPopup(e);
+            }
+            @Override
+            public void mouseReleased(MouseEvent e) {
+                maybeShowPopup(e);
+            }
+            private void maybeShowPopup(MouseEvent e) {
+                if (e.isPopupTrigger()) {
+                    clickLocation.setLocation(e.getPoint());
+                    popupMenu.show(e.getComponent(), e.getX(), e.getY());
+                }
+            }
+        });
     }
 
     // show (line, column) location of text in tool tips
@@ -252,5 +283,62 @@ public final class LatexPane extends JTextPane {
             LOGGER.log(Level.SEVERE, "while updating text", e);
         }
         startFiltering();
+    }
+
+    /**
+     * Compare text attributes at given indices whether or not they are equal.
+     *
+     * If at least one of the given indices is outside the scope of the current document, this
+     * test returns false.
+     *
+     * @param start First position to test against.  If outside of document, will return false
+     * @param index Position to compare with first.  If outside of document, will return false
+     * @param attrs Set of text attributes to look for.  If <code>null</code> or empty set given,
+     *              then the test is always positive (i.e., returns true).  Otherwise, all the
+     *              given attributes must match
+     * @return true, if all attributes of interest are equal at both indices and false otherwise
+     */
+    protected boolean areEqualIndices(int start, int index, Set<TextAttribute> attrs) {
+        if (attrs == null)
+            return true;
+        // test that neither position is out of bounds:
+        for (int i : Sets.newHashSet(start, index))
+            if (i < 0 || i > getDocument().getLength())
+                return false;
+        // go through all attributes and compare them for the given indices:
+        // if any does not match, we can abort and return false
+        for (TextAttribute attribute : attrs)
+            if (!attribute.isMatch(
+                    getStyledDocument().getCharacterElement(start).getAttributes(),
+                    getStyledDocument().getCharacterElement(index).getAttributes()))
+                return false;
+        return true;
+    }
+    enum TextAttribute {
+        Style {
+            @Override
+            boolean isMatch(AttributeSet as1, AttributeSet as2) {
+                String name1 = (String) as1.getAttribute(StyleConstants.NameAttribute);
+                String name2 = (String) as2.getAttribute(StyleConstants.NameAttribute);
+                return name1 == null?name2 == null:name1.equals(name2);
+            }
+        },
+        Revision {
+            @Override
+            boolean isMatch(AttributeSet as1, AttributeSet as2) {
+                String rev1 = (String) as1.getAttribute(REVISION_ATTR);
+                String rev2 = (String) as2.getAttribute(REVISION_ATTR);
+                return rev1 == null?rev2 == null:rev1.equals(rev2);
+            }
+        },
+        Author {
+            @Override
+            boolean isMatch(AttributeSet as1, AttributeSet as2) {
+                Color c1 = (Color) as1.getAttribute(StyleConstants.Foreground);
+                Color c2 = (Color) as2.getAttribute(StyleConstants.Foreground);
+                return c1 == null?c2 == null:c1.equals(c2);
+            }
+        };
+        abstract boolean isMatch(AttributeSet as1, AttributeSet as2);
     }
 }
