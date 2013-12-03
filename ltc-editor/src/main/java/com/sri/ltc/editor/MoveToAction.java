@@ -1,6 +1,7 @@
 package com.sri.ltc.editor;
 
 import com.google.common.collect.Sets;
+import com.sun.istack.internal.NotNull;
 
 import javax.swing.*;
 import java.awt.*;
@@ -16,8 +17,8 @@ public final class MoveToAction extends AbstractAction {
     private final boolean isForward;
     private Point clickLocation;
 
-    public MoveToAction(String name, LatexPane latexPane, boolean forward, Point clickLocation) {
-        super(name);
+    public MoveToAction(@NotNull LatexPane latexPane, boolean forward, Point clickLocation) {
+        super("Move to "+(forward?"next":"previous")+" change");
         this.latexPane = latexPane;
         isForward = forward;
         this.clickLocation = clickLocation;
@@ -54,6 +55,7 @@ public final class MoveToAction extends AbstractAction {
             index++; // increment position if looking for end of previous change
         latexPane.setCaretPosition(index);
     }
+
     private boolean testBorder(int index) {
         boolean result;
         if (isForward)

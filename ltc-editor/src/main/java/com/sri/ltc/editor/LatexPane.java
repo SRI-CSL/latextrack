@@ -28,6 +28,8 @@ import com.google.common.collect.Sets;
 import com.sri.ltc.CommonUtils;
 
 import javax.swing.*;
+import javax.swing.event.CaretEvent;
+import javax.swing.event.CaretListener;
 import javax.swing.text.*;
 import java.awt.*;
 import java.awt.event.*;
@@ -56,6 +58,7 @@ public final class LatexPane extends JTextPane {
     protected int last_key_pressed = -1;
     private final boolean editable;
     private Point clickLocation = new Point();
+    private DotMark selectionLocation = new DotMark();
 
     public LatexPane(boolean editable) {
         this.editable = editable;
@@ -99,18 +102,23 @@ public final class LatexPane extends JTextPane {
 
         // popup menu for move and undo actions (only if editable)
         final JPopupMenu popupMenu = new JPopupMenu();
-        JMenuItem item;
-        item = popupMenu.add(new MoveToAction("Move to previous change", this, false, clickLocation));
-        item = popupMenu.add(new MoveToAction("Move to next change", this, true, clickLocation));
+        popupMenu.add(new MoveToAction(this, false, clickLocation));
+        popupMenu.add(new MoveToAction(this, true, clickLocation));
         // if editable, then also allow "Undo" actions:
         if (editable) {
             popupMenu.addSeparator();
-            // TODO: implement actions
-            popupMenu.add(new JMenuItem("Undo this change"));
-            popupMenu.add(new JMenuItem("Undo changes by same author"));
-            popupMenu.add(new JMenuItem("Undo all changes in region"));
+            popupMenu.add(new UndoChangesAction(this, UndoChangesAction.UndoType.ByRev, clickLocation, selectionLocation));
+            popupMenu.add(new UndoChangesAction(this, UndoChangesAction.UndoType.ByAuthor, clickLocation, selectionLocation));
+            popupMenu.add(new UndoChangesAction(this, UndoChangesAction.UndoType.InRegion, clickLocation, selectionLocation));
+            // listen for selections of regions:
+            addCaretListener(new CaretListener() {
+                @Override
+                public void caretUpdate(CaretEvent e) {
+                    selectionLocation.set(e.getDot(), e.getMark());
+                }
+            });
         }
-        this.addMouseListener(new MouseAdapter() {
+        addMouseListener(new MouseAdapter() {
             @Override
             public void mousePressed(MouseEvent e) {
                 maybeShowPopup(e);
@@ -314,6 +322,85 @@ public final class LatexPane extends JTextPane {
                 return false;
         return true;
     }
+
+    /**
+     * Undo change at given start location.
+     *
+     * If mode is <code>null</code>, we are operating in a region, so only regard change going
+     * forward from start location and matching the same style.
+     *
+     * If mode is <code>{@link TextAttribute.Revision}</code> then flip the change that stretches
+     * backward and forward with the same revision ID than the given start location (if any).
+     *
+     * If mode is <code>{@link TextAttribute.Author}</code> then flip the change that stretches
+     * backward and forward with the same foreground color and style than the given start location
+     * (if any).
+     *
+     * This function returns the end position of the change found and undone or -1 if the given
+     * start location is a not valid position in the document or does not denote a change.
+     *
+     * @param start
+     * @param end
+     * @param mode
+     * @return right border position of the change found or -1 if there was no change to match
+     */
+    protected int undoChange(int start, int end, TextAttribute mode) {
+        if (start < 0 || start > getDocument().getLength())
+            return -1;
+        // get attributes at start location (if any):
+        String style = (String) getStyledDocument().getCharacterElement(start).getAttributes()
+                .getAttribute(StyleConstants.NameAttribute); // "default" or addition/deletion
+        Object revision = getStyledDocument().getCharacterElement(start).getAttributes()
+                .getAttribute(REVISION_ATTR);
+        if (TextAttribute.Revision.equals(mode) && revision == null) {
+            JOptionPane.showMessageDialog(this,
+                    "Cannot undo change of same revision at "+start+" as no change found.",
+                    "No change found",
+                    JOptionPane.INFORMATION_MESSAGE);
+            return -1;
+        }
+        Object color = getStyledDocument().getCharacterElement(start).getAttributes()
+                .getAttribute(StyleConstants.Foreground);
+        if (TextAttribute.Author.equals(mode) && color == null) {
+            JOptionPane.showMessageDialog(this,
+                    "Cannot undo changes of same color at "+start+" as no change found.",
+                    "No change found",
+                    JOptionPane.INFORMATION_MESSAGE);
+            return -1;
+        }
+        // find left and right border of change (or non-change):
+        int left = start;
+        if (mode != null) { // go backwards: (only if not in region)
+            int index = start - 1;
+            for (;
+                 index >= 0 && areSameChange(index, mode, style, revision, color);
+                 index--);
+            left = index + 1;
+        }
+        int index = start;
+        for (;
+             index <= end && areSameChange(index, mode, style, revision, color);
+             index++);
+        int right = index;
+        if (!"default".equals(style)) {
+            // TODO: implement
+
+            System.out.println("Flipping change in ["+left+", "+right+"[ of style = "+style);
+        }
+        return right;
+    }
+
+    private boolean areSameChange(int index, TextAttribute mode, Object style, Object revision, Object color) {
+        return style.equals(getStyledDocument().getCharacterElement(index).getAttributes()
+                .getAttribute(StyleConstants.NameAttribute)) &&
+                (!TextAttribute.Revision.equals(mode) || // skip test, if mode == null
+                        revision.equals(getStyledDocument().getCharacterElement(index).getAttributes()
+                                .getAttribute(REVISION_ATTR))) &&
+                (!TextAttribute.Author.equals(mode) || // skip test, if mode == null
+                        color.equals(getStyledDocument().getCharacterElement(index).getAttributes()
+                                .getAttribute(StyleConstants.Foreground)));
+    }
+
     enum TextAttribute {
         Style {
             @Override
