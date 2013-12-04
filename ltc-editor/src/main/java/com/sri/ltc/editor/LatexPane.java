@@ -52,7 +52,34 @@ public final class LatexPane extends JTextPane {
     private static final String KEY_SHOW_PARAGRAPHS = "showParagraphs";
     private static final String REVISION_ATTR = "revision attribute";
     private static final String DATE_ATTR = "date attribute";
-    protected final static String STYLE_PREFIX = "style no. ";
+
+    protected enum LTCStyle {
+        None { // = 0
+            @Override
+            LTCStyle flip() {
+                return None;
+            }
+        },
+        Addition { // = 1
+            @Override
+            LTCStyle flip() {
+                return Deletion;
+            }
+        },
+        Deletion { // = 2
+            @Override
+            LTCStyle flip() {
+                return Addition;
+            }
+        };
+        String getName() {
+            if (None.equals(this))
+                return "default";
+            else
+                return "style no. "+ordinal();
+        }
+        abstract LTCStyle flip();
+    }
 
     private final LatexDocumentFilter documentFilter = new LatexDocumentFilter(this);
     protected int last_key_pressed = -1;
@@ -81,10 +108,10 @@ public final class LatexPane extends JTextPane {
         StyledDocument document = getStyledDocument();
         Style style;
 
-        style = document.addStyle(STYLE_PREFIX+1, null); // addition
+        style = document.addStyle(LTCStyle.Addition.getName(), null);
         StyleConstants.setUnderline(style, true);
 
-        style = document.addStyle(STYLE_PREFIX+2, null); // deletion
+        style = document.addStyle(LTCStyle.Deletion.getName(), null);
         StyleConstants.setStrikeThrough(style, true);
 
         // more initialization
@@ -255,7 +282,7 @@ public final class LatexPane extends JTextPane {
                 Style style;
                 for (Integer[] tuple : styles) {
                     if (tuple != null && tuple.length >= 5) {
-                        style = document.getStyle(STYLE_PREFIX+tuple[2]);
+                        style = document.getStyle(LTCStyle.values()[tuple[2]].getName());
                         StyleConstants.setForeground(style, colors.get(tuple[3]));
                         if (orderedIDs != null) {  // add meta data about this change
                             String revision = orderedIDs.get(tuple[4]);

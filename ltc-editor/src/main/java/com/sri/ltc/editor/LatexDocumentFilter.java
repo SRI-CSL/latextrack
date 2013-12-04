@@ -80,7 +80,7 @@ public final class LatexDocumentFilter extends DocumentFilter {
         synchronized (color) {
             // prepare deletion style
             StyledDocument document = (StyledDocument) fb.getDocument();
-            Style style = document.getStyle(LatexPane.STYLE_PREFIX+2);
+            Style style = document.getStyle(LatexPane.LTCStyle.Deletion.getName());
             StyleConstants.setForeground(style, color);
 
             // go through each character and check: not already removed & addition by current author or not
@@ -129,7 +129,7 @@ public final class LatexDocumentFilter extends DocumentFilter {
         if ("".equals(text)) return;
 
         synchronized (color) {
-            Style style = ((StyledDocument) fb.getDocument()).getStyle(LatexPane.STYLE_PREFIX+1);
+            Style style = ((StyledDocument) fb.getDocument()).getStyle(LatexPane.LTCStyle.Addition.getName());
             StyleConstants.setForeground(style, color);
             fb.insertString(offset, text, style); // TODO: does this move caret to end of insertion?
             fireChange();
