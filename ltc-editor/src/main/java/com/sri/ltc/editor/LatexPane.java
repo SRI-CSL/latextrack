@@ -24,21 +24,25 @@ package com.sri.ltc.editor;
 
 import articles.showpar.ShowParEditorKit;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import com.sri.ltc.CommonUtils;
 
 import javax.swing.*;
+import javax.swing.event.CaretEvent;
+import javax.swing.event.CaretListener;
 import javax.swing.text.*;
 import java.awt.*;
-import java.awt.event.KeyAdapter;
-import java.awt.event.KeyEvent;
-import java.awt.event.MouseEvent;
+import java.awt.event.*;
 import java.text.ParseException;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.prefs.Preferences;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * @author linda
@@ -48,13 +52,34 @@ public final class LatexPane extends JTextPane {
 
     private static final Logger LOGGER = Logger.getLogger(LatexPane.class.getName());
     private static final String KEY_SHOW_PARAGRAPHS = "showParagraphs";
-    private static final String REVISION_ATTR = "revision attribute";
-    private static final String DATE_ATTR = "date attribute";
-    protected final static String STYLE_PREFIX = "style no. ";
+    static final String REVISION_ATTR = "revision attribute";
+    static final String DATE_ATTR = "date attribute";
+
+    private static final Pattern STYLE_PATTERN = Pattern.compile("style no\\. ([12])");
+    protected enum LTCStyle {
+        None, // = 0
+        Addition, // = 1
+        Deletion; // = 2
+        String getName() {
+            if (None.equals(this))
+                return "default";
+            else
+                return "style no. "+ordinal();
+        }
+        static LTCStyle createByName(String name) {
+            if (name == null) throw new IllegalArgumentException("Cannot create LTCStyle from NULL");
+            if ("default".equals(name)) return None;
+            Matcher matcher = STYLE_PATTERN.matcher(name);
+            if (!matcher.matches()) throw new RuntimeException("Cannot create LTCStyle from name="+name);
+            return LTCStyle.values()[Integer.parseInt(matcher.group(1))];
+        }
+    }
 
     private final LatexDocumentFilter documentFilter = new LatexDocumentFilter(this);
     protected int last_key_pressed = -1;
     private final boolean editable;
+    private Point clickLocation = new Point();
+    private DotMark selectionLocation = new DotMark();
 
     public LatexPane(boolean editable) {
         this.editable = editable;
@@ -77,10 +102,10 @@ public final class LatexPane extends JTextPane {
         StyledDocument document = getStyledDocument();
         Style style;
 
-        style = document.addStyle(STYLE_PREFIX+1, null); // addition
+        style = document.addStyle(LTCStyle.Addition.getName(), null);
         StyleConstants.setUnderline(style, true);
 
-        style = document.addStyle(STYLE_PREFIX+2, null); // deletion
+        style = document.addStyle(LTCStyle.Deletion.getName(), null);
         StyleConstants.setStrikeThrough(style, true);
 
         // more initialization
@@ -91,10 +116,47 @@ public final class LatexPane extends JTextPane {
         setFont(font);
         setJTextPaneFont(this, font, Color.black);
 
+        ((AbstractDocument) document).setDocumentFilter(documentFilter);
+
         setToolTipText(""); // turns on tool tips
         // show tool tips almost immediately
         ToolTipManager.sharedInstance().setInitialDelay(100);
         ToolTipManager.sharedInstance().setReshowDelay(100);
+
+        // popup menu for move and undo actions (only if editable)
+        final JPopupMenu popupMenu = new JPopupMenu();
+        popupMenu.add(new MoveToAction(this, false, clickLocation));
+        popupMenu.add(new MoveToAction(this, true, clickLocation));
+        // if editable, then also allow "Undo" actions:
+        if (editable) {
+            popupMenu.addSeparator();
+            popupMenu.add(new UndoChangesAction(this, UndoChangesAction.UndoType.ByRev, clickLocation, selectionLocation));
+            popupMenu.add(new UndoChangesAction(this, UndoChangesAction.UndoType.ByAuthor, clickLocation, selectionLocation));
+            popupMenu.add(new UndoChangesAction(this, UndoChangesAction.UndoType.InRegion, clickLocation, selectionLocation));
+            // listen for selections of regions:
+            addCaretListener(new CaretListener() {
+                @Override
+                public void caretUpdate(CaretEvent e) {
+                    selectionLocation.set(e.getDot(), e.getMark());
+                }
+            });
+        }
+        addMouseListener(new MouseAdapter() {
+            @Override
+            public void mousePressed(MouseEvent e) {
+                maybeShowPopup(e);
+            }
+            @Override
+            public void mouseReleased(MouseEvent e) {
+                maybeShowPopup(e);
+            }
+            private void maybeShowPopup(MouseEvent e) {
+                if (e.isPopupTrigger()) {
+                    clickLocation.setLocation(e.getPoint());
+                    popupMenu.show(e.getComponent(), e.getX(), e.getY());
+                }
+            }
+        });
     }
 
     // show (line, column) location of text in tool tips
@@ -171,14 +233,15 @@ public final class LatexPane extends JTextPane {
     }
 
     public void startFiltering() {
-        ((AbstractDocument) getStyledDocument()).setDocumentFilter(documentFilter);
+        documentFilter.setFilter(true); // switch filtering ON
         setEditable(editable);
     }
 
     public List<Object[]> stopFiltering() {
         setEditable(false);
+        documentFilter.setFilter(false); // switch filtering OFF
         StyledDocument document = getStyledDocument();
-        ((AbstractDocument) document).setDocumentFilter(null);
+//        ((AbstractDocument) document).setDocumentFilter(null);
         // collect any deletions
         List<Object[]> deletions = Lists.newArrayList();
         int start = -1;
@@ -216,7 +279,7 @@ public final class LatexPane extends JTextPane {
                 Style style;
                 for (Integer[] tuple : styles) {
                     if (tuple != null && tuple.length >= 5) {
-                        style = document.getStyle(STYLE_PREFIX+tuple[2]);
+                        style = document.getStyle(LTCStyle.values()[tuple[2]].getName());
                         StyleConstants.setForeground(style, colors.get(tuple[3]));
                         if (orderedIDs != null) {  // add meta data about this change
                             String revision = orderedIDs.get(tuple[4]);
@@ -252,5 +315,165 @@ public final class LatexPane extends JTextPane {
             LOGGER.log(Level.SEVERE, "while updating text", e);
         }
         startFiltering();
+    }
+
+    /**
+     * Compare text attributes at given indices whether or not they are equal.
+     *
+     * If at least one of the given indices is outside the scope of the current document, this
+     * test returns false.
+     *
+     * @param start First position to test against.  If outside of document, will return false
+     * @param index Position to compare with first.  If outside of document, will return false
+     * @param attrs Set of text attributes to look for.  If <code>null</code> or empty set given,
+     *              then the test is always positive (i.e., returns true).  Otherwise, all the
+     *              given attributes must match
+     * @return true, if all attributes of interest are equal at both indices and false otherwise
+     */
+    protected boolean areEqualIndices(int start, int index, Set<TextAttribute> attrs) {
+        if (attrs == null)
+            return true;
+        // test that neither position is out of bounds:
+        for (int i : Sets.newHashSet(start, index))
+            if (i < 0 || i > getDocument().getLength())
+                return false;
+        // go through all attributes and compare them for the given indices:
+        // if any does not match, we can abort and return false
+        for (TextAttribute attribute : attrs)
+            if (!attribute.isMatch(
+                    getStyledDocument().getCharacterElement(start).getAttributes(),
+                    getStyledDocument().getCharacterElement(index).getAttributes()))
+                return false;
+        return true;
+    }
+
+    /**
+     * Undo change at given start location, i.e., all surrounding characters that are marked up
+     * with the same style (addition or deletion).  The given end location is also respected in
+     * that the change will never extend beyond this location.
+     *
+     * If mode is <code>null</code>, we are operating in a region, so only regard change going
+     * forward from start location and matching the same style.
+     *
+     * If mode is <code>{@link TextAttribute.Revision}</code> then flip the change that stretches
+     * backward and forward with the same revision ID than the given start location (if any).
+     *
+     * If mode is <code>{@link TextAttribute.Author}</code> then flip the change that stretches
+     * backward and forward with the same foreground color and style than the given start location
+     * (if any).
+     *
+     * This function returns the end position of the change found and undone or -1 if the given
+     * start location is a not valid position in the document or does not denote a change.
+     *
+     * @param start Start position of change to be undone
+     * @param end The change to be undone cannot go beyond this given location.  Use the current
+     *            length of the document if no restriction is needed
+     * @param mode Denotes the mode of matching the surrounding characters; only forward or
+     *             backward and matching by revision or author
+     * @return right border position of the change found or -1 if there was no change to match
+     */
+    protected int undoChange(int start, int end, TextAttribute mode) {
+        if (start < 0 || start > getDocument().getLength())
+            return -1;
+        // get attributes at start location (if any):
+        String style = (String) getStyledDocument().getCharacterElement(start).getAttributes()
+                .getAttribute(StyleConstants.NameAttribute); // "default" or addition/deletion
+        Object revision = getStyledDocument().getCharacterElement(start).getAttributes()
+                .getAttribute(REVISION_ATTR);
+        if (TextAttribute.Revision.equals(mode) && revision == null) {
+            JOptionPane.showMessageDialog(this,
+                    "Cannot undo change of same revision at "+start+" as no change found.",
+                    "No change found",
+                    JOptionPane.INFORMATION_MESSAGE);
+            return -1;
+        }
+        Object color = getStyledDocument().getCharacterElement(start).getAttributes()
+                .getAttribute(StyleConstants.Foreground);
+        if (TextAttribute.Author.equals(mode) && color == null) {
+            JOptionPane.showMessageDialog(this,
+                    "Cannot undo changes of same color at "+start+" as no change found.",
+                    "No change found",
+                    JOptionPane.INFORMATION_MESSAGE);
+            return -1;
+        }
+        // find left and right border of change (or non-change):
+        int left = start;
+        if (mode != null) { // go backwards: (only if not in region)
+            int index = start - 1;
+            for (;
+                 index >= 0 && areSameChange(index, mode, style, revision, color);
+                 index--);
+            left = index + 1;
+        }
+        int index = start;
+        for (;
+             index <= end && areSameChange(index, mode, style, revision, color);
+             index++);
+        int right = index;
+        LTCStyle ltcStyle = LTCStyle.createByName(style);
+        try {
+            switch (ltcStyle) {
+                case None: // ignore
+                    break;
+                case Addition:
+                    // keep track of right border in case characters are deleted!
+                    Position rightPos = getDocument().createPosition(right);
+                    getDocument().remove(left, right - left);
+                    right = rightPos.getOffset();
+                    break;
+                case Deletion:
+                    Document document = getDocument();
+                    String delstring = document.getText(left, right - left);
+                    // first: remove region BYPASSING document filter; remember string to insert
+                    documentFilter.setFilter(false);
+                    document.remove(left, right - left);
+                    documentFilter.setFilter(true);
+                    // second: insert removed string (with document filter)
+                    document.insertString(left, delstring, null);
+                    break;
+            }
+        } catch (BadLocationException e) {
+            LOGGER.log(Level.SEVERE, "while undoing change in [" + left + ", " + right + "[ of style = " + ltcStyle.name(), e);
+        }
+        return right;
+    }
+
+    private boolean areSameChange(int index, TextAttribute mode, Object style, Object revision, Object color) {
+        return style.equals(getStyledDocument().getCharacterElement(index).getAttributes()
+                .getAttribute(StyleConstants.NameAttribute)) &&
+                (!TextAttribute.Revision.equals(mode) || // skip test, if mode == null
+                        revision.equals(getStyledDocument().getCharacterElement(index).getAttributes()
+                                .getAttribute(REVISION_ATTR))) &&
+                (!TextAttribute.Author.equals(mode) || // skip test, if mode == null
+                        color.equals(getStyledDocument().getCharacterElement(index).getAttributes()
+                                .getAttribute(StyleConstants.Foreground)));
+    }
+
+    enum TextAttribute {
+        Style {
+            @Override
+            boolean isMatch(AttributeSet as1, AttributeSet as2) {
+                String name1 = (String) as1.getAttribute(StyleConstants.NameAttribute);
+                String name2 = (String) as2.getAttribute(StyleConstants.NameAttribute);
+                return name1 == null?name2 == null:name1.equals(name2);
+            }
+        },
+        Revision {
+            @Override
+            boolean isMatch(AttributeSet as1, AttributeSet as2) {
+                String rev1 = (String) as1.getAttribute(REVISION_ATTR);
+                String rev2 = (String) as2.getAttribute(REVISION_ATTR);
+                return rev1 == null?rev2 == null:rev1.equals(rev2);
+            }
+        },
+        Author {
+            @Override
+            boolean isMatch(AttributeSet as1, AttributeSet as2) {
+                Color c1 = (Color) as1.getAttribute(StyleConstants.Foreground);
+                Color c2 = (Color) as2.getAttribute(StyleConstants.Foreground);
+                return c1 == null?c2 == null:c1.equals(c2);
+            }
+        };
+        abstract boolean isMatch(AttributeSet as1, AttributeSet as2);
     }
 }

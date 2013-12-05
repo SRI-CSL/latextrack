@@ -49,8 +49,10 @@ public final class CommitTable extends JTable {
 
     private final static Logger LOGGER = Logger.getLogger(CommitTable.class.getName());
 
-    public CommitTable(CommitTableModel model) {
+    public CommitTable(CommitTableModel model, final AuthorListModel authorModel) {
         super(model);
+        if (authorModel == null)
+            throw new IllegalArgumentException("Cannot create commit table with NULL as author model");
 
         setFillsViewportHeight(true);
         getTableHeader().setReorderingAllowed(false);
@@ -62,7 +64,7 @@ public final class CommitTable extends JTable {
         setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         setColumnSelectionAllowed(true);
         setRowSelectionAllowed(true);
-        setDragEnabled(true); 
+        setDragEnabled(true);
         setTransferHandler(new CommitTransferHandler()); // customized drag 'n drop
 
         // renderer
@@ -86,7 +88,11 @@ public final class CommitTable extends JTable {
         setDefaultRenderer(Author.class, new CommitTableRenderer() {
             @Override
             String renderText(Object object) {
-                return ((Author) object).name;
+                return object.toString(); // name and email
+            }
+            @Override
+            Color renderColor(Object object) {
+                return authorModel.getColorForAuthor((Author) object);
             }
         });
 
@@ -112,12 +118,23 @@ public final class CommitTable extends JTable {
                     builder.append(width);
                     if (i < tcm.getColumnCount() - 1)
                         builder.append(", ");
-                    preferences.putInt(KEY_PREF_WIDTH+i, width);
+                    preferences.putInt(KEY_PREF_WIDTH + i, width);
                 }
                 builder.append("]");
                 LOGGER.config(builder.toString());
             }
         });
+    }
+
+    @Override
+    public boolean isCellEditable(int row, int col) {
+        // only the first row with authors is editable!
+        if (row > 0)
+            return false;
+        Object o = getValueAt(row, col);
+        if (o instanceof Author)
+            return true;
+        return false;
     }
 
     private class CommitTransferHandler extends TransferHandler {

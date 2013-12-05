@@ -398,6 +398,7 @@ public final class LTCserverImpl implements LTCserverInterface {
                             return unit.revision;
                         }
                     })); // add list of revisions used in accumulation: remove the base version!
+            map.put(LTCserverInterface.KEY_LAST, units.get(0).revision); // base version
             session.getAccumulate().removePropertyChangeListener(listener);
         } catch (Exception e) {
             logAndThrow(2,"Exception during change accumulation: "+e.getMessage());
