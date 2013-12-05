@@ -28,6 +28,7 @@ import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.errors.AmbiguousObjectException;
 import org.eclipse.jgit.errors.IncorrectObjectTypeException;
 import org.eclipse.jgit.errors.MissingObjectException;
+import org.eclipse.jgit.errors.RevisionSyntaxException;
 import org.eclipse.jgit.lib.Constants;
 import org.eclipse.jgit.lib.IndexDiff;
 import org.eclipse.jgit.lib.ObjectId;
@@ -93,7 +94,14 @@ public class GitTrackedFile extends TrackedFile<GitRepository> {
             RevCommit limitRevCommit = null;
 
             if (inclusiveLimitRevision != null)
-                limitRevCommit = revWalk.parseCommit(wrappedRepository.resolve(inclusiveLimitRevision));
+                try {
+                    ObjectId limitId = wrappedRepository.resolve(inclusiveLimitRevision);
+                    if (limitId == null)
+                        throw new VersionControlException("Cannot resolve revision \""+inclusiveLimitRevision+"\"");
+                    limitRevCommit = revWalk.parseCommit(limitId);
+                } catch (RevisionSyntaxException e) {
+                    throw new VersionControlException("Revision \""+inclusiveLimitRevision+"\" does not comply with standard syntax");
+                }
 
             if (inclusiveLimitDate == null)
                 inclusiveLimitDate = new Date(0);
@@ -132,11 +140,7 @@ public class GitTrackedFile extends TrackedFile<GitRepository> {
                 }
             }
 
-        } catch (IncorrectObjectTypeException e) {
-            throw new VersionControlException(e);
-        } catch (AmbiguousObjectException e) {
-            throw new VersionControlException(e);
-        } catch (MissingObjectException e) {
+        } catch (Exception e) {
             throw new VersionControlException(e);
         }
 

@@ -106,7 +106,7 @@ public class LTCSession {
                     } catch (ExecutionException e) {
                         LOGGER.log(Level.SEVERE, e.getMessage(), e);
                         JOptionPane.showMessageDialog(editor.getFrame(),
-                                "An error occurred:\n"+e.getMessage(),
+                                formatException(e.getCause()),
                                 "Error while initializing",
                                 JOptionPane.ERROR_MESSAGE);
                     }
@@ -184,7 +184,7 @@ public class LTCSession {
                     } catch (ExecutionException e) {
                         LOGGER.log(Level.SEVERE, e.getMessage(), e);
                         JOptionPane.showMessageDialog(editor.getFrame(),
-                                "An error occurred:\n"+e.getMessage(),
+                                formatException(e.getCause()),
                                 "Error while updating",
                                 JOptionPane.ERROR_MESSAGE);
                     }
@@ -348,10 +348,14 @@ public class LTCSession {
                     LOGGER.log(Level.SEVERE, e.getMessage(), e);
                 } catch (ExecutionException e) {
                     LOGGER.log(Level.SEVERE, e.getMessage(), e);
+                    JOptionPane.showMessageDialog(editor.getFrame(),
+                            formatException(e.getCause()),
+                            "Error while creating bug report",
+                            JOptionPane.ERROR_MESSAGE);
                 } catch (IOException e) {
                     LOGGER.log(Level.SEVERE, e.getMessage(), e);
                     JOptionPane.showMessageDialog(editor.getFrame(),
-                            "An error occurred:\n"+e.getMessage(),
+                            formatException(e),
                             "Error while opening email client",
                             JOptionPane.ERROR_MESSAGE);
                 }
@@ -367,5 +371,12 @@ public class LTCSession {
                 Thread.sleep(500);
             } catch (InterruptedException ignored) {}
         } while ((!worker.isDone()));
+    }
+
+    private String formatException(Throwable e) {
+        if (e.getCause() == null)
+            return e.getMessage();
+        else
+            return formatException(e.getCause());
     }
 }

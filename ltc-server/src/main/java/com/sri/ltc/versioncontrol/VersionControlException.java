@@ -28,7 +28,13 @@ package com.sri.ltc.versioncontrol;
  */
 public class VersionControlException extends Exception {
 
+    private static final long serialVersionUID = 8793393024058353028L;
+
     public VersionControlException(Throwable throwable) {
         super(throwable);
+    }
+
+    public VersionControlException(String message) {
+        super(message);
     }
 }
