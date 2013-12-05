@@ -23,13 +23,13 @@ package com.sri.ltc.editor;
  */
 
 import com.google.common.collect.Sets;
+import com.sri.ltc.server.LTCserverInterface;
 
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import javax.swing.text.*;
 import java.awt.*;
 import java.awt.event.KeyEvent;
-import java.util.HashSet;
 import java.util.Set;
 
 /**
@@ -41,9 +41,14 @@ public final class LatexDocumentFilter extends DocumentFilter {
     private Boolean firstChange = true;
     private final LatexPane textPane;
     private Color color = Color.black; // also used to synchronize on
+    private boolean filter = false; // filtering status
 
     public LatexDocumentFilter(LatexPane textPane) {
         this.textPane = textPane;
+    }
+
+    public void setFilter(boolean filter) {
+        this.filter = filter;
     }
 
     public void addChangeListener(ChangeListener listener) {
@@ -82,6 +87,8 @@ public final class LatexDocumentFilter extends DocumentFilter {
             StyledDocument document = (StyledDocument) fb.getDocument();
             Style style = document.getStyle(LatexPane.LTCStyle.Deletion.getName());
             StyleConstants.setForeground(style, color);
+            style.addAttribute(LatexPane.REVISION_ATTR, LTCserverInterface.MODIFIED);
+            style.removeAttribute(LatexPane.DATE_ATTR);
 
             // go through each character and check: not already removed & addition by current author or not
             int removed = 0;
@@ -115,32 +122,42 @@ public final class LatexDocumentFilter extends DocumentFilter {
 
     @Override
     public void remove(FilterBypass fb, int offset, int length) throws BadLocationException {
-        int kept = removeAndCount(fb, offset, length);
-
-        // move caret (this also clears any selection)
-        if (KeyEvent.VK_BACK_SPACE == textPane.last_key_pressed)
-            textPane.setCaretPosition(offset);
-        else
-            textPane.setCaretPosition(offset+kept);
+        if (filter) {
+            int kept = removeAndCount(fb, offset, length);
+            // move caret (this also clears any selection)
+            if (KeyEvent.VK_BACK_SPACE == textPane.last_key_pressed)
+                textPane.setCaretPosition(offset);
+            else
+                textPane.setCaretPosition(offset+kept);
+        } else
+            super.remove(fb, offset, length);
     }
 
     @Override
     public void insertString(FilterBypass fb, int offset, String text, AttributeSet attr) throws BadLocationException {
         if ("".equals(text)) return;
 
-        synchronized (color) {
-            Style style = ((StyledDocument) fb.getDocument()).getStyle(LatexPane.LTCStyle.Addition.getName());
-            StyleConstants.setForeground(style, color);
-            fb.insertString(offset, text, style); // TODO: does this move caret to end of insertion?
-            fireChange();
-        }
+        if (filter)
+            synchronized (color) {
+                Style style = ((StyledDocument) fb.getDocument()).getStyle(LatexPane.LTCStyle.Addition.getName());
+                StyleConstants.setForeground(style, color);
+                style.addAttribute(LatexPane.REVISION_ATTR, LTCserverInterface.MODIFIED);
+                style.removeAttribute(LatexPane.DATE_ATTR);
+                fb.insertString(offset, text, style); // TODO: does this move caret to end of insertion?
+                fireChange();
+            }
+        else
+            super.insertString(fb, offset, text, attr);
     }
 
     @Override
     public void replace(FilterBypass fb, int offset, int length, String text, AttributeSet attrs) throws BadLocationException {
-        synchronized (color) {
-            int kept = this.removeAndCount(fb, offset, length);
-            this.insertString(fb, offset+kept, text, attrs);
-        }
+        if (filter)
+            synchronized (color) {
+                int kept = this.removeAndCount(fb, offset, length);
+                this.insertString(fb, offset+kept, text, attrs);
+            }
+        else
+            super.replace(fb, offset, length, text, attrs);
     }
 }

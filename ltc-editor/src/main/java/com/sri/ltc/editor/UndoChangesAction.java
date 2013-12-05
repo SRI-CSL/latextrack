@@ -15,7 +15,7 @@ public final class UndoChangesAction extends AbstractAction {
 
     enum UndoType {
         ByRev("Undo this change", LatexPane.TextAttribute.Revision),
-        ByAuthor("Undo changes in same color", LatexPane.TextAttribute.Author),
+        ByAuthor("Undo change in same color", LatexPane.TextAttribute.Author),
         InRegion("Undo all changes in region", null);
         final String name;
         final LatexPane.TextAttribute mode;

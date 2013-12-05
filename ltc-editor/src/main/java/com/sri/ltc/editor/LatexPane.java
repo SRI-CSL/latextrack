@@ -41,6 +41,8 @@ import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.prefs.Preferences;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * @author linda
@@ -50,35 +52,27 @@ public final class LatexPane extends JTextPane {
 
     private static final Logger LOGGER = Logger.getLogger(LatexPane.class.getName());
     private static final String KEY_SHOW_PARAGRAPHS = "showParagraphs";
-    private static final String REVISION_ATTR = "revision attribute";
-    private static final String DATE_ATTR = "date attribute";
+    static final String REVISION_ATTR = "revision attribute";
+    static final String DATE_ATTR = "date attribute";
 
+    private static final Pattern STYLE_PATTERN = Pattern.compile("style no\\. ([12])");
     protected enum LTCStyle {
-        None { // = 0
-            @Override
-            LTCStyle flip() {
-                return None;
-            }
-        },
-        Addition { // = 1
-            @Override
-            LTCStyle flip() {
-                return Deletion;
-            }
-        },
-        Deletion { // = 2
-            @Override
-            LTCStyle flip() {
-                return Addition;
-            }
-        };
+        None, // = 0
+        Addition, // = 1
+        Deletion; // = 2
         String getName() {
             if (None.equals(this))
                 return "default";
             else
                 return "style no. "+ordinal();
         }
-        abstract LTCStyle flip();
+        static LTCStyle createByName(String name) {
+            if (name == null) throw new IllegalArgumentException("Cannot create LTCStyle from NULL");
+            if ("default".equals(name)) return None;
+            Matcher matcher = STYLE_PATTERN.matcher(name);
+            if (!matcher.matches()) throw new RuntimeException("Cannot create LTCStyle from name="+name);
+            return LTCStyle.values()[Integer.parseInt(matcher.group(1))];
+        }
     }
 
     private final LatexDocumentFilter documentFilter = new LatexDocumentFilter(this);
@@ -121,6 +115,8 @@ public final class LatexPane extends JTextPane {
         Font font = new Font("Monospaced", Font.PLAIN, 12);
         setFont(font);
         setJTextPaneFont(this, font, Color.black);
+
+        ((AbstractDocument) document).setDocumentFilter(documentFilter);
 
         setToolTipText(""); // turns on tool tips
         // show tool tips almost immediately
@@ -237,14 +233,15 @@ public final class LatexPane extends JTextPane {
     }
 
     public void startFiltering() {
-        ((AbstractDocument) getStyledDocument()).setDocumentFilter(documentFilter);
+        documentFilter.setFilter(true); // switch filtering ON
         setEditable(editable);
     }
 
     public List<Object[]> stopFiltering() {
         setEditable(false);
+        documentFilter.setFilter(false); // switch filtering OFF
         StyledDocument document = getStyledDocument();
-        ((AbstractDocument) document).setDocumentFilter(null);
+//        ((AbstractDocument) document).setDocumentFilter(null);
         // collect any deletions
         List<Object[]> deletions = Lists.newArrayList();
         int start = -1;
@@ -351,7 +348,9 @@ public final class LatexPane extends JTextPane {
     }
 
     /**
-     * Undo change at given start location.
+     * Undo change at given start location, i.e., all surrounding characters that are marked up
+     * with the same style (addition or deletion).  The given end location is also respected in
+     * that the change will never extend beyond this location.
      *
      * If mode is <code>null</code>, we are operating in a region, so only regard change going
      * forward from start location and matching the same style.
@@ -366,9 +365,11 @@ public final class LatexPane extends JTextPane {
      * This function returns the end position of the change found and undone or -1 if the given
      * start location is a not valid position in the document or does not denote a change.
      *
-     * @param start
-     * @param end
-     * @param mode
+     * @param start Start position of change to be undone
+     * @param end The change to be undone cannot go beyond this given location.  Use the current
+     *            length of the document if no restriction is needed
+     * @param mode Denotes the mode of matching the surrounding characters; only forward or
+     *             backward and matching by revision or author
      * @return right border position of the change found or -1 if there was no change to match
      */
     protected int undoChange(int start, int end, TextAttribute mode) {
@@ -409,10 +410,31 @@ public final class LatexPane extends JTextPane {
              index <= end && areSameChange(index, mode, style, revision, color);
              index++);
         int right = index;
-        if (!"default".equals(style)) {
-            // TODO: implement
-
-            System.out.println("Flipping change in ["+left+", "+right+"[ of style = "+style);
+        LTCStyle ltcStyle = LTCStyle.createByName(style);
+        System.out.println("Flipping change in ["+left+", "+right+"[ of style = "+ltcStyle.name());
+        try {
+            switch (ltcStyle) {
+                case None: // ignore
+                    break;
+                case Addition:
+                    // keep track of right border in case characters are deleted!
+                    Position rightPos = getDocument().createPosition(right);
+                    getDocument().remove(left, right - left);
+                    right = rightPos.getOffset();
+                    break;
+                case Deletion:
+                    Document document = getDocument();
+                    String delstring = document.getText(left, right - left);
+                    // first: remove region BYPASSING document filter; remember string to insert
+                    documentFilter.setFilter(false);
+                    document.remove(left, right - left);
+                    documentFilter.setFilter(true);
+                    // second: insert removed string (with document filter)
+                    document.insertString(left, delstring, null);
+                    break;
+            }
+        } catch (BadLocationException e) {
+            LOGGER.log(Level.SEVERE, "while undoing change in [" + left + ", " + right + "[ of style = " + ltcStyle.name(), e);
         }
         return right;
     }
