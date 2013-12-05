@@ -44,7 +44,6 @@ public final class UndoChangesAction extends AbstractAction {
         switch (type) {
             case ByRev:
             case ByAuthor:
-                System.out.println(" --- Undo!");
                 latexPane.undoChange(index, latexPane.getDocument().getLength(), type.mode);
                 break;
             case InRegion:
@@ -61,7 +60,6 @@ public final class UndoChangesAction extends AbstractAction {
                 //       i.e., index < Math.min(dot, mark) && index > Math.max(dot, mark)
                 // determine start and end of region to perform undo:
                 index = Math.min(dot, mark); // use beginning of region
-                System.out.println(" --- Undo in ["+index+", "+Math.max(dot, mark)+"[!");
                 while (index >= 0 && index < Math.max(dot, mark))  // fail silently if index = -1 returned
                     index = latexPane.undoChange(index, Math.max(dot, mark)-1, type.mode);
                 break;

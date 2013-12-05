@@ -411,7 +411,6 @@ public final class LatexPane extends JTextPane {
              index++);
         int right = index;
         LTCStyle ltcStyle = LTCStyle.createByName(style);
-        System.out.println("Flipping change in ["+left+", "+right+"[ of style = "+ltcStyle.name());
         try {
             switch (ltcStyle) {
                 case None: // ignore
