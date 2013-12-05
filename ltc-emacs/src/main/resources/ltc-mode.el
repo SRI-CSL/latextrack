@@ -1312,9 +1312,7 @@ This function returns the end position after the change was undone."
       (setq startindex start)
       (while (< startindex (point-max))
 	(let ((nextindex (undo-change startindex nil nil t))) ; only compare by face id (possibly nil)
-	  (if (= 0 nextindex)
-	      (setq startindex (1+ startindex)) ; advance index by 1
-	    (setq startindex nextindex))))) ; advance index to next possible change
+	  (setq startindex nextindex)))) ; advance index to next possible change
     (ltc-log-debug " ~~ now at point %d " (point))
     ))
 
