@@ -66,7 +66,7 @@ public class TemporarySVNRepository extends TemporaryFolder{
         // turn into our objects:
         repository = new SVNRepository(svnRoot);
 
-        // TODO: check that .svn exists?
+        // check that .svn exists?
         File svn = new File(getRoot() + "/" + TEST_REPO + "/.svn");
         assertTrue(".svn directory exists", svn.exists());
         assertTrue(".svn is directory", svn.isDirectory());
