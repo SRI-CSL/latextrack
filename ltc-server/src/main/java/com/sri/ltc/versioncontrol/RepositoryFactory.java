@@ -44,17 +44,19 @@ public class RepositoryFactory {
     };
 
     public static Repository fromPath(File path) throws Exception {
-        File testPath;
+        if (path == null)
+            throw new IllegalArgumentException("Cannot create repository from NULL");
+        if (!path.exists() || !path.isFile())
+            throw new IllegalArgumentException("Cannot create repository if given file \""+
+                    path.getName()+"\" does not exist or is not a file");
 
-        testPath = new File(path.getParent(), ".svn");
-        if (testPath.exists())
-            return new SVNRepository(path);
-
-        // walk up the parent dirs and look for .git directory
-        testPath = path.getParentFile();
+        // walk up the parent dirs and look for .git or .svn directory
+        File testPath = path.getParentFile();
         while (testPath != null && testPath.isDirectory()) {
             if (testPath.listFiles(GIT_FILTER).length == 1)
                 return new GitRepository(path);
+            else if (testPath.listFiles(SVN_FILTER).length == 1)
+                return new SVNRepository(path);
             else
                 testPath = testPath.getParentFile();
         }

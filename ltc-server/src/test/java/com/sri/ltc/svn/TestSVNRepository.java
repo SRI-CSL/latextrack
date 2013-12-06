@@ -48,7 +48,7 @@ public class TestSVNRepository {
     @Rule
     public TemporarySVNRepository temporarySVNRepository = new TemporarySVNRepository();
 
-    @Test //(expected = SVNException.class)
+    @Test
     public void testUntracked() {
         assertTrue(temporarySVNRepository.getRoot().exists());
 
@@ -130,7 +130,7 @@ public class TestSVNRepository {
     }
 
     @Test(expected = VersionControlException.class)
-    public void badThingsWithRepo() throws VersionControlException, IOException {
+    public void badThingsWithWorkingCopy() throws VersionControlException, IOException {
         assertTrue(temporarySVNRepository.getRoot().exists());
         TrackedFile trackedFile = null;
 
