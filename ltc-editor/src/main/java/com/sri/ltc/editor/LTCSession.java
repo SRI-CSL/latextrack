@@ -135,7 +135,8 @@ public class LTCSession {
     }
 
     public void startUpdate(final String date, final String rev,
-                            final boolean isModified, final String currentText, final List<Object[]> deletions, final int caretPosition) {
+                            final boolean isModified, final String currentText,
+                            final List<Object[]> deletions, final int caretPosition) {
         if (!isValid()) return;
 
         // create new worker to update session
