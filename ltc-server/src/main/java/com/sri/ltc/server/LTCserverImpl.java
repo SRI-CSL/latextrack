@@ -22,7 +22,6 @@
 package com.sri.ltc.server;
 
 import com.google.common.base.Function;
-import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.sri.ltc.CommonUtils;
@@ -31,7 +30,6 @@ import com.sri.ltc.filter.Author;
 import com.sri.ltc.filter.Filtering;
 import com.sri.ltc.versioncontrol.history.CompleteHistory;
 import com.sri.ltc.versioncontrol.history.HistoryUnit;
-import com.sri.ltc.versioncontrol.history.LimitedHistory;
 import com.sri.ltc.latexdiff.*;
 import com.sri.ltc.versioncontrol.*;
 import org.apache.commons.codec.binary.Base64;
@@ -264,50 +262,13 @@ public final class LTCserverImpl implements LTCserverInterface {
         updateProgress(10);
 
         Filtering filter = Filtering.getInstance();
-        Author self = session.getTrackedFile().getRepository().getSelf();
 
         // obtain file history from version control, disk, and session (obeying any filters):
         List<HistoryUnit> units = new ArrayList<HistoryUnit>();
         try {
             // create history with limits and obtain revision IDs, authors, and readers:
-            LimitedHistory history = session.createLimitedHistory(filter.getStatus(BoolPrefs.COLLAPSE_AUTHORS)); // whether to condense authors or not
-            updateProgress(12);
-            units = history.getHistoryUnits();
-            updateProgress(45);
-
-            // add file on disk to list, if modified or new but not committed yet
-            switch (session.getTrackedFile().getStatus()) {
-                case Added:
-                case Modified:
-                case Changed:
-                case Conflicting: // TODO: once we implement merge assistance, maybe this gets handled differently
-                    HistoryUnit last = Iterables.getLast(units, null);
-                    if (last != null && filter.getStatus(BoolPrefs.COLLAPSE_AUTHORS) && last.author.equals(self))
-                        // replace last unit if collapsing authors:
-                        units.remove(units.size()-1);
-                    // add new unit for ON DISK:
-                    units.add(new HistoryUnit(self,
-                            LTCserverInterface.ON_DISK,
-                            new FileReaderWrapper(session.getTrackedFile().getFile().getCanonicalPath())));
-            }
-            // add current text from editor, if modified since last save:
-            if (isModified) {
-                // check if ON DISK or collapsing authors && last one equals self:
-                HistoryUnit last = Iterables.getLast(units, null);
-                if (last != null &&
-                        (LTCserverInterface.ON_DISK.equals(last.revision) ||
-                                (filter.getStatus(BoolPrefs.COLLAPSE_AUTHORS) && last.author.equals(self))))
-                    // replace last unit
-                    units.remove(units.size()-1);
-                // add new unit for MODIFIED:
-                units.add(new HistoryUnit(self,
-                        LTCserverInterface.MODIFIED,
-                        new StringReaderWrapper(currentText)));
-            }
-            // if no history, then use text from file and self as author
-            if (units.isEmpty())
-                units.add(new HistoryUnit(self, "",
-                        new FileReaderWrapper(session.getTrackedFile().getFile().getCanonicalPath())));
+            units = session.createLimitedHistory(filter.getStatus(BoolPrefs.COLLAPSE_AUTHORS), // whether to condense authors or not
+                    isModified, currentText);
             updateProgress(47);
         } catch (IOException e) {
             logAndThrow(5, e);
@@ -348,6 +309,7 @@ public final class LTCserverImpl implements LTCserverInterface {
                 indices.add(sortedAuthors.indexOf(a));
         }
         // handle self if not already computed:
+        Author self = session.getTrackedFile().getRepository().getSelf();
         if (!authors.contains(self) && !filter.getStatus(BoolPrefs.ALLOW_SIMILAR_COLORS))  // create unique colors for all authors + self
             try {
                 computeUniqueColor(self, defaultColors, currentColors);
@@ -869,16 +831,13 @@ public final class LTCserverImpl implements LTCserverInterface {
             Element element = document.createElement("active-revisions");
             rootElement.appendChild(element);
 
-            LimitedHistory history = null;
             try {
-                history = session.createLimitedHistory(get_bool_pref(BoolPrefs.COLLAPSE_AUTHORS.name()));
+                for (HistoryUnit unit : session.createLimitedHistory(get_bool_pref(BoolPrefs.COLLAPSE_AUTHORS.name()),
+                        false, "")) {  // TODO: decide to break the API and add 2 arguments to "create_bug_report"?
+                    addSimpleTextNode(document, element, "sha", unit.revision, null);
+                }
             } catch (Exception e) {
                 logAndThrow(3, e);
-            }
-
-            assert history != null;
-            for (HistoryUnit unit : history.getHistoryUnits()) {
-                addSimpleTextNode(document, element, "sha", unit.revision, null);
             }
         }
 
@@ -901,7 +860,6 @@ public final class LTCserverImpl implements LTCserverInterface {
             addSimpleTextNode(document, rootElement, "bundle-name", bundle.getName(), null);
 
         // create XML file:
-
         TransformerFactory transformerFactory = TransformerFactory.newInstance();
         Transformer transformer = null;
         try {

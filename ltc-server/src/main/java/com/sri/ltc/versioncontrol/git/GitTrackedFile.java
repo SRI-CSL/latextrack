@@ -25,9 +25,6 @@ import com.sri.ltc.versioncontrol.Commit;
 import com.sri.ltc.versioncontrol.TrackedFile;
 import com.sri.ltc.versioncontrol.VersionControlException;
 import org.eclipse.jgit.api.Git;
-import org.eclipse.jgit.errors.AmbiguousObjectException;
-import org.eclipse.jgit.errors.IncorrectObjectTypeException;
-import org.eclipse.jgit.errors.MissingObjectException;
 import org.eclipse.jgit.errors.RevisionSyntaxException;
 import org.eclipse.jgit.lib.Constants;
 import org.eclipse.jgit.lib.IndexDiff;
@@ -91,22 +88,26 @@ public class GitTrackedFile extends TrackedFile<GitRepository> {
             revWalk.sort(RevSort.COMMIT_TIME_DESC);
             revWalk.markStart(rootCommit);
 
-            RevCommit limitRevCommit = null;
+            boolean stopOnNextItr = false;
 
+            RevCommit limitRevCommit = null;
             if (inclusiveLimitRevision != null)
-                try {
-                    ObjectId limitId = wrappedRepository.resolve(inclusiveLimitRevision);
-                    if (limitId == null)
-                        throw new VersionControlException("Cannot resolve revision \""+inclusiveLimitRevision+"\"");
-                    limitRevCommit = revWalk.parseCommit(limitId);
-                } catch (RevisionSyntaxException e) {
-                    throw new VersionControlException("Revision \""+inclusiveLimitRevision+"\" does not comply with standard syntax");
-                }
+                if (HAT_REVISION.equals(inclusiveLimitRevision))
+                    stopOnNextItr = true; // if limiting by "HAT" only include last commit
+                else
+                    // try to resolve limiting revision:
+                    try {
+                        ObjectId limitId = wrappedRepository.resolve(inclusiveLimitRevision);
+                        if (limitId == null)
+                            throw new VersionControlException("Cannot resolve revision \""+inclusiveLimitRevision+"\"");
+                        limitRevCommit = revWalk.parseCommit(limitId);
+                    } catch (RevisionSyntaxException e) {
+                        throw new VersionControlException("Revision \""+inclusiveLimitRevision+"\" does not comply with standard syntax");
+                    }
 
             if (inclusiveLimitDate == null)
                 inclusiveLimitDate = new Date(0);
 
-            boolean stopOnNextItr = false;
             Date lastDateItr = null;
             for (RevCommit revCommit : revWalk) {
 
@@ -125,7 +126,6 @@ public class GitTrackedFile extends TrackedFile<GitRepository> {
                 // now test if this was the last commit we wanted, we need to include one more commit then stop.
                 if (revCommit.getId().equals(limitRevCommit))
                     stopOnNextItr = true;
-
 
                 // check to see if we are past the first date threshold, if yes we want to keep going until
                 // the times after the crossing aren't equal...

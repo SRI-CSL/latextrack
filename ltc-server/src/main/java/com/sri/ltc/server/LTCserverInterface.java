@@ -347,8 +347,9 @@ public interface LTCserverInterface {
      * Set a revision to limit the commit graph for the given session.
      * The revision can be a unique substring at the beginning of any valid revision ID.
      * If the given string for rev is empty, then no limit is applied.
-     * If the revision control does not know the given revision, all
-     * revisions are included (unless limited by other filters).
+     * If the revision control does not know the given revision, a subsequent
+     * {@link #get_changes(int, boolean, byte[], java.util.List, int)} will
+     * result in an exception.
      *
      * @param sessionID identifies the session
      * @param rev string describing the revision to limit the commit graph (can be a unique

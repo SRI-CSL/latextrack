@@ -167,11 +167,16 @@ public class SVNTrackedFile extends TrackedFile<SVNRepository> {
     @Override
     public List<Commit> getCommits(@Nullable Date inclusiveLimitDate, @Nullable String inclusiveLimitRevision) throws VersionControlException {
         SVNLogEntryHandler handler = null;
+        // when HAT_REVISION.equals(inclusiveLimitRev), we need to limit to latest revision+1
         try {
             handler = new SVNLogEntryHandler(
                     this,
                     inclusiveLimitDate,
-                    (inclusiveLimitRevision == null) ? null : Long.parseLong(inclusiveLimitRevision));
+                    inclusiveLimitRevision == null ?
+                            null :
+                            HAT_REVISION.equals(inclusiveLimitRevision) ?
+                                    Long.MAX_VALUE :  // TODO: HEAD + 1?
+                                    Long.parseLong(inclusiveLimitRevision));
         } catch (NumberFormatException e) {
             throw new VersionControlException("Given revision \""+inclusiveLimitRevision+"\" is not a number");
         }

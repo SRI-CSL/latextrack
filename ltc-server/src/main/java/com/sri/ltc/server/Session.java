@@ -21,17 +21,17 @@
  */
 package com.sri.ltc.server;
 
-import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.sri.ltc.filter.Author;
+import com.sri.ltc.latexdiff.FileReaderWrapper;
+import com.sri.ltc.latexdiff.StringReaderWrapper;
 import com.sri.ltc.versioncontrol.VersionControlException;
 import com.sri.ltc.versioncontrol.history.CompleteHistory;
-import com.sri.ltc.versioncontrol.Remotes;
 import com.sri.ltc.latexdiff.Accumulate;
 import com.sri.ltc.versioncontrol.TrackedFile;
+import com.sri.ltc.versioncontrol.history.HistoryUnit;
 import com.sri.ltc.versioncontrol.history.LimitedHistory;
 
-import java.awt.*;
 import java.io.IOException;
 import java.text.ParseException;
 import java.util.*;
@@ -77,7 +77,7 @@ public final class Session {
 
     // synchronize all the following accessor methods to the data sets in this session:
 
-    // --- known authors ---  TODO: make colors unique?
+    // --- known authors ---
 
     public synchronized Set<Author> getAuthors() {
         return knownAuthors;
@@ -87,8 +87,53 @@ public final class Session {
     }
 
     // --- create limited history ---
-    public synchronized LimitedHistory createLimitedHistory(boolean collapseAuthors) throws Exception {
-        return new LimitedHistory(trackedFile, limitedAuthors, limit_date, limit_rev, collapseAuthors);
+    public synchronized List<HistoryUnit> createLimitedHistory(boolean collapseAuthors, boolean isModified,
+                                                               String currentText) throws Exception {
+        Author self = getTrackedFile().getRepository().getSelf();
+
+        // process modified & on disk cases first:
+        HistoryUnit last = null;
+        if (isModified)
+            // use current text from editor, if modified since last save:
+            last = new HistoryUnit(self,
+                    LTCserverInterface.MODIFIED,
+                    new StringReaderWrapper(currentText));
+        else
+            switch (getTrackedFile().getStatus()) {
+                case Added:
+                case Modified:
+                case Changed:
+                case Conflicting: // TODO: once we implement merge assistance, maybe this gets handled differently
+                    // use file on disk, if not yet committed:
+                    last = new HistoryUnit(self,
+                            LTCserverInterface.ON_DISK,
+                            new FileReaderWrapper(getTrackedFile().getFile().getCanonicalPath()));
+            }
+
+        String limitingRev = limit_rev;
+        // handle if limit_rev matches "on disk" or "modified" (or starts with those!)
+        // but only allow matching if present in 'units'!
+        if (!limit_rev.isEmpty() && last != null && last.revision.startsWith(limit_rev))
+            // no limiting revision OR limiting revision is neither the beginning of "modified" nor "on disk":
+            // obtain revision history from version control system
+            limitingRev = TrackedFile.HAT_REVISION;
+        List<HistoryUnit> units = new LimitedHistory(trackedFile,
+                limitedAuthors, limit_date, limitingRev, collapseAuthors).getHistoryUnits();
+
+        // process last unit: if exists, possibly replace the last one from VC
+        if (last != null) {
+            // check if we collapse authors and need to remove the newest version:
+            if (collapseAuthors && !units.isEmpty() && last.author.equals(self))
+                units.remove(units.size()-1);
+            units.add(last); // add given last unit to those retrieved from version control
+        }
+
+        // if no history, then use text from file and self as author
+        if (units.isEmpty())
+            units.add(new HistoryUnit(self, "",
+                    new FileReaderWrapper(getTrackedFile().getFile().getCanonicalPath())));
+
+        return units;
     }
 
     // --- limited authors ---
