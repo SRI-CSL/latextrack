@@ -167,24 +167,26 @@ public class SVNTrackedFile extends TrackedFile<SVNRepository> {
     @Override
     public List<Commit> getCommits(@Nullable Date inclusiveLimitDate, @Nullable String inclusiveLimitRevision) throws VersionControlException {
         SVNLogEntryHandler handler = null;
-        // when HAT_REVISION.equals(inclusiveLimitRev), we need to limit to latest revision+1
-        try {
-            handler = new SVNLogEntryHandler(
-                    this,
-                    inclusiveLimitDate,
-                    inclusiveLimitRevision == null ?
-                            null :
-                            HAT_REVISION.equals(inclusiveLimitRevision) ?
-                                    Long.MAX_VALUE :  // TODO: HEAD + 1?
-                                    Long.parseLong(inclusiveLimitRevision));
-        } catch (NumberFormatException e) {
-            throw new VersionControlException("Given revision \""+inclusiveLimitRevision+"\" is not a number");
-        }
-
         List<Commit> commits = null;
+
         try {
             SVNClientManager manager = getRepository().getClientManager();
             SVNStatus status = manager.getStatusClient().doStatus(getFile(), false);
+
+            // when HAT_REVISION.equals(inclusiveLimitRev), we need to limit to latest revision+1
+            try {
+                handler = new SVNLogEntryHandler(
+                        this,
+                        inclusiveLimitDate,
+                        inclusiveLimitRevision == null ?
+                                null :
+                                HAT_REVISION.equals(inclusiveLimitRevision) ?
+                                        status.getRevision().getNumber()+1L :  // HAT means latest revision + 1
+                                        Long.parseLong(inclusiveLimitRevision));
+            } catch (NumberFormatException e) {
+                throw new VersionControlException("Given revision \""+inclusiveLimitRevision+"\" is not a number");
+            }
+
             if (STATE_WITH_LOG.contains(status.getContentsStatus()))
                 manager.getLogClient().doLog(new File[]{getFile()},
                         SVNRevision.UNDEFINED, SVNRevision.UNDEFINED, false, false, 0, handler);
@@ -192,6 +194,7 @@ public class SVNTrackedFile extends TrackedFile<SVNRepository> {
         } catch (SVNException e) {
             throw new VersionControlException(e);
         }
+
         return commits;
     }
 
