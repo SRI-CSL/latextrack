@@ -118,8 +118,8 @@ public class LTCSession {
         if (!isValid()) return;
 
         // create new worker to close session
-        executeWorkerAndWait(new LTCWorker<Map,Void>(editor.getFrame(), ID,
-                "Closing...", "<html>Closing track changes of file<br>"+getCanonicalPath()+"</html>", false) {
+        executeWorkerAndWait(new LTCWorker<Map, Void>(editor.getFrame(), ID,
+                "Closing...", "<html>Closing track changes of file<br>" + getCanonicalPath() + "</html>", false) {
             @Override
             protected Map callLTCinBackground() throws XmlRpcException {
                 int lastID = ID;
@@ -188,6 +188,8 @@ public class LTCSession {
                                 formatException(e.getCause()),
                                 "Error while updating",
                                 JOptionPane.ERROR_MESSAGE);
+                    } finally {
+                        editor.textPane.startFiltering(); // in case we displayed an error
                     }
             }
         }).execute();
@@ -197,8 +199,8 @@ public class LTCSession {
         if (!isValid()) return;
 
         // create new worker to save file in session
-        executeWorkerAndWait(new LTCWorker<Void,Void>(editor.getFrame(), ID,
-                "Saving...", "<html>Saving file<br>"+getCanonicalPath()+"</html>", false) {
+        executeWorkerAndWait(new LTCWorker<Void, Void>(editor.getFrame(), ID,
+                "Saving...", "<html>Saving file<br>" + getCanonicalPath() + "</html>", false) {
             @Override
             protected Void callLTCinBackground() throws XmlRpcException {
                 LTC.save_file(ID, Base64.encodeBase64(currentText.getBytes()), deletions);
@@ -282,7 +284,7 @@ public class LTCSession {
         // if color == null then get otherwise set color
 
         // create new worker to set or get
-        executeWorkerAndWait(new LTCWorker<String,Void>(editor.getFrame(), ID,
+        executeWorkerAndWait(new LTCWorker<String, Void>(editor.getFrame(), ID,
                 "...", "getting or setting color", false) {
             @Override
             protected String callLTCinBackground() throws XmlRpcException {
