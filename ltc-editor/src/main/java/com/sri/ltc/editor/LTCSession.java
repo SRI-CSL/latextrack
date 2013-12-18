@@ -26,12 +26,16 @@ import com.sri.ltc.filter.Author;
 import com.sri.ltc.server.LTCserverInterface;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.xmlrpc.XmlRpcException;
+import org.tmatesoft.svn.core.SVNAuthenticationException;
 
 import javax.swing.*;
+import javax.swing.event.HyperlinkEvent;
+import javax.swing.event.HyperlinkListener;
 import java.awt.*;
 import java.io.File;
 import java.io.IOException;
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URLEncoder;
 import java.util.Collections;
 import java.util.List;
@@ -105,13 +109,66 @@ public class LTCSession {
                         LOGGER.log(Level.SEVERE, e.getMessage(), e);
                     } catch (ExecutionException e) {
                         LOGGER.log(Level.SEVERE, e.getMessage(), e);
-                        JOptionPane.showMessageDialog(editor.getFrame(),
-                                formatException(e.getCause()),
-                                "Error while initializing",
-                                JOptionPane.ERROR_MESSAGE);
+                        StringBuilder message = new StringBuilder(formatException(e.getCause()));
+                        if (e.getCause() != null && e.getCause().getCause() != null &&
+                                e.getCause().getCause().getCause() instanceof SVNAuthenticationException) {
+                            message.append("<br><br>For a possible work-around see<br>");
+                            message.append("&nbsp;&nbsp;<a href=\"http://latextrack.sourceforge.net/faq.html#svn-authentication\">");
+                            message.append("http://latextrack.sourceforge.net/faq.html#svn-authentication</a>");
+                            // use solution from http://stackoverflow.com/questions/8348063/clickable-links-in-joptionpane
+                            JEditorPane ep = createEPforDialogs(message.toString());
+                            // handle link events
+                            ep.addHyperlinkListener(new HyperlinkListener() {
+                                @Override
+                                public void hyperlinkUpdate(HyperlinkEvent event) {
+                                    if (event.getEventType().equals(HyperlinkEvent.EventType.ACTIVATED)) {
+                                        // close dialog
+                                        SwingUtilities.getWindowAncestor((Component) event.getSource()).dispose();
+                                        // try to browse
+                                        if (Desktop.isDesktopSupported()) {
+                                            try {
+                                                Desktop.getDesktop().browse(event.getURL().toURI());
+                                            } catch (URISyntaxException e1) {
+                                                LOGGER.log(Level.SEVERE, e1.getMessage(), e1);
+                                            } catch (IOException e1) {
+                                                LOGGER.log(Level.SEVERE, e1.getMessage(), e1);
+                                            }
+                                        } else
+                                            JOptionPane.showMessageDialog(editor.getFrame(),
+                                                    createEPforDialogs("Please copy and paste URL to your browser:<br>"
+                                                            + "&nbsp;&nbsp;http://latextrack.sourceforge.net/faq.html#svn-authentication"),
+                                                    "Cannot open browser",
+                                                    JOptionPane.ERROR_MESSAGE);
+                                    }
+                                }
+                            });
+                            // show
+                            JOptionPane.showMessageDialog(editor.getFrame(), ep,
+                                    "Error while initializing",
+                                    JOptionPane.ERROR_MESSAGE);
+                        } else
+                            JOptionPane.showMessageDialog(editor.getFrame(),
+                                    message.toString(),
+                                    "Error while initializing",
+                                    JOptionPane.ERROR_MESSAGE);
                     }
             }
         }).execute();
+    }
+
+    private JEditorPane createEPforDialogs(String text) {
+        // for copying style
+        JLabel label = new JLabel();
+        Font font = label.getFont();
+        JEditorPane ep = new JEditorPane("text/html", "<html><body style=\"font-family:"
+                + font.getFamily() + ";font-weight:"
+                + (font.isBold() ? "bold" : "normal") + ";font-size:"
+                + font.getSize() + "pt;\">"
+                + text
+                + "</body></html>");
+        ep.setEditable(false);
+        ep.setBackground(label.getBackground());
+        return ep;
     }
 
     public void close() {

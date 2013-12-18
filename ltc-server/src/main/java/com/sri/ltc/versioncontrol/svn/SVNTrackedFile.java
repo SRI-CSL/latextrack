@@ -187,6 +187,21 @@ public class SVNTrackedFile extends TrackedFile<SVNRepository> {
                 throw new VersionControlException("Given revision \""+inclusiveLimitRevision+"\" is not a number");
             }
 
+//            // TODO: this is where authentication might be required:
+//            try {
+//                KeyStore keyStore = KeyStore.getInstance("KeychainStore", "Apple");
+//                keyStore.load(null, null);
+//            } catch (NoSuchProviderException e) {
+//            } catch (KeyStoreException e) {
+//                new VersionControlException(e);
+//            } catch (CertificateException e) {
+//                new VersionControlException(e);
+//            } catch (NoSuchAlgorithmException e) {
+//                new VersionControlException(e);
+//            } catch (IOException e) {
+//                new VersionControlException(e);
+//            }
+
             if (STATE_WITH_LOG.contains(status.getContentsStatus()))
                 manager.getLogClient().doLog(new File[]{getFile()},
                         SVNRevision.UNDEFINED, SVNRevision.UNDEFINED, false, false, 0, handler);

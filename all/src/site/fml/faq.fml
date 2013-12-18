@@ -94,9 +94,7 @@
                 <p>Until we have a proper mechanism to check for updates from the LTC applications, it is best to
                     subscribe to changes using the <a href="http://sourceforge.net/projects/latextrack/">
                         SourceForge web site
-                    </a> or to the <a href="http://lists.sourceforge.net/lists/listinfo/latextrack-announce">
-                        latextrack-announce mailing list
-                    </a>
+                    </a>.
                 </p>
             </answer>
         </faq>
@@ -132,6 +130,41 @@ The answer to the question of life is: 42
             </answer>
         </faq>
 
+        <faq id="svn-authentication">
+            <question>My svn-controlled file generates an authentication error.</question>
+            <answer>
+                <p>We are relying on a Java library called svnkit to provide access to Subversion repositories.  As
+                such, the authentication mechanism is a bit different (because written in Java) than your native svn
+                command line client or other Subversion applications.  If you are able to run the following command</p>
+                <source>$> svn log &lt;MY_FILE&gt;</source>
+                <p>from the command line without a prompt for authentication but LTC generates an authentication error,
+                you can try to work around this by doing the following once for every Subversion repository, where your
+                files generate such an error.  First, download the svnkit 1.7.x <b>standalone</b> distribution
+                (or match the version used in LTC for "org.tmatesoft.svnkit" as seen on page
+                <a href="dependencies.html">
+                    http://latextrack.sourceforge.net/dependencies.html
+                </a>) from <a href="http://www.svnkit.com/download.php">http://www.svnkit.com/download.php</a>.
+                Extract the downloaded zip file in a directory of your choice that we call $TMP_SVNKIT.  Then, do the following
+                command in your svn repository, which may result in prompts for authentication as seen below.  Simply
+                answer the following questions, which may look like this:</p>
+                <source>$> $TMP_SVNKIT/svnkit-1.7.x/bin/jsvn log &lt;MY_FILE&gt;
+Authentication realm: svn+ssh://rfs.csl.sri.com
+Username: &lt;USERNAME&gt;
+Password for 'rfs.csl.sri.com' (leave blank if you are going to use private key): &lt;PASSWORD&gt;
+Port number for 'rfs.csl.sri.com' [22]:
+The 'rfs.csl.sri.com' server's key fingerprint is:
+&lt;FINGERPRINT&gt;
+If you trust this host, enter 'p' to add the key to the SVN cache and carry on connecting.
+If you want to carry on connecting just once, without adding the key to the cache, type 't'. If you do not trust this host, type 'R' to abandon the connection.
+(R)eject, accept (t)emporarily or accept (p)ermanently? p</source>
+                <p>Now the credentials should be cached (typically in ~/.subversion/auth/ or ~/.svn/auth) and a
+                subsequent call to the above command is <b>not</b> prompting for authentication anymore.  In this case,
+                LTC should now work since we are using the svnkit Java library and thus going through the same steps
+                to determine authenticity.  In case the above does not provide remedy, please send screen shots and
+                details to the <a href="mailto:lilalinda@users.sourceforge.net">lead developer</a>.</p>
+            </answer>
+        </faq>
+
     </part>
 
     <part id="troubleshooting-emacs">
@@ -161,7 +194,8 @@ The answer to the question of life is: 42
 
         <faq id="how-install">
             <question>
-                When I try to invoke ltc-mode in Emacs, it says "Error while initializing session: Why? url-http-response-status is nil".
+                When I try to invoke ltc-mode in Emacs, it says
+                "LTC Error: While initializing session: Why? url-http-response-status is nil".
             </question>
             <answer>
                 <p>Possible causes are that the server is not running or that the server uses a different port than the Emacs mode. If the server is running, check whether Emacs uses the same port as the server.  The port that the server uses was output on the command line where it was started and can also be found in the beginning of the log file ~/.LTC.log in a line ending similarly to the following.</p>

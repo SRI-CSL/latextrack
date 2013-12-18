@@ -27,22 +27,23 @@ import com.sri.ltc.versioncontrol.Remotes;
 import com.sri.ltc.versioncontrol.Repository;
 import com.sri.ltc.versioncontrol.TrackedFile;
 import org.tmatesoft.svn.core.SVNException;
-import org.tmatesoft.svn.core.wc.SVNClientManager;
-import org.tmatesoft.svn.core.wc.SVNInfo;
-import org.tmatesoft.svn.core.wc.SVNRevision;
+import org.tmatesoft.svn.core.auth.ISVNAuthenticationManager;
+import org.tmatesoft.svn.core.wc.*;
 import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import java.io.File;
 import java.io.IOException;
 
 public class SVNRepository implements Repository {
-    private Author defaultAuthor;
+    private final Author defaultAuthor;
     private Author currentAuthor;
-    private File initialPath;
-    private SVNClientManager clientManager = null;
+    private final File initialPath;
+    private final ISVNAuthenticationManager authManager;
+    private final SVNClientManager clientManager;
 
     public SVNRepository(File initialPath) throws Exception {
-        clientManager = SVNClientManager.newInstance();
+        authManager = SVNWCUtil.createDefaultAuthenticationManager();
+        clientManager = SVNClientManager.newInstance(null, authManager);
         this.initialPath = initialPath;
 
         defaultAuthor = new Author(System.getProperty("user.name"), null);
@@ -51,6 +52,10 @@ public class SVNRepository implements Repository {
 
     public SVNClientManager getClientManager() {
         return clientManager;
+    }
+
+    public ISVNAuthenticationManager getAuthManager() {
+        return authManager;
     }
 
     @Override
