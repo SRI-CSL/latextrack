@@ -317,8 +317,13 @@
 		   ;; init session with file name
 		   (setq session-id (ltc-method-call "init_session" (buffer-file-name))))
 	       ;; handling any initialization errors
-	       ('error 
-		(ltc-error "While initializing session: %s" (error-message-string err))
+	       ('error
+		;; if SVNAuthenticationException then display FAQ entry!
+		(ltc-error "While initializing session: %s %s" 
+			   (error-message-string err) 
+			   (if (string-match "SVNAuthenticationException" (error-message-string err)) 
+			       "\n\nFor a possible work-around see our FAQ at\n  http://latextrack.sourceforge.net/faq.html#svn-authentication" 
+			     ""))
 		nil))) ; 
 	(ltc-mode 0) ; an error occurred: toggle mode off again
       ;; else-forms: initialization of session was successful:
