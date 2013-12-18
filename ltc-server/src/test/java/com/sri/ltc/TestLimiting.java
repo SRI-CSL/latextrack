@@ -126,15 +126,27 @@ public final class TestLimiting {
         System.out.println();
     }
 
+    class ListNString {
+        public final List<String> list;
+        public final String text;
+        ListNString(List<String> list, String text) {
+            this.list = list;
+            this.text = text;
+        }
+    }
+
     @SuppressWarnings("unchecked")
-    private List<String> getRevs() throws XmlRpcException {
+    private ListNString getRevs() throws XmlRpcException {
         Map map = API.get_changes(sessionID, false, Base64.encodeBase64(fileTexts[fileTexts.length - 1].getBytes()), null, 0);
-        List<String> revs = (List<String>) map.get(LTCserverInterface.KEY_REVS);
-        // print revisions:
-        System.out.println(" active revisions:");
-        for (String rev : revs)
-            System.out.println("  "+rev.substring(0,7));
-        return revs;
+        ListNString result = new ListNString(
+                (List<String>) map.get(LTCserverInterface.KEY_REVS),
+                (String) map.get(LTCserverInterface.KEY_LAST));
+        // print stuff:
+//        System.out.println(" last revision: "+result.text.substring(0,7));
+//        System.out.println(" active revisions:");
+//        for (String rev : result.list)
+//            System.out.println("  "+rev.substring(0,7));
+        return result;
     }
 
     @Test
@@ -149,8 +161,9 @@ public final class TestLimiting {
         assertEquals("dates are equal", dateOfSecondCommit, limitingDate);
 
         // now get active revisions: should be one less than before
-        List<String> revs = getRevs();
-        assertEquals("one fewer revision", commits.size()-1, revs.size());
+        ListNString revs = getRevs();
+        assertEquals("last rev is the first commit", commits.get(4), revs.text);
+        assertEquals("one fewer revision", commits.size()-1, revs.list.size());
     }
 
     @Test
@@ -172,8 +185,9 @@ public final class TestLimiting {
         assertFalse("dates are not equal", limitingDate.equals(CommonUtils.serializeDate(dateOfThirdCommit)));
 
         // now get active revisions: should be two less than before
-        List<String> revs = getRevs();
-        assertEquals("three fewer revisions", commits.size()-3, revs.size());
+        ListNString revs = getRevs();
+        assertEquals("last rev is the third commit", commits.get(2), revs.text);
+        assertEquals("three fewer revisions", commits.size()-3, revs.list.size());
     }
 
     @Test
@@ -189,7 +203,9 @@ public final class TestLimiting {
         assertEquals("revision string", rev, API.set_limited_rev(sessionID, rev));
 
         // now get active revisions: should be two less than before
-        List<String> revs = getRevs();
-        assertEquals("two fewer revisions", commits.size()-2, revs.size());
+        ListNString revs = getRevs();
+        assertEquals("limiting rev is first active", rev, revs.list.get(0).substring(0,6));
+        assertEquals("last rev is one before limiting", commits.get(3), revs.text);
+        assertEquals("two fewer revisions", commits.size()-2, revs.list.size());
     }
 }

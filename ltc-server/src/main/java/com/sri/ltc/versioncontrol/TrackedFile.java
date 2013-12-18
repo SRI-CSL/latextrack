@@ -45,6 +45,7 @@ public abstract class TrackedFile<RepositoryClass extends Repository> {
         Unchanged,
         Unknown
     }
+    public static final String HAT_REVISION = "Hat on top of HEAD";
 
     /**
      * Obtain list of commits in topological order.  The list could be empty but not NULL.

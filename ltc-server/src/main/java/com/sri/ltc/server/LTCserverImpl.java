@@ -22,7 +22,6 @@
 package com.sri.ltc.server;
 
 import com.google.common.base.Function;
-import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.sri.ltc.CommonUtils;
@@ -31,7 +30,6 @@ import com.sri.ltc.filter.Author;
 import com.sri.ltc.filter.Filtering;
 import com.sri.ltc.versioncontrol.history.CompleteHistory;
 import com.sri.ltc.versioncontrol.history.HistoryUnit;
-import com.sri.ltc.versioncontrol.history.LimitedHistory;
 import com.sri.ltc.latexdiff.*;
 import com.sri.ltc.versioncontrol.*;
 import org.apache.commons.codec.binary.Base64;
@@ -94,8 +92,8 @@ public final class LTCserverImpl implements LTCserverInterface {
 
     private final static Logger LOGGER = Logger.getLogger(LTCserverImpl.class.getName());
 
-    private void logAndThrow(int code, String message) throws XmlRpcException {
-        XmlRpcException e = new XmlRpcException(code, message);
+    private void logAndThrow(int code, Throwable cause) throws XmlRpcException {
+        XmlRpcException e = new XmlRpcException(code, cause.getMessage(), cause);
         LOGGER.log(Level.SEVERE, e.getMessage(), e);
         throw e;
     }
@@ -103,7 +101,7 @@ public final class LTCserverImpl implements LTCserverInterface {
     private Session getSession(int sessionID) throws XmlRpcException {
         Session session = SessionManager.getSession(sessionID);
         if (session == null)
-            logAndThrow(1,"Cannot retrieve session with given ID");
+            logAndThrow(1, new RuntimeException("Cannot retrieve session with given ID "+sessionID));
         return session;
     }
 
@@ -117,20 +115,20 @@ public final class LTCserverImpl implements LTCserverInterface {
 
     public int init_session(String path) throws XmlRpcException {
         if (path == null)
-            logAndThrow(1,"Given path is NULL");
+            logAndThrow(1, new IllegalArgumentException("Given path is NULL"));
 
         LOGGER.info("Server: init_session with file \""+path+"\" called.");
 
         // is given path a valid file?
         File file = new File(path);
         if (!file.canRead())
-            logAndThrow(2,"Cannot read given file");
+            logAndThrow(2, new RuntimeException("Cannot read file "+file.getAbsolutePath()));
 
         Repository repository = null;
         try {
             repository = RepositoryFactory.fromPath(file);
         } catch (Exception e) {
-            logAndThrow(3, "Could not find version control (git or svn) for this file");
+            logAndThrow(3, new RuntimeException("Could not find version control (git or svn) for file "+file.getAbsolutePath()))   ;
         }
         updateProgress(3);
 
@@ -139,13 +137,13 @@ public final class LTCserverImpl implements LTCserverInterface {
             // test whether file tracked under git
             switch (trackedFile.getStatus()) {
                 case NotTracked:
-                    logAndThrow(4, "File not tracked under version control");
+                    logAndThrow(4, new RuntimeException("File \""+trackedFile.getFile().getName()+"\" not tracked under version control"));
                     break;
                 case Removed:
-                    logAndThrow(5, "File deleted or deleted to commit under version control");
+                    logAndThrow(5, new RuntimeException("File \""+trackedFile.getFile().getName()+"\" deleted or deleted to commit under version control"));
                     break;
                 case Unknown:
-                    logAndThrow(6, "File status unknown under version control");
+                    logAndThrow(6, new RuntimeException("File \""+trackedFile.getFile().getName()+"\" status unknown under version control"));
                     break;
 
                 default:
@@ -155,13 +153,13 @@ public final class LTCserverImpl implements LTCserverInterface {
 
             return SessionManager.createSession(trackedFile);
         } catch (IOException e) {
-            logAndThrow(7,"IOException during tracked file creation: "+e.getMessage());
+            logAndThrow(7, e);
         } catch (ParseException e) {
-            logAndThrow(8,"ParseException during tracked file creation: "+e.getMessage()+" (@"+e.getErrorOffset()+")");
+            logAndThrow(8, e);
         } catch (VersionControlException e) {
-            logAndThrow(10,"VersionControlException during tracked file creation: "+e.getMessage());
+            logAndThrow(10, e);
         } catch (IllegalStateException e) {
-            logAndThrow(11,"Tracked file already active under another session: "+e.getMessage());
+            logAndThrow(11, new RuntimeException("Tracked file already active under another session", e));
         }
 
         return -1;
@@ -171,7 +169,7 @@ public final class LTCserverImpl implements LTCserverInterface {
     public Map close_session(int sessionID, byte[] currentText64, List deletions, int caretPosition) throws XmlRpcException {
         Session session = SessionManager.finishSession(sessionID);
         if (session == null)
-            logAndThrow(1,"Cannot close session with given ID");
+            logAndThrow(1, new RuntimeException("Cannot close session with given ID "+sessionID));
 
         // translate current text
         String currentText = new String(Base64.decodeBase64(currentText64));
@@ -192,7 +190,7 @@ public final class LTCserverImpl implements LTCserverInterface {
                 caretPosition = document.getCaretPosition();
             }
         } catch (BadLocationException e) {
-            logAndThrow(2,"Cannot remove deletions at "+e.offsetRequested()+" while closing session: "+e.getMessage());
+            logAndThrow(2, e);
         }
 
         // create return value
@@ -227,11 +225,11 @@ public final class LTCserverImpl implements LTCserverInterface {
             out.write(currentText);
             out.close();
         } catch (BadLocationException e) {
-            logAndThrow(2,"Cannot apply recent edits at "+e.offsetRequested()+" while saving file: "+e.getMessage());
+            logAndThrow(2, e);
         } catch (FileNotFoundException e) {
-            logAndThrow(4,"FileNotFoundException during saving file: "+e.getMessage());
+            logAndThrow(4, e);
         } catch (IOException e) {
-            logAndThrow(3,"IOException during saving file: "+e.getMessage());
+            logAndThrow(3, e);
         }
 
         return 0;
@@ -259,62 +257,25 @@ public final class LTCserverImpl implements LTCserverInterface {
             currentText = (String) map.get(MarkedUpDocument.KEYS.TEXT);
             caretPosition = (Integer) map.get(MarkedUpDocument.KEYS.POSITION);
         } catch (BadLocationException e) {
-            logAndThrow(7,"Cannot remove deletions at "+e.offsetRequested()+" while getting changes: "+e.getMessage());
+            logAndThrow(7, e);
         }
         updateProgress(10);
 
         Filtering filter = Filtering.getInstance();
-        Author self = session.getTrackedFile().getRepository().getSelf();
 
         // obtain file history from version control, disk, and session (obeying any filters):
         List<HistoryUnit> units = new ArrayList<HistoryUnit>();
         try {
             // create history with limits and obtain revision IDs, authors, and readers:
-            LimitedHistory history = session.createLimitedHistory(filter.getStatus(BoolPrefs.COLLAPSE_AUTHORS)); // whether to condense authors or not
-            updateProgress(12);
-            units = history.getHistoryUnits();
-            updateProgress(45);
-
-            // add file on disk to list, if modified or new but not committed yet
-            switch (session.getTrackedFile().getStatus()) {
-                case Added:
-                case Modified:
-                case Changed:
-                case Conflicting: // TODO: once we implement merge assistance, maybe this gets handled differently
-                    HistoryUnit last = Iterables.getLast(units, null);
-                    if (last != null && filter.getStatus(BoolPrefs.COLLAPSE_AUTHORS) && last.author.equals(self))
-                        // replace last unit if collapsing authors:
-                        units.remove(units.size()-1);
-                    // add new unit for ON DISK:
-                    units.add(new HistoryUnit(self,
-                            LTCserverInterface.ON_DISK,
-                            new FileReaderWrapper(session.getTrackedFile().getFile().getCanonicalPath())));
-            }
-            // add current text from editor, if modified since last save:
-            if (isModified) {
-                // check if ON DISK or collapsing authors && last one equals self:
-                HistoryUnit last = Iterables.getLast(units, null);
-                if (last != null &&
-                        (LTCserverInterface.ON_DISK.equals(last.revision) ||
-                                (filter.getStatus(BoolPrefs.COLLAPSE_AUTHORS) && last.author.equals(self))))
-                    // replace last unit
-                    units.remove(units.size()-1);
-                // add new unit for MODIFIED:
-                units.add(new HistoryUnit(self,
-                        LTCserverInterface.MODIFIED,
-                        new StringReaderWrapper(currentText)));
-            }
-            // if no history, then use text from file and self as author
-            if (units.isEmpty())
-                units.add(new HistoryUnit(self, "",
-                        new FileReaderWrapper(session.getTrackedFile().getFile().getCanonicalPath())));
+            units = session.createLimitedHistory(filter.getStatus(BoolPrefs.COLLAPSE_AUTHORS), // whether to condense authors or not
+                    isModified, currentText);
             updateProgress(47);
         } catch (IOException e) {
-            logAndThrow(5,"IOException during log retrieval: "+e.getMessage());
+            logAndThrow(5, e);
         } catch (ParseException e) {
-            logAndThrow(6,"ParseException during log retrieval: "+e.getMessage()+" (@"+e.getErrorOffset()+")");
+            logAndThrow(6, e);
         } catch (Exception e) {
-            logAndThrow(7,"General Exception during log retrieval: "+e.getMessage());
+            logAndThrow(7, e);
         }
 
         // compute colors and indices of authors:
@@ -339,7 +300,7 @@ public final class LTCserverImpl implements LTCserverInterface {
                     try {
                         computeUniqueColor(a, defaultColors, currentColors);
                     } catch (BackingStoreException e) {
-                        logAndThrow(8,"Cannot obtain preferences for author "+a+" while getting changes: "+e.getMessage());
+                        logAndThrow(8, e);
                     }
                 mappedAuthors.put(sortedAuthors.indexOf(a), concatAuthorAndColor(a));
             }
@@ -348,12 +309,13 @@ public final class LTCserverImpl implements LTCserverInterface {
                 indices.add(sortedAuthors.indexOf(a));
         }
         // handle self if not already computed:
+        Author self = session.getTrackedFile().getRepository().getSelf();
         if (!authors.contains(self) && !filter.getStatus(BoolPrefs.ALLOW_SIMILAR_COLORS))  // create unique colors for all authors + self
             try {
                 computeUniqueColor(self, defaultColors, currentColors);
                 mappedAuthors.put(-1, concatAuthorAndColor(self));
             } catch (BackingStoreException e) {
-                logAndThrow(8,"Cannot obtain preferences for author (self) "+self+" while getting changes: "+e.getMessage());
+                logAndThrow(8, e);
             }
         updateProgress(50);
 
@@ -398,9 +360,10 @@ public final class LTCserverImpl implements LTCserverInterface {
                             return unit.revision;
                         }
                     })); // add list of revisions used in accumulation: remove the base version!
+            map.put(LTCserverInterface.KEY_LAST, units.get(0).revision); // base version
             session.getAccumulate().removePropertyChangeListener(listener);
         } catch (Exception e) {
-            logAndThrow(2,"Exception during change accumulation: "+e.getMessage());
+            logAndThrow(2, e);
         }
         updateProgress(90);
 
@@ -472,11 +435,11 @@ public final class LTCserverImpl implements LTCserverInterface {
         try {
             return new CompleteHistory(session.getTrackedFile()).update();
         } catch (ParseException e) {
-            logAndThrow(2, "ParseException during retrieval of commit graph: "+e.getMessage()+" (offset = "+e.getErrorOffset()+")");
+            logAndThrow(2, e);
         } catch (IOException e) {
-            logAndThrow(4,"IOException during retrieval of commit graph: "+e.getMessage());
+            logAndThrow(4, e);
         } catch (Exception e) {
-            logAndThrow(4,"General Exception during retrieval of commit graph: "+e.getMessage());
+            logAndThrow(5, e);
         }
         return null;
     }
@@ -488,7 +451,7 @@ public final class LTCserverImpl implements LTCserverInterface {
         } catch (IllegalArgumentException e) {
             // ignore
         } catch (Exception e) {
-            logAndThrow(2, "Exception during get_self: "+e.getMessage());
+            logAndThrow(2, e);
         }
         return new Object[0]; // if self is undefined
     }
@@ -501,7 +464,7 @@ public final class LTCserverImpl implements LTCserverInterface {
             session.addAuthors(Collections.singleton(a));
         } catch (IllegalArgumentException e) {
             // thrown by constructor of Author
-            logAndThrow(4,"Cannot create author to set as self with given arguments: "+e.getMessage());
+            logAndThrow(4, e);
         }
         return get_self(sessionID);
     }
@@ -511,7 +474,7 @@ public final class LTCserverImpl implements LTCserverInterface {
         try {
             session.getTrackedFile().getRepository().resetSelf();
         } catch (Exception e) {
-            logAndThrow(5,"Exception during resetting self: "+e.getMessage());
+            logAndThrow(5, e);
         }
         return get_self(sessionID);
     }
@@ -537,7 +500,7 @@ public final class LTCserverImpl implements LTCserverInterface {
             for (Object[] authorAsList : (List<Object[]>) authors)
                 session.addLimitedAuthor(Author.fromList(authorAsList));
         } catch (Exception e) {
-            logAndThrow(2, e.getMessage());
+            logAndThrow(2, e);
         }
         return get_limited_authors(sessionID);
     }
@@ -586,7 +549,7 @@ public final class LTCserverImpl implements LTCserverInterface {
             BoolPrefs boolPref = BoolPrefs.valueOf(key);
             return Filtering.getInstance().getStatus(boolPref);
         } catch (IllegalArgumentException e) {
-            logAndThrow(1, e.getMessage());
+            logAndThrow(1, e);
         }
         return false;
     }
@@ -597,7 +560,7 @@ public final class LTCserverImpl implements LTCserverInterface {
             Filtering.getInstance().setStatus(boolPref, value);
             LOGGER.fine("Server: turning boolean preference for \"" + key + (value ? "\" on." : "\" off."));
         } catch (IllegalArgumentException e) {
-            logAndThrow(1, e.getMessage());
+            logAndThrow(1, e);
         }
         return 0;
     }
@@ -620,7 +583,7 @@ public final class LTCserverImpl implements LTCserverInterface {
         LOGGER.fine("Server: creating bug report in directory \""+outputDirectory+"\"");
 
         if (outputDirectory == null || outputDirectory.isEmpty())
-            logAndThrow(5, "Cannot create bug report with empty or NULL output directory");
+            logAndThrow(5, new IllegalArgumentException("Cannot create bug report with empty or NULL output directory"));
 
         File outputDirectoryFile = new File(outputDirectory);
         if (outputDirectoryFile.mkdirs()) {
@@ -633,7 +596,7 @@ public final class LTCserverImpl implements LTCserverInterface {
             try {
                 bundle = getSession(sessionID).getTrackedFile().getRepository().getBundle(new File(outputDirectory));
             } catch (IOException e) {
-                logAndThrow(4, "IOException while creating repository bundle: " + e.getMessage());
+                logAndThrow(4, e);
             }
 
         // create an XML with current settings etc.
@@ -675,9 +638,9 @@ public final class LTCserverImpl implements LTCserverInterface {
 
             zos.close();
         } catch (FileNotFoundException e) {
-            logAndThrow(2, "FileNotFoundException while creating report as ZIP file: " + e.getMessage());
+            logAndThrow(2, e);
         } catch (IOException e) {
-            logAndThrow(3, "IOException while creating report as ZIP file: "+e.getMessage());
+            logAndThrow(3, e);
         }
 
         return zipFile.getAbsolutePath();
@@ -709,7 +672,7 @@ public final class LTCserverImpl implements LTCserverInterface {
 
     public String get_color(String authorName, String authorEmail) throws XmlRpcException {
         if (authorName == null || "".equals(authorName))
-            logAndThrow(10, "Cannot get color with NULL or empty author name");
+            logAndThrow(10, new IllegalArgumentException("Cannot get color with NULL or empty author name"));
 
         Author author = new Author(authorName, authorEmail);
         LOGGER.fine("Server: getting color for author \""+author+"\" called.");
@@ -741,7 +704,7 @@ public final class LTCserverImpl implements LTCserverInterface {
 
     public int set_color(String authorName, String authorEmail, String hexColor) throws XmlRpcException {
         if (authorName == null || "".equals(authorName))
-            logAndThrow(1, "Cannot set color with NULL or empty author name");
+            logAndThrow(1, new IllegalArgumentException("Cannot set color with NULL or empty author name"));
 
         Author author = new Author(authorName, authorEmail);
         LOGGER.fine("Server: setting color for author \""+author+"\" to " + hexColor + ".");
@@ -753,9 +716,9 @@ public final class LTCserverImpl implements LTCserverInterface {
                         Color.decode(hexColor).getRGB());
                 preferences.flush();
             } catch (NumberFormatException e) {
-                logAndThrow(2, "NumberFormatException while decoding given color: "+e.getMessage());
+                logAndThrow(2, e);
             } catch (BackingStoreException e) {
-                logAndThrow(3, "BackingStoreException while setting author color: "+e.getMessage());;
+                logAndThrow(3, e);
             }
         }
         return 0;
@@ -763,7 +726,7 @@ public final class LTCserverImpl implements LTCserverInterface {
 
     public int reset_color(String authorName, String authorEmail) throws XmlRpcException {
         if (authorName == null || "".equals(authorName))
-            logAndThrow(1, "Cannot reset color with NULL or empty author name");
+            logAndThrow(1, new IllegalArgumentException("Cannot reset color with NULL or empty author name"));
         synchronized (preferences) {
             preferences.remove(getColorKey(new Author(authorName, authorEmail)));
         }
@@ -778,7 +741,7 @@ public final class LTCserverImpl implements LTCserverInterface {
                         preferences.remove(key);
                 }
             } catch (BackingStoreException e) {
-                logAndThrow(1, "BackingStoreException while removing stored colors: "+e.getMessage());
+                logAndThrow(1, e);
             }
         }
         return 0;
@@ -827,7 +790,7 @@ public final class LTCserverImpl implements LTCserverInterface {
         try {
             documentBuilder = documentBuilderFactory.newDocumentBuilder();
         } catch (ParserConfigurationException e) {
-            logAndThrow(2, "Could not create document builder:" + e.getMessage());
+            logAndThrow(2, e);
         }
 
         assert documentBuilder != null;
@@ -868,16 +831,13 @@ public final class LTCserverImpl implements LTCserverInterface {
             Element element = document.createElement("active-revisions");
             rootElement.appendChild(element);
 
-            LimitedHistory history = null;
             try {
-                history = session.createLimitedHistory(get_bool_pref(BoolPrefs.COLLAPSE_AUTHORS.name()));
+                for (HistoryUnit unit : session.createLimitedHistory(get_bool_pref(BoolPrefs.COLLAPSE_AUTHORS.name()),
+                        false, "")) {  // TODO: decide to break the API and add 2 arguments to "create_bug_report"?
+                    addSimpleTextNode(document, element, "sha", unit.revision, null);
+                }
             } catch (Exception e) {
-                logAndThrow(3, "Could not create LimitedHistory:" + e.getMessage());
-            }
-
-            assert history != null;
-            for (HistoryUnit unit : history.getHistoryUnits()) {
-                addSimpleTextNode(document, element, "sha", unit.revision, null);
+                logAndThrow(3, e);
             }
         }
 
@@ -900,13 +860,12 @@ public final class LTCserverImpl implements LTCserverInterface {
             addSimpleTextNode(document, rootElement, "bundle-name", bundle.getName(), null);
 
         // create XML file:
-
         TransformerFactory transformerFactory = TransformerFactory.newInstance();
         Transformer transformer = null;
         try {
             transformer = transformerFactory.newTransformer();
         } catch (TransformerConfigurationException e) {
-            logAndThrow(4, "Could not create transformer:" + e.getMessage());
+            logAndThrow(4, e);
         }
         assert transformer != null;
 
@@ -918,7 +877,7 @@ public final class LTCserverImpl implements LTCserverInterface {
             File file = new File(outputFileNameAndPath);
             fileWriter = new FileWriter(file, false);
         } catch (IOException e) {
-            logAndThrow(5, "Could not create output file: " + e.getMessage());
+            logAndThrow(5, e);
         }
         assert fileWriter != null;
 
@@ -930,9 +889,9 @@ public final class LTCserverImpl implements LTCserverInterface {
             fileWriter.flush();
             fileWriter.close();
         } catch (TransformerException e) {
-            logAndThrow(6, "Could not transform document: " + e.getMessage());
+            logAndThrow(6, e);
         } catch (IOException e) {
-            logAndThrow(7, "Exception creating report xml file:" + e.getMessage());
+            logAndThrow(7, e);
         }
     }
 }

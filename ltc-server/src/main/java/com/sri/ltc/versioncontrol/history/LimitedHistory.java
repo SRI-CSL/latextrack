@@ -25,7 +25,6 @@ import com.google.common.collect.Lists;
 import com.sri.ltc.CommonUtils;
 import com.sri.ltc.filter.Author;
 import com.sri.ltc.latexdiff.CommitReaderWrapper;
-import com.sri.ltc.latexdiff.ReaderWrapper;
 import com.sri.ltc.versioncontrol.Commit;
 import com.sri.ltc.versioncontrol.TrackedFile;
 import com.sri.ltc.versioncontrol.VersionControlException;
@@ -110,10 +109,10 @@ public final class LimitedHistory extends FileHistory {
     }
 
     public final List<HistoryUnit> getHistoryUnits() {
+        // obtain units from version control:
         List<HistoryUnit> units = Lists.newArrayList();
         for (Commit commit : commitList)
             units.add(new HistoryUnit(commit.getAuthor(), commit.getId(), new CommitReaderWrapper(commit)));
         return units;
-
     }
 }

@@ -26,12 +26,16 @@ import com.sri.ltc.filter.Author;
 import com.sri.ltc.server.LTCserverInterface;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.xmlrpc.XmlRpcException;
+import org.tmatesoft.svn.core.SVNAuthenticationException;
 
 import javax.swing.*;
+import javax.swing.event.HyperlinkEvent;
+import javax.swing.event.HyperlinkListener;
 import java.awt.*;
 import java.io.File;
 import java.io.IOException;
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URLEncoder;
 import java.util.Collections;
 import java.util.List;
@@ -105,21 +109,74 @@ public class LTCSession {
                         LOGGER.log(Level.SEVERE, e.getMessage(), e);
                     } catch (ExecutionException e) {
                         LOGGER.log(Level.SEVERE, e.getMessage(), e);
-                        JOptionPane.showMessageDialog(editor.getFrame(),
-                                "An error occurred:\n"+e.getMessage(),
-                                "Error while initializing",
-                                JOptionPane.ERROR_MESSAGE);
+                        StringBuilder message = new StringBuilder(formatException(e.getCause()));
+                        if (e.getCause() != null && e.getCause().getCause() != null &&
+                                e.getCause().getCause().getCause() instanceof SVNAuthenticationException) {
+                            message.append("<br><br>For a possible work-around see<br>");
+                            message.append("&nbsp;&nbsp;<a href=\"http://latextrack.sourceforge.net/faq.html#svn-authentication\">");
+                            message.append("http://latextrack.sourceforge.net/faq.html#svn-authentication</a>");
+                            // use solution from http://stackoverflow.com/questions/8348063/clickable-links-in-joptionpane
+                            JEditorPane ep = createEPforDialogs(message.toString());
+                            // handle link events
+                            ep.addHyperlinkListener(new HyperlinkListener() {
+                                @Override
+                                public void hyperlinkUpdate(HyperlinkEvent event) {
+                                    if (event.getEventType().equals(HyperlinkEvent.EventType.ACTIVATED)) {
+                                        // close dialog
+                                        SwingUtilities.getWindowAncestor((Component) event.getSource()).dispose();
+                                        // try to browse
+                                        if (Desktop.isDesktopSupported()) {
+                                            try {
+                                                Desktop.getDesktop().browse(event.getURL().toURI());
+                                            } catch (URISyntaxException e1) {
+                                                LOGGER.log(Level.SEVERE, e1.getMessage(), e1);
+                                            } catch (IOException e1) {
+                                                LOGGER.log(Level.SEVERE, e1.getMessage(), e1);
+                                            }
+                                        } else
+                                            JOptionPane.showMessageDialog(editor.getFrame(),
+                                                    createEPforDialogs("Please copy and paste URL to your browser:<br>"
+                                                            + "&nbsp;&nbsp;http://latextrack.sourceforge.net/faq.html#svn-authentication"),
+                                                    "Cannot open browser",
+                                                    JOptionPane.ERROR_MESSAGE);
+                                    }
+                                }
+                            });
+                            // show
+                            JOptionPane.showMessageDialog(editor.getFrame(), ep,
+                                    "Error while initializing",
+                                    JOptionPane.ERROR_MESSAGE);
+                        } else
+                            JOptionPane.showMessageDialog(editor.getFrame(),
+                                    message.toString(),
+                                    "Error while initializing",
+                                    JOptionPane.ERROR_MESSAGE);
                     }
             }
         }).execute();
+    }
+
+    private JEditorPane createEPforDialogs(String text) {
+        // for copying style
+        JLabel label = new JLabel();
+        Font font = label.getFont();
+        JEditorPane ep = new JEditorPane("text/html", "<html><body style=\"font-family:"
+                + font.getFamily() + ";font-weight:"
+                + (font.isBold() ? "bold" : "normal") + ";font-size:"
+                + font.getSize() + "pt;\">"
+                + text
+                + "</body></html>");
+        ep.setEditable(false);
+        ep.setBackground(label.getBackground());
+        return ep;
     }
 
     public void close() {
         if (!isValid()) return;
 
         // create new worker to close session
-        executeWorkerAndWait(new LTCWorker<Map,Void>(editor.getFrame(), ID,
-                "Closing...", "<html>Closing track changes of file<br>"+getCanonicalPath()+"</html>", false) {
+        executeWorkerAndWait(new LTCWorker<Map, Void>(editor.getFrame(), ID,
+                "Closing...", "<html>Closing track changes of file<br>" + getCanonicalPath() + "</html>", false) {
             @Override
             protected Map callLTCinBackground() throws XmlRpcException {
                 int lastID = ID;
@@ -135,7 +192,8 @@ public class LTCSession {
     }
 
     public void startUpdate(final String date, final String rev,
-                            final boolean isModified, final String currentText, final List<Object[]> deletions, final int caretPosition) {
+                            final boolean isModified, final String currentText,
+                            final List<Object[]> deletions, final int caretPosition) {
         if (!isValid()) return;
 
         // create new worker to update session
@@ -177,15 +235,18 @@ public class LTCSession {
                                 (List<Integer[]>) map.get(LTCserverInterface.KEY_STYLES),
                                 (Integer) map.get(LTCserverInterface.KEY_CARET),
                                 (List<String>) map.get(LTCserverInterface.KEY_REVS),
+                                (String) map.get(LTCserverInterface.KEY_LAST),
                                 commits);
                     } catch (InterruptedException e) {
                         LOGGER.log(Level.SEVERE, e.getMessage(), e);
                     } catch (ExecutionException e) {
                         LOGGER.log(Level.SEVERE, e.getMessage(), e);
                         JOptionPane.showMessageDialog(editor.getFrame(),
-                                "An error occurred:\n"+e.getMessage(),
+                                formatException(e.getCause()),
                                 "Error while updating",
                                 JOptionPane.ERROR_MESSAGE);
+                    } finally {
+                        editor.textPane.startFiltering(); // in case we displayed an error
                     }
             }
         }).execute();
@@ -195,8 +256,8 @@ public class LTCSession {
         if (!isValid()) return;
 
         // create new worker to save file in session
-        executeWorkerAndWait(new LTCWorker<Void,Void>(editor.getFrame(), ID,
-                "Saving...", "<html>Saving file<br>"+getCanonicalPath()+"</html>", false) {
+        executeWorkerAndWait(new LTCWorker<Void, Void>(editor.getFrame(), ID,
+                "Saving...", "<html>Saving file<br>" + getCanonicalPath() + "</html>", false) {
             @Override
             protected Void callLTCinBackground() throws XmlRpcException {
                 LTC.save_file(ID, Base64.encodeBase64(currentText.getBytes()), deletions);
@@ -234,7 +295,7 @@ public class LTCSession {
         }).execute();
     }
 
-    public void setLimitedAuthors(final boolean allLimited, final List<String[]> limitedAuthors) {
+    public void setLimitedAuthors(final List<String[]> limitedAuthors) {
         if (!isValid()) return;
 
         // create new worker to set limited authors in session
@@ -242,7 +303,7 @@ public class LTCSession {
                 "Setting...", "Setting limited authors", false) {
             @Override
             protected Void callLTCinBackground() throws XmlRpcException {
-                if (allLimited)
+                if (limitedAuthors == null || limitedAuthors.isEmpty())
                     LTC.reset_limited_authors(ID);
                 else
                     LTC.set_limited_authors(ID, limitedAuthors);
@@ -280,7 +341,7 @@ public class LTCSession {
         // if color == null then get otherwise set color
 
         // create new worker to set or get
-        executeWorkerAndWait(new LTCWorker<String,Void>(editor.getFrame(), ID,
+        executeWorkerAndWait(new LTCWorker<String, Void>(editor.getFrame(), ID,
                 "...", "getting or setting color", false) {
             @Override
             protected String callLTCinBackground() throws XmlRpcException {
@@ -347,10 +408,14 @@ public class LTCSession {
                     LOGGER.log(Level.SEVERE, e.getMessage(), e);
                 } catch (ExecutionException e) {
                     LOGGER.log(Level.SEVERE, e.getMessage(), e);
+                    JOptionPane.showMessageDialog(editor.getFrame(),
+                            formatException(e.getCause()),
+                            "Error while creating bug report",
+                            JOptionPane.ERROR_MESSAGE);
                 } catch (IOException e) {
                     LOGGER.log(Level.SEVERE, e.getMessage(), e);
                     JOptionPane.showMessageDialog(editor.getFrame(),
-                            "An error occurred:\n"+e.getMessage(),
+                            formatException(e),
                             "Error while opening email client",
                             JOptionPane.ERROR_MESSAGE);
                 }
@@ -366,5 +431,12 @@ public class LTCSession {
                 Thread.sleep(500);
             } catch (InterruptedException ignored) {}
         } while ((!worker.isDone()));
+    }
+
+    private String formatException(Throwable e) {
+        if (e.getCause() == null)
+            return e.getMessage();
+        else
+            return formatException(e.getCause());
     }
 }

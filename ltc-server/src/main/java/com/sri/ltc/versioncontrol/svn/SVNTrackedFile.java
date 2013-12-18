@@ -111,7 +111,6 @@ public class SVNTrackedFile extends TrackedFile<SVNRepository> {
 
             put(SVNStatusType.STATUS_IGNORED.getID(), Status.Ignored);
         }
-
         // the following codes exist in SVNStatusType but are not included in the map above. These
         // will map to "Unknown".
         //        public static final SVNStatusType INAPPLICABLE = new SVNStatusType(0, "inapplicable");
@@ -129,6 +128,7 @@ public class SVNTrackedFile extends TrackedFile<SVNRepository> {
         //        public static final SVNStatusType STATUS_NAME_CONFLICT = new SVNStatusType(-1, "name_conflict", 'N');
         //        public static final SVNStatusType STATUS_MERGED = new SVNStatusType(8, "merged", 'G');
         //        public static final SVNStatusType NO_MERGE = new SVNStatusType(14, "no_merge");
+        private static final long serialVersionUID = 6244733234217276311L;
     };
     private final static Set<SVNStatusType> STATE_WITH_LOG = Collections.unmodifiableSet(Sets.newHashSet(
             SVNStatusType.STATUS_NORMAL,
@@ -166,15 +166,42 @@ public class SVNTrackedFile extends TrackedFile<SVNRepository> {
 
     @Override
     public List<Commit> getCommits(@Nullable Date inclusiveLimitDate, @Nullable String inclusiveLimitRevision) throws VersionControlException {
-        SVNLogEntryHandler handler = new SVNLogEntryHandler(
-                this,
-                inclusiveLimitDate,
-                (inclusiveLimitRevision == null) ? null : Long.parseLong(inclusiveLimitRevision));
-
+        SVNLogEntryHandler handler = null;
         List<Commit> commits = null;
+
         try {
             SVNClientManager manager = getRepository().getClientManager();
             SVNStatus status = manager.getStatusClient().doStatus(getFile(), false);
+
+            // when HAT_REVISION.equals(inclusiveLimitRev), we need to limit to latest revision+1
+            try {
+                handler = new SVNLogEntryHandler(
+                        this,
+                        inclusiveLimitDate,
+                        inclusiveLimitRevision == null ?
+                                null :
+                                HAT_REVISION.equals(inclusiveLimitRevision) ?
+                                        status.getRevision().getNumber()+1L :  // HAT means latest revision + 1
+                                        Long.parseLong(inclusiveLimitRevision));
+            } catch (NumberFormatException e) {
+                throw new VersionControlException("Given revision \""+inclusiveLimitRevision+"\" is not a number");
+            }
+
+//            // TODO: this is where authentication might be required:
+//            try {
+//                KeyStore keyStore = KeyStore.getInstance("KeychainStore", "Apple");
+//                keyStore.load(null, null);
+//            } catch (NoSuchProviderException e) {
+//            } catch (KeyStoreException e) {
+//                new VersionControlException(e);
+//            } catch (CertificateException e) {
+//                new VersionControlException(e);
+//            } catch (NoSuchAlgorithmException e) {
+//                new VersionControlException(e);
+//            } catch (IOException e) {
+//                new VersionControlException(e);
+//            }
+
             if (STATE_WITH_LOG.contains(status.getContentsStatus()))
                 manager.getLogClient().doLog(new File[]{getFile()},
                         SVNRevision.UNDEFINED, SVNRevision.UNDEFINED, false, false, 0, handler);
@@ -182,6 +209,7 @@ public class SVNTrackedFile extends TrackedFile<SVNRepository> {
         } catch (SVNException e) {
             throw new VersionControlException(e);
         }
+
         return commits;
     }
 
