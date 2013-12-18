@@ -27,6 +27,21 @@
         <author email="lilalinda at users.sourceforge.net">Linda Briesemeister</author>
     </properties>
     <body>
+        <release version="1.0.3" date="2013-12-18">
+            <action dev="lilalinda" type="add">
+                Improved error message handling for SVN authentication issues.  Added a FAQ item, which is also shown
+                when error occurs in LTC Editor or ltc-mode.
+            </action>
+            <action dev="lilalinda" type="add">
+                Redesigned LTC Editor to have a more compact view on LTC information (strongly influenced by Emacs'
+                info buffer).  Still a few issues open here (continue to develop on feature branch).
+            </action>
+            <action dev="lilalinda" type="fix" issue="42">
+                Allowing limiting by latest version on disk or in editor, which results in empty changes but might be
+                nice to temporarily see the document without changes.
+            </action>
+        </release>
+
         <release version="1.0.2" date="2013-11-19">
             <action dev="lilalinda" type="add" due-to="Peter">
                 New Emacs function to undo-change at point or all changes by the same author or in region.  (Needs to
@@ -36,10 +51,13 @@
                 The coloring of the revision history is now more intuitive -- the first version with changes is now
                 shown as the first active/colored one instead of the base version with which to compare.
             </action>
-            <action dev="lilalinda" issue="17">
+            <action dev="lilalinda" type="fix" issue="17">
                 Better control of debug and log output in Emacs.  Now there is a customizable toggle in the "ltc" group
                 that governs the amount of output in *Messages*.  The contents of the *Messages* buffer is also copied
                 into the bug report.
+            </action>
+            <action dev="lilalinda" type="fix" issue="44">
+                Fixed issue that prevented SVN-controlled files in subdirectories to work.
             </action>
         </release>
 
