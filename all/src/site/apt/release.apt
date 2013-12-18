@@ -134,7 +134,7 @@ $> git flow release finish v1.0
   propagate this to the remote branch.
 
 +---
-$> git checkout develop
+$> git checkout develop  # this may not be necessary
 $> mvn versions:set -DnewVersion=1.1-SNAPSHOT
 $> mvn versions:commit
 $> git commit -am "bumping next release number to v1.1-SNAPSHOT"
@@ -157,8 +157,3 @@ Connection to shell-24002 closed by remote host.
 Connection to shell-24002 closed.
 Connection to shell.sf.net closed.
 +---
-
-Announcement
-
-  Once the release is performed, check the status of the project web page and consider announcing it via
-  the mailing list.
