@@ -292,7 +292,7 @@ public final class LTCEditor extends LTCGui {
             }
         });
         // TODO" testing ComponentBorder
-        final AuthorPanel authorPanel = new AuthorPanel();
+        final AuthorPanel authorPanel = new AuthorPanel(authorField.getBackground());
         ComponentBorder cb = new ComponentBorder(authorPanel, ComponentBorder.Edge.LEFT);
         cb.install(authorField);
 //        authorField.setEnabled(false); // TODO: re-enable once figuring out the editing!
@@ -300,7 +300,6 @@ public final class LTCEditor extends LTCGui {
             public void actionPerformed(ActionEvent e) {
                 authorPanel.addAuthor(new Author(authorField.getText(), null));
                 authorField.setText("");
-//                authorField.repaint();
                 // TODO: validate first, set limited
 //                getUpdateButton().doClick();
             }

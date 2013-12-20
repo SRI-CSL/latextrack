@@ -26,8 +26,11 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * Describing an author under GIT.  Authors have unique names and non-empty email addresses.
+ * Describing an author for version control systems.  Authors have unique names and possibly empty email addresses.
  * Their default initials are computed as the capital letters of all beginning words in the full name.
+ *
+ * When comparing them, we do so lexicographically but ignoring case.  Thus, this implementation of
+ * {@link java.lang.Comparable} is not consistent with <code>equals</code>.
  *
  * @author linda
  */
@@ -82,9 +85,9 @@ public final class Author implements Comparable<Author> {
 
     @Override
     public int compareTo(Author author) {
-        int result = name.compareTo(author.name);
+        int result = name.toLowerCase().compareTo(author.name.toLowerCase());
         if (result == 0)
-            return email.compareTo(author.email);
+            return email.toLowerCase().compareTo(author.email.toLowerCase());
         return result;
     }
 

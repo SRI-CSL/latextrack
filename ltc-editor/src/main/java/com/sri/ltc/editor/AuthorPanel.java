@@ -4,6 +4,9 @@ import com.sri.ltc.filter.Author;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.util.Iterator;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
@@ -16,33 +19,107 @@ import java.util.TreeSet;
  */
 public class AuthorPanel extends JPanel {
 
-    private final int HEIGHT = new JLabel("T").getPreferredSize().height; // TODO; adjust when using custom labels!
+    private static int HEIGHT;
     private final SortedSet<Author> model = new TreeSet<Author>();
 
-    public AuthorPanel() {
+    public AuthorPanel(Color background) {
         super(); // using FLowLayout!
-        Component c = add(new JLabel("T")); // TODO: remove
-//        add(new JLabel("dudi")); // TODO: remove
-        setBackground(Color.yellow); // TODO: remove
-//        authorPanel.setBackground(authorField.getBackground()); // TODO: uncomment
+
+        // add one author label temporarily to calculate height:
+        Component c = add(new AuthorLabel(new Author("A", null)));
+        HEIGHT = super.getPreferredSize().height;
+        remove(c);
+
+        setBackground(background);
+    }
+
+    @Override
+    public Dimension getPreferredSize() {
+        int width = 0;
+        if (getComponents().length > 0)
+            width = super.getPreferredSize().width;
+        return new Dimension(width, HEIGHT);
     }
 
     public boolean addAuthor(Author author) {
-        boolean result = model.add(author);
-        if (result) {
-            add(new JLabel(author.toString()));
-            setSize(getPreferredSize()); // copying what CompoundBorder does...
+        synchronized (model) {
+            boolean result = model.add(author);
+            if (result)
+                update();
+            return result;
         }
-        return result;
     }
 
-//    @Override
-//    public Dimension getPreferredSize() {
-//        int width = 0;
-//        Component[] components = getComponents();
-//        for (Component c : components)
-//            width += (c.getPreferredSize().width);
-//        width += (components.length - 1) * ((FlowLayout) getLayout()).getHgap(); // add spaces in between
-//        return new Dimension(width, HEIGHT);
-//    }
+    private boolean removeAuthor(Author author) {
+        synchronized (model) {
+            boolean result = model.remove(author);
+            if (result)
+                update();
+            return result;
+        }
+    }
+
+    private void update() {
+        synchronized (model) {
+            // remove all components and add them in alphabetical order
+            removeAll();
+            for (Iterator<Author> i = model.iterator(); i.hasNext(); ) {
+                add(new AuthorLabel(i.next()));
+            }
+            setSize(getPreferredSize()); // copying what CompoundBorder does...
+            revalidate();
+        }
+    }
+
+    private class AuthorLabel extends JLabel {
+        public AuthorLabel(final Author author) {
+            super(author.name, new RemoveIcon(), JLabel.CENTER);
+            setHorizontalTextPosition(JLabel.LEADING);
+
+            // react to clicks by deleting from panel
+            addMouseListener(new MouseAdapter() {
+                @Override
+                public void mouseClicked(MouseEvent e) {
+                    AuthorPanel.this.removeAuthor(author);
+                }
+            });
+            setToolTipText("<html>Click to remove<br>\""+author.toString()+"\"</html>");
+
+            // draw a little thin line border and then some space
+            setBorder(BorderFactory.createCompoundBorder(
+                    BorderFactory.createLineBorder(Color.LIGHT_GRAY, 1),
+                    BorderFactory.createEmptyBorder(0, 4, 0, 4)));
+        }
+    }
+
+    private class RemoveIcon implements Icon {
+
+        private final static int LENGTH = 8; // pixels for square
+
+        @Override
+        public void paintIcon(Component c, Graphics g, int x, int y) {
+            // setup drawing
+            Graphics2D g2d = (Graphics2D) g.create();
+            g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+            g2d.setStroke(new BasicStroke(0.5f));
+            g2d.setColor(Color.LIGHT_GRAY);
+
+            // draw cross
+            g2d.drawLine(x, y, x+LENGTH, y+LENGTH);
+            g2d.drawLine(x, y+LENGTH, x+LENGTH, y);
+
+            // draw enclosing border
+            g2d.drawRect(x, y, LENGTH, LENGTH);
+        }
+
+        @Override
+        public int getIconWidth() {
+            return LENGTH;
+        }
+
+        @Override
+        public int getIconHeight() {
+            return LENGTH;
+        }
+    }
 }
