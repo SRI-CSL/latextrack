@@ -42,11 +42,21 @@ import java.util.SortedSet;
  */
 public final class AuthorSetField extends JTextField {
 
+    private static final String COMMIT_ACTION = "commit";
+
     private final AuthorListModel authorModel;
-    private final SortedSet<Author> currentAuthors = Sets.newTreeSet();
+    private final SortedSet<Author>
+            currentAuthors = Sets.newTreeSet(),
+            possibleAuthors = Sets.newTreeSet();
 
     public AuthorSetField(AuthorListModel authorModel) {
         this.authorModel = authorModel;
+
+        // TAB key to "commit" autocomplete
+//        setFocusTraversalKeysEnabled(false); // Without this, cursor always leaves text field
+//        getInputMap().put(KeyStroke.getKeyStroke("TAB"), COMMIT_ACTION);
+//        getActionMap().put(COMMIT_ACTION, autoComplete.new CommitAction());
+
         addCaretListener(new CaretListener() {
             @Override
             public void caretUpdate(CaretEvent caretEvent) {

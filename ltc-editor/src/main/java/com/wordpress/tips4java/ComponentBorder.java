@@ -4,6 +4,8 @@ package com.wordpress.tips4java;
  Copied from http://tips4java.wordpress.com/2009/09/27/component-border/
  */
 import java.awt.*;
+import java.awt.event.ComponentAdapter;
+import java.awt.event.ComponentEvent;
 import javax.swing.*;
 import javax.swing.border.*;
 
@@ -202,12 +204,21 @@ public class ComponentBorder implements Border
         else
         {
             CompoundBorder compound = new CompoundBorder(current, this);
-			parent.setBorder(compound);
+            parent.setBorder(compound);
         }
 
         //  Add component to the parent
 
         parent.add(component);
+
+        //  Listen to size changes of component to recalculate the border
+
+        component.addComponentListener(new ComponentAdapter() {
+            @Override
+            public void componentResized(ComponentEvent e) {
+                determineInsetsAndAlignment();
+            }
+        });
     }
 
     /**
@@ -227,27 +238,32 @@ public class ComponentBorder implements Border
         //  The X, Y alignment of the component is controlled by both the edge
         //  and alignment parameters
 
+        int distance;
         if (edge == Edge.TOP)
         {
-            borderInsets.top = component.getPreferredSize().height + gap;
+            distance = component.getPreferredSize().height;
+            borderInsets.top = distance + (distance==0?0:gap);
             component.setAlignmentX(alignment);
             component.setAlignmentY(0.0f);
         }
         else if (edge == Edge.BOTTOM)
         {
-            borderInsets.bottom = component.getPreferredSize().height + gap;
+            distance = component.getPreferredSize().height;
+            borderInsets.bottom = distance + (distance==0?0:gap);
             component.setAlignmentX(alignment);
             component.setAlignmentY(1.0f);
         }
         else if (edge == Edge.LEFT)
         {
-            borderInsets.left = component.getPreferredSize().width + gap;
+            distance = component.getPreferredSize().width;
+            borderInsets.left = distance + (distance==0?0:gap);
             component.setAlignmentX(0.0f);
             component.setAlignmentY(alignment);
         }
         else if (edge == Edge.RIGHT)
         {
-            borderInsets.right = component.getPreferredSize().width + gap;
+            distance = component.getPreferredSize().width;
+            borderInsets.right = distance + (distance==0?0:gap);
             component.setAlignmentX(1.0f);
             component.setAlignmentY(alignment);
         }

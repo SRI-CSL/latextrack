@@ -28,6 +28,7 @@ import com.sri.ltc.logging.LevelOptionHandler;
 import com.sri.ltc.logging.LogConfiguration;
 import com.sri.ltc.server.LTCserverImpl;
 import com.sri.ltc.server.LTCserverInterface;
+import com.wordpress.tips4java.ComponentBorder;
 import org.apache.xmlrpc.XmlRpcException;
 import org.kohsuke.args4j.Argument;
 import org.kohsuke.args4j.CmdLineException;
@@ -169,7 +170,9 @@ public final class LTCEditor extends LTCGui {
             }
         }
     };
-    private final JTextField authorField = new AuthorSetField(authorModel);
+    // TODO:
+    private final JTextField authorField = new JTextField(); //new AuthorSetField(authorModel);
+
     private final DateField dateField = new DateField();
     private final JTextField revField = new JTextField();
     private final JButton saveButton = new JButton(new AbstractAction("Save ("+'\u2318'+"S)") {
@@ -288,53 +291,61 @@ public final class LTCEditor extends LTCGui {
                 getUpdateButton().doClick();
             }
         });
-        authorField.setEnabled(false); // TODO: re-enable once figuring out the editing!
+        // TODO" testing ComponentBorder
+        final AuthorPanel authorPanel = new AuthorPanel();
+        ComponentBorder cb = new ComponentBorder(authorPanel, ComponentBorder.Edge.LEFT);
+        cb.install(authorField);
+//        authorField.setEnabled(false); // TODO: re-enable once figuring out the editing!
         authorField.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-                getUpdateButton().doClick();
+                authorPanel.addAuthor(new Author(authorField.getText(), null));
+                authorField.setText("");
+//                authorField.repaint();
+                // TODO: validate first, set limited
+//                getUpdateButton().doClick();
             }
         });
-        authorField.setTransferHandler(new TransferHandler() {
-            @Override
-            public boolean canImport(TransferSupport support) {
-                if (support.isDataFlavorSupported(AUTHOR_FLAVOR) ||
-                        support.isDataFlavorSupported(DataFlavor.stringFlavor))
-                    return true;
-                return false;
-            }
-            @Override
-            public boolean importData(TransferSupport support) {
-                if (!canImport(support))
-                    return false;
-                // Fetch the Transferable and its data
-                try {
-                    Transferable t = support.getTransferable();
-                    DataFlavor[] flavors = t.getTransferDataFlavors();
-                    if (flavors == null || flavors.length < 1)
-                        return false; // cannot get flavor
-                    Class representationClass = flavors[0].getRepresentationClass();
-                    String authorName = "";
-                    // first try author representation:
-                    if (Author.class.equals(representationClass))
-                        authorName = ((Author) t.getTransferData(AUTHOR_FLAVOR)).name;
-                    // now try text representations:
-                    DataFlavor bestTextFlavor = DataFlavor.selectBestTextFlavor(flavors);
-                    if (bestTextFlavor != null)
-                        authorName = ((String) t.getTransferData(stringFlavor)).trim();
-                    // update text field if anything was successfully transfered:
-                    if (!"".equals(authorName)) {
-                        String currentText = authorField.getText().trim();
-                        authorField.setText("".equals(currentText)?authorName:currentText+", "+authorName);
-                        return true; // signal success
-                    }
-                } catch (UnsupportedFlavorException e) {
-                    LOGGER.log(Level.SEVERE, e.getMessage(), e);
-                } catch (IOException e) {
-                    LOGGER.log(Level.SEVERE, e.getMessage(), e);
-                }
-                return false;
-            }
-        });
+//        authorField.setTransferHandler(new TransferHandler() {
+//            @Override
+//            public boolean canImport(TransferSupport support) {
+//                if (support.isDataFlavorSupported(AUTHOR_FLAVOR) ||
+//                        support.isDataFlavorSupported(DataFlavor.stringFlavor))
+//                    return true;
+//                return false;
+//            }
+//            @Override
+//            public boolean importData(TransferSupport support) {
+//                if (!canImport(support))
+//                    return false;
+//                // Fetch the Transferable and its data
+//                try {
+//                    Transferable t = support.getTransferable();
+//                    DataFlavor[] flavors = t.getTransferDataFlavors();
+//                    if (flavors == null || flavors.length < 1)
+//                        return false; // cannot get flavor
+//                    Class representationClass = flavors[0].getRepresentationClass();
+//                    String authorName = "";
+//                    // first try author representation:
+//                    if (Author.class.equals(representationClass))
+//                        authorName = ((Author) t.getTransferData(AUTHOR_FLAVOR)).name;
+//                    // now try text representations:
+//                    DataFlavor bestTextFlavor = DataFlavor.selectBestTextFlavor(flavors);
+//                    if (bestTextFlavor != null)
+//                        authorName = ((String) t.getTransferData(stringFlavor)).trim();
+//                    // update text field if anything was successfully transfered:
+//                    if (!"".equals(authorName)) {
+//                        String currentText = authorField.getText().trim();
+//                        authorField.setText("".equals(currentText)?authorName:currentText+", "+authorName);
+//                        return true; // signal success
+//                    }
+//                } catch (UnsupportedFlavorException e) {
+//                    LOGGER.log(Level.SEVERE, e.getMessage(), e);
+//                } catch (IOException e) {
+//                    LOGGER.log(Level.SEVERE, e.getMessage(), e);
+//                }
+//                return false;
+//            }
+//        });
         dateField.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 getUpdateButton().doClick();
