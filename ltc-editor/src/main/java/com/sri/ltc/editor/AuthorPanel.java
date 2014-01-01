@@ -87,7 +87,7 @@ public class AuthorPanel extends JPanel {
 
             // draw a little thin line border and then some space
             setBorder(BorderFactory.createCompoundBorder(
-                    BorderFactory.createLineBorder(Color.LIGHT_GRAY, 1),
+                    BorderFactory.createLineBorder(CommitTableRenderer.INACTIVE_COLOR, 1),
                     BorderFactory.createEmptyBorder(0, 4, 0, 4)));
         }
     }
@@ -101,8 +101,8 @@ public class AuthorPanel extends JPanel {
             // setup drawing
             Graphics2D g2d = (Graphics2D) g.create();
             g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-            g2d.setStroke(new BasicStroke(0.5f));
-            g2d.setColor(Color.LIGHT_GRAY);
+            g2d.setStroke(new BasicStroke(1f));
+            g2d.setColor(CommitTableRenderer.INACTIVE_COLOR);
 
             // draw cross
             g2d.drawLine(x, y, x+LENGTH, y+LENGTH);
