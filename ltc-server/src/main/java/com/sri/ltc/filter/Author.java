@@ -36,7 +36,8 @@ import java.util.regex.Pattern;
  */
 public final class Author implements Comparable<Author> {
 
-    private final static Pattern EMAIL_PATTERN = Pattern.compile("^\\w([\\.\\w\\-])*[\\w]*@(\\w[\\w\\-\\.\\(\\)]*)+$");
+    private final static Pattern EMAIL_PATTERN = Pattern.compile("^[^<>\\s]+$");
+            // Pattern.compile("^\\w([\\.\\w\\-])*[\\w]*@(\\w[\\w\\-\\.\\(\\)]*)+$");  OLD pattern that was too restrictive
     private final static Pattern AUTHOR_PATTERN = Pattern.compile("^\\s*(([a-zA-Z\\-\\.]+\\s*)+)(\\s+<([^<>\\s]+)>){0,1}\\s*$");
 
     public final String name;
@@ -81,6 +82,10 @@ public final class Author implements Comparable<Author> {
     @Override
     public String toString() {
         return name+("".equals(email)?"":" <"+email+">");
+    }
+
+    public String toHTML() {
+        return name+("".equals(email)?"":" &lt;"+email+"&gt;");
     }
 
     @Override

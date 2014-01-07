@@ -170,9 +170,7 @@ public final class LTCEditor extends LTCGui {
             }
         }
     };
-    // TODO:
-    private final JTextField authorField = new JTextField(); //new AuthorSetField(authorModel);
-
+    private final JTextField authorField = new AuthorSetField(authorModel);
     private final DateField dateField = new DateField();
     private final JTextField revField = new JTextField();
     private final JButton saveButton = new JButton(new AbstractAction("Save ("+'\u2318'+"S)") {
@@ -295,13 +293,16 @@ public final class LTCEditor extends LTCGui {
         final AuthorPanel authorPanel = new AuthorPanel(authorField.getBackground());
         ComponentBorder cb = new ComponentBorder(authorPanel, ComponentBorder.Edge.LEFT);
         cb.install(authorField);
-//        authorField.setEnabled(false); // TODO: re-enable once figuring out the editing!
         authorField.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                authorPanel.addAuthor(new Author(authorField.getText(), null));
+            public void actionPerformed(ActionEvent event) {
+                try {
+                    authorPanel.addAuthor(Author.parse(authorField.getText()));
+                } catch (ParseException e) {
+                    authorField.getToolkit().beep();
+                    LOGGER.log(Level.SEVERE, e.getMessage(), e);
+                }
                 authorField.setText("");
-                // TODO: validate first, set limited
-//                getUpdateButton().doClick();
+                // TODO: set limited
             }
         });
 //        authorField.setTransferHandler(new TransferHandler() {

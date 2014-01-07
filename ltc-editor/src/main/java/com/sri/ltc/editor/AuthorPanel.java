@@ -83,7 +83,7 @@ public class AuthorPanel extends JPanel {
                     AuthorPanel.this.removeAuthor(author);
                 }
             });
-            setToolTipText("<html>Click to remove<br>\""+author.toString()+"\"</html>");
+            setToolTipText("<html>Click to remove<br>\""+author.toHTML()+"\"</html>");
 
             // draw a little thin line border and then some space
             setBorder(BorderFactory.createCompoundBorder(
