@@ -170,7 +170,7 @@ public final class LTCEditor extends LTCGui {
             }
         }
     };
-    private final JTextField authorField = new AuthorSetField(authorModel);
+    private final AuthorSetField authorField = new AuthorSetField(authorModel);
     private final DateField dateField = new DateField();
     private final JTextField revField = new JTextField();
     private final JButton saveButton = new JButton(new AbstractAction("Save ("+'\u2318'+"S)") {
@@ -293,6 +293,7 @@ public final class LTCEditor extends LTCGui {
         final AuthorPanel authorPanel = new AuthorPanel(authorField.getBackground());
         ComponentBorder cb = new ComponentBorder(authorPanel, ComponentBorder.Edge.LEFT);
         cb.install(authorField);
+        authorField.installAuthorPanel(authorPanel);
         authorField.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent event) {
                 try {

@@ -1,14 +1,15 @@
 package com.sri.ltc.editor;
 
+import com.google.common.base.Function;
+import com.google.common.collect.Collections2;
+import com.google.common.collect.Sets;
 import com.sri.ltc.filter.Author;
 
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.util.Iterator;
-import java.util.SortedSet;
-import java.util.TreeSet;
+import java.util.*;
 
 /**
  * Small panel with currently selected authors for limiting.
@@ -41,6 +42,18 @@ public class AuthorPanel extends JPanel {
         return new Dimension(width, HEIGHT);
     }
 
+    public Set<String> dataAsStrings() {
+        synchronized (model) {
+            return Sets.newHashSet(Collections2.transform(Sets.newHashSet(model),
+                    new Function<Author, String>() {
+                        @Override
+                        public String apply(Author author) {
+                            return author.toString();
+                        }
+                    }));
+        }
+    }
+
     public boolean addAuthor(Author author) {
         synchronized (model) {
             boolean result = model.add(author);
@@ -63,9 +76,8 @@ public class AuthorPanel extends JPanel {
         synchronized (model) {
             // remove all components and add them in alphabetical order
             removeAll();
-            for (Iterator<Author> i = model.iterator(); i.hasNext(); ) {
+            for (Iterator<Author> i = model.iterator(); i.hasNext(); )
                 add(new AuthorLabel(i.next()));
-            }
             setSize(getPreferredSize()); // copying what CompoundBorder does...
             revalidate();
         }

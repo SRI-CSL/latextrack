@@ -24,7 +24,6 @@ package com.sri.ltc.editor;
 import com.google.common.collect.Iterators;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
-import com.sri.ltc.filter.Author;
 
 import javax.swing.*;
 import javax.swing.event.DocumentEvent;
@@ -52,21 +51,12 @@ public final class AuthorSetField extends JTextField {
     };
 
     private final AuthorListModel authorModel;
-    private final SortedSet<Author>
-            currentAuthors = Sets.newTreeSet(),
-            possibleAuthors = Sets.newTreeSet();
+    private AuthorPanel authorPanel = null;
 
     public AuthorSetField(AuthorListModel authorModel) {
         this.authorModel = authorModel;
 
-        // TODO: remove after testing:
-        List<String> keywords = Lists.newArrayList(
-                "Roger Sherman <sherman@usa.gov>",
-                "rogeR BLA",
-                "autocomplete",
-                "stackabuse",
-                "java", "Jauvp");
-        Autocomplete autoComplete = new Autocomplete(keywords);
+        Autocomplete autoComplete = new Autocomplete();
         getDocument().addDocumentListener(autoComplete);
 
         // TAB key to "commit" autocomplete
@@ -76,18 +66,15 @@ public final class AuthorSetField extends JTextField {
         getActionMap().put(COMMIT_ACTION, autoComplete.new CompleteAction());
     }
 
+    public void installAuthorPanel(AuthorPanel authorPanel) {
+        this.authorPanel = authorPanel;
+    }
+
     private class Autocomplete implements DocumentListener {
 
-        private final List<String> keywords;
         private Mode mode = Mode.INSERT;
-        private List<String> matches = new ArrayList<String>();
-        private Iterator<String> matchIterator = Iterators.cycle(); // into matching strings
+        private Iterator<String> choiceIterator = Iterators.cycle(); // into matching strings
         private int position = -1;
-
-        public Autocomplete(List<String> keywords) {
-            this.keywords = keywords;
-            Collections.sort(keywords);
-        }
 
         @Override
         public void changedUpdate(DocumentEvent ev) { }
@@ -116,26 +103,23 @@ public final class AuthorSetField extends JTextField {
         }
 
         private boolean findMatches(String prefix) {
-            matches.clear();
+            SortedSet<String> matches = Sets.newTreeSet(String.CASE_INSENSITIVE_ORDER);
 
-            // TODO: remove after testing:
-            for (Iterator<String> i = keywords.iterator(); i.hasNext(); ) {
-                String s = i.next();
-                if (s.toLowerCase().startsWith(prefix))
-                    matches.add(s);
+            for (int i = 0; i < authorModel.getSize(); i++) {
+                String s1 = ((AuthorCell) authorModel.getElementAt(i)).author.toString();
+                if (s1 != null && s1.toLowerCase().startsWith(prefix))
+                    matches.add(s1);
             }
 
-//            for (int i = 0; i < authorModel.getSize(); i++) {
-//                String s1 = ((AuthorCell) authorModel.getElementAt(i)).label;
-//                if (s1 != null && s1.toLowerCase().startsWith(prefix)) // TODO: test that not already selected?
-//                    matches.add(s1);
-//            }
+            List<String> choices = Lists.newArrayList( // translate sorted matches without already selected into list
+                    Sets.difference(matches,
+                            authorPanel == null ? Sets.newHashSet() : authorPanel.dataAsStrings()));
 
-            synchronized (matchIterator) {
-                matchIterator = Iterators.cycle(matches);
+            synchronized (choiceIterator) {
+                choiceIterator = Iterators.cycle(choices);
             }
 
-            return matches.size() > 0;
+            return choiceIterator.hasNext();
         }
 
         private class CompleteAction extends AbstractAction {
@@ -161,15 +145,14 @@ public final class AuthorSetField extends JTextField {
         }
 
         private void nextCompletion() {
-            synchronized (matchIterator) {
-                if (matchIterator.hasNext()) {
-                    String completion = matchIterator.next();
+            synchronized (choiceIterator) {
+                if (choiceIterator.hasNext()) {
+                    String completion = choiceIterator.next();
                     AuthorSetField.this.setText(completion);
                     AuthorSetField.this.setCaretPosition(completion.length());
                     AuthorSetField.this.moveCaretPosition(position);
                     mode = Mode.COMPLETION;
                 } else
-                    // TODO: delete selection?
                     mode = Mode.INSERT;
             }
         }
