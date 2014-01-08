@@ -44,6 +44,8 @@ import java.awt.datatransfer.DataFlavor;
 import java.awt.datatransfer.Transferable;
 import java.awt.datatransfer.UnsupportedFlavorException;
 import java.awt.event.*;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
@@ -95,7 +97,7 @@ public final class LTCEditor extends LTCGui {
     private final LTCSession session = new LTCSession(this);
 
     // initializing GUI components
-    private final AuthorListModel authorModel = new AuthorListModel(session);
+    private final AuthorListModel authorModel = new AuthorListModel();
     private final CommitTableModel commitModel = new CommitTableModel();
     private final SelfComboBoxModel selfModel = new SelfComboBoxModel(session);
     private final JFileChooser fileChooser = new JFileChooser();
@@ -290,6 +292,14 @@ public final class LTCEditor extends LTCGui {
             }
         });
         final AuthorPanel authorPanel = new AuthorPanel(authorField.getBackground(), authorModel);
+        authorPanel.addChangeListener(new ChangeListener() {
+            @Override
+            public void stateChanged(ChangeEvent e) {
+                // set limited authors anew
+                if (session.isValid())
+                    session.setLimitedAuthors(authorPanel.dataAsList());
+            }
+        });
         ComponentBorder cb = new ComponentBorder(authorPanel, ComponentBorder.Edge.LEFT);
         cb.install(authorField);
         authorField.installAuthorPanel(authorPanel);
@@ -615,8 +625,8 @@ public final class LTCEditor extends LTCGui {
             LOGGER.log(Level.SEVERE, e.getMessage(), e);
         }
         authorField.setText("");
-        // TODO: set limited
     }
+
     private static void printUsage(PrintStream out, CmdLineParser parser) {
         out.println("usage: java -cp ... " + LTCEditor.class.getCanonicalName() + " [options...] [FILE] \nwith");
         parser.printUsage(out);

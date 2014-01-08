@@ -50,7 +50,7 @@ import java.util.logging.Level;
  *
  * @author linda
  */
-public class LTCSession {
+public final class LTCSession {
 
     private final LTCEditor editor;
 
@@ -295,7 +295,7 @@ public class LTCSession {
         }).execute();
     }
 
-    public void setLimitedAuthors(final List<String[]> limitedAuthors) {
+    public void setLimitedAuthors(final List<Object[]> limitedAuthors) {
         if (!isValid()) return;
 
         // create new worker to set limited authors in session

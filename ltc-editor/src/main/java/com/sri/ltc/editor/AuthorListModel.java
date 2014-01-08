@@ -37,12 +37,6 @@ public final class AuthorListModel extends AbstractListModel {
     private static final long serialVersionUID = -1625971771825835266L;
     private final SortedSet<AuthorCell> authors = new TreeSet<AuthorCell>();
 
-    private final LTCSession session;
-
-    public AuthorListModel(LTCSession session) {
-        this.session = session;
-    }
-
     public int getSize() {
         synchronized (authors) {
             return authors.size();
@@ -73,7 +67,7 @@ public final class AuthorListModel extends AbstractListModel {
                             Author.fromList(authorAsList),
                             Color.decode((String) authorAsList[2])));
                 }
-                fireIntervalAdded(this, 0, authors.size()-1);
+                fireIntervalAdded(this, 0, authors.size() - 1);
             }
         }
     }
@@ -120,42 +114,5 @@ public final class AuthorListModel extends AbstractListModel {
             if (index != -1)
                 fireContentsChanged(this, index, index);
         }
-    }
-
-    private void fireAllChanged() {
-        int size = getSize();
-        if (size > 0)
-            fireContentsChanged(this, 0, size - 1);
-    }
-
-    public void resetAll() {
-        synchronized (authors) {
-            for (AuthorCell authorCell : authors)
-                authorCell.limited = true;
-            fireAllChanged();
-        }
-        session.setLimitedAuthors(null);
-    }
-
-    public void setLimited(int[] indices, boolean limited) {
-        List<String[]> limitedAuthors = new ArrayList<String[]>(); // collect authors that are limited
-        boolean allLimited = true; // track whether at least one author not limited
-        synchronized (authors) {
-            List<AuthorCell> authorsAsList = new ArrayList<AuthorCell>(authors);
-            Set<Integer> indicesAsSet = new HashSet<Integer>();
-            for (int index : indices)
-                indicesAsSet.add(index);
-            for (int i = 0; i < authorsAsList.size(); i++) {
-                boolean status = indicesAsSet.contains(i)?limited:!limited;
-                AuthorCell authorCell = authorsAsList.get(i);
-                authorCell.limited = status;
-                if (status)
-                    limitedAuthors.add(new String[] {authorCell.author.name, authorCell.author.email});
-                else
-                    allLimited = false;
-            }
-            fireAllChanged();
-        }
-        session.setLimitedAuthors(allLimited?null:limitedAuthors);
     }
 }

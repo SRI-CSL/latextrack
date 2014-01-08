@@ -34,7 +34,7 @@ import java.awt.event.ActionListener;
  *
  * @author linda
  */
-public class ProgressDialog extends JDialog implements ActionListener {
+public final class ProgressDialog extends JDialog implements ActionListener {
 
     private static ProgressDialog dialog;
     private final JProgressBar progressBar = new JProgressBar(0, 100);

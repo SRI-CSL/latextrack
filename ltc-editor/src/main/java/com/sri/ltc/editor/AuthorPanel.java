@@ -2,14 +2,18 @@ package com.sri.ltc.editor;
 
 import com.google.common.base.Function;
 import com.google.common.collect.Collections2;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.sri.ltc.filter.Author;
 
 import javax.swing.*;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.*;
+import java.util.List;
 
 /**
  * Small panel with currently selected authors for limiting.
@@ -18,11 +22,14 @@ import java.util.*;
  *
  * @author linda
  */
-public class AuthorPanel extends JPanel {
+public final class AuthorPanel extends JPanel {
+
+    public final static String MODEL_PROPERTY = "model";
 
     private static int HEIGHT;
     private final SortedSet<Author> model = new TreeSet<Author>();
     private final AuthorListModel authorModel;
+    private final Set<ChangeListener> listeners = Sets.newHashSet();
 
     public AuthorPanel(Color background, AuthorListModel authorModel) {
         super(); // using FLowLayout!
@@ -44,6 +51,10 @@ public class AuthorPanel extends JPanel {
         return new Dimension(width, HEIGHT);
     }
 
+    public void addChangeListener(ChangeListener l) {
+        listeners.add(l);
+    }
+
     public Set<String> dataAsStrings() {
         synchronized (model) {
             return Sets.newHashSet(Collections2.transform(Sets.newHashSet(model),
@@ -51,6 +62,18 @@ public class AuthorPanel extends JPanel {
                         @Override
                         public String apply(Author author) {
                             return author.toString();
+                        }
+                    }));
+        }
+    }
+
+    public List<Object[]> dataAsList() {
+        synchronized (model) {
+            return Lists.newArrayList(Collections2.transform(Sets.newHashSet(model),
+                    new Function<Author, Object[]>() {
+                        @Override
+                        public Object[] apply(Author author) {
+                            return author.asList();
                         }
                     }));
         }
@@ -82,6 +105,9 @@ public class AuthorPanel extends JPanel {
                 add(new AuthorLabel(i.next()));
             setSize(getPreferredSize()); // copying what CompoundBorder does...
             revalidate();
+            // notify listeners:
+            for (ChangeListener l : listeners)
+                l.stateChanged(new ChangeEvent(this));
         }
     }
 
