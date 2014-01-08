@@ -289,64 +289,60 @@ public final class LTCEditor extends LTCGui {
                 getUpdateButton().doClick();
             }
         });
-        // TODO" testing ComponentBorder
         final AuthorPanel authorPanel = new AuthorPanel(authorField.getBackground());
         ComponentBorder cb = new ComponentBorder(authorPanel, ComponentBorder.Edge.LEFT);
         cb.install(authorField);
         authorField.installAuthorPanel(authorPanel);
         authorField.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent event) {
-                try {
-                    authorPanel.addAuthor(Author.parse(authorField.getText()));
-                } catch (ParseException e) {
-                    authorField.getToolkit().beep();
-                    LOGGER.log(Level.SEVERE, e.getMessage(), e);
-                }
-                authorField.setText("");
-                // TODO: set limited
+                setLimitedAuthor(authorPanel);
             }
         });
-//        authorField.setTransferHandler(new TransferHandler() {
-//            @Override
-//            public boolean canImport(TransferSupport support) {
-//                if (support.isDataFlavorSupported(AUTHOR_FLAVOR) ||
-//                        support.isDataFlavorSupported(DataFlavor.stringFlavor))
-//                    return true;
-//                return false;
-//            }
-//            @Override
-//            public boolean importData(TransferSupport support) {
-//                if (!canImport(support))
-//                    return false;
-//                // Fetch the Transferable and its data
-//                try {
-//                    Transferable t = support.getTransferable();
-//                    DataFlavor[] flavors = t.getTransferDataFlavors();
-//                    if (flavors == null || flavors.length < 1)
-//                        return false; // cannot get flavor
-//                    Class representationClass = flavors[0].getRepresentationClass();
-//                    String authorName = "";
-//                    // first try author representation:
-//                    if (Author.class.equals(representationClass))
-//                        authorName = ((Author) t.getTransferData(AUTHOR_FLAVOR)).name;
-//                    // now try text representations:
-//                    DataFlavor bestTextFlavor = DataFlavor.selectBestTextFlavor(flavors);
-//                    if (bestTextFlavor != null)
-//                        authorName = ((String) t.getTransferData(stringFlavor)).trim();
-//                    // update text field if anything was successfully transfered:
-//                    if (!"".equals(authorName)) {
-//                        String currentText = authorField.getText().trim();
-//                        authorField.setText("".equals(currentText)?authorName:currentText+", "+authorName);
-//                        return true; // signal success
-//                    }
-//                } catch (UnsupportedFlavorException e) {
-//                    LOGGER.log(Level.SEVERE, e.getMessage(), e);
-//                } catch (IOException e) {
-//                    LOGGER.log(Level.SEVERE, e.getMessage(), e);
-//                }
-//                return false;
-//            }
-//        });
+        authorField.setTransferHandler(new TransferHandler() {
+            @Override
+            public boolean canImport(TransferSupport support) {
+                if (support.isDataFlavorSupported(AUTHOR_FLAVOR) ||
+                        support.isDataFlavorSupported(DataFlavor.stringFlavor))
+                    return true;
+                return false;
+            }
+            @Override
+            public boolean importData(TransferSupport support) {
+                if (!canImport(support))
+                    return false;
+                // Fetch the Transferable and its data
+                try {
+                    Transferable t = support.getTransferable();
+                    DataFlavor[] flavors = t.getTransferDataFlavors();
+                    if (flavors == null || flavors.length < 1)
+                        return false; // cannot get flavor
+                    Class representationClass = flavors[0].getRepresentationClass();
+                    String authorText = "";
+                    boolean commitTransfer = false;
+                    // first try author representation:
+                    if (Author.class.equals(representationClass)) {
+                        authorText = ((Author) t.getTransferData(AUTHOR_FLAVOR)).toString();
+                        commitTransfer = true;
+                    }
+                    // now try text representations:
+                    DataFlavor bestTextFlavor = DataFlavor.selectBestTextFlavor(flavors);
+                    if (bestTextFlavor != null)
+                        authorText = ((String) t.getTransferData(stringFlavor)).trim();
+                    // update text field if anything was successfully transferred:
+                    if (!"".equals(authorText)) {
+                        authorField.setText(authorText);
+                        if (commitTransfer)
+                            setLimitedAuthor(authorPanel); // programmatically ENTER on text field
+                        return true; // signal success
+                    }
+                } catch (UnsupportedFlavorException e) {
+                    LOGGER.log(Level.SEVERE, e.getMessage(), e);
+                } catch (IOException e) {
+                    LOGGER.log(Level.SEVERE, e.getMessage(), e);
+                }
+                return false;
+            }
+        });
         dateField.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 getUpdateButton().doClick();
@@ -513,32 +509,6 @@ public final class LTCEditor extends LTCGui {
         buttonPane.add(saveButton);
         filteringPane.add(buttonPane, BorderLayout.PAGE_END);
 
-        // 2) authors panel
-
-//        JButton button = (JButton) authorButtons.add(new JButton(new AbstractAction("Reset") {
-//            private static final long serialVersionUID = -7513335226809639324L;
-//            public void actionPerformed(ActionEvent e) {
-//                authorModel.resetAll();
-//                authorList.clearSelection();
-//            }
-//        }));
-
-//        final Component limitButton = authorButtons.add(new LimitingButton(
-//                "Limit", authorList, authorModel, true));
-//        final Component unlimitButton = authorButtons.add(new LimitingButton(
-//                "Unlimit", authorList, authorModel, false));
-//        limitButton.setEnabled(false);
-//        unlimitButton.setEnabled(false);
-//        authorList.addListSelectionListener(new ListSelectionListener() {
-//            public void valueChanged(ListSelectionEvent e) {
-//                if (!e.getValueIsAdjusting()) {
-//                    // enable or disable buttons based on whether anything selected
-//                    limitButton.setEnabled(authorList.getSelectedIndices().length > 0);
-//                    unlimitButton.setEnabled(authorList.getSelectedIndices().length > 0);
-//                }
-//            }
-//        });
-
         return filteringPane;
     }
 
@@ -637,6 +607,16 @@ public final class LTCEditor extends LTCGui {
             getUpdateButton().doClick(); // crude way to invoke ENTER on JTextField
     }
 
+    private void setLimitedAuthor(AuthorPanel authorPanel) {
+        try {
+            authorPanel.addAuthor(Author.parse(authorField.getText()));
+        } catch (ParseException e) {
+            authorField.getToolkit().beep();
+            LOGGER.log(Level.SEVERE, e.getMessage(), e);
+        }
+        authorField.setText("");
+        // TODO: set limited
+    }
     private static void printUsage(PrintStream out, CmdLineParser parser) {
         out.println("usage: java -cp ... " + LTCEditor.class.getCanonicalName() + " [options...] [FILE] \nwith");
         parser.printUsage(out);

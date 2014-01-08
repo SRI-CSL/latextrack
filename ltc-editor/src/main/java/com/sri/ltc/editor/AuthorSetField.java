@@ -26,11 +26,11 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 
 import javax.swing.*;
-import javax.swing.event.DocumentEvent;
-import javax.swing.event.DocumentListener;
 import javax.swing.text.*;
 import java.awt.event.ActionEvent;
 import java.util.*;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * A text field that displays a (sorted) set of selected authors.
@@ -44,11 +44,8 @@ import java.util.*;
  */
 public final class AuthorSetField extends JTextField {
 
-    private static final String COMMIT_ACTION = "commit";
-    private static enum Mode {
-        INSERT,
-        COMPLETION
-    };
+    static final Logger LOGGER = Logger.getLogger(AuthorSetField.class.getName());
+    private static final String COMPLETE_ACTION = "complete";
 
     private final AuthorListModel authorModel;
     private AuthorPanel authorPanel = null;
@@ -56,50 +53,52 @@ public final class AuthorSetField extends JTextField {
     public AuthorSetField(AuthorListModel authorModel) {
         this.authorModel = authorModel;
 
-        Autocomplete autoComplete = new Autocomplete();
-        getDocument().addDocumentListener(autoComplete);
+        final AutoDocument autoDocument = new AutoDocument();
+        setDocument(autoDocument);
 
         // TAB key to "commit" autocomplete
         setFocusTraversalKeysEnabled(false); // Without this, cursor always leaves text field
-        // Maps the tab key to the commit action, which finishes the autocomplete when given a suggestion
-        getInputMap().put(KeyStroke.getKeyStroke("TAB"), COMMIT_ACTION);
-        getActionMap().put(COMMIT_ACTION, autoComplete.new CompleteAction());
+        // Maps the tab key to the action, which cycles through possible completions
+        getInputMap().put(KeyStroke.getKeyStroke("TAB"), COMPLETE_ACTION);
+        getActionMap().put(COMPLETE_ACTION, new AbstractAction() {
+            private static final long serialVersionUID = -6920396834222894988L;
+
+            @Override
+            public void actionPerformed(ActionEvent event) {
+                try {
+                    if (!autoDocument.nextCompletion(getCaretPosition()))
+                        AuthorSetField.this.replaceSelection("");
+                } catch (BadLocationException e) {
+                    LOGGER.log(Level.SEVERE, e.getMessage(), e);
+                }
+            }
+        });
     }
 
     public void installAuthorPanel(AuthorPanel authorPanel) {
         this.authorPanel = authorPanel;
     }
 
-    private class Autocomplete implements DocumentListener {
+    private class AutoDocument extends PlainDocument {
+        private static final long serialVersionUID = 7317665916116652860L;
 
-        private Mode mode = Mode.INSERT;
-        private Iterator<String> choiceIterator = Iterators.cycle(); // into matching strings
-        private int position = -1;
-
-        @Override
-        public void changedUpdate(DocumentEvent ev) { }
+        private Iterator<String> choiceIterator = Iterators.cycle(); // iterate over matching strings
 
         @Override
-        public void removeUpdate(DocumentEvent ev) { }
+        public void replace(int offset, int length, String s, AttributeSet a) throws BadLocationException {
+            super.remove(offset, length);
+            insertString(offset, s, a);
+        }
 
         @Override
-        public void insertUpdate(DocumentEvent ev) {
-            if (ev.getLength() != 1)
+        public void insertString(int offset, String s, AttributeSet a) throws BadLocationException {
+            if (s == null || "".equals(s))
                 return;
-
-            int pos = ev.getOffset();
-            try {
-                String content = AuthorSetField.this.getText(0, pos + 1);
-                if (findMatches(content.toLowerCase()))
-                    // We cannot modify Document from within notification,
-                    // so we submit a task that does the change later
-                    SwingUtilities.invokeLater(new CompletionTask(pos + 1));
-                else
-                    // Nothing found
-                    mode = Mode.INSERT;
-            } catch (BadLocationException e) {
-                return; // ignore this exception
-            }
+            String content = getText(0, offset) + s;
+            if (findMatches(content.toLowerCase()))
+                nextCompletion(offset + s.length());
+            else
+                super.insertString(offset, s, a);
         }
 
         private boolean findMatches(String prefix) {
@@ -122,39 +121,18 @@ public final class AuthorSetField extends JTextField {
             return choiceIterator.hasNext();
         }
 
-        private class CompleteAction extends AbstractAction {
-            private static final long serialVersionUID = -7874851540618105429L;
-
-            @Override
-            public void actionPerformed(ActionEvent ev) {
-                if (mode == Mode.COMPLETION)
-                    nextCompletion();
-                else
-                    AuthorSetField.this.replaceSelection("");
-            }
-        }
-
-        private class CompletionTask implements Runnable {
-            CompletionTask(int position) {
-                Autocomplete.this.position = position;
-            }
-
-            public void run() {
-                nextCompletion();
-            }
-        }
-
-        private void nextCompletion() {
+        boolean nextCompletion(int position) throws BadLocationException {
             synchronized (choiceIterator) {
                 if (choiceIterator.hasNext()) {
                     String completion = choiceIterator.next();
-                    AuthorSetField.this.setText(completion);
-                    AuthorSetField.this.setCaretPosition(completion.length());
-                    AuthorSetField.this.moveCaretPosition(position);
-                    mode = Mode.COMPLETION;
-                } else
-                    mode = Mode.INSERT;
+                    super.remove(0, getLength());
+                    super.insertString(0, completion, null);
+                    setSelectionStart(position);
+                    setSelectionEnd(getLength());
+                    return true;
+                }
             }
+            return false;
         }
     }
 }
