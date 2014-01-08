@@ -22,9 +22,11 @@ public class AuthorPanel extends JPanel {
 
     private static int HEIGHT;
     private final SortedSet<Author> model = new TreeSet<Author>();
+    private final AuthorListModel authorModel;
 
-    public AuthorPanel(Color background) {
+    public AuthorPanel(Color background, AuthorListModel authorModel) {
         super(); // using FLowLayout!
+        this.authorModel = authorModel;
 
         // add one author label temporarily to calculate height:
         Component c = add(new AuthorLabel(new Author("A", null)));
@@ -84,9 +86,11 @@ public class AuthorPanel extends JPanel {
     }
 
     private class AuthorLabel extends JLabel {
+
         public AuthorLabel(final Author author) {
             super(author.name, new RemoveIcon(), JLabel.CENTER);
             setHorizontalTextPosition(JLabel.LEADING);
+            setForeground(authorModel.getColorForAuthor(author));
 
             // react to clicks by deleting from panel
             addMouseListener(new MouseAdapter() {

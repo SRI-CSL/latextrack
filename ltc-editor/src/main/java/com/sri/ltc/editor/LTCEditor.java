@@ -289,7 +289,7 @@ public final class LTCEditor extends LTCGui {
                 getUpdateButton().doClick();
             }
         });
-        final AuthorPanel authorPanel = new AuthorPanel(authorField.getBackground());
+        final AuthorPanel authorPanel = new AuthorPanel(authorField.getBackground(), authorModel);
         ComponentBorder cb = new ComponentBorder(authorPanel, ComponentBorder.Edge.LEFT);
         cb.install(authorField);
         authorField.installAuthorPanel(authorPanel);
