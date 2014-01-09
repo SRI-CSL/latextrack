@@ -21,17 +21,19 @@
  */
 package com.sri.ltc.editor;
 
+import com.google.common.collect.Iterators;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
-import com.sri.ltc.filter.Author;
 
 import javax.swing.*;
-import javax.swing.event.CaretEvent;
-import javax.swing.event.CaretListener;
 import javax.swing.text.*;
-import java.util.SortedSet;
+import java.awt.event.ActionEvent;
+import java.util.*;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
- * A text field that displays a (sorted) set of authors in their color.
+ * A text field that displays a (sorted) set of selected authors.
  *
  * It allows drag-n-drop and copy-n-paste of both, author and string objects.
  *
@@ -42,179 +44,95 @@ import java.util.SortedSet;
  */
 public final class AuthorSetField extends JTextField {
 
+    static final Logger LOGGER = Logger.getLogger(AuthorSetField.class.getName());
+    private static final String COMPLETE_ACTION = "complete";
+
     private final AuthorListModel authorModel;
-    private final SortedSet<Author> currentAuthors = Sets.newTreeSet();
+    private AuthorPanel authorPanel = null;
 
     public AuthorSetField(AuthorListModel authorModel) {
         this.authorModel = authorModel;
-        addCaretListener(new CaretListener() {
+
+        final AutoDocument autoDocument = new AutoDocument();
+        setDocument(autoDocument);
+
+        // TAB key to "commit" autocomplete
+        setFocusTraversalKeysEnabled(false); // Without this, cursor always leaves text field
+        // Maps the tab key to the action, which cycles through possible completions
+        getInputMap().put(KeyStroke.getKeyStroke("TAB"), COMPLETE_ACTION);
+        getActionMap().put(COMPLETE_ACTION, new AbstractAction() {
+            private static final long serialVersionUID = -6920396834222894988L;
+
             @Override
-            public void caretUpdate(CaretEvent caretEvent) {
-//                System.out.println("Caret event: "+caretEvent);
+            public void actionPerformed(ActionEvent event) {
+                try {
+                    if (!autoDocument.nextCompletion(getCaretPosition()))
+                        AuthorSetField.this.replaceSelection("");
+                } catch (BadLocationException e) {
+                    LOGGER.log(Level.SEVERE, e.getMessage(), e);
+                }
             }
         });
     }
 
-    @Override
-    protected Document createDefaultModel() {
-        return new AutoListDocument();
+    public void installAuthorPanel(AuthorPanel authorPanel) {
+        this.authorPanel = authorPanel;
     }
 
-    private String getMatch(String s) {
-        for (int i = 0; i < authorModel.getSize(); i++) {
-            String s1 = ((AuthorCell) authorModel.getElementAt(i)).label;
-            if (s1 != null && s1.toLowerCase().startsWith(s.toLowerCase()))
-                return s1;
-        }
-        return null;
-    }
+    private class AutoDocument extends PlainDocument {
+        private static final long serialVersionUID = 7317665916116652860L;
 
-    @Override
-    public void replaceSelection(String s) {
-        AutoListDocument autoDoc = (AutoListDocument) getDocument();
-        if (autoDoc != null)
-            try {
-                int i = Math.min(getCaret().getDot(), getCaret().getMark());
-                int j = Math.max(getCaret().getDot(), getCaret().getMark());
-                autoDoc.replace(i, j - i, s, null);
-            } catch (Exception exception) {
-            }
-    }
+        private Iterator<String> choiceIterator = Iterators.cycle(); // iterate over matching strings
 
-    private void setSelection(int start, int end) {
-        setSelectionStart(start);
-        setSelectionEnd(end);
-    }
-
-    /**
-     * Text model to implement autocompletion based on the current contents of author model.
-     *
-     * Based on <link>http://www.java2s.com/Code/Java/Swing-JFC/AutocompleteTextField.htm</link>
-     */
-    class AutoListDocument extends DefaultStyledDocument {
-        private static final long serialVersionUID = 5411815738746290051L;
-
-        AutoListDocument() {
-            setDocumentFilter(new AuthorSetFilter());
+        @Override
+        public void replace(int offset, int length, String s, AttributeSet a) throws BadLocationException {
+            super.remove(offset, length);
+            insertString(offset, s, a);
         }
 
         @Override
-        public void insertString(int i, String s, AttributeSet attributeSet) throws BadLocationException {
+        public void insertString(int offset, String s, AttributeSet a) throws BadLocationException {
             if (s == null || "".equals(s))
                 return;
-            System.out.println("Doc insert: i="+i+" s="+s);
-            super.insertString(i, s, attributeSet);
-
-            // TODO: only start at most recent edit!
-            String current = getText(0, getLength());
-            // start is last ", ":
-            int start = current.lastIndexOf(", ");
-            if (start > -1)
-                start += 2;
+            String content = getText(0, offset) + s;
+            if (findMatches(content.toLowerCase()))
+                nextCompletion(offset + s.length());
             else
-                start = 0;
-            int end = start+s.length();
-            System.out.println("start = "+start+", end = "+end);
+                super.insertString(offset, s, a);
+        }
 
-            String s1 = getText(start, end);
-            String s2 = getMatch(s1);
-//            int j = (i + s.length()) - 1;
-            if (s2 == null) {
-                // no match!
-                getToolkit().beep();
-                //super.insertString(i, s, attributeSet);
-                setSelection(start, end);
-                return;
+        private boolean findMatches(String prefix) {
+            SortedSet<String> matches = Sets.newTreeSet(String.CASE_INSENSITIVE_ORDER);
+
+            for (int i = 0; i < authorModel.getSize(); i++) {
+                String s1 = ((AuthorCell) authorModel.getElementAt(i)).author.toString();
+                if (s1 != null && s1.toLowerCase().startsWith(prefix))
+                    matches.add(s1);
             }
-            super.remove(start, end);
-            super.insertString(start, s2, attributeSet);
-            setSelection(end, getLength());
-        }
 
-        @Override
-        public void remove(int i, int j) throws BadLocationException {
-            System.out.println("Doc remove: i="+i+" j="+j);
-//            super.remove(i, j);
-            int k = getSelectionStart();
-            if (k > 0)
-                k--;
-            String s = getMatch(getText(0, k));
-            if (s == null) {
-                super.remove(i, j);
-            } else {
-                super.remove(0, getLength());
-                super.insertString(0, s, null);
+            List<String> choices = Lists.newArrayList( // translate sorted matches without already selected into list
+                    Sets.difference(matches,
+                            authorPanel == null ? Sets.newHashSet() : authorPanel.dataAsStrings()));
+
+            synchronized (choiceIterator) {
+                choiceIterator = Iterators.cycle(choices);
             }
-            try {
-                setSelection(k, getLength());
-            } catch (Exception exception) {
+
+            return choiceIterator.hasNext();
+        }
+
+        boolean nextCompletion(int position) throws BadLocationException {
+            synchronized (choiceIterator) {
+                if (choiceIterator.hasNext()) {
+                    String completion = choiceIterator.next();
+                    super.remove(0, getLength());
+                    super.insertString(0, completion, null);
+                    setSelectionStart(position);
+                    setSelectionEnd(getLength());
+                    return true;
+                }
             }
-        }
-
-        @Override
-        public void replace(int i, int j, String s, AttributeSet attributeSet) throws BadLocationException {
-            System.out.println("Doc replace: i="+i+" j="+j+" s="+s);
-            super.remove(i, j);
-            insertString(i, s, attributeSet);
-        }
-    }
-
-    class AuthorSetFilter extends DocumentFilter {
-        private boolean editingStarted = false;
-
-        @Override
-        public void insertString(FilterBypass fb, int i, String s, AttributeSet attributeSet) throws BadLocationException {
-            System.out.println("Filter insert: i="+i+" s="+s);
-//            // TODO: only start at most recent edit!
-//            String s1 = getText(0, i);
-//            String s2 = getMatch(s1 + s);
-//            int j = (i + s.length()) - 1;
-//            if (s2 == null) {
-//                // no match!
-//                getToolkit().beep();
-//                fb.insertString(i, s, attributeSet);
-//                setSelection(0, s.length());
-//                return;
-//            }
-//            fb.remove(0, fb.getDocument().getLength());
-//            fb.insertString(0, s2, attributeSet);
-//            setSelection(j + 1, fb.getDocument().getLength());
-            // calculate new point of insertion:
-            int end = fb.getDocument().getLength();
-            if (end > 0 && !editingStarted) {
-                fb.insertString(end, ", ", null);
-                end = fb.getDocument().getLength();
-            }
-            fb.insertString(end, s, attributeSet);
-            editingStarted = true;
-        }
-
-        @Override
-        public void remove(FilterBypass fb, int i, int j) throws BadLocationException {
-            if (j == 0) return;
-            System.out.println("Filter remove: i="+i+" j="+j);
-//            int k = getSelectionStart();
-//            if (k > 0)
-//                k--;
-//            String s = getMatch(getText(0, k));
-//            if (s == null) {
-//                fb.remove(i, j);
-//            } else {
-//                fb.remove(0, fb.getDocument().getLength());
-//                fb.insertString(0, s, null);
-//            }
-//            try {
-//                setSelection(k, fb.getDocument().getLength());
-//            } catch (Exception exception) {
-//            }
-            super.remove(fb, i, j); // TODO: implement!
-        }
-
-        @Override
-        public void replace(FilterBypass fb, int i, int j, String s, AttributeSet attributeSet) throws BadLocationException {
-            System.out.println("Filter replace: i="+i+" j="+j+" s="+s);
-            this.remove(fb, i, j);
-            this.insertString(fb, i, s, attributeSet);
+            return false;
         }
     }
 }

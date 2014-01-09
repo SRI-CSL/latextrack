@@ -28,6 +28,7 @@ import com.sri.ltc.logging.LevelOptionHandler;
 import com.sri.ltc.logging.LogConfiguration;
 import com.sri.ltc.server.LTCserverImpl;
 import com.sri.ltc.server.LTCserverInterface;
+import com.wordpress.tips4java.ComponentBorder;
 import org.apache.xmlrpc.XmlRpcException;
 import org.kohsuke.args4j.Argument;
 import org.kohsuke.args4j.CmdLineException;
@@ -94,7 +95,7 @@ public final class LTCEditor extends LTCGui {
     private final LTCSession session = new LTCSession(this);
 
     // initializing GUI components
-    private final AuthorListModel authorModel = new AuthorListModel(session);
+    private final AuthorListModel authorModel = new AuthorListModel();
     private final CommitTableModel commitModel = new CommitTableModel();
     private final SelfComboBoxModel selfModel = new SelfComboBoxModel(session);
     private final JFileChooser fileChooser = new JFileChooser();
@@ -169,7 +170,7 @@ public final class LTCEditor extends LTCGui {
             }
         }
     };
-    private final JTextField authorField = new AuthorSetField(authorModel);
+    private final AuthorSetField authorField = new AuthorSetField(authorModel);
     private final DateField dateField = new DateField();
     private final JTextField revField = new JTextField();
     private final JButton saveButton = new JButton(new AbstractAction("Save ("+'\u2318'+"S)") {
@@ -288,10 +289,21 @@ public final class LTCEditor extends LTCGui {
                 getUpdateButton().doClick();
             }
         });
-        authorField.setEnabled(false); // TODO: re-enable once figuring out the editing!
+        final AuthorPanel authorPanel = new AuthorPanel(authorField.getBackground(), authorModel);
+        authorPanel.addChangeListener(new ChangeListener() {
+            @Override
+            public void stateChanged(ChangeEvent e) {
+                // set limited authors anew
+                if (session.isValid())
+                    session.setLimitedAuthors(authorPanel.dataAsList());
+            }
+        });
+        ComponentBorder cb = new ComponentBorder(authorPanel, ComponentBorder.Edge.LEFT);
+        cb.install(authorField);
+        authorField.installAuthorPanel(authorPanel);
         authorField.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                getUpdateButton().doClick();
+            public void actionPerformed(ActionEvent event) {
+                setLimitedAuthor(authorPanel);
             }
         });
         authorField.setTransferHandler(new TransferHandler() {
@@ -313,18 +325,22 @@ public final class LTCEditor extends LTCGui {
                     if (flavors == null || flavors.length < 1)
                         return false; // cannot get flavor
                     Class representationClass = flavors[0].getRepresentationClass();
-                    String authorName = "";
+                    String authorText = "";
+                    boolean commitTransfer = false;
                     // first try author representation:
-                    if (Author.class.equals(representationClass))
-                        authorName = ((Author) t.getTransferData(AUTHOR_FLAVOR)).name;
+                    if (Author.class.equals(representationClass)) {
+                        authorText = ((Author) t.getTransferData(AUTHOR_FLAVOR)).toString();
+                        commitTransfer = true;
+                    }
                     // now try text representations:
                     DataFlavor bestTextFlavor = DataFlavor.selectBestTextFlavor(flavors);
                     if (bestTextFlavor != null)
-                        authorName = ((String) t.getTransferData(stringFlavor)).trim();
-                    // update text field if anything was successfully transfered:
-                    if (!"".equals(authorName)) {
-                        String currentText = authorField.getText().trim();
-                        authorField.setText("".equals(currentText)?authorName:currentText+", "+authorName);
+                        authorText = ((String) t.getTransferData(stringFlavor)).trim();
+                    // update text field if anything was successfully transferred:
+                    if (!"".equals(authorText)) {
+                        authorField.setText(authorText);
+                        if (commitTransfer)
+                            setLimitedAuthor(authorPanel); // programmatically ENTER on text field
                         return true; // signal success
                     }
                 } catch (UnsupportedFlavorException e) {
@@ -501,32 +517,6 @@ public final class LTCEditor extends LTCGui {
         buttonPane.add(saveButton);
         filteringPane.add(buttonPane, BorderLayout.PAGE_END);
 
-        // 2) authors panel
-
-//        JButton button = (JButton) authorButtons.add(new JButton(new AbstractAction("Reset") {
-//            private static final long serialVersionUID = -7513335226809639324L;
-//            public void actionPerformed(ActionEvent e) {
-//                authorModel.resetAll();
-//                authorList.clearSelection();
-//            }
-//        }));
-
-//        final Component limitButton = authorButtons.add(new LimitingButton(
-//                "Limit", authorList, authorModel, true));
-//        final Component unlimitButton = authorButtons.add(new LimitingButton(
-//                "Unlimit", authorList, authorModel, false));
-//        limitButton.setEnabled(false);
-//        unlimitButton.setEnabled(false);
-//        authorList.addListSelectionListener(new ListSelectionListener() {
-//            public void valueChanged(ListSelectionEvent e) {
-//                if (!e.getValueIsAdjusting()) {
-//                    // enable or disable buttons based on whether anything selected
-//                    limitButton.setEnabled(authorList.getSelectedIndices().length > 0);
-//                    unlimitButton.setEnabled(authorList.getSelectedIndices().length > 0);
-//                }
-//            }
-//        });
-
         return filteringPane;
     }
 
@@ -623,6 +613,16 @@ public final class LTCEditor extends LTCGui {
         fileField.setText(path);
         if (doUpdate)
             getUpdateButton().doClick(); // crude way to invoke ENTER on JTextField
+    }
+
+    private void setLimitedAuthor(AuthorPanel authorPanel) {
+        try {
+            authorPanel.addAuthor(Author.parse(authorField.getText()));
+        } catch (ParseException e) {
+            authorField.getToolkit().beep();
+            LOGGER.log(Level.SEVERE, e.getMessage(), e);
+        }
+        authorField.setText("");
     }
 
     private static void printUsage(PrintStream out, CmdLineParser parser) {
