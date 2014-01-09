@@ -24,8 +24,6 @@ import java.util.List;
  */
 public final class AuthorPanel extends JPanel {
 
-    public final static String MODEL_PROPERTY = "model";
-
     private static int HEIGHT;
     private final SortedSet<Author> model = new TreeSet<Author>();
     private final AuthorListModel authorModel;
