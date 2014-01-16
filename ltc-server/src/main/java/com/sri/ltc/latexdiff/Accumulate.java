@@ -182,6 +182,8 @@ public final class Accumulate {
         caretPosition = document.applyFiltering(flagsToHide, caretPosition);
         progress = updateProgress(0.9f, 0.05f);
 
+        // TODO: apply limited authors (if any)?
+
         // create return value:
         map.put(LTCserverInterface.KEY_TEXT, Base64.encodeBase64(document.getText(0, document.getLength()).getBytes()));
         map.put(LTCserverInterface.KEY_STYLES, document.getStyles());

@@ -482,14 +482,10 @@ public final class LTCserverImpl implements LTCserverInterface {
     public List get_limited_authors(int sessionID) throws XmlRpcException {
         Session session = getSession(sessionID);
         // build up list as intersection of currently limited authors and known ones
-        List<Object[]> result = new ArrayList<Object[]>();
-        Set<Author> limitedAuthors = session.getLimitedAuthors();
-        if (limitedAuthors.isEmpty())
-            return result;
-        for (Author author : session.getAuthors())
-            if (limitedAuthors.contains(author))
-                result.add(concatAuthorAndColor(author));
-        return result;
+        Sets.SetView<Author> intersection = Sets.intersection(
+                session.getLimitedAuthors(),
+                session.getAuthors());
+        return Lists.newArrayList(intersection);
     }
 
     @SuppressWarnings("unchecked")
