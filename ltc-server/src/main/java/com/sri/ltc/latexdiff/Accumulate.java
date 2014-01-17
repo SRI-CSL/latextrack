@@ -29,7 +29,6 @@ import javax.swing.text.*;
 import java.awt.*;
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
-import java.io.IOException;
 import java.util.*;
 import java.util.List;
 
@@ -73,16 +72,14 @@ public final class Accumulate {
      * addition or 2 for deletion, and the index of the author who made this change.  The author index is either taken
      * from the given array or assigned by index of the text array.
      *
-     *
-     *
-     *
      * @param priorText an array of text wrappers denoting the oldest to the newest version
      * @param authorIndices an array of author indices for each version of <code>priorText</code>;
      *                      must be of the same length as <code>priorText</code> or empty or <code>null</code>
      * @param flagsToHide a set of {@link com.sri.ltc.latexdiff.Change.Flag}, which are to be hidden in accumulated markup
+     * @param limitedAuthors a set of author indices, to which all markup is limited after accumulated;
+     *                       if this is empty or <code>null</code>, then all authors are used
      * @param caretPosition the caret position to be transformed by the accumulation   @return Map with 3 entries pointing to the text, the updated caret position, and the list of styles to mark-up
-     * the changes in the text
-     * @throws IOException if given readers cannot load text
+     * the changes in the text  @throws IOException if given readers cannot load text
      * @throws BadLocationException if a location in the underlying document does not exist
      * @throws IllegalStateException if the given array <code>authorIndices</code> is not empty,
      *                               but its length does not match the one of <code>priorText</code>
@@ -90,7 +87,7 @@ public final class Accumulate {
     @SuppressWarnings("unchecked")
     public Map perform(ReaderWrapper[] priorText,
                        Integer[] authorIndices,
-                       Set<Change.Flag> flagsToHide,
+                       Set<Change.Flag> flagsToHide, Set<Integer> limitedAuthors,
                        int caretPosition) throws Exception {
 
         // init return value:
@@ -98,6 +95,7 @@ public final class Accumulate {
         map.put(LTCserverInterface.KEY_TEXT, new byte[0]);
         map.put(LTCserverInterface.KEY_CARET, caretPosition);
         map.put(LTCserverInterface.KEY_STYLES, new ArrayList<Integer[]>());
+        map.put(LTCserverInterface.KEY_REV_INDICES, new ArrayList<Integer>());
 
         if (priorText == null || priorText.length == 0)
             return map;
@@ -179,15 +177,14 @@ public final class Accumulate {
         }
 
         // after changes are accumulated, apply the filters
-        caretPosition = document.applyFiltering(flagsToHide, caretPosition);
+        caretPosition = document.applyFiltering(flagsToHide, limitedAuthors, caretPosition);
         progress = updateProgress(0.9f, 0.05f);
-
-        // TODO: apply limited authors (if any)?
 
         // create return value:
         map.put(LTCserverInterface.KEY_TEXT, Base64.encodeBase64(document.getText(0, document.getLength()).getBytes()));
         map.put(LTCserverInterface.KEY_STYLES, document.getStyles());
         map.put(LTCserverInterface.KEY_CARET, caretPosition);
+        map.put(LTCserverInterface.KEY_REV_INDICES, document.getSortedRevisionIndices());
 
         updateProgress(0.95f, 0.05f);
         return map;

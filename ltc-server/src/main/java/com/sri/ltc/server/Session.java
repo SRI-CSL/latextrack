@@ -87,6 +87,22 @@ public final class Session {
     }
 
     // --- create limited history ---
+
+    /**
+     * Get limited history of tracked file with any limits on date or revision observed. Also observe
+     * given setting whether to collapse authors.  Use also a flag whether text is modified in editor
+     * and then the given current text.  If not modified, then this will test whether the file on
+     * disk is currently different than the last repository version.
+     * <p>
+     * The returned ordered list of history units always has at least one element.
+     *
+     * @param collapseAuthors Whether to collapse subsequent authors and only use the latest revision
+     *                        in the sequence of history units
+     * @param isModified Whether the text is currently modified in the editor
+     * @param currentText Current text to use if the flag <code>isModified</code> is TRUE
+     * @return ordered list of history units with at least one entry
+     * @throws Exception
+     */
     public synchronized List<HistoryUnit> createLimitedHistory(boolean collapseAuthors, boolean isModified,
                                                                String currentText) throws Exception {
         Author self = getTrackedFile().getRepository().getSelf();
@@ -117,8 +133,7 @@ public final class Session {
             // no limiting revision OR limiting revision is neither the beginning of "modified" nor "on disk":
             // obtain revision history from version control system
             limitingRev = TrackedFile.HAT_REVISION;
-        List<HistoryUnit> units = new LimitedHistory(trackedFile,
-                limitedAuthors, limit_date, limitingRev, collapseAuthors).getHistoryUnits();
+        List<HistoryUnit> units = new LimitedHistory(trackedFile, limit_date, limitingRev, collapseAuthors).getHistoryUnits();
 
         // process last unit: if exists, possibly replace the last one from VC
         if (last != null) {

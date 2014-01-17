@@ -41,6 +41,7 @@ public interface LTCserverInterface {
     public final static String KEY_CARET = "caret";
     public final static String KEY_REVS = "revs";
     public final static String KEY_LAST = "last_rev";
+    public final static String KEY_REV_INDICES = "revision indices";
     public static enum BoolPrefs {SMALL, DELETIONS, PREAMBLE, COMMANDS, COMMENTS, COLLAPSE_AUTHORS, ALLOW_SIMILAR_COLORS};
     public final static String ON_DISK = "on disk"; // special name for version on disk (if file modified and not committed)
     public final static String MODIFIED = "modified"; // special name for text modified in editor
@@ -147,7 +148,8 @@ public interface LTCserverInterface {
      * names from newest to oldest that have been used to obtain the changes.  Also, the
      * String under {@link #KEY_LAST} contains the revision name of the base version used
      * in computing the difference, which can be mark as the last or limiting revision to
-     * the user.
+     * the user. Finally, under {@link #KEY_REV_INDICES} the indices of the revisions used
+     * in markup are communicated (denoting "active" revisions).
      *
      *
      * @param sessionID identifies the session

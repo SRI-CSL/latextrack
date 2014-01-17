@@ -50,17 +50,18 @@ public final class TestAccumulate {
     private static Accumulate accumulate = new Accumulate();
 
     private static Map perform(int caretPosition, String... texts) throws Exception {
-        return perform(caretPosition, EnumSet.noneOf(Change.Flag.class), texts);
+        return perform(caretPosition, null, EnumSet.noneOf(Change.Flag.class), texts);
     }
 
-    private static Map perform(int caretPosition, Set<Change.Flag> flagsToHide, String... texts) throws Exception {
+    private static Map perform(int caretPosition, Set<Integer> limitedAuthors, Set<Change.Flag> flagsToHide,
+                               String... texts) throws Exception {
         ReaderWrapper[] readers = null;
         if (texts != null) {
             readers = new ReaderWrapper[texts.length];
             for (int i=0; i<texts.length; i++)
                 readers[i] = new StringReaderWrapper(texts[i]);
         }
-        return accumulate.perform(readers, null, flagsToHide, caretPosition);
+        return accumulate.perform(readers, null, flagsToHide, limitedAuthors, caretPosition);
     }
 
     @SuppressWarnings("unchecked")
@@ -101,7 +102,7 @@ public final class TestAccumulate {
     public void oneOrNoVersions() throws Exception {
         map = perform(0, (String[]) null);
         assertMap("", 0, 0);
-        map = perform(0, EnumSet.of(Change.Flag.PREAMBLE, Change.Flag.COMMENT, Change.Flag.DELETION), "");
+        map = perform(0, null, EnumSet.of(Change.Flag.PREAMBLE, Change.Flag.COMMENT, Change.Flag.DELETION), "");
         assertMap("", 0, 0);
         String text = "Hello World.";
         int position = 7;
@@ -135,14 +136,14 @@ public final class TestAccumulate {
                 null, null);
 
         // removing things but hiding deletions
-        map = perform(17, EnumSet.of(Change.Flag.DELETION),
+        map = perform(17, null, EnumSet.of(Change.Flag.DELETION),
                 "   Lorem ipsum \n \ndolor sit amet. ",
                 "Lorem ipsum dolor sit    \t"
         );
         assertMap("Lorem ipsum dolor sit    \t", 0, 17);
 
         // adding commands but hiding them
-        map = perform(18, EnumSet.of(Change.Flag.COMMAND),
+        map = perform(18, null, EnumSet.of(Change.Flag.COMMAND),
                 "Lorem ipsum dolor sit    \t",
                 "   Lorem ipsum \\textbf{dolor} sit amet. "
         );
@@ -175,7 +176,7 @@ public final class TestAccumulate {
                 new int[][]{{8, 9}, {11, 12}, {25, 26}},
                 null, null);
         // hide small changes...
-        map = perform(0, EnumSet.of(Change.Flag.SMALL),
+        map = perform(0, null, EnumSet.of(Change.Flag.SMALL),
                 "\t  Lorem ippsu dolor sit amet",
                 "Lorem ipsum dolor sit amt \n "
         );
@@ -264,7 +265,7 @@ public final class TestAccumulate {
                 new int[] {1, 2, 2},
                 null);
         // back and forth but hiding deletions
-        map = perform(0, EnumSet.of(Change.Flag.DELETION),
+        map = perform(0, null, EnumSet.of(Change.Flag.DELETION),
                 "Lorem\t ipsum dolor",
                 "Lorem dolor",
                 "Lorem  ipsum"
@@ -288,7 +289,7 @@ public final class TestAccumulate {
                 new int[] {1, 2, 1},
                 null);
         // small addition and deletion with command; filtering COMMANDS and SMALL
-        map = perform(0, EnumSet.of(Change.Flag.SMALL, Change.Flag.COMMAND),
+        map = perform(0, null, EnumSet.of(Change.Flag.SMALL, Change.Flag.COMMAND),
                 "Lorem ipm   \\dolor amet",
                 "Lorem ipsum \\dolor",
                 "Lorem  ipsum"
@@ -313,7 +314,7 @@ public final class TestAccumulate {
                 null);
         // recreate problem with comment:
         // adding text and then adding comment, but showing everything
-        map = perform(0, EnumSet.of(Change.Flag.COMMENT),
+        map = perform(0, null, EnumSet.of(Change.Flag.COMMENT),
                 "  Lorem ipsum dolor sit amet\n",
                 "Lorem ipsum \ndolor sit amet, consectetur adipiscing elit. \n ",
                 "Lorem ipsum \ndolor sit amet, consectetur adipiscing elit. \n " +
@@ -370,7 +371,7 @@ public final class TestAccumulate {
                 new int[][] {{0, 2}, {6, 14}, {14, 20}},
                 null,
                 null);
-        map = perform(18, EnumSet.of(Change.Flag.DELETION),
+        map = perform(18, null, EnumSet.of(Change.Flag.DELETION),
                 "deleted\nold\n",
                 "% added old more \ntext\n");
         assertMap("% added old more \ntext\n", 2, 18);
@@ -388,7 +389,7 @@ public final class TestAccumulate {
                 new int[][] {{0, 2}, {6, 14}, {14, 20}, {24, 38}},
                 null,
                 null);
-        map = perform(12, EnumSet.of(Change.Flag.COMMENT),
+        map = perform(12, null, EnumSet.of(Change.Flag.COMMENT),
                 "old;deleted\ntext\n",
                 "% old;added text more and\nmore");
         assertMap("% old;added text more and\nmore", 1, 12);
@@ -397,7 +398,7 @@ public final class TestAccumulate {
                 new int[][] {{26, 30}},
                 null,
                 null);
-        map = perform(12, EnumSet.of(Change.Flag.DELETION),
+        map = perform(12, null, EnumSet.of(Change.Flag.DELETION),
                 "old;deleted\ntext\n",
                 "% old;added text more and\nmore");
         assertMap("% old;added text more and\nmore", 3, 12);
@@ -407,7 +408,7 @@ public final class TestAccumulate {
                 null,
                 null);
         // deletion in preamble, small deletion and addition of comment
-        map = perform(0, EnumSet.of(Change.Flag.PREAMBLE, Change.Flag.COMMENT),
+        map = perform(0, null, EnumSet.of(Change.Flag.PREAMBLE, Change.Flag.COMMENT),
                 "Lorem ipsumm dolor",
                 "pre  \\begin{document}Lorem ipsumm dolor",
                 "  \\begin{document}Lorem ipsumm dolor",
@@ -422,7 +423,7 @@ public final class TestAccumulate {
                 new int[] {1, 3},
                 null);
         // deletion in preamble, small deletion and addition of preamble
-        map = perform(0, EnumSet.of(Change.Flag.PREAMBLE, Change.Flag.COMMAND, Change.Flag.DELETION),
+        map = perform(0, null, EnumSet.of(Change.Flag.PREAMBLE, Change.Flag.COMMAND, Change.Flag.DELETION),
                 "pra   Lorem ipsumm dolor",
                 "pre  Lorem ipsumm dolor",
                 "pre  \\begin{document}Lorem ipsumm dolor",
@@ -436,7 +437,7 @@ public final class TestAccumulate {
                 new int[] {2, 4},
                 null);
         // preamble location
-        map = perform(0, EnumSet.of(Change.Flag.PREAMBLE),
+        map = perform(0, null, EnumSet.of(Change.Flag.PREAMBLE),
                 " pre2 \\begin{document}Lorem ipsum dolor",
                 " pre2 Lorem   ipsum dolor",
                 "pre1 pre2 Lorem ipsum  dolor"
@@ -448,7 +449,7 @@ public final class TestAccumulate {
                 new int[] {2, 1},
                 null);
         // deletion in preamble, small deletion and addition of comment
-        map = perform(0, EnumSet.of(Change.Flag.DELETION, Change.Flag.COMMAND),
+        map = perform(0, null, EnumSet.of(Change.Flag.DELETION, Change.Flag.COMMAND),
                 "pra   Lorem ipsumm dolor",
                 "pre  Lorem ipsumm dolor",
                 "pre  \\begin{document}Lorem ipsumm dolor",
@@ -462,7 +463,7 @@ public final class TestAccumulate {
                 new int[] {1, 2, 4},
                 null);
         // filtering comments
-        map = perform(3, EnumSet.of(Change.Flag.COMMENT),
+        map = perform(3, null, EnumSet.of(Change.Flag.COMMENT),
                 "\n\nIf % or should this be ``When''?\nin the Course",
                 "\n\nWhen in the Course"
         );
@@ -476,12 +477,12 @@ public final class TestAccumulate {
 
     @Test
     public void testAttributionOfChange() throws Exception {
-        map = perform(0, EnumSet.of(Change.Flag.COMMENT),
+        map = perform(0, null, EnumSet.of(Change.Flag.COMMENT),
                 "oldest",
                 "pretty \n  \n% oldest comment",
                 "% oldest comment with space");
         assertMap("pretty \n  \n% oldest comment with space", 1, 11);
-        map = perform(0, EnumSet.of(Change.Flag.COMMENT),
+        map = perform(0, null, EnumSet.of(Change.Flag.COMMENT),
                 "oldest",
                 "% oldest comment",
                 " % oldest comment with space");
@@ -491,7 +492,7 @@ public final class TestAccumulate {
                 new int[][]{{0, 1}},
                 new int[]{1},
                 new int[]{0});
-        map = perform(0, EnumSet.of(Change.Flag.COMMENT),
+        map = perform(0, null, EnumSet.of(Change.Flag.COMMENT),
                 "oldest",
                 "% oldest comment",
                 "pretty % oldest comment with space");
@@ -501,7 +502,7 @@ public final class TestAccumulate {
                 new int[][]{{0, 7}},
                 new int[]{2},
                 new int[]{1});
-        map = perform(2, EnumSet.of(Change.Flag.COMMENT),
+        map = perform(2, null, EnumSet.of(Change.Flag.COMMENT),
                 "oldest",
                 "pretty % oldest comment",
                 " \n% oldest comment with space");
@@ -511,7 +512,7 @@ public final class TestAccumulate {
                 new int[][]{{0, 6}, {6, 8}},
                 new int[]{2, 1},
                 new int[]{1, 0});
-        map = perform(0, EnumSet.of(Change.Flag.COMMENT),
+        map = perform(0, null, EnumSet.of(Change.Flag.COMMENT),
                 "oldest",
                 "pretty \n  % oldest comment",
                 "% oldest comment with space");
@@ -590,10 +591,10 @@ public final class TestAccumulate {
                         "\n" +
                         "\\end{document}";
 
-        map = perform(0, EnumSet.of(Change.Flag.SMALL, Change.Flag.COMMENT), new String[] { version2Text, version3Text, version4Text });
+        map = perform(0, null, EnumSet.of(Change.Flag.SMALL, Change.Flag.COMMENT), new String[] { version2Text, version3Text, version4Text });
         int styleCountWithPreamble = ((List<Integer[]>) map.get(LTCserverInterface.KEY_STYLES)).size();
 
-        map = perform(0, EnumSet.of(Change.Flag.SMALL, Change.Flag.COMMENT, Change.Flag.PREAMBLE), new String[] { version2Text, version3Text, version4Text });
+        map = perform(0, null, EnumSet.of(Change.Flag.SMALL, Change.Flag.COMMENT, Change.Flag.PREAMBLE), new String[] { version2Text, version3Text, version4Text });
         int styleCountWithoutPreamble = ((List<Integer[]>) map.get(LTCserverInterface.KEY_STYLES)).size();
 
         // If this is broken, more than just one change (the change in the preamble) will show up

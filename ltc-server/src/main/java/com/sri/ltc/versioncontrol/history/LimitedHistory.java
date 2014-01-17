@@ -40,19 +40,16 @@ import java.util.logging.Logger;
 public final class LimitedHistory extends FileHistory {
 
     private final static Logger LOGGER = Logger.getLogger(LimitedHistory.class.getName());
-    private final Set<Author> limitingAuthors;
     private final String limitingDate;
     private final String limitingRev;
     private final boolean collapseAuthors;
 
     public LimitedHistory(TrackedFile file,
-                          Set<Author> limitingAuthors,
                           String limitingDate,
                           String limitingRev,
                           boolean collapseAuthors)
             throws Exception {
         super(file);
-        this.limitingAuthors = limitingAuthors;
         this.limitingDate = limitingDate;
         this.limitingRev = limitingRev;
         this.collapseAuthors = collapseAuthors;
@@ -74,12 +71,6 @@ public final class LimitedHistory extends FileHistory {
     @Override
     void transformList() throws IOException {
         Author self = trackedFile.getRepository().getSelf();
-
-        // reduce commit path to authors (if any specified)
-        if (limitingAuthors != null && !limitingAuthors.isEmpty())
-            for (ListIterator<Commit> i = commitList.listIterator(); i.hasNext(); )
-                if (!limitingAuthors.contains(i.next().getAuthor()))
-                    i.remove();
 
         // if no limiting date nor rev then reduce list until last commit of calling author (by name only)
         if ((limitingDate == null || "".equals(limitingDate)) &&

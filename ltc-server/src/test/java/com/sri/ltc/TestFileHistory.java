@@ -21,7 +21,6 @@
  */
 package com.sri.ltc;
 
-import com.google.common.collect.Sets;
 import com.sri.ltc.categories.IntegrationTests;
 import com.sri.ltc.filter.Author;
 import com.sri.ltc.git.TemporaryGitRepository;
@@ -122,37 +121,34 @@ public final class TestFileHistory {
 
         // as Anton and not collapsing; no other limits
         trackedFile.getRepository().setSelf(Authors.ANTON.toAuthor());
-        units = new LimitedHistory(trackedFile, null, null, null, false).getHistoryUnits();
+        units = new LimitedHistory(trackedFile, null, null, false).getHistoryUnits();
         assertEquals("as Anton and not collapsing", 7, units.size());
 
         // as Anton and collapsing; no other limits
-        units = new LimitedHistory(trackedFile, null, null, null, true).getHistoryUnits();
+        units = new LimitedHistory(trackedFile, null, null, true).getHistoryUnits();
         assertEquals("as Anton and collapsing", 5, units.size());
 
         // as Anton and collapsing; limiting to Anton and Berta
         units = new LimitedHistory(trackedFile,
-                Sets.newHashSet(Authors.ANTON.toAuthor(), Authors.BERTA.toAuthor()),
                 null, null, true).getHistoryUnits();
         assertEquals("as Anton and limiting to Anton and Berta", 2, units.size());
 
         // as Carlos and not collapsing; no other limits
         trackedFile.getRepository().setSelf(Authors.CARLOS.toAuthor());
-        units = new LimitedHistory(trackedFile, null, null, null, false).getHistoryUnits();
+        units = new LimitedHistory(trackedFile, null, null, false).getHistoryUnits();
         assertEquals("as Carlos and not collapsing", 5, units.size());
 
         // as Carlos and collapsing; no other limits
-        units = new LimitedHistory(trackedFile, null, null, null, true).getHistoryUnits();
+        units = new LimitedHistory(trackedFile, null, null, true).getHistoryUnits();
         assertEquals("as Carlos and collapsing", 3, units.size());
 
         // as Carlos and collapsing; limiting to Berta and Anton
         units = new LimitedHistory(trackedFile,
-                Sets.newHashSet(Authors.ANTON.toAuthor(), Authors.BERTA.toAuthor()),
                 null, null, true).getHistoryUnits();
         assertEquals("as Carlos and limiting to Anton and Berta", 2, units.size());
 
         // as Carlos and not collapsing; limiting to Berta and Anton
         units = new LimitedHistory(trackedFile,
-                Sets.newHashSet(Authors.ANTON.toAuthor(), Authors.BERTA.toAuthor()),
                 null, null, false).getHistoryUnits();
         assertEquals("as Carlos and not collapsing; limiting to Anton and Berta", 5, units.size());
     }

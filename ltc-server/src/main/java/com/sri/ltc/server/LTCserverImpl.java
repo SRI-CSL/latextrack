@@ -22,7 +22,9 @@
 package com.sri.ltc.server;
 
 import com.google.common.base.Function;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.sri.ltc.CommonUtils;
 import com.sri.ltc.ProgressReceiver;
@@ -184,10 +186,10 @@ public final class LTCserverImpl implements LTCserverInterface {
         // apply deletions to current text and update caret position
         try {
             if (deletions != null && !deletions.isEmpty()) {
-                MarkedUpDocument document = new MarkedUpDocument(currentText, deletions, caretPosition);
-                document.removeDeletions();
-                currentText = document.getText(0, document.getLength());
-                caretPosition = document.getCaretPosition();
+                Map<MarkedUpDocument.KEYS,Object> map =
+                        MarkedUpDocument.applyDeletions(currentText, deletions, caretPosition);
+                currentText = (String) map.get(MarkedUpDocument.KEYS.TEXT);
+                caretPosition = (Integer) map.get(MarkedUpDocument.KEYS.POSITION);
             }
         } catch (BadLocationException e) {
             logAndThrow(2, e);
@@ -216,9 +218,9 @@ public final class LTCserverImpl implements LTCserverInterface {
 
         try {
             if (deletions != null && !deletions.isEmpty()) {
-                MarkedUpDocument document = new MarkedUpDocument(currentText, deletions, 0);
-                document.removeDeletions();
-                currentText = document.getText(0, document.getLength());
+                Map<MarkedUpDocument.KEYS,Object> map =
+                        MarkedUpDocument.applyDeletions(currentText, deletions, 0);
+                currentText = (String) map.get(MarkedUpDocument.KEYS.TEXT);
             }
             // write current text to file
             BufferedWriter out = new BufferedWriter(new FileWriter(session.getTrackedFile().getFile(), false));
@@ -264,7 +266,7 @@ public final class LTCserverImpl implements LTCserverInterface {
         Filtering filter = Filtering.getInstance();
 
         // obtain file history from version control, disk, and session (obeying any filters):
-        List<HistoryUnit> units = new ArrayList<HistoryUnit>();
+        List<HistoryUnit> units = Lists.newArrayList();
         try {
             // create history with limits and obtain revision IDs, authors, and readers:
             units = session.createLimitedHistory(filter.getStatus(BoolPrefs.COLLAPSE_AUTHORS), // whether to condense authors or not
@@ -288,11 +290,13 @@ public final class LTCserverImpl implements LTCserverInterface {
                 return unit.author;
             }
         });
-        session.addAuthors(new HashSet<Author>(authors));
-        Map<Integer,Object[]> mappedAuthors = new HashMap<Integer,Object[]>();
-        List<Integer> indices = new ArrayList<Integer>();
+        session.addAuthors(Sets.newHashSet(authors));
+        Set<Author> limitedAuthors = session.getLimitedAuthors();
+        Map<Integer,Object[]> mappedAuthors = Maps.newHashMap();
+        Set<Integer> limitedAuthorsAsIndices = Sets.newHashSet();
+        List<Integer> indices = Lists.newArrayList();
         if (authors != null && authors.size() > 0) {
-            List<Author> sortedAuthors = new ArrayList<Author>(new TreeSet<Author>(authors));
+            List<Author> sortedAuthors = Lists.newArrayList(Sets.newTreeSet(authors));
             // assign color (if unique colors requested) and then
             // build up map: index -> author and color (as list)
             for (Author a : sortedAuthors) {
@@ -302,7 +306,10 @@ public final class LTCserverImpl implements LTCserverInterface {
                     } catch (BackingStoreException e) {
                         logAndThrow(8, e);
                     }
-                mappedAuthors.put(sortedAuthors.indexOf(a), concatAuthorAndColor(a));
+                int index = sortedAuthors.indexOf(a);
+                mappedAuthors.put(index, concatAuthorAndColor(a));
+                if (limitedAuthors.contains(a))
+                    limitedAuthorsAsIndices.add(index);
             }
             // build up list of indices
             for (Author a : authors)
@@ -334,23 +341,23 @@ public final class LTCserverImpl implements LTCserverInterface {
                 };
                 session.getAccumulate().addPropertyChangeListener(listener);
             }
-            List<ReaderWrapper> readers = Lists.transform(units, new Function<HistoryUnit, ReaderWrapper>() {
-                @Nullable
-                @Override
-                public ReaderWrapper apply(@Nullable HistoryUnit unit) {
-                    return unit.reader;
-                }
-            });
+
             map = session.getAccumulate().perform(
-                    readers.toArray(new ReaderWrapper[readers.size()]),
-                    indices.toArray(new Integer[indices.size()]),
+                    Iterables.toArray(Lists.transform(units, new Function<HistoryUnit, ReaderWrapper>() {
+                        @Nullable
+                        @Override
+                        public ReaderWrapper apply(@Nullable HistoryUnit unit) {
+                            return unit.reader;
+                        }
+                    }), ReaderWrapper.class),
+                    Iterables.toArray(indices, Integer.class),
                     Change.buildFlagsToHide(
                             filter.getStatus(BoolPrefs.DELETIONS),
                             filter.getStatus(BoolPrefs.SMALL),
                             filter.getStatus(BoolPrefs.PREAMBLE),
                             filter.getStatus(BoolPrefs.COMMENTS),
                             filter.getStatus(BoolPrefs.COMMANDS)),
-                    caretPosition);
+                    limitedAuthorsAsIndices, caretPosition);
             map.put(LTCserverInterface.KEY_AUTHORS, mappedAuthors); // add current author map
             map.put(LTCserverInterface.KEY_REVS, Lists.transform(units.subList(1, units.size()),
                     new Function<HistoryUnit, String>() {
@@ -360,7 +367,15 @@ public final class LTCserverImpl implements LTCserverInterface {
                             return unit.revision;
                         }
                     })); // add list of revisions used in accumulation: remove the base version!
-            map.put(LTCserverInterface.KEY_LAST, units.get(0).revision); // base version
+            // calculate base version: version before oldest active revision if any, otherwise...
+            List<Integer> active_revs = (List<Integer>) map.get(KEY_REV_INDICES);
+            if (active_revs.isEmpty())
+                map.put(LTCserverInterface.KEY_LAST, units.get(0).revision); // there is always at least one unit
+            else
+                map.put(LTCserverInterface.KEY_LAST, units.get(active_revs.get(0)).revision);
+                // indices of active revs are 0,1,... to be used with the sublist above under #KEY_REVS,
+                // so we don't need to subtract 1 to get to the last revision before the lowest index in 'units'
+
             session.getAccumulate().removePropertyChangeListener(listener);
         } catch (Exception e) {
             logAndThrow(2, e);
