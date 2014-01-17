@@ -138,8 +138,9 @@ public final class Session {
         // process last unit: if exists, possibly replace the last one from VC
         if (last != null) {
             // check if we collapse authors and need to remove the newest version:
-            if (collapseAuthors && !units.isEmpty() && last.author.equals(self))
-                units.remove(units.size()-1);
+            if (collapseAuthors && !units.isEmpty() &&
+                    last.author.equals(units.get(units.size() - 1).author))
+                units.remove(units.size() - 1);
             units.add(last); // add given last unit to those retrieved from version control
         }
 
