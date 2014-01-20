@@ -35,6 +35,12 @@ import java.util.*;
 import java.util.logging.Logger;
 
 /**
+ * Create a limited history from the given file observing any revision or date limits as
+ * well as the setting whether to collapse consecutive revisions of the same author.
+ * <p>
+ * Note that with limiting date or revision, the units will always try to add one more
+ * revision at the end which serves as the base version for change accumulation.
+ *
  * @author linda
  */
 public final class LimitedHistory extends FileHistory {
@@ -61,11 +67,6 @@ public final class LimitedHistory extends FileHistory {
         return trackedFile.getCommits(
                 ((limitingDate == null) || limitingDate.isEmpty()) ? null : CommonUtils.deSerializeDate(limitingDate),
                 ((limitingRev == null) || limitingRev.isEmpty()) ? null : limitingRev);
-    }
-
-    @Override
-    void transformGraph() {
-        // nothing to be done here
     }
 
     @Override

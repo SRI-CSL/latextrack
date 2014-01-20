@@ -67,7 +67,7 @@ public final class TestAccumulate {
     @SuppressWarnings("unchecked")
     private void assertMap(String text, int styles, int caretPosition) {
         assertNotNull(map);
-        assertTrue("Map has 3 entries", map.size() == 3);
+        assertTrue("Map has 3 entries", map.size() == 4);
         assertEquals("Text is equal to", text, new String(Base64.decodeBase64((byte[]) map.get(LTCserverInterface.KEY_TEXT))));
         assertEquals("Number of styles", styles, ((List<Integer[]>) map.get(LTCserverInterface.KEY_STYLES)).size());
         assertEquals("Caret position", caretPosition, map.get(LTCserverInterface.KEY_CARET));

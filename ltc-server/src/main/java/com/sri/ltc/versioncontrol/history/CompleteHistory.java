@@ -45,11 +45,6 @@ public final class CompleteHistory extends FileHistory {
     }
 
     @Override
-    void transformGraph() {
-        // nothing to prune
-    }
-
-    @Override
     void transformList() {
         // nothing to remove
     }

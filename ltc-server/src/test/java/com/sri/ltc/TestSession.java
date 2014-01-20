@@ -25,6 +25,8 @@ import com.google.common.collect.Lists;
 import com.sri.ltc.categories.IntegrationTests;
 import com.sri.ltc.filter.Author;
 import com.sri.ltc.git.TemporaryGitRepository;
+import com.sri.ltc.server.Session;
+import com.sri.ltc.server.SessionManager;
 import com.sri.ltc.versioncontrol.Commit;
 import com.sri.ltc.versioncontrol.TrackedFile;
 import com.sri.ltc.versioncontrol.VersionControlException;
@@ -41,17 +43,15 @@ import java.text.ParseException;
 import java.util.Date;
 import java.util.List;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 /**
- * Unit tests for file history and collapsing as well as limiting by date or revision.
+ * Unit tests for limiting by authors.
  *
  * @author linda
  */
 @Category(IntegrationTests.class)
-public final class TestFileHistory {
+public final class TestSession {
 
     @ClassRule
     public static TemporaryGitRepository temporaryGitRepository = new TemporaryGitRepository();
@@ -66,7 +66,7 @@ public final class TestFileHistory {
         }
     }
 
-    private static TrackedFile trackedFile = null;
+    private static Session session = null;
     private static final List<String> revisions = Lists.newArrayList();
     private static final List<Date> dates = Lists.newArrayList();
 
@@ -84,7 +84,7 @@ public final class TestFileHistory {
         Commit commit;
 
         temporaryGitRepository.setAuthor(Authors.ANTON.toAuthor());
-        trackedFile = temporaryGitRepository.createTestFileInRepository("foo", ".txt", "first version", true);
+        TrackedFile trackedFile = temporaryGitRepository.createTestFileInRepository("foo", ".txt", "first version", true);
         commit = trackedFile.commit("first commit");
         revisions.add(commit.getId());
         dates.add(commit.getDate());
@@ -134,39 +134,47 @@ public final class TestFileHistory {
 
         assertNotNull("tracked file is not null", trackedFile);
         assertTrue("Revisions and Dates have same length", revisions.size() == dates.size());
+
+        session = SessionManager.getSession(SessionManager.createSession(trackedFile));
+        assertNotNull("session is not null", session);
     }
 
     @Test
-    public void testCompleteHistory() throws ParseException, VersionControlException, IOException {
-        CompleteHistory history = new CompleteHistory(trackedFile);
-
-        assertEquals("history has 3 authors", 3, history.getAuthors().size());
-
-        List<Object[]> commits = history.update();
-        assertEquals("history has 8 commits", 8, commits.size());
-    }
-
-    @Test
-    public void testCollapsing() throws Exception {
+    public void testLimitingAuthors() throws Exception {
         List<HistoryUnit> units;
 
-        // as Anton and not collapsing
-        trackedFile.getRepository().setSelf(Authors.ANTON.toAuthor());
-        units = new LimitedHistory(trackedFile, null, null, false).getHistoryUnits();
-        assertEquals("as Anton and not collapsing", 7, units.size());
-
-        // as Anton and collapsing
-        units = new LimitedHistory(trackedFile, null, null, true).getHistoryUnits();
-        assertEquals("as Anton and collapsing", 5, units.size());
-
-        // as Carlos and not collapsing
-        trackedFile.getRepository().setSelf(Authors.CARLOS.toAuthor());
-        units = new LimitedHistory(trackedFile, null, null, false).getHistoryUnits();
-        assertEquals("as Carlos and not collapsing", 5, units.size());
-
-        // as Carlos and collapsing
-        units = new LimitedHistory(trackedFile, null, null, true).getHistoryUnits();
-        assertEquals("as Carlos and collapsing", 3, units.size());
+//        // as Anton and not collapsing
+//        trackedFile.getRepository().setSelf(Authors.ANTON.toAuthor());
+//        units = new LimitedHistory(trackedFile, null, null, false).getHistoryUnits();
+//        assertEquals("as Anton and not collapsing", 7, units.size());
+//
+//        // as Anton and collapsing
+//        units = new LimitedHistory(trackedFile, null, null, true).getHistoryUnits();
+//        assertEquals("as Anton and collapsing", 5, units.size());
+//
+////        // as Anton and collapsing; limiting to Anton and Berta
+////        units = new LimitedHistory(trackedFile,
+////                null, null, true).getHistoryUnits();
+////        assertEquals("as Anton and limiting to Anton and Berta", 2, units.size());
+//
+//        // as Carlos and not collapsing
+//        trackedFile.getRepository().setSelf(Authors.CARLOS.toAuthor());
+//        units = new LimitedHistory(trackedFile, null, null, false).getHistoryUnits();
+//        assertEquals("as Carlos and not collapsing", 5, units.size());
+//
+//        // as Carlos and collapsing
+//        units = new LimitedHistory(trackedFile, null, null, true).getHistoryUnits();
+//        assertEquals("as Carlos and collapsing", 3, units.size());
+//
+////        // as Carlos and collapsing; limiting to Berta and Anton
+////        units = new LimitedHistory(trackedFile,
+////                null, null, true).getHistoryUnits();
+////        assertEquals("as Carlos and limiting to Anton and Berta", 2, units.size());
+//
+////        // as Carlos and not collapsing; limiting to Berta and Anton
+////        units = new LimitedHistory(trackedFile,
+////                null, null, false).getHistoryUnits();
+////        assertEquals("as Carlos and not collapsing; limiting to Anton and Berta", 5, units.size());
     }
 
     @Test
@@ -174,51 +182,51 @@ public final class TestFileHistory {
         List<HistoryUnit> units;
 
         // as Anton:
-        trackedFile.getRepository().setSelf(Authors.ANTON.toAuthor());
-
-        // as Anton, collapsing, and limited by rev #2
-        units = new LimitedHistory(trackedFile, null, revisions.get(1), true).getHistoryUnits();
-        assertEquals("as Anton, collapsing, and limited by rev #2", 5, units.size());
-        // as Anton, collapsing, and limited by rev #4
-        units = new LimitedHistory(trackedFile, null, revisions.get(3), true).getHistoryUnits();
-        assertEquals("as Anton, collapsing, and limited by rev #4", 4, units.size());
-        // as Anton, not collapsing, and limited by rev #4
-        units = new LimitedHistory(trackedFile, null, revisions.get(3), false).getHistoryUnits();
-        assertEquals("as Anton, not collapsing, and limited by rev #4", 6, units.size());
-
-        // as Carlos:
-        trackedFile.getRepository().setSelf(Authors.CARLOS.toAuthor());
-
-        // as Carlos, not collapsing, and limited by rev #3
-        units = new LimitedHistory(trackedFile, null, revisions.get(2), false).getHistoryUnits();
-        assertEquals("as Carlos, not collapsing, and limited by rev #3", 7, units.size());
-        // as Carlos, collapsing, and limited by rev #3
-        units = new LimitedHistory(trackedFile, null, revisions.get(2), true).getHistoryUnits();
-        assertEquals("as Carlos, collapsing, and limited by rev #3", 5, units.size());
+//        trackedFile.getRepository().setSelf(Authors.ANTON.toAuthor());
+//
+//        // as Anton, collapsing, and limited by rev #2
+//        units = new LimitedHistory(trackedFile, null, revisions.get(1), true).getHistoryUnits();
+//        assertEquals("as Anton, collapsing, and limited by rev #2", 5, units.size());
+//        // as Anton, collapsing, and limited by rev #4
+//        units = new LimitedHistory(trackedFile, null, revisions.get(3), true).getHistoryUnits();
+//        assertEquals("as Anton, collapsing, and limited by rev #4", 4, units.size());
+//        // as Anton, not collapsing, and limited by rev #4
+//        units = new LimitedHistory(trackedFile, null, revisions.get(3), false).getHistoryUnits();
+//        assertEquals("as Anton, not collapsing, and limited by rev #4", 6, units.size());
+//
+//        // as Carlos:
+//        trackedFile.getRepository().setSelf(Authors.CARLOS.toAuthor());
+//
+//        // as Carlos, not collapsing, and limited by rev #3
+//        units = new LimitedHistory(trackedFile, null, revisions.get(2), false).getHistoryUnits();
+//        assertEquals("as Carlos, not collapsing, and limited by rev #3", 7, units.size());
+//        // as Carlos, collapsing, and limited by rev #3
+//        units = new LimitedHistory(trackedFile, null, revisions.get(2), true).getHistoryUnits();
+//        assertEquals("as Carlos, collapsing, and limited by rev #3", 5, units.size());
     }
 
     @Test
     public void testLimitingByDate() throws Exception {
         List<HistoryUnit> units;
 
-        // as Anton:
-        trackedFile.getRepository().setSelf(Authors.ANTON.toAuthor());
-
-        // as Anton, collapsing, and limited by date #4
-        units = new LimitedHistory(trackedFile, dates.get(3).toString(), null, true).getHistoryUnits();
-        assertEquals("as Anton, collapsing, and limited by date #4", 4, units.size());
-        // as Anton, not collapsing, and limited by date #5
-        units = new LimitedHistory(trackedFile, dates.get(4).toString(), null, false).getHistoryUnits();
-        assertEquals("as Anton, not collapsing, and limited by date #5", 5, units.size());
-
-        // as Carlos:
-        trackedFile.getRepository().setSelf(Authors.CARLOS.toAuthor());
-
-        // as Carlos, not collapsing, and limited by date #7
-        units = new LimitedHistory(trackedFile, dates.get(6).toString(), null, false).getHistoryUnits();
-        assertEquals("as Carlos, not collapsing, and limited by date #7", 3, units.size());
-        // as Carlos, collapsing, and limited by date #5
-        units = new LimitedHistory(trackedFile, dates.get(4).toString(), null, true).getHistoryUnits();
-        assertEquals("as Carlos, collapsing, and limited by date #5", 3, units.size());
+//        // as Anton:
+//        trackedFile.getRepository().setSelf(Authors.ANTON.toAuthor());
+//
+//        // as Anton, collapsing, and limited by date #4
+//        units = new LimitedHistory(trackedFile, dates.get(3).toString(), null, true).getHistoryUnits();
+//        assertEquals("as Anton, collapsing, and limited by date #4", 4, units.size());
+//        // as Anton, not collapsing, and limited by date #5
+//        units = new LimitedHistory(trackedFile, dates.get(4).toString(), null, false).getHistoryUnits();
+//        assertEquals("as Anton, not collapsing, and limited by date #5", 5, units.size());
+//
+//        // as Carlos:
+//        trackedFile.getRepository().setSelf(Authors.CARLOS.toAuthor());
+//
+//        // as Carlos, not collapsing, and limited by date #7
+//        units = new LimitedHistory(trackedFile, dates.get(6).toString(), null, false).getHistoryUnits();
+//        assertEquals("as Carlos, not collapsing, and limited by date #7", 3, units.size());
+//        // as Carlos, collapsing, and limited by date #5
+//        units = new LimitedHistory(trackedFile, dates.get(4).toString(), null, true).getHistoryUnits();
+//        assertEquals("as Carlos, collapsing, and limited by date #5", 3, units.size());
     }
 }

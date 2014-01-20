@@ -51,7 +51,7 @@ public abstract class FileHistory {
     }
 
     abstract List<Commit> updateCommits() throws ParseException, VersionControlException, IOException;
-    abstract void transformGraph();
+
     abstract void transformList() throws IOException;
 
     /**
@@ -116,9 +116,6 @@ public abstract class FileHistory {
                 }
             }
         }
-
-        // do any specific graph transformations before flattening
-        transformGraph();
 
         // serialize commit graph by selecting the path with oldest commits for merges
         commitList = commitGraph.getPath(new Comparator<Commit>() {
