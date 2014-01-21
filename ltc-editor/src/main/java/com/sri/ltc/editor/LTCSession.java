@@ -38,6 +38,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URLEncoder;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
@@ -236,6 +237,7 @@ public final class LTCSession {
                                 (Integer) map.get(LTCserverInterface.KEY_CARET),
                                 (List<String>) map.get(LTCserverInterface.KEY_REVS),
                                 (String) map.get(LTCserverInterface.KEY_LAST),
+                                new HashSet<Integer>((List<Integer>) map.get(LTCserverInterface.KEY_REV_INDICES)),
                                 commits);
                     } catch (InterruptedException e) {
                         LOGGER.log(Level.SEVERE, e.getMessage(), e);

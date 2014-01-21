@@ -22,6 +22,8 @@ package com.sri.ltc.editor;
  * #L%
  */
 
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Sets;
 import com.sri.ltc.CommonUtils;
 import com.sri.ltc.filter.Author;
 import com.sri.ltc.logging.LevelOptionHandler;
@@ -91,6 +93,8 @@ public final class LTCEditor extends LTCGui {
     }
     private final static int CLICK_INTERVAL = (Integer)Toolkit.getDefaultToolkit().
             getDesktopProperty("awt.multiClickInterval");
+    private final static ImmutableSet<String> FIRST_IDS =
+            ImmutableSet.of(LTCserverInterface.ON_DISK, LTCserverInterface.MODIFIED);
 
     private final LTCSession session = new LTCSession(this);
 
@@ -225,7 +229,7 @@ public final class LTCEditor extends LTCGui {
                                 String text,
                                 List<Integer[]> styles,
                                 int caretPosition,
-                                List<String> orderedIDs, String lastID,
+                                List<String> orderedIDs, String lastID, Set<Integer> activeIndices,
                                 List<Object[]> commits) {
         // update list of authors
         finishAuthors(new ArrayList<Object[]>(authors.values()), false); // don't run another update
@@ -234,8 +238,19 @@ public final class LTCEditor extends LTCGui {
         for (Map.Entry<Integer,Object[]> entry : authors.entrySet())
             colors.put(entry.getKey(), Color.decode((String) entry.getValue()[2]));
         textPane.updateFromMaps(text, styles, colors, caretPosition, orderedIDs, commits);
-        // update list of commits
-        commitModel.update(commits, new HashSet<String>(orderedIDs), lastID);
+        // update list of commits:
+        Set<String> activeIDs = Sets.newHashSet();
+        for (ListIterator<String> i = orderedIDs.listIterator(); i.hasNext(); ) {
+            int index = i.nextIndex();
+            String ID = i.next();
+            if (activeIndices.contains(index))
+                activeIDs.add(ID);
+        }
+        String firstID = orderedIDs == null || orderedIDs.isEmpty()?"":orderedIDs.get(orderedIDs.size() - 1);
+        commitModel.update(commits,
+                FIRST_IDS.contains(firstID)?firstID:"",
+                lastID,
+                activeIDs);
         // update date field
         String date = dateField.getText();
         if (!date.isEmpty())

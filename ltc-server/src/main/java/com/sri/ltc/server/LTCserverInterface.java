@@ -147,7 +147,7 @@ public interface LTCserverInterface {
      * An entry under {@link #KEY_REVS} in the returned map is a list of revision
      * names from newest to oldest that have been used to obtain the changes.  Also, the
      * String under {@link #KEY_LAST} contains the revision name of the base version used
-     * in computing the difference, which can be mark as the last or limiting revision to
+     * in computing the difference, which can be marked as the last or limiting revision to
      * the user. Finally, under {@link #KEY_REV_INDICES} the indices of the revisions used
      * in markup are communicated (denoting "active" revisions).
      *
