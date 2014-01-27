@@ -405,6 +405,7 @@
 	     (styles (cdr (assoc-string "styles" map)))
 	     (revisions (cdr (assoc-string "revs" map)))
 	     (last (cdr (assoc-string "last_rev" map)))
+	     (rev_indices (cdr (assoc-string "revision indices" map)))
 	     (commits (ltc-method-call "get_commits" session-id)) ; list of 6-tuple strings
 	     )
 	(setq self (ltc-method-call "get_self" session-id)) ; get current author and color
@@ -439,8 +440,13 @@
 					    (shorten 8 revision)))
 		      )) styles))
 	(ltc-add-edit-hooks) ; add (local) hooks to capture user's edits
-	;; update commit graph in temp info buffer
-	(setq commit-graph (init-commit-graph commits revisions last))
+	;; update commit graph in temp info buffer:
+	;;   - first ID = if the last element in "revisions" exists and is "on disk" or "modified", otherwise ""
+	;;   - active IDs = use "rev_indices" to index into "revisions"
+	(setq commit-graph (init-commit-graph commits 
+					      (or (car (member (car (last revisions)) (list modified on_disk))) "")
+					      last 
+					      (mapcar (lambda (i) (nth i revisions)) rev_indices)))
 	(update-info-buffer)
 	(set-buffer-modified-p old-buffer-modified-p) ; restore modification flag
 	))
@@ -641,12 +647,14 @@
 
 ;;; --- info buffer functions
 
-(defun init-commit-graph (commits &optional ids last)
+(defun init-commit-graph (commits &optional first last active_ids)
   "Init commit graph from given COMMITS.  
 
-If a list of IDS is given (optional), those will be used to determine the activation state.  In this case, the first entry of the list is left untouched if it exists.  The author in the first entry in the list will be the current self in either case.
+If FIRST is given, use this revision for the first entry in the commit graph.  Otherwise, use the entry from the prior graph (if it exists).  The author in the first entry in the list will be the current self in either case.
 
 If LAST is given, use this revision to set 'isLast' of the respective entry to t.
+
+IF ACTIVE_IDS is given, use this to determine 'isActive' status of each entry (except the first entry for self).
 
 Each entry in the commit graph that is returned, contains a list with the following elements:
  (ID date (name email) message isActive isLast color (column (incoming-columns) (outgoing-columns) (passing-columns)))
@@ -663,7 +671,7 @@ Each entry in the commit graph that is returned, contains a list with the follow
 	  (passing-alist nil)     ; index -> set of passing columns
 	  (current-columns nil)   ; set of current columns
 	  )
-      ;; NOTE: this is modeled after CommitTableModel.init() in LTC Editor code!
+      ;; NOTE: this is modeled after CommitTableModel.update() in LTC Editor code!
       ;; 1) build up map : ID -> index in commits
       (setq commit-map (make-hash-table :test 'equal :size (length commits)))
       (setq counter -1) ; keep track of index in list of commits
@@ -772,13 +780,13 @@ Each entry in the commit graph that is returned, contains a list with the follow
       ;;   (column incoming-columns outgoing-columns passing-columns)
       (cons 
        ;; first row is item for self:
-       ;; - if optional IDS given, look at last item and keep it if MODIFIED or ON_DISK, else 
+       ;; - if optional FIRST given, look at last item and keep it if MODIFIED or ON_DISK, else 
        ;; - if prior graph not empty, keep first ID, otherwise "" 
        (list
 	;; determine ID of first item:
-	(if ids
-	    (concat "" (car (member (car (last ids)) (list modified on_disk))))
-	  (if commit-graph (caar commit-graph) "")) ; keep first ID if prior graph exists
+	(or first
+;	    (concat first (car (member (car (last ids)) (list modified on_disk))))
+	    (if commit-graph (caar commit-graph) "")) ; keep first ID if prior graph exists
 	;; set rest of first item to empty and self:
 	"" (list (car self) (nth 1 self)) "" t nil (nth 2 self) '(0 nil nil nil))
        ;; assemble rest of graph from list of commits and other data structures above:
@@ -792,7 +800,8 @@ Each entry in the commit graph that is returned, contains a list with the follow
 		    author ; (author-name author-email)
 		    ; limit message to first full stop, question or exclamation mark (followed by space) or newline (if any):
 		    (car (split-string (nth 1 raw-commit) "\\([.?!][:space:]+\\)\\|\n" t)) ; shortened message 
-		    (or (not ids) (not (not (member id ids))))  ; isActive: if no IDS, then t, otherwise look up
+		    (or (not active_ids)  ; isActive: if no ACTIVE_IDS, then t,
+			(not (not (member id active_ids))))  ; otherwise set to t (not the returned tail) if found
 		    (if last  ; isLast: if no LAST, then nil, otherwise compare ID with LAST
 			(string= last id))
 		    (cdr (assoc author authors)) ; color of author

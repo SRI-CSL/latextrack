@@ -303,12 +303,22 @@ public final class LTCSession {
         // create new worker to set limited authors in session
         (new LTCWorker<Void,Void>(editor.getFrame(), ID,
                 "Setting...", "Setting limited authors", false) {
+            @SuppressWarnings("unchecked")
             @Override
             protected Void callLTCinBackground() throws XmlRpcException {
                 if (limitedAuthors == null || limitedAuthors.isEmpty())
                     LTC.reset_limited_authors(ID);
-                else
-                    LTC.set_limited_authors(ID, limitedAuthors);
+                else {
+                    List<Object[]> authors = LTC.set_limited_authors(ID, limitedAuthors);
+                    StringBuilder builder = new StringBuilder("Limited authors set to: ");
+                    if (authors != null && !authors.isEmpty()) {
+                        for (Object[] a : authors)
+                            builder.append(Author.fromList(a)+", ");
+                        builder.delete(builder.length() - 2, builder.length()); // remove last ", "
+                    } else
+                        builder.append("[empty]");
+                    LOGGER.fine(builder.toString());
+                }
                 return null;
             }
         }).execute();
