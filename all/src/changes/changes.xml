@@ -27,6 +27,16 @@
         <author email="lilalinda at users.sourceforge.net">Linda Briesemeister</author>
     </properties>
     <body>
+        <release version="1.0.4" date="2014-01-27">
+            <action dev="lilalinda" type="fix" issue="46">
+                Fixed semantics of limiting by authors to not attribute changes to others.
+            </action>
+            <action dev="lilalinda" type="add">
+                Newly implemented text field for limiting authors in LTC Editor that allows drag-n-drop as well as
+                automatically completes known author names.
+            </action>
+        </release>
+
         <release version="1.0.3" date="2013-12-18">
             <action dev="lilalinda" type="add">
                 Improved error message handling for SVN authentication issues.  Added a FAQ item, which is also shown
