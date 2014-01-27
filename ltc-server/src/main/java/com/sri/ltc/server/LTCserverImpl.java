@@ -533,12 +533,14 @@ public final class LTCserverImpl implements LTCserverInterface {
     public int reset_limited_authors(int sessionID) throws XmlRpcException {
         Session session = getSession(sessionID);
         session.resetLimitedAuthors();
+        LOGGER.info("Server: reset_limited_authors");
         return 0;
     }
 
     public String set_limited_date(int sessionID, String date) throws XmlRpcException {
         Session session = getSession(sessionID);
         session.setLimitDate(date);
+        LOGGER.info("Server: set_limited_date to "+date);
         return session.getLimitDate();
     }
 
@@ -549,13 +551,14 @@ public final class LTCserverImpl implements LTCserverInterface {
 
     public int reset_limited_date(int sessionID) throws XmlRpcException {
         set_limited_date(sessionID, null);
+        LOGGER.info("Server: reset_limited_date");
         return 0;
     }
 
     public String set_limited_rev(int sessionID, String rev) throws XmlRpcException {
         Session session = getSession(sessionID);
-        LOGGER.fine("Setting limiting rev: "+rev);
         session.setLimitRev(rev);
+        LOGGER.fine("Server: set_limited_rev to "+rev);
         return session.getLimitRev();
     }
 
@@ -566,6 +569,7 @@ public final class LTCserverImpl implements LTCserverInterface {
 
     public int reset_limited_rev(int sessionID) throws XmlRpcException {
         set_limited_rev(sessionID, null);
+        LOGGER.fine("Server: reset_limited_rev");
         return 0;
     }
 
