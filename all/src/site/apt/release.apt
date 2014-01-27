@@ -88,7 +88,7 @@ $> git commit -am "updated change log"
 $> git flow release publish v1.0
 +---
 
-Clean Up Destination
+Clean Up Destination & Deploy JAR and Site
 
   You will want to clean up the destination files on the sourceforge servers.
   To do so, start a shell at sf.net and do the following (replacing with your user name).
@@ -111,8 +111,6 @@ For path information and login help, type "sf-help".
 +---
 
   Leave the shell open in order for the deployment through Maven to succeed.
-
-Deploy JAR and Site
 
   Next, we run the Maven build system to deploy the JAR file and site files to sourceforge.
 
