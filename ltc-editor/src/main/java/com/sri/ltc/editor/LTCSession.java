@@ -38,6 +38,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URLEncoder;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
@@ -50,7 +51,7 @@ import java.util.logging.Level;
  *
  * @author linda
  */
-public class LTCSession {
+public final class LTCSession {
 
     private final LTCEditor editor;
 
@@ -236,6 +237,7 @@ public class LTCSession {
                                 (Integer) map.get(LTCserverInterface.KEY_CARET),
                                 (List<String>) map.get(LTCserverInterface.KEY_REVS),
                                 (String) map.get(LTCserverInterface.KEY_LAST),
+                                new HashSet<Integer>((List<Integer>) map.get(LTCserverInterface.KEY_REV_INDICES)),
                                 commits);
                     } catch (InterruptedException e) {
                         LOGGER.log(Level.SEVERE, e.getMessage(), e);
@@ -295,18 +297,28 @@ public class LTCSession {
         }).execute();
     }
 
-    public void setLimitedAuthors(final List<String[]> limitedAuthors) {
+    public void setLimitedAuthors(final List<Object[]> limitedAuthors) {
         if (!isValid()) return;
 
         // create new worker to set limited authors in session
         (new LTCWorker<Void,Void>(editor.getFrame(), ID,
                 "Setting...", "Setting limited authors", false) {
+            @SuppressWarnings("unchecked")
             @Override
             protected Void callLTCinBackground() throws XmlRpcException {
                 if (limitedAuthors == null || limitedAuthors.isEmpty())
                     LTC.reset_limited_authors(ID);
-                else
-                    LTC.set_limited_authors(ID, limitedAuthors);
+                else {
+                    List<Object[]> authors = LTC.set_limited_authors(ID, limitedAuthors);
+                    StringBuilder builder = new StringBuilder("Limited authors set to: ");
+                    if (authors != null && !authors.isEmpty()) {
+                        for (Object[] a : authors)
+                            builder.append(Author.fromList(a)+", ");
+                        builder.delete(builder.length() - 2, builder.length()); // remove last ", "
+                    } else
+                        builder.append("[empty]");
+                    LOGGER.fine(builder.toString());
+                }
                 return null;
             }
         }).execute();

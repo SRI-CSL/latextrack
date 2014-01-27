@@ -134,8 +134,13 @@ public class RpcClient {
                                     ((Map<String,Object[]>) map.get(LTCserverInterface.KEY_AUTHORS)).entrySet())
                                 System.out.println("  "+e.getKey()+" -> "+ Author.fromList(e.getValue())+" ("+e.getValue()[2]+")");
                             System.out.println("revisions = ");
-                            for (Object rev : (Object[]) map.get(LTCserverInterface.KEY_REVS))
-                                System.out.println("  "+rev.toString());
+                            List<String> revisions = (List<String>) map.get(LTCserverInterface.KEY_REVS);
+                            for (String rev : revisions)
+                                System.out.println("  "+rev);
+                            System.out.println("last = "+(String) map.get(LTCserverInterface.KEY_LAST)+" active = ");
+                            List<Integer> active = (List<Integer>) map.get(LTCserverInterface.KEY_REV_INDICES);
+                            for (Integer index : active)
+                                System.out.println("  "+revisions.get(index));
                             break;
                         case 'S':
                             if (tokens.length > 2)

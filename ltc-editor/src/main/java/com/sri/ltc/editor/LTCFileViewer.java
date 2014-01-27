@@ -22,6 +22,7 @@ package com.sri.ltc.editor;
  * #L%
  */
 
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.sri.ltc.CommonUtils;
@@ -230,7 +231,7 @@ public final class LTCFileViewer extends LTCGui implements ListSelectionListener
                     try {
                         Filtering filter = Filtering.getInstance();
                         Map map = accumulate.perform(
-                                readers.toArray(new ReaderWrapper[readers.size()]),
+                                Iterables.toArray(readers, ReaderWrapper.class),
                                 null, // this will cause style indices to use order of readers
                                 // this will cause revision indices to use the order of readers
                                 Change.buildFlagsToHide(
@@ -239,7 +240,7 @@ public final class LTCFileViewer extends LTCGui implements ListSelectionListener
                                         filter.getStatus(LTCserverInterface.BoolPrefs.PREAMBLE),
                                         filter.getStatus(LTCserverInterface.BoolPrefs.COMMENTS),
                                         filter.getStatus(LTCserverInterface.BoolPrefs.COMMANDS)),
-                                textPane.getCaretPosition()
+                                null, textPane.getCaretPosition()
                         );
                         textPane.updateFromMaps(
                                 new String(Base64.decodeBase64((byte[]) map.get(LTCserverInterface.KEY_TEXT))),

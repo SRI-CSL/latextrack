@@ -21,6 +21,8 @@
  */
 package com.sri.ltc.latexdiff;
 
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
@@ -36,7 +38,7 @@ import java.util.regex.Pattern;
  * Document with mark ups concerning additions and deletions, as well as status flags.
  * <p>
  * After using a MarkedUpDocument for accumulating changes, a set of filters can be
- * applied using {@link #applyFiltering(java.util.Set, int)} exactly once, otherwise
+ * applied using {@link #applyFiltering(java.util.Set, java.util.Set, int)} exactly once, otherwise
  * a runtime exception is thrown.
  *
  * @author linda
@@ -93,7 +95,13 @@ public final class MarkedUpDocument extends DefaultStyledDocument {
         // remove deletions (if any) and adjust caret position
         if (deletions != null && !deletions.isEmpty()) {
             MarkedUpDocument document = new MarkedUpDocument(currentText, deletions, caretPosition);
-            document.removeDeletions();
+            for (int i = 0; i < document.getLength(); i++) {
+                Object strikethrough = document.getCharacterElement(i).getAttributes().getAttribute(StyleConstants.StrikeThrough);
+                if (strikethrough instanceof Boolean && (Boolean) strikethrough) {
+                    document.remove(i, 1);
+                    i--;
+                }
+            }
             currentText = document.getText(0, document.getLength());
             caretPosition = document.getCaretPosition();
         }
@@ -105,20 +113,6 @@ public final class MarkedUpDocument extends DefaultStyledDocument {
 
     public int getCaretPosition() {
         return caret.getOffset();
-    }
-
-    /**
-     * Remove any characters in the document that are marked as deletions.
-     * This updates the caret position accordingly.
-     */
-    public void removeDeletions() throws BadLocationException {
-        for (int i = 0; i < getLength(); i++) {
-            Object strikethrough = getCharacterElement(i).getAttributes().getAttribute(StyleConstants.StrikeThrough);
-            if (strikethrough instanceof Boolean && (Boolean) strikethrough) {
-                remove(i, 1);
-                i--;
-            }
-        }
     }
 
     public void updateStyles(int authorIndex, Color authorColor, Integer revisionIndex) {
@@ -195,19 +189,23 @@ public final class MarkedUpDocument extends DefaultStyledDocument {
     }
 
     /**
-     * Apply the flags to hide to filter text markup.  If deletions are to be hidden, this will remove any text
-     * that is marked up as a deletion, therefore the caret position needs to be tracked as well.
+     * Apply the limited authors and flags to hide to filter text markup.
+     * If deletions are to be hidden, this will remove any text that is marked up as a deletion, therefore the
+     * caret position needs to be tracked as well.  If deletions of non-limited authors exist, these are also
+     * being removed and the caret position changes.
      * <p>
      * This method should only be called once for a MarkedUpDocument, otherwise it will throw a RuntimeException.
      *
      * @param flagsToHide set of flags denoting which features to hide
-     * @param caretPosition current caret position
-     * @return caret position after filters were applied
+     * @param limitedAuthors set of authors to limit changes to; if empty or <code>null</code>, then all authors are used
+     * @param caretPosition current caret position  @return caret position after filters were applied
      * @throws BadLocationException if during the filtering process an unknown text position is encountered
      * @throws IllegalStateException if called twice for this document
      */
     @SuppressWarnings("unchecked")
-    protected int applyFiltering(Set<Change.Flag> flagsToHide, int caretPosition) throws BadLocationException {
+    protected int applyFiltering(Set<Change.Flag> flagsToHide, Set<Integer> limitedAuthors, int caretPosition)
+            throws BadLocationException {
+
         // test whether this is the first time calling this method
         synchronized (applyFilteringCalled) {
             if (applyFilteringCalled)
@@ -216,7 +214,7 @@ public final class MarkedUpDocument extends DefaultStyledDocument {
         }
 
         caret = createPosition(caretPosition);
-        if (!flagsToHide.isEmpty()) {
+        if (!flagsToHide.isEmpty() || (limitedAuthors != null && !limitedAuthors.isEmpty())) {
             // detect comments in current document:
             // everything after a non-deletion % that is not preceeded by a backslash
             // until the next, non-deletion end-of-line character
@@ -228,40 +226,40 @@ public final class MarkedUpDocument extends DefaultStyledDocument {
 
                 // are we entering a comment?
                 if (!inComment && !isDeletion(i))
-                    if ("%".equals(c) && (i == 0 || !"\\".equals(getText(i - 1, 1)))) {
+                    if ("%".equals(c) && (i == 0 || !"\\".equals(getText(i - 1, 1))))
                         inComment = true;
-                        // TODO: remove any leading whitespace with the same ID in front of this?
-//                        if (flagsToHide.contains(Change.Flag.COMMENT)) {
-//                            String leadingText = new StringBuilder(getText(0, i)).reverse().toString(); // reverse of leading text
-//                            Matcher matcher = LEADING_WHITE.matcher(leadingText);
-//                            if (matcher.matches()) { // there is leading white space before comment
-//                                System.out.println(" ~~ investigating from "+(i-matcher.end(1))+" to "+i+":\n"+
-//                                        getText(i-matcher.end(1),matcher.end(1)));
-//                                // go from i-1 backwards to i-matcher.end(1) and test for ID
-//                                for (int j=i-1; j >= i-matcher.end(1); j--) {
-//
-//                                }
-//                            }
-//                        }
+
+                // filter by author if any
+                if (limitedAuthors != null && !limitedAuthors.isEmpty()) {
+                    Object index = getCharacterElement(i).getAttributes().getAttribute(AUTHOR_INDEX);
+                    if (index instanceof Integer && !limitedAuthors.contains(index)) {
+                        // filter this character
+                        if (isDeletion(i)) { // deletion: remove character
+                            remove(i, 1);
+                            i--;
+                            continue;
+                        }
+                        if (isAddition(i))   // addition: remove all attributes to unmark it
+                            setCharacterAttributes(i, 1, SimpleAttributeSet.EMPTY, true);
                     }
+                }
 
                 Set<Change.Flag> currentFlags = (Set<Change.Flag>) getCharacterElement(i).getAttributes().getAttribute(FLAGS_ATTR);
 
                 // now filter by flags to be hidden
                 if (currentFlags != null) {
-                    Set<Change.Flag> flags = new HashSet<Change.Flag>(currentFlags); // make copy to be able to add to flags
+                    Set<Change.Flag> flags = Sets.newHashSet(currentFlags); // make copy to be able to add to flags
                     if (inComment)
                         flags.add(Change.Flag.COMMENT);
 
                     Set<Change.Flag> intersection = Sets.intersection(flags, flagsToHide);
-                    if (!intersection.isEmpty()) { // matching flags
+                    if (!intersection.isEmpty()) // matching flags
                         if (flags.contains((Change.Flag.DELETION))) { // change was a deletion, so remove character
                             remove(i, 1);
                             i--;
-                        } else { // change was an addition, so remove all attributes to hide it
+                            continue;
+                        } else // change was an addition, so remove all attributes to hide it
                             setCharacterAttributes(i, 1, SimpleAttributeSet.EMPTY, true);
-                        }
-                    }
                 }
 
                 // are we leaving a comment?
@@ -270,6 +268,7 @@ public final class MarkedUpDocument extends DefaultStyledDocument {
                         inComment = false;
             }
         }
+
         return getCaretPosition();
     }
 
@@ -278,12 +277,32 @@ public final class MarkedUpDocument extends DefaultStyledDocument {
     }
 
     /**
+     * Obtain a list of revision indices that are used in the current markup of the document.
+     * This list is sorted so that the first element (if any) is the lowest occurring revision
+     * index in the document.
+     *
+     * @return A sorted list of revision indices (could be empty but not NULL)
+     */
+    public List<Integer> getSortedRevisionIndices() {
+        SortedSet<Integer> rev_indices = Sets.newTreeSet();
+
+        // go through current document and collect revision indices
+        for (int i = 0; i < getLength(); i++) {
+            Object index = getCharacterElement(i).getAttributes().getAttribute(REVISION_INDEX);
+            if (index instanceof Integer)
+                rev_indices.add((Integer) index);
+        }
+
+        return Lists.newArrayList(rev_indices); // should be sorted
+    }
+
+    /**
      * Transform this marked up document into the list of 4-tuples that denote the style of a text section.
      *
      * @return List of 5-tuples (Integer array) with start and end indices, type of markup, author and revision indices.
      */
     public List<Integer[]> getStyles() {
-        List<Integer[]> list = new ArrayList<Integer[]>();
+        List<Integer[]> list = Lists.newArrayList();
         Chunk c = traverse(getDefaultRootElement(), null, list);
         // handle last chunk and add it if not default style:
         c.end = getLength()+1;
@@ -311,11 +330,9 @@ public final class MarkedUpDocument extends DefaultStyledDocument {
                 }
                 return chunk;
             }
-        } else {
-            for (int i=0; i < element.getElementCount(); i++) {
+        } else
+            for (int i=0; i < element.getElementCount(); i++)
                 chunk = traverse(element.getElement(i), chunk, list);
-            }
-        }
         return chunk;
     }
 

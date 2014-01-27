@@ -22,8 +22,7 @@
 package com.sri.ltc.server;
 
 import com.google.common.base.Function;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
+import com.google.common.collect.*;
 import com.sri.ltc.CommonUtils;
 import com.sri.ltc.ProgressReceiver;
 import com.sri.ltc.filter.Author;
@@ -184,10 +183,10 @@ public final class LTCserverImpl implements LTCserverInterface {
         // apply deletions to current text and update caret position
         try {
             if (deletions != null && !deletions.isEmpty()) {
-                MarkedUpDocument document = new MarkedUpDocument(currentText, deletions, caretPosition);
-                document.removeDeletions();
-                currentText = document.getText(0, document.getLength());
-                caretPosition = document.getCaretPosition();
+                Map<MarkedUpDocument.KEYS,Object> map =
+                        MarkedUpDocument.applyDeletions(currentText, deletions, caretPosition);
+                currentText = (String) map.get(MarkedUpDocument.KEYS.TEXT);
+                caretPosition = (Integer) map.get(MarkedUpDocument.KEYS.POSITION);
             }
         } catch (BadLocationException e) {
             logAndThrow(2, e);
@@ -216,9 +215,9 @@ public final class LTCserverImpl implements LTCserverInterface {
 
         try {
             if (deletions != null && !deletions.isEmpty()) {
-                MarkedUpDocument document = new MarkedUpDocument(currentText, deletions, 0);
-                document.removeDeletions();
-                currentText = document.getText(0, document.getLength());
+                Map<MarkedUpDocument.KEYS,Object> map =
+                        MarkedUpDocument.applyDeletions(currentText, deletions, 0);
+                currentText = (String) map.get(MarkedUpDocument.KEYS.TEXT);
             }
             // write current text to file
             BufferedWriter out = new BufferedWriter(new FileWriter(session.getTrackedFile().getFile(), false));
@@ -264,7 +263,7 @@ public final class LTCserverImpl implements LTCserverInterface {
         Filtering filter = Filtering.getInstance();
 
         // obtain file history from version control, disk, and session (obeying any filters):
-        List<HistoryUnit> units = new ArrayList<HistoryUnit>();
+        List<HistoryUnit> units = Lists.newArrayList();
         try {
             // create history with limits and obtain revision IDs, authors, and readers:
             units = session.createLimitedHistory(filter.getStatus(BoolPrefs.COLLAPSE_AUTHORS), // whether to condense authors or not
@@ -288,11 +287,13 @@ public final class LTCserverImpl implements LTCserverInterface {
                 return unit.author;
             }
         });
-        session.addAuthors(new HashSet<Author>(authors));
-        Map<Integer,Object[]> mappedAuthors = new HashMap<Integer,Object[]>();
-        List<Integer> indices = new ArrayList<Integer>();
+        session.addAuthors(Sets.newHashSet(authors));
+        Set<Author> limitedAuthors = session.getLimitedAuthors();
+        Map<Integer,Object[]> mappedAuthors = Maps.newHashMap();
+        Set<Integer> limitedAuthorsAsIndices = Sets.newHashSet();
+        List<Integer> indices = Lists.newArrayList();
         if (authors != null && authors.size() > 0) {
-            List<Author> sortedAuthors = new ArrayList<Author>(new TreeSet<Author>(authors));
+            List<Author> sortedAuthors = Lists.newArrayList(Sets.newTreeSet(authors));
             // assign color (if unique colors requested) and then
             // build up map: index -> author and color (as list)
             for (Author a : sortedAuthors) {
@@ -302,7 +303,10 @@ public final class LTCserverImpl implements LTCserverInterface {
                     } catch (BackingStoreException e) {
                         logAndThrow(8, e);
                     }
-                mappedAuthors.put(sortedAuthors.indexOf(a), concatAuthorAndColor(a));
+                int index = sortedAuthors.indexOf(a);
+                mappedAuthors.put(index, concatAuthorAndColor(a));
+                if (limitedAuthors.contains(a))
+                    limitedAuthorsAsIndices.add(index);
             }
             // build up list of indices
             for (Author a : authors)
@@ -334,23 +338,23 @@ public final class LTCserverImpl implements LTCserverInterface {
                 };
                 session.getAccumulate().addPropertyChangeListener(listener);
             }
-            List<ReaderWrapper> readers = Lists.transform(units, new Function<HistoryUnit, ReaderWrapper>() {
-                @Nullable
-                @Override
-                public ReaderWrapper apply(@Nullable HistoryUnit unit) {
-                    return unit.reader;
-                }
-            });
+
             map = session.getAccumulate().perform(
-                    readers.toArray(new ReaderWrapper[readers.size()]),
-                    indices.toArray(new Integer[indices.size()]),
+                    Iterables.toArray(Lists.transform(units, new Function<HistoryUnit, ReaderWrapper>() {
+                        @Nullable
+                        @Override
+                        public ReaderWrapper apply(@Nullable HistoryUnit unit) {
+                            return unit.reader;
+                        }
+                    }), ReaderWrapper.class),
+                    Iterables.toArray(indices, Integer.class),
                     Change.buildFlagsToHide(
                             filter.getStatus(BoolPrefs.DELETIONS),
                             filter.getStatus(BoolPrefs.SMALL),
                             filter.getStatus(BoolPrefs.PREAMBLE),
                             filter.getStatus(BoolPrefs.COMMENTS),
                             filter.getStatus(BoolPrefs.COMMANDS)),
-                    caretPosition);
+                    limitedAuthorsAsIndices, caretPosition);
             map.put(LTCserverInterface.KEY_AUTHORS, mappedAuthors); // add current author map
             map.put(LTCserverInterface.KEY_REVS, Lists.transform(units.subList(1, units.size()),
                     new Function<HistoryUnit, String>() {
@@ -360,7 +364,15 @@ public final class LTCserverImpl implements LTCserverInterface {
                             return unit.revision;
                         }
                     })); // add list of revisions used in accumulation: remove the base version!
-            map.put(LTCserverInterface.KEY_LAST, units.get(0).revision); // base version
+            // calculate base version: version before oldest active revision if any, otherwise...
+            List<Integer> active_revs = (List<Integer>) map.get(KEY_REV_INDICES);
+            if (active_revs.isEmpty())
+                map.put(LTCserverInterface.KEY_LAST, units.get(0).revision); // there is always at least one unit
+            else
+                map.put(LTCserverInterface.KEY_LAST, units.get(active_revs.get(0)).revision);
+            // indices of active revs are 0,1,... to be used with the sublist above under #KEY_REVS,
+            // so we don't need to subtract 1 to get to the last revision before the lowest index in 'units'
+
             session.getAccumulate().removePropertyChangeListener(listener);
         } catch (Exception e) {
             logAndThrow(2, e);
@@ -415,10 +427,10 @@ public final class LTCserverImpl implements LTCserverInterface {
         return session.getTrackedFile().getRepository().getVCS().name();
     }
 
-    private Object[] concatAuthorAndColor(Author author) throws XmlRpcException {
+    private Object[] concatAuthorAndColor(Author author) {
         Object[] authorAndColor = new Object[3];
         System.arraycopy(author.asList(), 0, authorAndColor, 0, 2);
-        authorAndColor[2] = get_color(author.name, author.email);
+        authorAndColor[2] = getColorForAuthor(author);
         return authorAndColor;
     }
 
@@ -482,38 +494,53 @@ public final class LTCserverImpl implements LTCserverInterface {
     public List get_limited_authors(int sessionID) throws XmlRpcException {
         Session session = getSession(sessionID);
         // build up list as intersection of currently limited authors and known ones
-        List<Object[]> result = new ArrayList<Object[]>();
-        Set<Author> limitedAuthors = session.getLimitedAuthors();
-        if (limitedAuthors.isEmpty())
-            return result;
-        for (Author author : session.getAuthors())
-            if (limitedAuthors.contains(author))
-                result.add(concatAuthorAndColor(author));
-        return result;
+        Sets.SetView<Author> intersection = Sets.intersection(
+                session.getLimitedAuthors(),
+                session.getAuthors());
+        // for each author, concatenate color at end:
+        return Lists.newArrayList(Collections2.transform(intersection,
+                new Function<Author, Object[]>() {
+                    @Nullable
+                    @Override
+                    public Object[] apply(@Nullable Author author) {
+                        return concatAuthorAndColor(author);
+                    }
+                }));
     }
 
     @SuppressWarnings("unchecked")
     public List set_limited_authors(int sessionID, List authors) throws XmlRpcException {
         Session session = getSession(sessionID);
         session.resetLimitedAuthors();
-        try {
-            for (Object[] authorAsList : (List<Object[]>) authors)
-                session.addLimitedAuthor(Author.fromList(authorAsList));
-        } catch (Exception e) {
-            logAndThrow(2, e);
-        }
+        StringBuilder builder = new StringBuilder("set_limited_authors with: ");
+        if (authors == null || authors.isEmpty())
+            builder.append("[empty]");
+        else
+            try {
+                for (Object[] authorAsList : (List<Object[]>) authors) {
+                    Author a = Author.fromList(authorAsList);
+                    builder.append(a + ", ");
+                    session.addLimitedAuthor(a);
+                }
+                builder.delete(builder.length() - 2, builder.length());
+            } catch (Exception e) {
+                logAndThrow(2, e);
+            }
+        LOGGER.info("Server: "+builder.toString());
         return get_limited_authors(sessionID);
     }
 
     public int reset_limited_authors(int sessionID) throws XmlRpcException {
         Session session = getSession(sessionID);
         session.resetLimitedAuthors();
+        LOGGER.info("Server: reset_limited_authors");
         return 0;
     }
 
     public String set_limited_date(int sessionID, String date) throws XmlRpcException {
         Session session = getSession(sessionID);
         session.setLimitDate(date);
+        LOGGER.info("Server: set_limited_date to "+date);
         return session.getLimitDate();
     }
 
@@ -524,13 +551,14 @@ public final class LTCserverImpl implements LTCserverInterface {
 
     public int reset_limited_date(int sessionID) throws XmlRpcException {
         set_limited_date(sessionID, null);
+        LOGGER.info("Server: reset_limited_date");
         return 0;
     }
 
     public String set_limited_rev(int sessionID, String rev) throws XmlRpcException {
         Session session = getSession(sessionID);
-        LOGGER.fine("Setting limiting rev: "+rev);
         session.setLimitRev(rev);
+        LOGGER.fine("Server: set_limited_rev to "+rev);
         return session.getLimitRev();
     }
 
@@ -541,6 +569,7 @@ public final class LTCserverImpl implements LTCserverInterface {
 
     public int reset_limited_rev(int sessionID) throws XmlRpcException {
         set_limited_rev(sessionID, null);
+        LOGGER.fine("Server: reset_limited_rev");
         return 0;
     }
 
@@ -670,13 +699,13 @@ public final class LTCserverImpl implements LTCserverInterface {
         return "#"+Integer.toHexString((color.getRGB() & 0xffffff) | 0x1000000).substring(1);
     }
 
-    public String get_color(String authorName, String authorEmail) throws XmlRpcException {
-        if (authorName == null || "".equals(authorName))
-            logAndThrow(10, new IllegalArgumentException("Cannot get color with NULL or empty author name"));
+    private void setColorForAuthor(Author author, Color color) {
+        synchronized (preferences) {
+            preferences.putInt(getColorKey(author), color.getRGB());
+        }
+    }
 
-        Author author = new Author(authorName, authorEmail);
-        LOGGER.fine("Server: getting color for author \""+author+"\" called.");
-
+    private String getColorForAuthor(Author author) {
         // define random color based on randomized hue
         Color randomColor = Color.getHSBColor((float) Math.random(), 0.85f, 1.0f);
         // obtain any stored color from preferences
@@ -695,11 +724,20 @@ public final class LTCserverImpl implements LTCserverInterface {
                     defaultColors.remove(0);
                 }
             }
-            set_color(authorName, authorEmail, convertToHex(storedColor));
+            setColorForAuthor(author, storedColor);
         }
-
         // ignore alpha channel of RGB value for storage
         return convertToHex(storedColor);
+    }
+
+    public String get_color(String authorName, String authorEmail) throws XmlRpcException {
+        if (authorName == null || "".equals(authorName))
+            logAndThrow(10, new IllegalArgumentException("Cannot get color with NULL or empty author name"));
+
+        Author author = new Author(authorName, authorEmail);
+        LOGGER.fine("Server: getting color for author \""+author+"\" called.");
+
+        return getColorForAuthor(author);
     }
 
     public int set_color(String authorName, String authorEmail, String hexColor) throws XmlRpcException {
@@ -710,10 +748,8 @@ public final class LTCserverImpl implements LTCserverInterface {
         LOGGER.fine("Server: setting color for author \""+author+"\" to " + hexColor + ".");
 
         synchronized (preferences) {
+            setColorForAuthor(author, Color.decode(hexColor));
             try {
-                preferences.putInt(
-                        getColorKey(author),
-                        Color.decode(hexColor).getRGB());
                 preferences.flush();
             } catch (NumberFormatException e) {
                 logAndThrow(2, e);
@@ -721,6 +757,7 @@ public final class LTCserverImpl implements LTCserverInterface {
                 logAndThrow(3, e);
             }
         }
+
         return 0;
     }
 

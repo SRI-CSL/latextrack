@@ -24,7 +24,6 @@ package com.sri.ltc.editor;
 
 import com.google.common.collect.Sets;
 import com.sri.ltc.filter.Author;
-import com.sri.ltc.server.LTCserverInterface;
 
 import javax.swing.table.AbstractTableModel;
 import java.text.ParseException;
@@ -103,18 +102,20 @@ public final class CommitTableModel extends AbstractTableModel {
         return lowest;
     }
 
-    public void update(List<Object[]> rawCommits, Set<String> IDs, String lastID) {
+    public void update(List<Object[]> rawCommits, String firstID, String lastID, Set<String> activeIDs) {
         synchronized (commits) {
             clear(firstRow.author); // keep author in first row but delete the revision ID
 
             if (rawCommits == null)
                 return;
 
-            // 1) build up list of commits from given list
+            // 1) build up list of commits from given list; also set of active IDs and last ID
             Map<String,CommitTableRow> commitMap = new HashMap<String,CommitTableRow>();
             for (Object[] c : rawCommits) {
                 try {
                     CommitTableRow ctr = new CommitTableRow(c);
+                    ctr.setActive(activeIDs.contains(ctr.ID));
+                    ctr.setLast(ctr.ID.equals(lastID));
                     commits.add(ctr);
                     commitMap.put(c[0].toString(), ctr); // remember in map for later
                 } catch (ParseException e) {
@@ -173,15 +174,8 @@ public final class CommitTableModel extends AbstractTableModel {
                 }
             }
 
-            // 4) mark active commits from IDs
-            if (IDs.contains(LTCserverInterface.ON_DISK))
-                setFirstID(LTCserverInterface.ON_DISK);
-            if (IDs.contains(LTCserverInterface.MODIFIED))
-                setFirstID(LTCserverInterface.MODIFIED);
-            for (CommitTableRow row : commits) {
-                row.setActive(IDs.contains(row.ID));
-                row.setLast(row.ID.equals(lastID));
-            }
+            // 4) handle first row
+            setFirstID(firstID);
         }
         fireTableDataChanged();
     }
