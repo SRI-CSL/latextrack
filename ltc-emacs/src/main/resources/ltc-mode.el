@@ -1,12 +1,15 @@
 ;;; ltc-mode.el --- user interface for LaTeX Track Changes (LTC) 
 ;;
-;; Copyright (C) 2009 - 2013 SRI International
+;; Copyright (C) 2009 - ${current.year} SRI International
 ;;
 ;; Author: Linda Briesemeister <linda.briesemeister@sri.com>
 ;;    Sam Owre <sam.owre@sri.com>
 ;; Maintainer: Linda Briesemeister <linda.briesemeister@sri.com>
 ;; Created: 20 May 2010
 ;; URL: ${url}
+;; Version: ${project.version}
+;; Package-Version: ${numeric.version}
+;; Package-Requires: ((cl "1.0") (versions "1.5") (xml-rpc "1.6.8.3"))
 ;;
 ;; This file is not part of GNU Emacs.
 ;;
@@ -28,16 +31,18 @@
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
+;;; License:
+;;
 ;; This program is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as
 ;; published by the Free Software Foundation, either version 3 of the 
 ;; License, or (at your option) any later version.
-
+;;
 ;; This program is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
 ;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 ;; GNU General Public License for more details.
-
+;;
 ;; You should have received a copy of the GNU General Public 
 ;; License along with this program.  If not, see
 ;; <http://www.gnu.org/licenses/gpl-3.0.html>.
@@ -179,6 +184,7 @@
 (defvar ltc-mode-map (make-sparse-keymap) "LTC mode keymap.")
 (define-key ltc-mode-map ltc-command-prefix 'ltc-prefix-map)
 
+;;;###autoload
 (define-minor-mode ltc-mode
   "Toggle LTC mode.
 

@@ -168,6 +168,11 @@ To skip all tests:
 
   $> mvn verify -Dmaven.test.skip=true
 
+To run an integration test but skip all unit tests, go into the module directory where the test class of interest is
+located and do:
+
+  $> mvn -DskipSurefireTests=true -Dit.test=<TEST_CLASS_NAME> verify
+
 
 Git Repositories etc.
 ---------------------
