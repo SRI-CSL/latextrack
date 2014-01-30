@@ -1,4 +1,4 @@
-;;; ltc-mode.el --- user interface for LaTeX Track Changes (LTC) 
+;;; ltc-mode.el --- user interface for LaTeX Track Changes (LTC) as minor mode to LaTeX
 ;;
 ;; Copyright (C) 2009 - ${current.year} SRI International
 ;;
@@ -9,7 +9,8 @@
 ;; URL: ${url}
 ;; Version: ${project.version}
 ;; Package-Version: ${numeric.version}
-;; Package-Requires: ((cl "1.0") (versions "1.5") (xml-rpc "1.6.8.3"))
+;; Package-Requires: ((cl "1.0") (xml-rpc "1.6.10"))
+;; Keywords: latex, track changes, git, svn, xmlrpc, java
 ;;
 ;; This file is not part of GNU Emacs.
 ;;
@@ -52,9 +53,8 @@
 ;;; Code:
 
 (require 'xml-rpc)
-(require 'versions)
 (require 'cl) ; for set operations
-(defconst min-xml-rpc-version "1.6.8.3" "Minimum version requirement for xml-rpc mode")
+(defconst min-xml-rpc-version "1.6.10" "Minimum version requirement for xml-rpc mode")
 (defconst ltc-version "${project.version}" "Current version of ltc-mode.el")
 
 (eval-after-load "ltc-mode"
@@ -77,7 +77,7 @@
 ;;;
 
 (defgroup ltc nil
-  "Latex Track Changes mode."
+  "Latex Track Changes minor mode."
   :version "23"
   :link '(url-link "${url}")
   :tag "LTC"
@@ -142,14 +142,14 @@
 ;;; regular and debugging output
 (defun ltc-log (formatstr &rest args)
   "Produce consistent output in *Messages* buffer using ORMATSTR with ARGS like the function `message`"
-  (apply 'message (concat  "LTC: " formatstr) args))
+  (apply #'message (concat  "LTC: " formatstr) args))
 (defun ltc-error (formatstr &rest args)
   "Produce consistent error messages in *Messages* buffer using FORMATSTR with ARGS like the function `message`"
-  (apply 'message (concat  "LTC Error: " formatstr) args))
+  (apply #'message (concat  "LTC Error: " formatstr) args))
 (defun ltc-log-debug (formatstr &rest args)
   "Produce consistent debug output in *Messages* buffer using FORMATSTR with ARGS like the function `message`"
   (if ltc-debug
-      (apply 'message (concat  "LTC debug: " formatstr) args)))
+      (apply #'message (concat  "LTC debug: " formatstr) args)))
 
 (defvar session-id nil "current LTC session ID.")
 (make-variable-buffer-local 'session-id)

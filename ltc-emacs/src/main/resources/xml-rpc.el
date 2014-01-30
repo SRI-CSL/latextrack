@@ -8,13 +8,13 @@
 
 ;; Author: Mark A. Hershberger <mah@everybody.org>
 ;; Original Author: Daniel Lundin <daniel@codefactory.se>
-;; Version: 1.6.8.1
+;; Version: 1.6.10
 ;; Created: May 13 2001
 ;; Keywords: xml rpc network
 ;; URL: http://launchpad.net/xml-rpc-el
-;; Last Modified: <Thu Sep 26 10:49:41 CDT 2013 linda>
+;; Last Modified: <2014-01-29 linda>
 
-(defconst xml-rpc-version "1.6.8.3"
+(defconst xml-rpc-version "1.6.10"
   "Current version of xml-rpc.el")
 
 ;; This file is NOT (yet) part of GNU Emacs.
@@ -124,6 +124,9 @@
 
 
 ;;; History:
+
+;; 1.6.9   - Add support for the i8 type (64 bit integers)
+;;         - Quote lambda with #' instead of ' to silence byte compiler
 
 ;; 1.6.8.3 - [linda] Support for explicitly passing 'base64 data types.
 
@@ -347,7 +350,7 @@ interpreting and simplifying it while retaining its structure."
       (setq valtype (car (caddar xml-list))
             valvalue (caddr (caddar xml-list)))
       (cond
-       ;; base64
+       ;; Base64
        ((eq valtype 'base64)
         (list :base64 (base64-decode-string valvalue))) ; for some reason, Emacs wraps this in a second encoding
        ;; Boolean
@@ -357,7 +360,7 @@ interpreting and simplifying it while retaining its structure."
        ((eq valtype 'string)
         valvalue)
        ;; Integer
-       ((or (eq valtype 'int) (eq valtype 'i4))
+       ((or (eq valtype 'int) (eq valtype 'i4) (eq valtype 'i8))
         (string-to-number (or valvalue "0")))
        ;; Double/float
        ((eq valtype 'double)
@@ -686,7 +689,7 @@ called with the result as parameter."
   (let* ((m-name (if (stringp method)
                      method
                    (symbol-name method)))
-         (m-params (mapcar '(lambda (p)
+         (m-params (mapcar #'(lambda (p)
                               `(param nil ,(car (xml-rpc-value-to-xml-list
                                                  p))))
                            (if async-callback-func
