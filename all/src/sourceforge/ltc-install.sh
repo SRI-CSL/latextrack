@@ -30,7 +30,9 @@ declare JAR_FILE=
 declare DOWNLOAD_URL=http://sourceforge.net/projects/latextrack/files/latest/download
 declare DOWNLOAD_DIR=""
 declare EMACS_DIR=""
-declare FETCH_TYPE=-1  # indicates nothng has been set
+declare ONLINE_TYPE=-1  # how to contact the web site for updates
+declare FETCH_TYPE=-1  # indicates nothing has been set
+declare SKIP_UPDATE=""
 
 ################################################################################
 # helper functions:
@@ -57,9 +59,13 @@ to the latest version in
 
 Optionally give an Emacs directory <EMACS DIR> where to extract the Emacs lisp files.
 
+This script also checks by default whether it itself is in the latest version.  To skip 
+this check, use option -s.
+
 OPTIONS:
    -h        Show this message
    -d <DIR>  Directory where JAR was downloaded instead of fetching online
+   -s        Skip the check for updates to this install script
 EOF
 }
 
@@ -130,7 +136,8 @@ findlatest () # find the latest LTC-<version>.jar in given DIR ($1) and set JAR_
 ################################################################################
 # test options and arguments
 
-while getopts “hd:” OPTION
+ARGUMENTS="$*"  # preserve in case we need to restart script after update
+while getopts “hd:s” OPTION
 do
     case $OPTION in
         h|\?)
@@ -138,6 +145,9 @@ do
             ;;
 	d)
 	    DOWNLOAD_DIR=$( cd $OPTARG ; pwd -P )  # make absolute
+	    ;;
+	s)
+	    SKIP_UPDATE="true"
 	    ;;
     esac
     shift $((OPTIND-1)); OPTIND=1 
@@ -164,6 +174,93 @@ if [ $# -gt 1 ]; then
     fi
 fi
 
+################################################################################
+# check for updates of this install script
+
+# determine online access type: prefer wget over curl
+which wget &>/dev/null
+if [ $? -eq 0 ]; then
+    ONLINE_TYPE=1  # indicates wget
+else
+    which curl &>/dev/null
+    if [ $? -eq 0 ]; then
+	ONLINE_TYPE=2  # indicates curl
+    fi
+fi
+
+# check for updates of this install script online unless specified to skip
+if [ -z "$SKIP_UPDATE" ]; then
+    if [ $ONLINE_TYPE -lt 1 ]; then
+	printf " *** ERROR: Cannot find executable of 'wget' or 'curl' to check for updates.\n"
+        printf "            Please install one of these utilities or skip the update check with -s\n\n"
+	exit 2
+    fi
+    # determine location of install script:
+    makedir_absolute $( dirname $0 )
+    SCRIPT_DIR=$ABS_DIR
+    # download to same location:
+    case $ONLINE_TYPE in
+	1)
+	    printf "\nChecking for updates of 'ltc-install.sh' via wget...\n"
+	    wget --quiet -N -P $SCRIPT_DIR http://sourceforge.net/projects/latextrack/files/ltc-install.sh/download
+	    if [ $? -gt 0 ]; then
+		usage "Something went wrong during update check with 'wget' -- exiting."; exit 5
+	    fi
+	    ;;
+	2) 
+	    printf "\nChecking for updates of 'ltc-install.sh' via curl...\n"
+	    curl --silent -L http://sourceforge.net/projects/latextrack/files/ltc-install.sh/download -o $SCRIPT_DIR/download -z $SCRIPT_DIR/ltc-install.sh
+	    if [ $? -gt 0 ]; then
+		usage "Something went wrong during update check with 'curl' -- exiting."; exit 5
+	    fi
+	    ;;
+	*)
+	    printf "Unknown ONLINE_TYPE -- exiting."; exit 8
+	    ;;
+    esac
+    # test how new online version is:
+    if [ $SCRIPT_DIR/download -nt $SCRIPT_DIR/ltc-install.sh ] ; then 
+	printf " *** ATTENTION: Newer install script available!\n"
+	while true; do
+	    read -p "                Do you wish to update the install script and start over? " -n 1 yn
+	    echo
+	    case $yn in
+		[Yy]*)
+		    # Spawn update script
+		    cat > updateScript.sh << EOF
+#!/bin/bash
+# Overwrite old file with new and restart new script
+if mv $SCRIPT_DIR/download $SCRIPT_DIR/ltc-install.sh; then
+  echo "done."
+  printf " *** Restarting with: bash %s/ltc-install.sh %s\n" $SCRIPT_DIR "$ARGUMENTS"
+  rm \$0
+  exec bash $SCRIPT_DIR/ltc-install.sh $ARGUMENTS
+else
+  echo "Failed to update!"
+  exit 1
+fi
+exit 0
+EOF
+		    echo -n "                Updating..."
+		    exec bash updateScript.sh
+		    break ;;
+		[Nn]*) 
+		    printf " *** Update not installed -- continue with old install script.\n"
+		    break ;;
+		*) echo "                Please answer y[es] or n[o]." ;;
+	    esac
+	done
+    else
+	printf "You are running the latest version of the install script.\n"
+    fi
+    rm -f $SCRIPT_DIR/download
+else
+    printf "\nSkipping check for updates of 'ltc-install.sh'\n"
+fi
+
+################################################################################
+# copy or download JAR file
+
 # test download directory (if given) or determine method for download
 if [ -n "$DOWNLOAD_DIR" ]; then
     testdir "$DOWNLOAD_DIR" "Download" "r"
@@ -171,15 +268,7 @@ if [ -n "$DOWNLOAD_DIR" ]; then
     findlatest $DOWNLOAD_DIR 
     FETCH_TYPE=0  # indicates using download directory
 else
-    which wget &>/dev/null
-    if [ $? -eq 0 ]; then
-	FETCH_TYPE=1  # indicates wget
-    else
-	which curl &>/dev/null
-	if [ $? -eq 0 ]; then
-	    FETCH_TYPE=2  # indicates curl
-	fi
-    fi
+    FETCH_TYPE=$ONLINE_TYPE
     if [ $FETCH_TYPE -lt 0 ]; then
 	printf " *** ERROR: Cannot find executable of 'wget' or 'curl' to download JAR file\n"
         printf "            Please download manually from\n"
@@ -189,9 +278,6 @@ else
 	exit 2
     fi
 fi
-
-################################################################################
-# copy or download JAR file
 
 echo
 case $FETCH_TYPE in
@@ -217,6 +303,9 @@ case $FETCH_TYPE in
 	    usage "Something went wrong during downloading with 'curl' -- exiting."; exit 5
 	fi
 	;;
+    *)
+	printf "Unknown FETCH_TYPE -- exiting."; exit 7
+	;;
 esac
 
 ################################################################################
@@ -224,7 +313,7 @@ esac
 
 if [ -n "$EMACS_DIR" ]; then
     echo "Inflating Emacs Lisp files in ${EMACS_DIR}:"
-    unzip -o "$JAVA_DIR/$JAR_FILE" xml-rpc.el versions.el ltc-mode.el -d "$EMACS_DIR"
+    unzip -o "$JAVA_DIR/$JAR_FILE" '*.el' -d "$EMACS_DIR"
     if [ $? -gt 0 ]; then
 	usage "Something went wrong when extracting Emacs Lisp files -- exiting."; exit 3
     fi
