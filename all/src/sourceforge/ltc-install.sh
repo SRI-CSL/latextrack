@@ -48,19 +48,20 @@ usage: $0 <OPTIONS> <JAVA DIR> [<EMACS DIR>]
 
 Install the latest LTC.jar file into given <JAVA DIR>.
 
-The script will try to download the latest release from the web using 'wget' or 'curl'.
-If you have already downloaded the latest release manually, you can specify a directory 
-via option -d, and the script will look there for the most recent file of the form 
-"LTC-<version>.jar" to be copied.
+The script will try to download the latest release from the web using 'wget' or 
+'curl'. If you have already downloaded the latest release manually, you can 
+specify a directory via option -d, and the script will look there for the most 
+recent file of the form "LTC-<version>.jar" to be copied.
 
-If successfully downloaded or copied, the script creates a symbolic link pointing 
-to the latest version in
+If successfully downloaded or copied, the script creates a symbolic link 
+pointing to the latest version in
   <JAVA DIR>/LTC.jar
 
-Optionally give an Emacs directory <EMACS DIR> where to extract the Emacs lisp files.
+Optionally give an Emacs directory <EMACS DIR> where to extract the Emacs lisp 
+files. (Not needed if installing ltc-mode from MELPA.)
 
-This script also checks by default whether it itself is in the latest version.  To skip 
-this check, use option -s.
+This script also checks by default whether it itself is in the latest version. 
+To skip this check, use option -s.
 
 OPTIONS:
    -h        Show this message
