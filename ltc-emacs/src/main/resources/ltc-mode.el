@@ -55,12 +55,12 @@
 (require 'xml-rpc)
 (require 'cl) ; for set operations
 (defconst min-xml-rpc-version "1.6.10" "Minimum version requirement for xml-rpc mode")
-(defconst ltc-version "${project.version}" "Current version of ltc-mode.el")
+(defconst ltc-mode-version "${project.version}" "Current version of ltc-mode.el")
 
 (eval-after-load "ltc-mode"
   '(progn
      (message "Emacs version: %s" (emacs-version))
-     (message "LTC version: %s" ltc-version)))
+     (message "LTC mode version: %s" ltc-mode-version)))
 
 ;;; ----------------------------------------------------------------------------
 ;;; constants
@@ -310,46 +310,76 @@
 
 (defun ltc-mode-start ()
   "start LTC mode"
-  (if (not (buffer-file-name))
-      (ltc-error "While starting LTC mode: Buffer has no file name associated")
-    ;; else-forms:
-    (ltc-log "Starting mode for file \"%s\"..." (buffer-file-name))
-    (if (not (condition-case err 
-		 (progn
-		   ;; testing xml-rpc version
-		   (ltc-log "Using `xml-rpc' package version: %s" xml-rpc-version)
-		   (and (version< xml-rpc-version min-xml-rpc-version)
-			(error "LTC requires `xml-rpc' package v%s or later" min-xml-rpc-version))
-		   ;; init session with file name
-		   (setq session-id (ltc-method-call "init_session" (buffer-file-name))))
-	       ;; handling any initialization errors
-	       ('error
-		;; if SVNAuthenticationException then display FAQ entry!
-		(ltc-error "While initializing session: %s %s" 
-			   (error-message-string err) 
-			   (if (string-match "SVNAuthenticationException" (error-message-string err)) 
-			       "\n\nFor a possible work-around see our FAQ at\n  http://latextrack.sourceforge.net/faq.html#svn-authentication" 
-			     ""))
-		nil))) ; 
-	(ltc-mode 0) ; an error occurred: toggle mode off again
-      ;; else-forms: initialization of session was successful:
-      (ltc-log "Session ID = %d" session-id)
-      (setq ltc-info-buffer (concat "LTC info (session " (number-to-string session-id) ")"))
-      ;; update boolean settings
-      (mapc (lambda (show-var) 
-	      (set show-var (ltc-method-call "get_bool_pref" (cdr (assoc show-var show-map))))) (mapcar 'car show-map))
-      (setq ltc-condense-authors (ltc-method-call "get_bool_pref" (cdr (assoc 'ltc-condense-authors other-settings-map))))
-      (setq ltc-allow-similar-colors (ltc-method-call "get_bool_pref" (cdr (assoc 'ltc-allow-similar-colors other-settings-map))))
-      (mapc (lambda (var) 
-	      (set var 'nil)) 
-	    limit-vars)
-      (setq orig-coding-sytem buffer-file-coding-system)
-      (setq buffer-file-coding-system 'no-conversion)
-      (font-lock-mode 0) ; turn-off latex font-lock mode
-      (add-hook 'write-file-functions 'ltc-hook-before-save nil t) ; add (local) hook to intercept saving to file
-      (add-hook 'kill-buffer-hook 'ltc-hook-before-kill nil t) ; add hook to intercept closing buffer
-      ;; run first update
-      (ltc-update)))
+  (unless 
+      (condition-case err 
+	  (progn 
+	    ;; check whether buffer has a file name:
+	    (if (not (buffer-file-name))
+		(error "%s" "While starting LTC mode: Buffer has no file name associated")
+	      (ltc-log "Starting LTC mode for file \"%s\"..." (buffer-file-name)))
+	    ;; testing xml-rpc version:
+	    (ltc-log "Using `xml-rpc' package version: %s" xml-rpc-version)
+	    (and (version< xml-rpc-version min-xml-rpc-version)
+		 (error "LTC requires `xml-rpc' package v%s or later" min-xml-rpc-version))
+	    ;; test whether server reports version and if so, whether version (prefixes) match
+	    (condition-case version-error
+		(let* ((ltc-server-version (ltc-method-call "get_version")))
+		  (ltc-log "Server version: %s" ltc-server-version)
+		  (unless (version= 
+			   (replace-regexp-in-string "-.*" "" ltc-mode-version)
+			   (replace-regexp-in-string "-.*" "" ltc-server-version))
+		    (unless
+			(y-or-n-p 
+			 (format "Warning: ltc-mode.el (%s) and LTC Server (%s) numeric version prefixes don't match. Continue anyways? " 
+				 ltc-mode-version ltc-server-version))
+		      (error "%s" "User aborted as versions of ltc-mode.el and LTC Server don't match!"))))
+	      ('error
+	       (cond ; ignore older versions of API that did not have this method:
+		   ((string-match "No such handler" (error-message-string version-error))
+		    (ltc-log "Warning: possibly outdated LTC server running!")) ; ignore but warn
+		   ((string-match "Invalid version syntax" (error-message-string version-error))
+		    (ltc-log "Warning: %s" (error-message-string version-error))) ; ignore but log output
+		   (t ; another error occurred: propagate up
+		    (error "While testing LTC server version: %s"
+			   (error-message-string version-error))))))
+	    ;; update boolean settings:
+	    (mapc (lambda (show-var) 
+		    (set show-var (ltc-method-call "get_bool_pref" (cdr (assoc show-var show-map)))))
+		  (mapcar 'car show-map))
+	    (setq ltc-condense-authors 
+		  (ltc-method-call "get_bool_pref" (cdr (assoc 'ltc-condense-authors other-settings-map))))
+	    (setq ltc-allow-similar-colors 
+		  (ltc-method-call "get_bool_pref" (cdr (assoc 'ltc-allow-similar-colors other-settings-map))))
+	    (mapc (lambda (var) 
+		    (set var 'nil)) 
+		  limit-vars)
+	    ;; init session (and propagate any errors) and create info buffer:
+	    (condition-case init-error
+		(setq session-id (ltc-method-call "init_session" (buffer-file-name)))
+	      ('error ; propagate up
+	       (error "While initializing session: %s%s" 
+		      (error-message-string init-error) 
+		      ;; if SVNAuthenticationException then display FAQ entry!
+		      (if (string-match "SVNAuthenticationException" (error-message-string init-error)) 
+			  (concat "\n\nFor a possible work-around see our FAQ at\n"
+				  "  http://latextrack.sourceforge.net/faq.html#svn-authentication")
+			"")))) 
+	    (ltc-log "Session ID = %d" session-id)
+	    (setq ltc-info-buffer (concat "LTC info (session " (number-to-string session-id) ")"))
+	    ;; buffer settings:
+	    (setq orig-coding-sytem buffer-file-coding-system)
+	    (setq buffer-file-coding-system 'no-conversion)
+	    (font-lock-mode 0) ; turn-off latex font-lock mode
+	    (add-hook 'write-file-functions 'ltc-hook-before-save nil t) ; add (local) hook to intercept saving to file
+	    (add-hook 'kill-buffer-hook 'ltc-hook-before-kill nil t) ; add hook to intercept closing buffer
+	    ;; run first update
+	    (ltc-update)
+	    t) ; success
+	;; handler(s)
+	('error 
+	 (ltc-error "%s" (error-message-string err))
+	 nil))
+    (ltc-mode 0)) ; an error occurred: toggle mode off again
   ) ;ltc-mode-start
 
 (defun ltc-mode-stop ()
@@ -636,7 +666,7 @@
        (list
 	(read-directory-name "Directory where to save bug report files (created if not exist): ")
 	(read-string "Explanation: ")
-	(y-or-n-p "Include repository? "))x1 
+	(y-or-n-p "Include repository? "))
      '(nil nil nil))) ; sets directory = nil and msg = nil and includeSrc = nil
   (when directory
     ;; copy current contents of *Messages* buffer to a new file Messages.txt in the directory
@@ -1078,7 +1108,7 @@ it will only set the new, chosen color if it is different than the old one."
 	    (ltc-method-call "set_color" name email new-color-short)
 	    (ltc-update))
 	  )	
-      (error nil)) ; no handlers as we simply abort if empty color name given
+      ('error nil)) ; no handlers as we simply abort if empty color name given
     ;; remove *Colors* buffer if still visible
     (when (setq b (get-buffer "*Colors*"))
       (delete-windows-on b t)
