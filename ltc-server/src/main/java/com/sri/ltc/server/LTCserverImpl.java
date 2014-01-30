@@ -112,7 +112,6 @@ public final class LTCserverImpl implements LTCserverInterface {
         return 42;
     }
 
-    @Override
     public String get_version() throws XmlRpcException {
         return CommonUtils.getVersion();
     }
