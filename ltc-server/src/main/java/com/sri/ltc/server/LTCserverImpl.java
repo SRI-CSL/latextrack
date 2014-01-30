@@ -112,6 +112,11 @@ public final class LTCserverImpl implements LTCserverInterface {
         return 42;
     }
 
+    @Override
+    public String get_version() throws XmlRpcException {
+        return CommonUtils.getVersion();
+    }
+
     public int init_session(String path) throws XmlRpcException {
         if (path == null)
             logAndThrow(1, new IllegalArgumentException("Given path is NULL"));
