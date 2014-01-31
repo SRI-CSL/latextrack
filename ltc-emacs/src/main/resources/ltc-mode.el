@@ -340,8 +340,11 @@
 		   ((string-match "Invalid version syntax" (error-message-string version-error))
 		    (ltc-log "Warning: %s" (error-message-string version-error))) ; ignore but log output
 		   (t ; another error occurred: propagate up
-		    (error "While testing LTC server version: %s"
-			   (error-message-string version-error))))))
+		    (error "While testing LTC server version: %s%s"
+			   (error-message-string version-error)
+			   (if (string= "Why? url-http-response-status is nil" (error-message-string version-error))
+			       "\nPerhaps the LTC server is not running?"
+			     ""))))))
 	    ;; update boolean settings:
 	    (mapc (lambda (show-var) 
 		    (set show-var (ltc-method-call "get_bool_pref" (cdr (assoc show-var show-map)))))
@@ -375,10 +378,8 @@
 	    ;; run first update
 	    (ltc-update)
 	    t) ; success
-	;; handler(s)
-	('error 
-	 (ltc-error "%s" (error-message-string err))
-	 nil))
+	;; handle any error
+	('error (ltc-error "%s" (error-message-string err)) nil)) ; return NIL to signal error
     (ltc-mode 0)) ; an error occurred: toggle mode off again
   ) ;ltc-mode-start
 
@@ -427,65 +428,70 @@
   (interactive)
   (ltc-log "Starting update...") ; TODO: make cursor turn into wait symbol
   (if ltc-mode
-      (let* ((map (ltc-method-call "get_changes" session-id 
-				   (buffer-modified-p) 
-				   (list :base64 (base64-encode-string (buffer-string) t))
-				   (compile-deletions)
-				   (1- (point))))
-	     (old-buffer-modified-p (buffer-modified-p)) ; maintain modified flag
-	     (newtext (base64-decode-string (nth 1 (cdr (assoc-string "text64" map)))))
-	     ;; build color table for this update: int -> color name
-	     (color-table (mapcar (lambda (four-tuple)
-				    (cons (string-to-number (nth 0 four-tuple)) (nth 3 four-tuple)))
-				  (cdr (assoc-string "authors" map))))
-	     (styles (cdr (assoc-string "styles" map)))
-	     (revisions (cdr (assoc-string "revs" map)))
-	     (last (cdr (assoc-string "last_rev" map)))
-	     (rev_indices (cdr (assoc-string "revision indices" map)))
-	     (commits (ltc-method-call "get_commits" session-id)) ; list of 6-tuple strings
-	     )
-	(setq self (ltc-method-call "get_self" session-id)) ; get current author and color
-	(ltc-log "Updates received") ; TODO: change cursor back (or later?)
-	(ltc-remove-edit-hooks) ; remove (local) hooks to capture user's edits temporarily
-	;; replace text in buffer and update cursor position
-	(erase-buffer)
-	(insert newtext)
-	(goto-char (1+ (cdr (assoc-string "caret" map)))) ; Emacs starts counting from 1!
-	;; apply styles to new buffer
-	(if (and styles (car styles))  ; sometimes STYLES = '(nil)
-	    (mapc (lambda (style)
-		    (let* ((revision (nth (nth 4 style) revisions))
-			   ;; now find revision in commits for extracting date:
-			   (date (catch 'findID
-				   (mapc (lambda (commit) 
-					   (if (string= (car commit) revision) 
-					       (throw 'findID (nth 4 commit)))) ; found ID, so stop loop
-					 commits)
-				   nil))) ; ID was not found
-		      (set-text-properties (1+ (car style)) (1+ (nth 1 style)) ; Emacs starts counting from 1!
-					   (list
-					    'face 
-					    (list 
-					     (if (= '1 (nth 2 style)) 'ltc-addition 'ltc-deletion) 
-					     (list
-					      :foreground (cdr (assoc (nth 3 style) color-table))))
-					    'help-echo
-					    (concat "rev: " (shorten 8 revision) 
-						    (if date (concat "\ndate: " date) nil))
-					    'ltc-change-rev  ; only revision info for undoing changes
-					    (shorten 8 revision)))
-		      )) styles))
-	(ltc-add-edit-hooks) ; add (local) hooks to capture user's edits
-	;; update commit graph in temp info buffer:
-	;;   - first ID = if the last element in "revisions" exists and is "on disk" or "modified", otherwise ""
-	;;   - active IDs = use "rev_indices" to index into "revisions"
-	(setq commit-graph (init-commit-graph commits 
-					      (or (car (member (car (last revisions)) (list modified on_disk))) "")
-					      last 
-					      (mapcar (lambda (i) (nth i revisions)) rev_indices)))
-	(update-info-buffer)
-	(set-buffer-modified-p old-buffer-modified-p) ; restore modification flag
-	))
+      (condition-case err
+	  (let* ((map (ltc-method-call "get_changes" session-id 
+				       (buffer-modified-p) 
+				       (list :base64 (base64-encode-string (buffer-string) t))
+				       (compile-deletions)
+				       (1- (point))))
+		 (old-buffer-modified-p (buffer-modified-p)) ; maintain modified flag
+		 (newtext (base64-decode-string (nth 1 (cdr (assoc-string "text64" map)))))
+		 ;; build color table for this update: int -> color name
+		 (color-table (mapcar (lambda (four-tuple)
+					(cons (string-to-number (nth 0 four-tuple)) (nth 3 four-tuple)))
+				      (cdr (assoc-string "authors" map))))
+		 (styles (cdr (assoc-string "styles" map)))
+		 (revisions (cdr (assoc-string "revs" map)))
+		 (last (cdr (assoc-string "last_rev" map)))
+		 (rev_indices (cdr (assoc-string "revision indices" map)))
+		 (commits (ltc-method-call "get_commits" session-id)) ; list of 6-tuple strings
+		 )
+	    (setq self (ltc-method-call "get_self" session-id)) ; get current author and color
+	    (ltc-log "Updates received") ; TODO: change cursor back (or later?)
+	    (ltc-remove-edit-hooks) ; remove (local) hooks to capture user's edits temporarily
+	    ;; replace text in buffer and update cursor position
+	    (erase-buffer)
+	    (insert newtext)
+	    (goto-char (1+ (cdr (assoc-string "caret" map)))) ; Emacs starts counting from 1!
+	    ;; apply styles to new buffer
+	    (if (and styles (car styles))  ; sometimes STYLES = '(nil)
+		(mapc (lambda (style)
+			(let* ((revision (nth (nth 4 style) revisions))
+			       ;; now find revision in commits for extracting date:
+			       (date (catch 'findID
+				       (mapc (lambda (commit) 
+					       (if (string= (car commit) revision) 
+						   (throw 'findID (nth 4 commit)))) ; found ID, so stop loop
+					     commits)
+				       nil))) ; ID was not found
+			  (set-text-properties (1+ (car style)) (1+ (nth 1 style)) ; Emacs starts counting from 1!
+					       (list
+						'face 
+						(list 
+						 (if (= '1 (nth 2 style)) 'ltc-addition 'ltc-deletion) 
+						 (list
+						  :foreground (cdr (assoc (nth 3 style) color-table))))
+						'help-echo
+						(concat "rev: " (shorten 8 revision) 
+							(if date (concat "\ndate: " date) nil))
+						'ltc-change-rev  ; only revision info for undoing changes
+						(shorten 8 revision)))
+			  )) styles))
+	    (ltc-add-edit-hooks) ; add (local) hooks to capture user's edits
+	    ;; update commit graph in temp info buffer:
+	    ;;   - first ID = if the last element in "revisions" exists and is "on disk" or "modified", otherwise ""
+	    ;;   - active IDs = use "rev_indices" to index into "revisions"
+	    (setq commit-graph (init-commit-graph commits 
+						  (or (car (member (car (last revisions)) (list modified on_disk))) "")
+						  last 
+						  (mapcar (lambda (i) (nth i revisions)) rev_indices)))
+	    (update-info-buffer)
+	    (set-buffer-modified-p old-buffer-modified-p) ; restore modification flag
+	    t)
+	('error 
+	 (ltc-error "While updating: %s" (error-message-string err))
+	 nil))
+    (ltc-log "Warning: cannot update because LTC mode not active")) ; TODO: change cursor back
   ) ;ltc-update
 
 ;;; --- capture save, close, and TODO: save-as (set-visited-file-name) operations 

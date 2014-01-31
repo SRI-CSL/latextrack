@@ -440,6 +440,9 @@ public final class LTCserverImpl implements LTCserverInterface {
 
     public List get_authors(int sessionID) throws XmlRpcException {
         Session session = getSession(sessionID);
+        LOGGER.info("Server: get_authors for file \""+session.getTrackedFile().getFile().getAbsolutePath()+"\", "+
+                " called.");
+
         List<Object[]> result = new ArrayList<Object[]>();
         for (Author author : session.getAuthors())
             result.add(concatAuthorAndColor(author));
@@ -448,6 +451,9 @@ public final class LTCserverImpl implements LTCserverInterface {
 
     public List get_commits(int sessionID) throws XmlRpcException {
         Session session = getSession(sessionID);
+        LOGGER.info("Server: get_commits for file \""+session.getTrackedFile().getFile().getAbsolutePath()+"\", "+
+                " called.");
+
         try {
             return new CompleteHistory(session.getTrackedFile()).update();
         } catch (ParseException e) {
@@ -462,6 +468,9 @@ public final class LTCserverImpl implements LTCserverInterface {
 
     public Object[] get_self(int sessionID) throws XmlRpcException {
         Session session = getSession(sessionID);
+        LOGGER.info("Server: get_self for file \""+session.getTrackedFile().getFile().getAbsolutePath()+"\", "+
+                " called.");
+
         try {
             return concatAuthorAndColor(session.getTrackedFile().getRepository().getSelf());
         } catch (IllegalArgumentException e) {
