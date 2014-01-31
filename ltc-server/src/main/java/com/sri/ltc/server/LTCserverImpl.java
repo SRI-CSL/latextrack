@@ -74,19 +74,22 @@ public final class LTCserverImpl implements LTCserverInterface {
             Color.decode("#00CCFF"))); // darker cyan/light blue
     public final static int NUM_DEFAULT_COLORS = defaultColors.size();
     private final static String KEY_COLOR = "author-color:";
-    private final ProgressReceiver progressReceiver;
+    private static ProgressReceiver progressReceiver = null;
+    private static final String PROGRESS_RECEIVER_LOCK = "lock for synchronizing access";
 
-    public LTCserverImpl() {
-        this.progressReceiver = null;
-    }
+    public LTCserverImpl() { }
 
-    public LTCserverImpl(ProgressReceiver progressReceiver) {
-        this.progressReceiver = progressReceiver;
+    public static void setProgressReceiver(ProgressReceiver receiver) {
+        synchronized (PROGRESS_RECEIVER_LOCK) {
+            progressReceiver = receiver;
+        }
     }
 
     private void updateProgress(int progress) {
-        if (progressReceiver != null)
-            progressReceiver.updateProgress(progress);
+        synchronized (PROGRESS_RECEIVER_LOCK) {
+            if (progressReceiver != null)
+                progressReceiver.updateProgress(progress);
+        }
     }
 
     private final static Logger LOGGER = Logger.getLogger(LTCserverImpl.class.getName());
@@ -133,7 +136,7 @@ public final class LTCserverImpl implements LTCserverInterface {
         } catch (Exception e) {
             logAndThrow(3, new RuntimeException("Could not find version control (git or svn) for file "+file.getAbsolutePath()))   ;
         }
-        updateProgress(3);
+        updateProgress(10);
 
         try {
             TrackedFile trackedFile = repository.getFile(file);
@@ -152,8 +155,8 @@ public final class LTCserverImpl implements LTCserverInterface {
                 default:
                     break;
             }
-            updateProgress(10);
 
+            updateProgress(100);
             return SessionManager.createSession(trackedFile);
         } catch (IOException e) {
             logAndThrow(7, e);
@@ -183,6 +186,7 @@ public final class LTCserverImpl implements LTCserverInterface {
                         deletions.size()+" deletions, ":
                         "")+
                 "and caret at "+caretPosition+" called.");
+        updateProgress(5);
 
         // apply deletions to current text and update caret position
         try {
@@ -197,9 +201,11 @@ public final class LTCserverImpl implements LTCserverInterface {
         }
 
         // create return value
+        updateProgress(90);
         Map map = new HashMap();
         map.put(LTCserverInterface.KEY_TEXT, Base64.encodeBase64(currentText.getBytes()));
         map.put(LTCserverInterface.KEY_CARET, caretPosition);
+        updateProgress(100);
         return map;
     }
 
@@ -252,6 +258,7 @@ public final class LTCserverImpl implements LTCserverInterface {
                         deletions.size()+" deletions, ":
                         "")+
                 "and caret at "+caretPosition+" called.");
+        updateProgress(5);
 
         // apply deletions to current text and update caret position
         try {
@@ -381,7 +388,7 @@ public final class LTCserverImpl implements LTCserverInterface {
         } catch (Exception e) {
             logAndThrow(2, e);
         }
-        updateProgress(90);
+        updateProgress(100);
 
         return map;
     }

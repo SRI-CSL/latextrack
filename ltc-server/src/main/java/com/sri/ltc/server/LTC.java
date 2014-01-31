@@ -22,6 +22,7 @@
 package com.sri.ltc.server;
 
 import com.sri.ltc.CommonUtils;
+import com.sri.ltc.ProgressReceiver;
 import com.sri.ltc.logging.LevelOptionHandler;
 import com.sri.ltc.logging.LogConfiguration;
 import org.kohsuke.args4j.CmdLineException;
@@ -159,6 +160,14 @@ public final class LTC {
         // customize for operating system:
         CommonUtils.customizeApp("/images/LTC-icon.png");
 
+        // handle progress meter setting
+        if (options.showProgress) {
+            logger.config("Showing progress meter during operation");
+            ProgressMeter meter = new ProgressMeter();
+            LTCserverImpl.setProgressReceiver(meter);
+            meter.start();
+        }
+
         LTC.getInstance(); // start up server (if not already running)
     }
 
@@ -174,5 +183,8 @@ public final class LTC {
 
         @Option(name="-p",usage="port on localhost used for XML-RPC")
         static int port = LTCserverInterface.PORT;
+
+        @Option(name="-m",usage="display progress")
+        boolean showProgress = false;
     }
 }
