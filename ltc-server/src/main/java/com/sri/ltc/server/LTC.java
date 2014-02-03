@@ -22,14 +22,12 @@
 package com.sri.ltc.server;
 
 import com.sri.ltc.CommonUtils;
-import com.sri.ltc.ProgressReceiver;
 import com.sri.ltc.logging.LevelOptionHandler;
 import com.sri.ltc.logging.LogConfiguration;
 import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
 
-import javax.servlet.ServletException;
 import javax.swing.*;
 import java.io.*;
 import java.util.logging.Level;
@@ -104,9 +102,7 @@ public final class LTC {
                     LTCOptions.port);
             rpcserver.start();
             logger.info("Started RPC server on port "+ LTCOptions.port+".");
-        } catch (ServletException e) {
-            logger.log(Level.SEVERE, "Cannot start RPC server", e);
-        } catch (IOException e) {
+        } catch (Exception e) {
             logger.log(Level.SEVERE, "Cannot start RPC server", e);
         }
     }
