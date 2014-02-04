@@ -26,6 +26,8 @@ import com.sri.ltc.server.LTC;
 import org.junit.*;
 import org.junit.experimental.categories.Category;
 
+import static org.junit.Assert.assertEquals;
+
 /**
  * @author linda
  */
@@ -59,6 +61,6 @@ public final class TestLTCserver {
 
     @Test
     public void instance() {
-        Assert.assertEquals(ltc, LTC.getInstance());
+        assertEquals("singleton instance", ltc, LTC.getInstance());
     }
 }

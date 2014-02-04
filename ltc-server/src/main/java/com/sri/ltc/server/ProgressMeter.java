@@ -2,7 +2,7 @@
  * #%L
  * LaTeX Track Changes (LTC) allows collaborators on a version-controlled LaTeX writing project to view and query changes in the .tex documents.
  * %%
- * Copyright (C) 2009 - 2012 SRI International
+ * Copyright (C) 2009 - 2014 SRI International
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -19,14 +19,33 @@
  * <http://www.gnu.org/licenses/gpl-3.0.html>.
  * #L%
  */
-package com.sri.ltc;
+package com.sri.ltc.server;
+
+import com.sri.ltc.ProgressReceiver;
 
 /**
  * @author linda
  */
-public interface ProgressReceiver {
+public final class ProgressMeter extends Thread implements ProgressReceiver {
+    @Override
+    public void updateProgress(int percent) {
+        StringBuilder bar = new StringBuilder("[");
 
-    public void updateProgress(int percent);
+        for (int i = 0; i < 50; i++) {
+            if (i < (percent/2)){
+                bar.append("=");
+            } else if (i == (percent/2)) {
+                bar.append(">");
+            } else {
+                bar.append(" ");
+            }
+        }
 
-    //setResult
+        bar.append("]   " + percent + "%     ");
+        System.out.print("\r" + bar.toString());
+        if (percent >= 100)
+            System.out.println();
+        else
+            System.out.flush();
+    }
 }

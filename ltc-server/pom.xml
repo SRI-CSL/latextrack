@@ -7,7 +7,7 @@
     <parent>
         <groupId>com.sri.ltc</groupId>
         <artifactId>LTC</artifactId>
-        <version>1.0.4</version>
+        <version>1.0.5-pre</version>
     </parent>
 
     <artifactId>ltc-server</artifactId>
@@ -16,6 +16,10 @@
     <description>
         LaTeX Track Changes (LTC) server
     </description>
+
+    <properties>
+        <jettyVersion>8.1.14.v20131031</jettyVersion>
+    </properties>
 
     <repositories>
         <repository>
@@ -55,7 +59,7 @@
         <dependency>
             <groupId>com.google.guava</groupId>
             <artifactId>guava</artifactId>
-            <version>16.0</version>
+            <version>16.0.1</version>
         </dependency>
         <dependency>
             <groupId>com.google.code.findbugs</groupId>
@@ -83,6 +87,29 @@
             <groupId>com.joestelmach</groupId>
             <artifactId>natty</artifactId>
             <version>0.8</version>
+        </dependency>
+
+        <!-- Jetty web server -->
+        <dependency>
+            <groupId>org.eclipse.jetty</groupId>
+            <artifactId>jetty-server</artifactId>
+            <version>${jettyVersion}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.eclipse.jetty</groupId>
+            <artifactId>jetty-servlet</artifactId>
+            <version>${jettyVersion}</version>
+        </dependency>
+        <!-- logging of Jetty redirected to file -->
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+            <version>1.7.5</version>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-log4j12</artifactId>
+            <version>1.7.5</version>
         </dependency>
     </dependencies>
 

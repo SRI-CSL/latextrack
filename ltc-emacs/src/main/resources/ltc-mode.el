@@ -1,12 +1,16 @@
-;;; ltc-mode.el --- user interface for LaTeX Track Changes (LTC) 
+;;; ltc-mode.el --- user interface for LaTeX Track Changes (LTC) as minor mode to LaTeX
 ;;
-;; Copyright (C) 2009 - 2013 SRI International
+;; Copyright (C) 2009 - ${current.year} SRI International
 ;;
 ;; Author: Linda Briesemeister <linda.briesemeister@sri.com>
 ;;    Sam Owre <sam.owre@sri.com>
 ;; Maintainer: Linda Briesemeister <linda.briesemeister@sri.com>
 ;; Created: 20 May 2010
 ;; URL: ${url}
+;; Version: ${project.version}
+;; Package-Version: ${numeric.version}
+;; Package-Requires: ((cl "1.0") (xml-rpc "1.6.10"))
+;; Keywords: latex, track changes, git, svn, xmlrpc, java
 ;;
 ;; This file is not part of GNU Emacs.
 ;;
@@ -28,16 +32,18 @@
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
+;;; License:
+;;
 ;; This program is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as
 ;; published by the Free Software Foundation, either version 3 of the 
 ;; License, or (at your option) any later version.
-
+;;
 ;; This program is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
 ;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 ;; GNU General Public License for more details.
-
+;;
 ;; You should have received a copy of the GNU General Public 
 ;; License along with this program.  If not, see
 ;; <http://www.gnu.org/licenses/gpl-3.0.html>.
@@ -47,15 +53,14 @@
 ;;; Code:
 
 (require 'xml-rpc)
-(require 'versions)
 (require 'cl) ; for set operations
-(defconst min-xml-rpc-version "1.6.8.3" "Minimum version requirement for xml-rpc mode")
-(defconst ltc-version "${project.version}" "Current version of ltc-mode.el")
+(defconst min-xml-rpc-version "1.6.10.1" "Minimum version requirement for xml-rpc mode")
+(defconst ltc-mode-version "${project.version}" "Current version of ltc-mode.el")
 
 (eval-after-load "ltc-mode"
   '(progn
      (message "Emacs version: %s" (emacs-version))
-     (message "LTC version: %s" ltc-version)))
+     (message "LTC mode version: %s" ltc-mode-version)))
 
 ;;; ----------------------------------------------------------------------------
 ;;; constants
@@ -72,7 +77,7 @@
 ;;;
 
 (defgroup ltc nil
-  "Latex Track Changes mode."
+  "Latex Track Changes minor mode."
   :version "23"
   :link '(url-link "${url}")
   :tag "LTC"
@@ -137,14 +142,14 @@
 ;;; regular and debugging output
 (defun ltc-log (formatstr &rest args)
   "Produce consistent output in *Messages* buffer using ORMATSTR with ARGS like the function `message`"
-  (apply 'message (concat  "LTC: " formatstr) args))
+  (apply #'message (concat  "LTC: " formatstr) args))
 (defun ltc-error (formatstr &rest args)
   "Produce consistent error messages in *Messages* buffer using FORMATSTR with ARGS like the function `message`"
-  (apply 'message (concat  "LTC Error: " formatstr) args))
+  (apply #'message (concat  "LTC Error: " formatstr) args))
 (defun ltc-log-debug (formatstr &rest args)
   "Produce consistent debug output in *Messages* buffer using FORMATSTR with ARGS like the function `message`"
   (if ltc-debug
-      (apply 'message (concat  "LTC debug: " formatstr) args)))
+      (apply #'message (concat  "LTC debug: " formatstr) args)))
 
 (defvar session-id nil "current LTC session ID.")
 (make-variable-buffer-local 'session-id)
@@ -179,6 +184,7 @@
 (defvar ltc-mode-map (make-sparse-keymap) "LTC mode keymap.")
 (define-key ltc-mode-map ltc-command-prefix 'ltc-prefix-map)
 
+;;;###autoload
 (define-minor-mode ltc-mode
   "Toggle LTC mode.
 
@@ -304,46 +310,77 @@
 
 (defun ltc-mode-start ()
   "start LTC mode"
-  (if (not (buffer-file-name))
-      (ltc-error "While starting LTC mode: Buffer has no file name associated")
-    ;; else-forms:
-    (ltc-log "Starting mode for file \"%s\"..." (buffer-file-name))
-    (if (not (condition-case err 
-		 (progn
-		   ;; testing xml-rpc version
-		   (ltc-log "Using `xml-rpc' package version: %s" xml-rpc-version)
-		   (and (version< xml-rpc-version min-xml-rpc-version)
-			(error "LTC requires `xml-rpc' package v%s or later" min-xml-rpc-version))
-		   ;; init session with file name
-		   (setq session-id (ltc-method-call "init_session" (buffer-file-name))))
-	       ;; handling any initialization errors
-	       ('error
-		;; if SVNAuthenticationException then display FAQ entry!
-		(ltc-error "While initializing session: %s %s" 
-			   (error-message-string err) 
-			   (if (string-match "SVNAuthenticationException" (error-message-string err)) 
-			       "\n\nFor a possible work-around see our FAQ at\n  http://latextrack.sourceforge.net/faq.html#svn-authentication" 
-			     ""))
-		nil))) ; 
-	(ltc-mode 0) ; an error occurred: toggle mode off again
-      ;; else-forms: initialization of session was successful:
-      (ltc-log "Session ID = %d" session-id)
-      (setq ltc-info-buffer (concat "LTC info (session " (number-to-string session-id) ")"))
-      ;; update boolean settings
-      (mapc (lambda (show-var) 
-	      (set show-var (ltc-method-call "get_bool_pref" (cdr (assoc show-var show-map))))) (mapcar 'car show-map))
-      (setq ltc-condense-authors (ltc-method-call "get_bool_pref" (cdr (assoc 'ltc-condense-authors other-settings-map))))
-      (setq ltc-allow-similar-colors (ltc-method-call "get_bool_pref" (cdr (assoc 'ltc-allow-similar-colors other-settings-map))))
-      (mapc (lambda (var) 
-	      (set var 'nil)) 
-	    limit-vars)
-      (setq orig-coding-sytem buffer-file-coding-system)
-      (setq buffer-file-coding-system 'no-conversion)
-      (font-lock-mode 0) ; turn-off latex font-lock mode
-      (add-hook 'write-file-functions 'ltc-hook-before-save nil t) ; add (local) hook to intercept saving to file
-      (add-hook 'kill-buffer-hook 'ltc-hook-before-kill nil t) ; add hook to intercept closing buffer
-      ;; run first update
-      (ltc-update)))
+  (unless 
+      (condition-case err 
+	  (progn 
+	    ;; check whether buffer has a file name:
+	    (if (not (buffer-file-name))
+		(error "%s" "While starting LTC mode: Buffer has no file name associated")
+	      (ltc-log "Starting LTC mode for file \"%s\"..." (buffer-file-name)))
+	    ;; testing xml-rpc version:
+	    (ltc-log "Using `xml-rpc' package version: %s" xml-rpc-version)
+	    (and (version< xml-rpc-version min-xml-rpc-version)
+		 (error "LTC requires `xml-rpc' package v%s or later" min-xml-rpc-version))
+	    ;; test whether server reports version and if so, whether version (prefixes) match
+	    (condition-case version-error
+		(let* ((ltc-server-version (ltc-method-call "get_version")))
+		  (ltc-log "Server version: %s" ltc-server-version)
+		  (unless (version= 
+			   (replace-regexp-in-string "-.*" "" ltc-mode-version)
+			   (replace-regexp-in-string "-.*" "" ltc-server-version))
+		    (unless
+			(y-or-n-p 
+			 (format "Warning: ltc-mode.el (%s) and LTC Server (%s) numeric version prefixes don't match. Continue anyways? " 
+				 ltc-mode-version ltc-server-version))
+		      (error "%s" "User aborted as versions of ltc-mode.el and LTC Server don't match!"))))
+	      ('error
+	       (cond ; ignore older versions of API that did not have this method:
+		   ((string-match "No such handler" (error-message-string version-error))
+		    (ltc-log "Warning: possibly outdated LTC server running!")) ; ignore but warn
+		   ((string-match "Invalid version syntax" (error-message-string version-error))
+		    (ltc-log "Warning: %s" (error-message-string version-error))) ; ignore but log output
+		   (t ; another error occurred: propagate up
+		    (error "While testing LTC server version: %s%s"
+			   (error-message-string version-error)
+			   (if (string= "Why? url-http-response-status is nil" (error-message-string version-error))
+			       "\nPerhaps the LTC server is not running?"
+			     ""))))))
+	    ;; update boolean settings:
+	    (mapc (lambda (show-var) 
+		    (set show-var (ltc-method-call "get_bool_pref" (cdr (assoc show-var show-map)))))
+		  (mapcar 'car show-map))
+	    (setq ltc-condense-authors 
+		  (ltc-method-call "get_bool_pref" (cdr (assoc 'ltc-condense-authors other-settings-map))))
+	    (setq ltc-allow-similar-colors 
+		  (ltc-method-call "get_bool_pref" (cdr (assoc 'ltc-allow-similar-colors other-settings-map))))
+	    (mapc (lambda (var) 
+		    (set var 'nil)) 
+		  limit-vars)
+	    ;; init session (and propagate any errors) and create info buffer:
+	    (condition-case init-error
+		(setq session-id (ltc-method-call "init_session" (buffer-file-name)))
+	      ('error ; propagate up
+	       (error "While initializing session: %s%s" 
+		      (error-message-string init-error) 
+		      ;; if SVNAuthenticationException then display FAQ entry!
+		      (if (string-match "SVNAuthenticationException" (error-message-string init-error)) 
+			  (concat "\n\nFor a possible work-around see our FAQ at\n"
+				  "  http://latextrack.sourceforge.net/faq.html#svn-authentication")
+			"")))) 
+	    (ltc-log "Session ID = %d" session-id)
+	    (setq ltc-info-buffer (concat "LTC info (session " (number-to-string session-id) ")"))
+	    ;; buffer settings:
+	    (setq orig-coding-sytem buffer-file-coding-system)
+	    (setq buffer-file-coding-system 'no-conversion)
+	    (font-lock-mode 0) ; turn-off latex font-lock mode
+	    (add-hook 'write-file-functions 'ltc-hook-before-save nil t) ; add (local) hook to intercept saving to file
+	    (add-hook 'kill-buffer-hook 'ltc-hook-before-kill nil t) ; add hook to intercept closing buffer
+	    ;; run first update
+	    (ltc-update)
+	    t) ; success
+	;; handle any error
+	('error (ltc-error "%s" (error-message-string err)) nil)) ; return NIL to signal error
+    (ltc-mode 0)) ; an error occurred: toggle mode off again
   ) ;ltc-mode-start
 
 (defun ltc-mode-stop ()
@@ -391,65 +428,70 @@
   (interactive)
   (ltc-log "Starting update...") ; TODO: make cursor turn into wait symbol
   (if ltc-mode
-      (let* ((map (ltc-method-call "get_changes" session-id 
-				   (buffer-modified-p) 
-				   (list :base64 (base64-encode-string (buffer-string) t))
-				   (compile-deletions)
-				   (1- (point))))
-	     (old-buffer-modified-p (buffer-modified-p)) ; maintain modified flag
-	     (newtext (base64-decode-string (nth 1 (cdr (assoc-string "text64" map)))))
-	     ;; build color table for this update: int -> color name
-	     (color-table (mapcar (lambda (four-tuple)
-				    (cons (string-to-number (nth 0 four-tuple)) (nth 3 four-tuple)))
-				  (cdr (assoc-string "authors" map))))
-	     (styles (cdr (assoc-string "styles" map)))
-	     (revisions (cdr (assoc-string "revs" map)))
-	     (last (cdr (assoc-string "last_rev" map)))
-	     (rev_indices (cdr (assoc-string "revision indices" map)))
-	     (commits (ltc-method-call "get_commits" session-id)) ; list of 6-tuple strings
-	     )
-	(setq self (ltc-method-call "get_self" session-id)) ; get current author and color
-	(ltc-log "Updates received") ; TODO: change cursor back (or later?)
-	(ltc-remove-edit-hooks) ; remove (local) hooks to capture user's edits temporarily
-	;; replace text in buffer and update cursor position
-	(erase-buffer)
-	(insert newtext)
-	(goto-char (1+ (cdr (assoc-string "caret" map)))) ; Emacs starts counting from 1!
-	;; apply styles to new buffer
-	(if (and styles (car styles))  ; sometimes STYLES = '(nil)
-	    (mapc (lambda (style)
-		    (let* ((revision (nth (nth 4 style) revisions))
-			   ;; now find revision in commits for extracting date:
-			   (date (catch 'findID
-				   (mapc (lambda (commit) 
-					   (if (string= (car commit) revision) 
-					       (throw 'findID (nth 4 commit)))) ; found ID, so stop loop
-					 commits)
-				   nil))) ; ID was not found
-		      (set-text-properties (1+ (car style)) (1+ (nth 1 style)) ; Emacs starts counting from 1!
-					   (list
-					    'face 
-					    (list 
-					     (if (= '1 (nth 2 style)) 'ltc-addition 'ltc-deletion) 
-					     (list
-					      :foreground (cdr (assoc (nth 3 style) color-table))))
-					    'help-echo
-					    (concat "rev: " (shorten 8 revision) 
-						    (if date (concat "\ndate: " date) nil))
-					    'ltc-change-rev  ; only revision info for undoing changes
-					    (shorten 8 revision)))
-		      )) styles))
-	(ltc-add-edit-hooks) ; add (local) hooks to capture user's edits
-	;; update commit graph in temp info buffer:
-	;;   - first ID = if the last element in "revisions" exists and is "on disk" or "modified", otherwise ""
-	;;   - active IDs = use "rev_indices" to index into "revisions"
-	(setq commit-graph (init-commit-graph commits 
-					      (or (car (member (car (last revisions)) (list modified on_disk))) "")
-					      last 
-					      (mapcar (lambda (i) (nth i revisions)) rev_indices)))
-	(update-info-buffer)
-	(set-buffer-modified-p old-buffer-modified-p) ; restore modification flag
-	))
+      (condition-case err
+	  (let* ((map (ltc-method-call "get_changes" session-id 
+				       (buffer-modified-p) 
+				       (list :base64 (base64-encode-string (buffer-string) t))
+				       (compile-deletions)
+				       (1- (point))))
+		 (old-buffer-modified-p (buffer-modified-p)) ; maintain modified flag
+		 (newtext (base64-decode-string (nth 1 (cdr (assoc-string "text64" map)))))
+		 ;; build color table for this update: int -> color name
+		 (color-table (mapcar (lambda (four-tuple)
+					(cons (string-to-number (nth 0 four-tuple)) (nth 3 four-tuple)))
+				      (cdr (assoc-string "authors" map))))
+		 (styles (cdr (assoc-string "styles" map)))
+		 (revisions (cdr (assoc-string "revs" map)))
+		 (last (cdr (assoc-string "last_rev" map)))
+		 (rev_indices (cdr (assoc-string "revision indices" map)))
+		 (commits (ltc-method-call "get_commits" session-id)) ; list of 6-tuple strings
+		 )
+	    (setq self (ltc-method-call "get_self" session-id)) ; get current author and color
+	    (ltc-log "Updates received") ; TODO: change cursor back (or later?)
+	    (ltc-remove-edit-hooks) ; remove (local) hooks to capture user's edits temporarily
+	    ;; replace text in buffer and update cursor position
+	    (erase-buffer)
+	    (insert newtext)
+	    (goto-char (1+ (cdr (assoc-string "caret" map)))) ; Emacs starts counting from 1!
+	    ;; apply styles to new buffer
+	    (if (and styles (car styles))  ; sometimes STYLES = '(nil)
+		(mapc (lambda (style)
+			(let* ((revision (nth (nth 4 style) revisions))
+			       ;; now find revision in commits for extracting date:
+			       (date (catch 'findID
+				       (mapc (lambda (commit) 
+					       (if (string= (car commit) revision) 
+						   (throw 'findID (nth 4 commit)))) ; found ID, so stop loop
+					     commits)
+				       nil))) ; ID was not found
+			  (set-text-properties (1+ (car style)) (1+ (nth 1 style)) ; Emacs starts counting from 1!
+					       (list
+						'face 
+						(list 
+						 (if (= '1 (nth 2 style)) 'ltc-addition 'ltc-deletion) 
+						 (list
+						  :foreground (cdr (assoc (nth 3 style) color-table))))
+						'help-echo
+						(concat "rev: " (shorten 8 revision) 
+							(if date (concat "\ndate: " date) nil))
+						'ltc-change-rev  ; only revision info for undoing changes
+						(shorten 8 revision)))
+			  )) styles))
+	    (ltc-add-edit-hooks) ; add (local) hooks to capture user's edits
+	    ;; update commit graph in temp info buffer:
+	    ;;   - first ID = if the last element in "revisions" exists and is "on disk" or "modified", otherwise ""
+	    ;;   - active IDs = use "rev_indices" to index into "revisions"
+	    (setq commit-graph (init-commit-graph commits 
+						  (or (car (member (car (last revisions)) (list modified on_disk))) "")
+						  last 
+						  (mapcar (lambda (i) (nth i revisions)) rev_indices)))
+	    (update-info-buffer)
+	    (set-buffer-modified-p old-buffer-modified-p) ; restore modification flag
+	    t)
+	('error 
+	 (ltc-error "While updating: %s" (error-message-string err))
+	 nil))
+    (ltc-log "Warning: cannot update because LTC mode not active")) ; TODO: change cursor back
   ) ;ltc-update
 
 ;;; --- capture save, close, and TODO: save-as (set-visited-file-name) operations 
@@ -630,7 +672,7 @@
        (list
 	(read-directory-name "Directory where to save bug report files (created if not exist): ")
 	(read-string "Explanation: ")
-	(y-or-n-p "Include repository? "))x1 
+	(y-or-n-p "Include repository? "))
      '(nil nil nil))) ; sets directory = nil and msg = nil and includeSrc = nil
   (when directory
     ;; copy current contents of *Messages* buffer to a new file Messages.txt in the directory
@@ -1072,7 +1114,7 @@ it will only set the new, chosen color if it is different than the old one."
 	    (ltc-method-call "set_color" name email new-color-short)
 	    (ltc-update))
 	  )	
-      (error nil)) ; no handlers as we simply abort if empty color name given
+      ('error nil)) ; no handlers as we simply abort if empty color name given
     ;; remove *Colors* buffer if still visible
     (when (setq b (get-buffer "*Colors*"))
       (delete-windows-on b t)
