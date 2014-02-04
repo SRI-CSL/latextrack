@@ -110,6 +110,9 @@ and fix the last bugs before releasing:
   $> mvn versions:commit
   $> git commit -am "bumping next release number to v1.1-SNAPSHOT"
 
+If cutting a release while in the middle of a (larger) feature branch, merge the feature when stable into 'develop'
+and then continue the release on develop.  When done, switch back to feature.
+
 
 Running
 -------
