@@ -24,6 +24,9 @@ package com.sri.ltc.server;
 import com.sri.ltc.CommonUtils;
 import com.sri.ltc.logging.LevelOptionHandler;
 import com.sri.ltc.logging.LogConfiguration;
+import org.apache.xmlrpc.webserver.XmlRpcServlet;
+import org.eclipse.jetty.servlet.ServletContextHandler;
+import org.eclipse.jetty.servlet.ServletHolder;
 import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
@@ -95,13 +98,20 @@ public final class LTC {
         logger.config("Java version: " + System.getProperty("java.version"));
 
         try {
-            // set up RPC server - this will enable us to receive XML-RPC calls
-            Server rpcserver = new Server(
-                    LTCserverInterface.class,
-                    LTCserverImpl.class,
-                    LTCOptions.port);
-            rpcserver.start();
-            logger.info("Started RPC server on port "+ LTCOptions.port+".");
+            // using Jetty:
+            org.eclipse.jetty.server.Server jettyServer = new org.eclipse.jetty.server.Server(LTCOptions.port);
+
+            ServletContextHandler context = new ServletContextHandler(ServletContextHandler.SESSIONS);
+            context.setContextPath("/");
+            jettyServer.setHandler(context);
+
+            // XmlRpcServlet uses org/apache/xmlrpc/webserver/XmlRpcServlet.properties
+            // to determine XML-RPC handlers:
+            context.addServlet(new ServletHolder(new XmlRpcServlet()), "/xmlrpc/*");
+
+            jettyServer.start();
+            logger.info("Started RPC server on port " + LTCOptions.port + ".");
+            jettyServer.join();
         } catch (Exception e) {
             logger.log(Level.SEVERE, "Cannot start RPC server", e);
         }

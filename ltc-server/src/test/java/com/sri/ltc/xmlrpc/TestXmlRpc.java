@@ -25,12 +25,13 @@ import com.sri.ltc.categories.IntegrationTests;
 import com.sri.ltc.server.*;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.xmlrpc.XmlRpcException;
+import org.apache.xmlrpc.server.PropertyHandlerMapping;
+import org.apache.xmlrpc.webserver.ServletWebServer;
+import org.apache.xmlrpc.webserver.XmlRpcServlet;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-import javax.servlet.ServletException;
-import java.io.IOException;
 import java.net.URL;
 import java.util.logging.Logger;
 
@@ -47,12 +48,21 @@ public final class TestXmlRpc {
     private static myIF myInterface;
 
     @BeforeClass
-    public static void connect() throws IOException, ServletException, InterruptedException {
-        Server server = new Server(
-                myIF.class,
-                myImpl.class,
-                PORT);
-        server.start();
+    public static void connect() throws Exception {
+        XmlRpcServlet servlet = new XmlRpcServlet() {
+            private static final long serialVersionUID = 7559509850917373466L;
+
+            // Instead of loading properties from a file, we override this
+            // method to set up a mapping based on our classes.
+            protected PropertyHandlerMapping newPropertyHandlerMapping(java.net.URL url)
+                    throws java.io.IOException, XmlRpcException {
+                PropertyHandlerMapping mapping = new PropertyHandlerMapping();
+                mapping.addHandler(myIF.class.getName(), myImpl.class);
+                return mapping;
+            }
+        };
+        ServletWebServer webServer = new ServletWebServer(servlet, PORT);
+        webServer.start();
         logger.info("Started RPC server on port "+PORT+".");
         Thread.sleep(200);
 

@@ -54,7 +54,7 @@
 
 (require 'xml-rpc)
 (require 'cl) ; for set operations
-(defconst min-xml-rpc-version "1.6.10" "Minimum version requirement for xml-rpc mode")
+(defconst min-xml-rpc-version "1.6.10.1" "Minimum version requirement for xml-rpc mode")
 (defconst ltc-mode-version "${project.version}" "Current version of ltc-mode.el")
 
 (eval-after-load "ltc-mode"

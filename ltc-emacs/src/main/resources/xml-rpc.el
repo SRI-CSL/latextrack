@@ -8,13 +8,13 @@
 
 ;; Author: Mark A. Hershberger <mah@everybody.org>
 ;; Original Author: Daniel Lundin <daniel@codefactory.se>
-;; Version: 1.6.10
+;; Version: 1.6.10.1
 ;; Created: May 13 2001
 ;; Keywords: xml rpc network
 ;; URL: http://launchpad.net/xml-rpc-el
 ;; Last Modified: <2014-01-29 linda>
 
-(defconst xml-rpc-version "1.6.10"
+(defconst xml-rpc-version "1.6.10.1"
   "Current version of xml-rpc.el")
 
 ;; This file is NOT (yet) part of GNU Emacs.
@@ -124,6 +124,9 @@
 
 
 ;;; History:
+
+;; 1.6.10.1 - removed extra HTTP header "Connection: close" and re-enabled keep-alive
+;;            to work with long-lived connections when large data is transmitted (LTC)
 
 ;; 1.6.9   - Add support for the i8 type (64 bit integers)
 ;;         - Quote lambda with #' instead of ' to silence byte compiler
@@ -553,9 +556,8 @@ or nil if called with ASYNC-CALLBACK-FUNCTION."
                                         "\n"))
               (url-mime-charset-string "utf-8;q=1, iso-8859-1;q=0.5")
               (url-request-coding-system xml-rpc-use-coding-system)
-              (url-http-attempt-keepalives nil)
+              (url-http-attempt-keepalives t)
               (url-request-extra-headers (list
-                                          (cons "Connection" "close")
                                           (cons "Content-Type"
                                                 "text/xml; charset=utf-8"))))
           (when (> xml-rpc-debug 1)
