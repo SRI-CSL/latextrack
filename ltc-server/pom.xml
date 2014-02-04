@@ -17,6 +17,10 @@
         LaTeX Track Changes (LTC) server
     </description>
 
+    <properties>
+        <jettyVersion>8.1.14.v20131031</jettyVersion>
+    </properties>
+
     <repositories>
         <repository>
             <id>jgit-repository</id>
@@ -89,12 +93,23 @@
         <dependency>
             <groupId>org.eclipse.jetty</groupId>
             <artifactId>jetty-server</artifactId>
-            <version>8.1.14.v20131031</version>
+            <version>${jettyVersion}</version>
         </dependency>
         <dependency>
             <groupId>org.eclipse.jetty</groupId>
             <artifactId>jetty-servlet</artifactId>
-            <version>8.1.14.v20131031</version>
+            <version>${jettyVersion}</version>
+        </dependency>
+        <!-- logging of Jetty redirected to file -->
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+            <version>1.7.5</version>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-log4j12</artifactId>
+            <version>1.7.5</version>
         </dependency>
     </dependencies>
 

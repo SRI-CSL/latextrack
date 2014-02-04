@@ -25,6 +25,7 @@ import com.sri.ltc.CommonUtils;
 import com.sri.ltc.logging.LevelOptionHandler;
 import com.sri.ltc.logging.LogConfiguration;
 import org.apache.xmlrpc.webserver.XmlRpcServlet;
+import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
 import org.kohsuke.args4j.CmdLineException;
@@ -99,7 +100,7 @@ public final class LTC {
 
         try {
             // using Jetty:
-            org.eclipse.jetty.server.Server jettyServer = new org.eclipse.jetty.server.Server(LTCOptions.port);
+            Server jettyServer = new Server(LTCOptions.port);
 
             ServletContextHandler context = new ServletContextHandler(ServletContextHandler.SESSIONS);
             context.setContextPath("/");
