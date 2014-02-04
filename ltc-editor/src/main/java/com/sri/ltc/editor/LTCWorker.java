@@ -42,7 +42,10 @@ import java.util.logging.Logger;
 public abstract class LTCWorker<T,V> extends SwingWorker<T,V> implements ProgressReceiver {
 
     protected final Logger LOGGER = Logger.getLogger(LTCWorker.class.getName());
-    protected final LTCserverInterface LTC = new LTCserverImpl(this);
+    {
+        LTCserverImpl.setProgressReceiver(this);
+    }
+    protected final LTCserverInterface LTC = new LTCserverImpl();
     protected final int sessionID;
 
     protected LTCWorker(JFrame frame, int sessionID, String progressTitle, String progressText, boolean withCancel) {
@@ -75,7 +78,7 @@ public abstract class LTCWorker<T,V> extends SwingWorker<T,V> implements Progres
     protected abstract T callLTCinBackground() throws XmlRpcException;
 
     @Override
-    public final void updateProgress(int progress) {
-        setProgress(progress);
+    public final void updateProgress(int percent) {
+        setProgress(percent);
     }
 }

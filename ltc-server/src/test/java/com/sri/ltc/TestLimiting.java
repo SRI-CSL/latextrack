@@ -174,6 +174,13 @@ public final class TestLimiting {
     }
 
     @Test
+    public void nameOfVersionControl() throws XmlRpcException {
+        assertEquals("name of VCS is GIT",
+                LTCserverInterface.VersionControlSystems.GIT.name(),
+                API.get_VCS(sessionID));
+    }
+
+    @Test
     public void limitToExact() throws XmlRpcException {
         if (commits.size() < 3)
             fail("cannot test with too few commits");

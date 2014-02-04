@@ -79,25 +79,25 @@ public class TestLimitsInGit {
             assertTrue("tracked file is not NULL", trackedFile != null);
             List<Commit> commits;
 
-            // TODO: test revision limit
+            // test revision limit
             commits = trackedFile.getCommits(null, "36eeab06"); // this should return commits until revision 3!
             assertTrue("list of commits is not NULL", commits != null);
             assertEquals("list of commits has length 4", 4, commits.size());
 
-            // TODO: test date limit: date somewhere between r5 and r4 => 3 commits
+            // test date limit: date somewhere between r5 and r4 => 3 commits
             commits = trackedFile.getCommits(CommonUtils.deSerializeDate("2010-07-23 13:15 -0500"), null);
             assertTrue("list of commits is not NULL", commits != null);
             assertEquals("list of commits has length 3", 3, commits.size());
-            // TODO: test date limit: date exactly r4 => 4 commits
+            // test date limit: date exactly r4 => 4 commits
             commits = trackedFile.getCommits(CommonUtils.deSerializeDate("2010-07-23 13:12:42 -0500"), null);
             assertTrue("list of commits is not NULL", commits != null);
             assertEquals("list of commits has length 4", 4, commits.size());
 
-            // TODO: test both limits at the same time; date later than revision, so date is significant
+            // test both limits at the same time; date later than revision, so date is significant
             commits = trackedFile.getCommits(CommonUtils.deSerializeDate("2010-07-23 13:10 -0500"), "bac2f515");
             assertTrue("list of commits is not NULL", commits != null);
             assertEquals("list of commits has length 5", 5, commits.size());
-            // TODO: test both limits at the same time; date earlier than revision, so revision is significant
+            // test both limits at the same time; date earlier than revision, so revision is significant
             commits = trackedFile.getCommits(CommonUtils.deSerializeDate("2010-07-23 13:10 -0500"), "203e0ce8");
             assertTrue("list of commits is not NULL", commits != null);
             assertEquals("list of commits has length 3", 3, commits.size());

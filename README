@@ -110,6 +110,9 @@ and fix the last bugs before releasing:
   $> mvn versions:commit
   $> git commit -am "bumping next release number to v1.1-SNAPSHOT"
 
+If cutting a release while in the middle of a (larger) feature branch, merge the feature when stable into 'develop'
+and then continue the release on develop.  When done, switch back to feature.
+
 
 Running
 -------
@@ -167,6 +170,11 @@ For integration tests (labeled with IntegrationTests category):
 To skip all tests:
 
   $> mvn verify -Dmaven.test.skip=true
+
+To run an integration test but skip all unit tests, go into the module directory where the test class of interest is
+located and do:
+
+  $> mvn -DskipSurefireTests=true -Dit.test=<TEST_CLASS_NAME> verify
 
 
 Git Repositories etc.

@@ -48,6 +48,14 @@ public interface LTCserverInterface {
     public static enum VersionControlSystems {GIT, SVN};
 
     /**
+     * Obtain the version of the running LTC server.
+     *
+     * @return Current version of LTC server as a string
+     * @throws XmlRpcException
+     */
+    public String get_version() throws XmlRpcException;
+
+    /**
      * Initialize a new track changes session with the base system.
      * The given path should point to the file being edited.  Relative
      * file names are allowed.

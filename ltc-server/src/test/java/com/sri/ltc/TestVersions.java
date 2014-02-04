@@ -2,7 +2,7 @@
  * #%L
  * LaTeX Track Changes (LTC) allows collaborators on a version-controlled LaTeX writing project to view and query changes in the .tex documents.
  * %%
- * Copyright (C) 2009 - 2012 SRI International
+ * Copyright (C) 2009 - 2013 SRI International
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -19,18 +19,26 @@
  * <http://www.gnu.org/licenses/gpl-3.0.html>.
  * #L%
  */
-package com.sri.ltc.server;
+package com.sri.ltc;
 
-import org.apache.xmlrpc.webserver.ServletWebServer;
+import com.sri.ltc.server.LTCserverImpl;
+import com.sri.ltc.server.LTCserverInterface;
+import org.apache.xmlrpc.XmlRpcException;
+import org.junit.Test;
 
-import javax.servlet.ServletException;
+import static org.junit.Assert.assertEquals;
+
 
 /**
+ * Test version string from API.
  * @author linda
  */
-public final class Server extends ServletWebServer {
+public final class TestVersions {
 
-    public Server(Class iface, Class impl, int port) throws ServletException {
-        super(new RpcServlet(iface, impl), port);
+    private final static LTCserverInterface API = new LTCserverImpl();
+
+    @Test
+    public void versions() throws XmlRpcException {
+        assertEquals("versions match", CommonUtils.getVersion(), API.get_version());
     }
 }
