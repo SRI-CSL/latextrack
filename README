@@ -112,6 +112,25 @@ and fix the last bugs before releasing:
 
 If cutting a release while in the middle of a (larger) feature branch, merge the feature when stable into 'develop'
 and then continue the release on develop.  When done, switch back to feature.
+  $> git flow feature finish -k FOO
+  Checking out files: 100% (22/22), done.
+  Switched to branch 'develop'
+  ...
+  Summary of actions:
+  - The feature branch 'feature/FOO' was merged into 'develop'
+  - Feature branch 'feature/FOO' is still available
+  - You are now on branch 'develop'
+
+  $> git st
+  # On branch develop
+  nothing to commit, working directory clean
+  $> git flow release start vX.Y.Z
+  Switched to a new branch 'release/vX.Y.Z'
+  ...
+  [make release and possible more changes on develop]
+  $> git flow feature rebase FOO  # TODO: finish this section
+
+etc.
 
 
 Running
