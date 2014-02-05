@@ -27,6 +27,21 @@
         <author email="lilalinda at users.sourceforge.net">Linda Briesemeister</author>
     </properties>
     <body>
+        <release version="1.0.5" date="2014-02-05">
+            <action dev="lilalinda" type="fix" issue="48" due-to="Peter">
+                Fixed intermittent communication issues between Emacs mode and LTC Server for long text files with a
+                rich version control history.
+            </action>
+            <action dev="lilalinda" type="update">
+                Improved error messages and fall-backs for Emacs mode.  Emacs now checks versions between ltc-mode.el
+                and LTC Server and alerts the user if a mismatch is found.
+            </action>
+            <action dev="lilalinda" type="update">
+                LTC Server now responds in HTTP 1.1 due to an embedded Jetty web server.  A new command line switch -m
+                shows a progress meter for computing intensive requests.
+            </action>
+        </release>
+
         <release version="1.0.4" date="2014-01-27">
             <action dev="lilalinda" type="fix" issue="46">
                 Fixed semantics of limiting by authors to not attribute changes to others.
