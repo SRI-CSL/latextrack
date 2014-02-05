@@ -9,7 +9,13 @@ Installing and Updating LTC
 
   Use the {{{http://sourceforge.net/projects/latextrack/files/ltc-install.sh/download}ltc-install.sh}} script to
   automatically fetch the latest JAR file to a location of your choice and optionally extract the Emacs Lisp files to
-  your Emacs directory. To <<update>> from an older version, also use this script.
+  your Emacs directory. Also use this script to update from an older version of LTC.
+
+  Note that we have improved the install script recently (as of <<Jan 30, 2014>>) to perform a self-check
+  whether a newer version exists.  Please update any version of the script that is older than Jan 30, 2014, before
+  running it to install or update LTC.  See also this {{{./faq.html#old-install}FAQ entry}} with more details about the
+  error message an older script generates.
+
   You can obtain usage information by invoking the script this way:
 
 +----

@@ -67,11 +67,11 @@
             </question>
             <answer>
                 <p><a href="http://subversion.apache.org/">Subversion</a> is also a free and open source version
-                control system, which is very popular and under active development.  However, it is a so-called
-                centralized version control system, which means that authors can only use LTC while connected to the
-                server, as the history of the .tex file is kept there.  This prevents working with LTC in offline
-                situations.  Since it remains widely in use and is familiar to some authors, we do support using it.
-                The response time is slower than using git.</p>
+                    control system, which is very popular and under active development.  However, it is a so-called
+                    centralized version control system, which means that authors can only use LTC while connected to the
+                    server, as the history of the .tex file is kept there.  This prevents working with LTC in offline
+                    situations.  Since it remains widely in use and is familiar to some authors, we do support using it.
+                    The response time is slower than using git.</p>
             </answer>
         </faq>
 
@@ -126,7 +126,8 @@
 $> java -cp $LTC/LTC.jar com.sri.ltc.server.HelloLTC
 The answer to the question of life is: 42
 (Seeing this means your LTC server on port 7777 is running.)</source>
-                <p>If you don't see the answer to the question of life, your LTC Server is not running on the tested port. If you omit the -p option, the default port is used for testing.</p>
+                <p>If you don't see the answer to the question of life, your LTC Server is not running on the tested
+                    port. If you omit the <b>-p</b> option, the default port is used for testing.</p>
             </answer>
         </faq>
 
@@ -134,19 +135,19 @@ The answer to the question of life is: 42
             <question>My svn-controlled file generates an authentication error.</question>
             <answer>
                 <p>We are relying on a Java library called svnkit to provide access to Subversion repositories.  As
-                such, the authentication mechanism is a bit different (because written in Java) than your native svn
-                command line client or other Subversion applications.  If you are able to run the following command</p>
+                    such, the authentication mechanism is a bit different (because written in Java) than your native svn
+                    command line client or other Subversion applications.  If you are able to run the following command</p>
                 <source>$> svn log &lt;MY_FILE&gt;</source>
                 <p>from the command line without a prompt for authentication but LTC generates an authentication error,
-                you can try to work around this by doing the following once for every Subversion repository, where your
-                files generate such an error.  First, download the svnkit 1.7.x <b>standalone</b> distribution
-                (or match the version used in LTC for "org.tmatesoft.svnkit" as seen on page
-                <a href="dependencies.html">
-                    http://latextrack.sourceforge.net/dependencies.html
-                </a>) from <a href="http://www.svnkit.com/download.php">http://www.svnkit.com/download.php</a>.
-                Extract the downloaded zip file in a directory of your choice that we call $TMP_SVNKIT.  Then, do the following
-                command in your svn repository, which may result in prompts for authentication as seen below.  Simply
-                answer the following questions, which may look like this:</p>
+                    you can try to work around this by doing the following once for every Subversion repository, where your
+                    files generate such an error.  First, download the svnkit 1.7.x <b>standalone</b> distribution
+                    (or match the version used in LTC for "org.tmatesoft.svnkit" as seen on page
+                    <a href="dependencies.html">
+                        http://latextrack.sourceforge.net/dependencies.html
+                    </a>) from <a href="http://www.svnkit.com/download.php">http://www.svnkit.com/download.php</a>.
+                    Extract the downloaded zip file in a directory of your choice that we call $TMP_SVNKIT.  Then, do the following
+                    command in your svn repository, which may result in prompts for authentication as seen below.  Simply
+                    answer the following questions, which may look like this:</p>
                 <source>$> $TMP_SVNKIT/svnkit-1.7.x/bin/jsvn log &lt;MY_FILE&gt;
 Authentication realm: svn+ssh://rfs.csl.sri.com
 Username: &lt;USERNAME&gt;
@@ -158,13 +159,29 @@ If you trust this host, enter 'p' to add the key to the SVN cache and carry on c
 If you want to carry on connecting just once, without adding the key to the cache, type 't'. If you do not trust this host, type 'R' to abandon the connection.
 (R)eject, accept (t)emporarily or accept (p)ermanently? p</source>
                 <p>Now the credentials should be cached (typically in ~/.subversion/auth/ or ~/.svn/auth) and a
-                subsequent call to the above command is <b>not</b> prompting for authentication anymore.  In this case,
-                LTC should now work since we are using the svnkit Java library and thus going through the same steps
-                to determine authenticity.  In case the above does not provide remedy, please send screen shots and
-                details to the <a href="mailto:lilalinda@users.sourceforge.net">lead developer</a>.</p>
+                    subsequent call to the above command is <b>not</b> prompting for authentication anymore.  In this case,
+                    LTC should now work since we are using the svnkit Java library and thus going through the same steps
+                    to determine authenticity.  In case the above does not provide remedy, please send screen shots and
+                    details to the <a href="mailto:lilalinda@users.sourceforge.net">lead developer</a>.</p>
             </answer>
         </faq>
 
+        <faq id="old-install">
+            <question>Running ltc-install.sh with Emacs directory generates error.</question>
+            <answer>
+                <p>If you are installing or updating LTC with the ltc-install.sh script and supplying an Emacs
+                    directory (where the Emacs packages are being put) but an error occurs that says:</p>
+                <source>caution: filename not matched:  versions.el
+ *** ERROR: Something went wrong when extracting Emacs Lisp files -- exiting.</source>
+                <p>then you may have an outdated install script.  Download
+                    <a href="http://sourceforge.net/projects/latextrack/files/ltc-install.sh/download">ltc-install.sh</a>
+                    again and try it with the new script.  As of <b>Jan 30, 2014</b>, the install script performs a
+                    self-check at the beginning to see whether a newer version of it is available online.  If a newer
+                    version is found you are prompted whether the script should overwrite itself.  You can skip the
+                    self-check using the option <b>-s</b>.
+                </p>
+            </answer>
+        </faq>
     </part>
 
     <part id="troubleshooting-emacs">
@@ -187,22 +204,46 @@ If you want to carry on connecting just once, without adding the key to the cach
             </question>
             <answer>
                 <p>Emacs is not able to find the Emacs Lisp files from the LTC distribution.
-                Check that the load-path in Emacs contains the directory that you used as the second argument for the
-                LTC installation script.</p>
+                    Check that the load-path in Emacs contains the directory that you used as the second argument for the
+                    LTC installation script.</p>
             </answer>
         </faq>
 
-        <faq id="how-install">
+        <faq id="server-not-running">
             <question>
                 When I try to invoke ltc-mode in Emacs, it says
-                "LTC Error: While initializing session: Why? url-http-response-status is nil".
+                "LTC Error: While testing LTC server version: Why? url-http-response-status is nil &nbsp;&nbsp;&nbsp;
+                Perhaps the LTC server is not running?"
             </question>
             <answer>
-                <p>Possible causes are that the server is not running or that the server uses a different port than the Emacs mode. If the server is running, check whether Emacs uses the same port as the server.  The port that the server uses was output on the command line where it was started and can also be found in the beginning of the log file ~/.LTC.log in a line ending similarly to the following.</p>
+                <p>Possible causes are that the server is not running or that the server uses a different port than
+                    the Emacs mode. If the server is running, check whether Emacs uses the same port as the server.
+                    The port that the server uses was output on the command line where it was started and can also be
+                    found in the log file ~/.LTC.log in a line ending similarly to the following.</p>
                 <source>... | INFO:    Started RPC server on port 8765.</source>
-                <p>You can also check whether the LTC Server is running using the utility described in the <a href="#test-server">question above</a>.</p>
-                <p>To check the port setting in Emacs, invoke the command "C-h v ltc-port &lt;RET&gt;" (this requires ltc-mode to be loaded at least once, possibly with the failure above).  See the manual for more details on configuring Emacs.</p>
+                <p>You can also check whether the LTC Server is running using the utility described in the
+                    <a href="#test-server">question above</a>.</p>
+                <p>To check the port setting in Emacs, invoke the command "C-h v ltc-port &lt;RET&gt;" (this requires
+                    ltc-mode to be loaded at least once, possibly with the failure above).  See the manual for more
+                    details on configuring Emacs.</p>
             </answer>
+        </faq>
+
+        <faq id="version-mismatch">
+            <question>
+                When I invoke ltc-mode in Emacs, it asks
+                "Warning: ltc-mode.el (X.Y.Z) and LTC Server (A.B.C) numeric version prefixes don't match. Continue anyways? (y or n)"
+            </question>
+            <answer>
+                <p>We are now checking versions between the client (Emacs mode) and server to make sure that they match.
+                    We are only comparing the numeric prefix (i.e., if we release an alpha names X.Y.Z-pre, it would
+                    only compare the numeric part X.Y.Z of the version numbers) -- we prompt the user whether to
+                    continue loading ltc-mode in case they need to update their LTC installation.  Using the install
+                    script with the appropriate Emacs directory as the second argument should always result in
+                    matching versions.  In that case the user is not prompted for input.
+                </p>
+            </answer>
+
         </faq>
 
         <faq id="strikethrough-emacs">
@@ -210,12 +251,14 @@ If you want to carry on connecting just once, without adding the key to the cach
                 My ltc-mode seems to be working but deletions are missing the strike-through markup.
             </question>
             <answer>
-                <p>Unfortunately, Emacs under Mac OS X is missing the Courier font in strike-through.
-                Other operating systems such as Linux do not have this problem but the default setting for marking up
-                deletions may not show the strike-through.</p>
+                <p>Unfortunately, Emacs 23 under Mac OS X is missing the Courier font in strike-through.
+                    Other operating systems such as Linux do not have this problem but the default setting for marking up
+                    deletions may not show the strike-through.</p>
                 <p>You can customize Emacs to use a different font face for marking up deletions using command
-                "M-x customize-face RET ltc-deletion RET" once LTC mode has been loaded at least once via "M-x ltc-mode"
-                (which may have been unsuccessful).  </p>
+                    "M-x customize-face &lt;RET&gt; ltc-deletion &lt;RET&gt;" once LTC mode has been loaded at least
+                    once via "M-x ltc-mode" (which can be unsuccessful).</p>
+                <p>As of Emacs 24 on Mac OS X, the strike-through font is working again.  Customize the deletion font
+                    accordingly.</p>
             </answer>
         </faq>
 
