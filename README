@@ -128,8 +128,10 @@ and then continue the release on develop.  When done, switch back to feature.
   Switched to a new branch 'release/vX.Y.Z'
   ...
   [make release and possible more changes on develop]
-  $> git flow feature rebase FOO  # TODO: finish this section
-
+  $> git flow feature rebase FOO
+  Will try to rebase 'FOO'...
+  First, rewinding head to replay your work on top of it...
+  Fast-forwarded feature/FOO to develop.
 etc.
 
 
