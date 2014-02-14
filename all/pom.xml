@@ -7,7 +7,7 @@
     <parent>
         <groupId>com.sri.ltc</groupId>
         <artifactId>LTC</artifactId>
-        <version>1.0.5</version>
+        <version>1.1-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
@@ -314,51 +314,16 @@
                 <artifactId>maven-latex-plugin</artifactId>
                 <version>1.2</version>
                 <inherited>false</inherited>
+                <configuration>
+                    <settings>
+                        <texCommand>xelatex</texCommand>
+                    </settings>
+                </configuration>
                 <executions>
                     <execution>
                         <phase>site</phase>
                         <goals>
                             <goal>latex</goal>
-                        </goals>
-                    </execution>
-                    <execution>
-                        <id>HTML multipage</id>
-                        <configuration>
-                            <settings>
-                                <cleanUp>true</cleanUp>
-                                <tempDirectory>m2latex_multipage</tempDirectory>
-                                <outputDirectory>html_multipage</outputDirectory>
-                                <tex4htCommandArgs>
-                                    <tex4htCommandArg>manual,2,png</tex4htCommandArg>
-                                    <tex4htCommandArg></tex4htCommandArg>
-                                    <tex4htCommandArg></tex4htCommandArg>
-                                    <tex4htCommandArg>-interaction=nonstopmode --src-specials</tex4htCommandArg>
-                                </tex4htCommandArgs>
-                            </settings>
-                        </configuration>
-                        <phase>site</phase>
-                        <goals>
-                            <goal>tex4ht</goal>
-                        </goals>
-                    </execution>
-                    <execution>
-                        <id>HTML singlepage</id>
-                        <configuration>
-                            <settings>
-                                <cleanUp>true</cleanUp>
-                                <tempDirectory>m2latex_singlepage</tempDirectory>
-                                <outputDirectory>html_singlepage</outputDirectory>
-                                <tex4htCommandArgs>
-                                    <tex4htCommandArg>manual,0,png</tex4htCommandArg>
-                                    <tex4htCommandArg></tex4htCommandArg>
-                                    <tex4htCommandArg></tex4htCommandArg>
-                                    <tex4htCommandArg>-interaction=nonstopmode --src-specials</tex4htCommandArg>
-                                </tex4htCommandArgs>
-                            </settings>
-                        </configuration>
-                        <phase>site</phase>
-                        <goals>
-                            <goal>tex4ht</goal>
                         </goals>
                     </execution>
                 </executions>
