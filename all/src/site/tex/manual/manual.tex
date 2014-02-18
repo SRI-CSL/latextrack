@@ -27,7 +27,7 @@
 \usepackage{xparse} % for \Menu command definition
 \usepackage{hanging} % for hanging paragraphs
 \usepackage{wrapfig}
-\usepackage{ltxcmds} % to use \@ifpackageloaded{tex4ht} in body
+\usepackage[subfigure]{tocloft} % sans-serif fonts in TOC etc.
 
 %% distinguish tex4ht and xelatex...
 \makeatletter
@@ -147,16 +147,32 @@
 % clear default layout:
 \fancyhead{}
 \fancyfoot{}
-% remove lines:
+% handle lines:
 \renewcommand{\headrulewidth}{0.2pt} 
 \renewcommand{\footrulewidth}{0pt}
 % custom header: chapter on left, section on right for odd; even reversed
-\fancyhead[LE,RO]{\nouppercase\rightmark}
-\fancyhead[LO,RE]{\nouppercase\leftmark}
+\fancyhead[LE,RO]{\sffamily\nouppercase\rightmark}
+\fancyhead[LO,RE]{\sffamily\nouppercase\leftmark}
 % custom footer: version -- copyright -- page number for odd; even reversed
 \fancyfoot[LO,RE]{\small{LTC\lining~v\version}}
 \fancyfoot[C]{\small{\textcopyright~SRI International}}
-\fancyfoot[RO,LE]{\small{\thepage}}
+\fancyfoot[RO,LE]{\sffamily\small{\thepage}}
+
+%% TOC fonts etc.
+% see also http://www.khirevich.com/latex/font/
+% ToC
+\renewcommand{\cfttoctitlefont}{\sffamily\Huge\bfseries} % ToC title            
+\renewcommand{\cftchapfont}{\sffamily\bfseries}
+\renewcommand{\cftchappagefont}{\sffamily\bfseries}
+\renewcommand{\cftsecfont}{\sffamily}
+\renewcommand{\cftsecpagefont}{\sffamily}
+\renewcommand{\cftsubsecfont}{\sffamily}
+\renewcommand{\cftsubsecpagefont}{\sffamily}
+% LoF
+\renewcommand{\cftloftitlefont}{\sffamily\Huge\bfseries} % LoF title            
+\renewcommand\cftfignumwidth{3em}
+\renewcommand{\cftfigfont}{\sffamily}
+\renewcommand{\cftfigpagefont}{\sffamily}
 
 %% colors
 \definecolor{LightGray}{gray}{0.8}
@@ -201,11 +217,11 @@ Public License for more details.
 See Appendix~\ref{ch:license} or \url{http://www.gnu.org/licenses/} for the complete license.
 
 \thispagestyle{plain}
-\textsf{\tableofcontents}
+\clearpage % due to tocloft package\tableofcontents
 \thispagestyle{empty}
 
 \iftexforht{}{% else
-  \textsf{\listoffigures} % list of figures only in PDF version
+  \clearpage % due to tocloft package  \listoffigures % list of figures only in PDF version
   \thispagestyle{empty}%
 }
 
@@ -214,7 +230,7 @@ See Appendix~\ref{ch:license} or \url{http://www.gnu.org/licenses/} for the comp
   \fancyhf{} % clear all header and footer fields
   \fancyfoot[LO,RE]{\small{LTC\lining~v\version}}
   \fancyfoot[C]{\small{\textcopyright~SRI International}}
-  \fancyfoot[RO,LE]{\small{\thepage}}
+  \fancyfoot[RO,LE]{\sffamily\small{\thepage}}
 }
 \pagestyle{fancy}
 \input{installation}
