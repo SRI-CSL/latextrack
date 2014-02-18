@@ -1,4 +1,4 @@
-\ifxetex% !TEX root = manual.tex
+% !TEX root = manual.tex
 \section{Tutorial with Subversion and LTC Editor} \label{sec:tutorial-svn}
 
 In this section, we assume that the example svn repository has been created according to the instructions in Section~\ref{sec:example-svn} above.  The latter subsections require a local svn repository but the beginning can be done with either the remote example repository or a local one.  
@@ -142,11 +142,11 @@ Sometimes the list of commits considered is getting long and the resulting marku
   \begin{minipage}[b]{0.57\linewidth}
     \centering
     \mygraphics{scale=.5}{figures/svn-editor-condense-on}
-    \ifxetex
-      \caption[Effect of condensing authors]{Effect of condensing authors:\\ ignoring the fifth version by Roger Sherman} 
-    \else
-      \caption[Effect of condensing authors]{Effect of condensing authors: ignoring the fifth version by Roger Sherman} 
-    \fi
+	\iftexforht{%
+      \caption[Effect of condensing authors]{Effect of condensing authors: ignoring the 5th version by Roger Sherman} 
+	}{%
+      \caption[Effect of condensing authors]{Effect of condensing authors:\\ ignoring the 5th version by Roger Sherman} 
+	}
     \label{fig:svn-editor-condense-on}  
   \end{minipage}  
 \hspace{0.04\linewidth}%

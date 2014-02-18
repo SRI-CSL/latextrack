@@ -317,6 +317,7 @@
                 <configuration>
                     <settings>
                         <texCommand>xelatex</texCommand>
+                        <tex4htCommand>htxelatex</tex4htCommand>
                     </settings>
                 </configuration>
                 <executions>
@@ -324,6 +325,46 @@
                         <phase>site</phase>
                         <goals>
                             <goal>latex</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>HTML multipage</id>
+                        <configuration>
+                            <settings>
+                                <cleanUp>true</cleanUp>
+                                <tempDirectory>m2latex_multipage</tempDirectory>
+                                <outputDirectory>html_multipage</outputDirectory>
+                                <tex4htCommandArgs>
+                                    <tex4htCommandArg>manual,2,png</tex4htCommandArg>
+                                    <tex4htCommandArg></tex4htCommandArg>
+                                    <tex4htCommandArg></tex4htCommandArg>
+                                    <tex4htCommandArg>-interaction=nonstopmode --src-specials</tex4htCommandArg>
+                                </tex4htCommandArgs>
+                            </settings>
+                        </configuration>
+                        <phase>site</phase>
+                        <goals>
+                            <goal>tex4ht</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>HTML singlepage</id>
+                        <configuration>
+                            <settings>
+                                <cleanUp>true</cleanUp>
+                                <tempDirectory>m2latex_singlepage</tempDirectory>
+                                <outputDirectory>html_singlepage</outputDirectory>
+                                <tex4htCommandArgs>
+                                    <tex4htCommandArg>manual,0,png</tex4htCommandArg>
+                                    <tex4htCommandArg></tex4htCommandArg>
+                                    <tex4htCommandArg></tex4htCommandArg>
+                                    <tex4htCommandArg>-interaction=nonstopmode --src-specials</tex4htCommandArg>
+                                </tex4htCommandArgs>
+                            </settings>
+                        </configuration>
+                        <phase>site</phase>
+                        <goals>
+                            <goal>tex4ht</goal>
                         </goals>
                     </execution>
                 </executions>
