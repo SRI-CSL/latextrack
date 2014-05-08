@@ -314,7 +314,7 @@ esac
 
 if [ -n "$EMACS_DIR" ]; then
     echo "Inflating Emacs Lisp files in ${EMACS_DIR}:"
-    unzip -o "$JAVA_DIR/$JAR_FILE" '*.el' -d "$EMACS_DIR"
+    unzip -o "$JAVA_DIR/$JAR_FILE" '*.el*' -d "$EMACS_DIR"
     if [ $? -gt 0 ]; then
 	usage "Something went wrong when extracting Emacs Lisp files -- exiting."; exit 3
     fi
