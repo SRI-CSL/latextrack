@@ -4,6 +4,9 @@ target/
 # generated Lexer class
 ltc-server/src/main/java/com/sri/ltc/latexdiff/Lexer.java
 
+# byte-compiled Emacs files
+ltc-emacs/src/main/resources/*.elc
+
 # in manual folder
 all/src/site/tex/manual/version.txt
 all/src/site/tex/manual/baseurl.txt

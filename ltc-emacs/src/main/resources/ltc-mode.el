@@ -155,8 +155,7 @@
 (make-variable-buffer-local 'session-id)
 
 (defvar commit-graph nil 
-  "Commit graph structure containing one element per commit: 
-(id date (author-name author email) message isActive isLast color (columns....)? OR: (list-of-parents) (list-of-children))")
+  "Commit graph structure containing one element per commit")
 (make-variable-buffer-local 'commit-graph)
 
 (defvar self nil "3-tuple of current author when session is initialized.")
@@ -229,77 +228,77 @@
 
 (easy-menu-define
   ltc-minor-mode-menu ltc-mode-map "Menu for LTC"
- '("LTC"
-   ["Update buffer" ltc-update]
-   "--"
-   ("Show/Hide" :filter (lambda (ignored)  
-    			  (mapcar (lambda (show-var) (vector  
-						      (documentation-property show-var 'variable-documentation) 
-						      (list 'list
-						       (list 'setq show-var (list 'not show-var)) 
-						       (list 'ltc-method-call 
-							     "set_bool_pref" 
-							     (list 'cdr (list 'assoc (list 'quote show-var) 'show-map)) 
-							     show-var) 
-						       '(ltc-update)) 
-						      :style 'toggle :selected show-var :key-sequence nil)
-				    ) (mapcar 'car show-map))
-    			  ))
-   ("Limit by"
-    ["Set of authors..." ltc-limit-authors
-     :label (concat "Set of authors" 
-		    (if ltc-limiting-authors
-			;; show a list of initials
-			(concat " ["
-				(mapconcat (lambda (name) (mapconcat (lambda (word) (substring word 0 1)) 
-								     (split-string (upcase name)) "")) 
-					   (mapcar 'car ltc-limiting-authors) " ")
-				"]...")
-		      "..."))]
-    ["Start at date..." ltc-limit-date
-     :label (concat "Start at date" 
-      		    (if (or (not ltc-limiting-date) (string= "" ltc-limiting-date))
-      			"..."
-      		      (concat " [" ltc-limiting-date "]...")))]
-    ["Start at revision..." ltc-limit-rev 
-     :label (concat "Start at revision" 
-		    (if (or (not ltc-limiting-rev) (string= "" ltc-limiting-rev))
-			"..."
-		      (concat " [" (shorten 7 ltc-limiting-rev) "]...")))]
-    )
-   ("Other settings"
-    ["Condense authors" 
-     (list 
-      (setq ltc-condense-authors (not ltc-condense-authors))
-      (ltc-method-call "set_bool_pref" (cdr (assoc 'ltc-condense-authors other-settings-map)) ltc-condense-authors)
-      (ltc-update)
-      )
-     :style toggle :selected ltc-condense-authors :key-sequence nil]
-    ["Allow similar colors" 
-     (list 
-      (setq ltc-allow-similar-colors (not ltc-allow-similar-colors))
-      (ltc-method-call "set_bool_pref" (cdr (assoc 'ltc-allow-similar-colors other-settings-map)) ltc-allow-similar-colors)
-      (ltc-update)
-      )
-     :style toggle :selected ltc-allow-similar-colors :key-sequence nil]
-    )
-   "--"
-   ["Undo change (same rev) at point" ltc-undo-change
-    :help "Undo change (i.e., all surrounding characters of same revision) at current point."]
-   ["Undo changes with same author" ltc-undo-changes-same-author
-    :help "Undo all changes of same author and kind (i.e. addition or deletion) at current point."]
-   ["Undo changes within region" ltc-undo-changes-within-region 
-    :help "Undo all changes in currently marked region."]
-   ["Move to previous" ltc-prev-change]
-   ["Move to next" ltc-next-change]
-   "--"
-   ["Set author color..." ltc-set-color]
-   "--"
-   ["Bug report..." ltc-bug-report]
-   "--"
-   ["Turn LTC off" ltc-mode]
-   "--"
-   ))
+  '("LTC"
+    ["Update buffer" ltc-update]
+    "--"
+    ("Show/Hide" :filter (lambda (ignored)  
+			   (mapcar (lambda (show-var) (vector  
+						       (documentation-property show-var 'variable-documentation) 
+						       (list 'list
+							     (list 'setq show-var (list 'not show-var)) 
+							     (list 'ltc-method-call 
+								   "set_bool_pref" 
+								   (list 'cdr (list 'assoc (list 'quote show-var) 'show-map)) 
+								   show-var) 
+							     '(ltc-update)) 
+						       :style 'toggle :selected show-var :key-sequence nil)
+				     ) (mapcar 'car show-map))
+			   ))
+    ("Limit by"
+     ["Set of authors..." ltc-limit-authors
+      :label (concat "Set of authors" 
+		     (if ltc-limiting-authors
+			 ;; show a list of initials
+			 (concat " ["
+				 (mapconcat (lambda (name) (mapconcat (lambda (word) (substring word 0 1)) 
+								      (split-string (upcase name)) "")) 
+					    (mapcar 'car ltc-limiting-authors) " ")
+				 "]...")
+		       "..."))]
+     ["Start at date..." ltc-limit-date
+      :label (concat "Start at date" 
+		     (if (or (not ltc-limiting-date) (string= "" ltc-limiting-date))
+			 "..."
+		       (concat " [" ltc-limiting-date "]...")))]
+     ["Start at revision..." ltc-limit-rev 
+      :label (concat "Start at revision" 
+		     (if (or (not ltc-limiting-rev) (string= "" ltc-limiting-rev))
+			 "..."
+		       (concat " [" (shorten 7 ltc-limiting-rev) "]...")))]
+     )
+    ("Other settings"
+     ["Condense authors" 
+      (list 
+       (setq ltc-condense-authors (not ltc-condense-authors))
+       (ltc-method-call "set_bool_pref" (cdr (assoc 'ltc-condense-authors other-settings-map)) ltc-condense-authors)
+       (ltc-update)
+       )
+      :style toggle :selected ltc-condense-authors :key-sequence nil]
+     ["Allow similar colors" 
+      (list 
+       (setq ltc-allow-similar-colors (not ltc-allow-similar-colors))
+       (ltc-method-call "set_bool_pref" (cdr (assoc 'ltc-allow-similar-colors other-settings-map)) ltc-allow-similar-colors)
+       (ltc-update)
+       )
+      :style toggle :selected ltc-allow-similar-colors :key-sequence nil]
+     )
+    "--"
+    ["Undo change (same rev) at point" ltc-undo-change
+     :help "Undo change (i.e., all surrounding characters of same revision) at current point."]
+    ["Undo changes with same author" ltc-undo-changes-same-author
+     :help "Undo all changes of same author and kind (i.e. addition or deletion) at current point."]
+    ["Undo changes within region" ltc-undo-changes-within-region 
+     :help "Undo all changes in currently marked region."]
+    ["Move to previous" ltc-prev-change]
+    ["Move to next" ltc-next-change]
+    "--"
+    ["Set author color..." ltc-set-color]
+    "--"
+    ["Bug report..." ltc-bug-report]
+    "--"
+    ["Turn LTC off" ltc-mode]
+    "--"
+    ))
 
 ;;; ----------------------------------------------------------------------------
 ;;; mode implementation
@@ -335,16 +334,16 @@
 		      (error "%s" "User aborted as versions of ltc-mode.el and LTC Server don't match!"))))
 	      ('error
 	       (cond ; ignore older versions of API that did not have this method:
-		   ((string-match "No such handler" (error-message-string version-error))
-		    (ltc-log "Warning: possibly outdated LTC server running!")) ; ignore but warn
-		   ((string-match "Invalid version syntax" (error-message-string version-error))
-		    (ltc-log "Warning: %s" (error-message-string version-error))) ; ignore but log output
-		   (t ; another error occurred: propagate up
-		    (error "While testing LTC server version: %s%s"
-			   (error-message-string version-error)
-			   (if (string= "Why? url-http-response-status is nil" (error-message-string version-error))
-			       "\nPerhaps the LTC server is not running?"
-			     ""))))))
+		((string-match "No such handler" (error-message-string version-error))
+		 (ltc-log "Warning: possibly outdated LTC server running!")) ; ignore but warn
+		((string-match "Invalid version syntax" (error-message-string version-error))
+		 (ltc-log "Warning: %s" (error-message-string version-error))) ; ignore but log output
+		(t ; another error occurred: propagate up
+		 (error "While testing LTC server version: %s%s"
+			(error-message-string version-error)
+			(if (string= "Why? url-http-response-status is nil" (error-message-string version-error))
+			    "\nPerhaps the LTC server is not running?"
+			  ""))))))
 	    ;; update boolean settings:
 	    (mapc (lambda (show-var) 
 		    (set show-var (ltc-method-call "get_bool_pref" (cdr (assoc show-var show-map)))))
@@ -375,6 +374,8 @@
 	    (font-lock-mode 0) ; turn-off latex font-lock mode
 	    (add-hook 'write-file-functions 'ltc-hook-before-save nil t) ; add (local) hook to intercept saving to file
 	    (add-hook 'kill-buffer-hook 'ltc-hook-before-kill nil t) ; add hook to intercept closing buffer
+	    (add-hook 'first-change-hook 'ltc-hook-first-change nil t) ; change commit graph upon first modification
+	    (ltc-add-edit-hooks)
 	    ;; run first update
 	    (ltc-update)
 	    t) ; success
@@ -388,6 +389,7 @@
   (setq commit-graph nil) ; reset commit graph
   (setq self nil) ; reset information about current author
   (ltc-remove-edit-hooks) ; remove (local) hooks to capture user's edits
+  (remove-hook 'first-change-hook 'ltc-hook-first-change t)
   (remove-hook 'write-file-functions 'ltc-hook-before-save t) ; remove (local) hook to intercept saving to file
   (remove-hook 'kill-buffer-hook 'ltc-hook-before-kill t) ; remove hook to intercept closing buffer
   ;; close session and obtain text for buffer without track changes
@@ -448,36 +450,37 @@
 		 )
 	    (setq self (ltc-method-call "get_self" session-id)) ; get current author and color
 	    (ltc-log "Updates received") ; TODO: change cursor back (or later?)
-	    (ltc-remove-edit-hooks) ; remove (local) hooks to capture user's edits temporarily
-	    ;; replace text in buffer and update cursor position
-	    (erase-buffer)
-	    (insert newtext)
-	    (goto-char (1+ (cdr (assoc-string "caret" map)))) ; Emacs starts counting from 1!
-	    ;; apply styles to new buffer
-	    (if (and styles (car styles))  ; sometimes STYLES = '(nil)
-		(mapc (lambda (style)
-			(let* ((revision (nth (nth 4 style) revisions))
-			       ;; now find revision in commits for extracting date:
-			       (date (catch 'findID
-				       (mapc (lambda (commit) 
-					       (if (string= (car commit) revision) 
-						   (throw 'findID (nth 4 commit)))) ; found ID, so stop loop
-					     commits)
-				       nil))) ; ID was not found
-			  (set-text-properties (1+ (car style)) (1+ (nth 1 style)) ; Emacs starts counting from 1!
-					       (list
-						'face 
-						(list 
-						 (if (= '1 (nth 2 style)) 'ltc-addition 'ltc-deletion) 
+	    (let ((inhibit-modification-hooks t)) ; temporarily disable modification hooks
+	      ;; replace text in buffer:
+	      (erase-buffer)
+	      (insert newtext)
+	      ;; update cursor position
+	      (goto-char (1+ (cdr (assoc-string "caret" map)))) ; Emacs starts counting from 1!
+	      ;; apply styles to new buffer
+	      (if (and styles (car styles))  ; sometimes STYLES = '(nil)
+		  (mapc (lambda (style)
+			  (let* ((revision (nth (nth 4 style) revisions))
+				 ;; now find revision in commits for extracting date:
+				 (date (catch 'findID
+					 (mapc (lambda (commit) 
+						 (if (string= (car commit) revision) 
+						     (throw 'findID (nth 4 commit)))) ; found ID, so stop loop
+					       commits)
+					 nil))) ; ID was not found
+			    (set-text-properties (1+ (car style)) (1+ (nth 1 style)) ; Emacs starts counting from 1!
 						 (list
-						  :foreground (cdr (assoc (nth 3 style) color-table))))
-						'help-echo
-						(concat "rev: " (shorten 8 revision) 
-							(if date (concat "\ndate: " date) nil))
-						'ltc-change-rev  ; only revision info for undoing changes
-						(shorten 8 revision)))
-			  )) styles))
-	    (ltc-add-edit-hooks) ; add (local) hooks to capture user's edits
+						  'face 
+						  (list 
+						   (if (= '1 (nth 2 style)) 'ltc-addition 'ltc-deletion) 
+						   (list
+						    :foreground (cdr (assoc (nth 3 style) color-table))))
+						  'help-echo
+						  (concat "rev: " (shorten 8 revision) 
+							  (if date (concat "\ndate: " date) nil))
+						  'ltc-change-rev  ; only revision info for undoing changes
+						  (shorten 8 revision)))
+			    )) styles))
+	      )
 	    ;; update commit graph in temp info buffer:
 	    ;;   - first ID = if the last element in "revisions" exists and is "on disk" or "modified", otherwise ""
 	    ;;   - active IDs = use "rev_indices" to index into "revisions"
@@ -537,9 +540,9 @@
 	 (define-key minibuffer-local-completion-map " " nil)
 	 (while 
 	     (let ((author (completing-read (format "Enter author [%d] or empty to stop: " n) completion-list nil nil)))
-		  (setq n (+ 1 n))
-		  (if (string< "" author)
-		      (setq author-list (cons author author-list)))))
+	       (setq n (+ 1 n))
+	       (if (string< "" author)
+		   (setq author-list (cons author author-list)))))
 	 ;; reset minibuffer-local-completion-map binding
 	 (define-key minibuffer-local-completion-map " " old-spc)
 	 (list (mapcar 'string-to-author (nreverse author-list))))
@@ -702,158 +705,157 @@ Each entry in the commit graph that is returned, contains a list with the follow
  (ID date (name email) message isActive isLast color (column (incoming-columns) (outgoing-columns) (passing-columns)))
 "
   (if ltc-mode
-    ;; build commit graph 
-    (let ((authors (mapcar (lambda (v) (cons (list (car v) (cadr v)) (nth 2 v))) 
-			   (ltc-method-call "get_authors" session-id)))
-	  (parents-alist nil)
-	  (children-alist nil)
-	  (circle-alist '((0 0))) ; index -> circle column, start with 0 -> 0
-	  (incoming-alist nil)    ; index -> set of incoming columns
-	  (outgoing-alist nil)    ; index -> set of outgoing columns
-	  (passing-alist nil)     ; index -> set of passing columns
-	  (current-columns nil)   ; set of current columns
-	  )
-      ;; NOTE: this is modeled after CommitTableModel.update() in LTC Editor code!
-      ;; 1) build up map : ID -> index in commits
-      (setq commit-map (make-hash-table :test 'equal :size (length commits)))
-      (setq counter -1) ; keep track of index in list of commits
-      (mapc (lambda (raw-commit)
-	      (let ((id (car raw-commit))
-		    (author (list (nth 2 raw-commit) (nth 3 raw-commit))))
-		; side-effect: build up map
-		(setq counter (+ 1 counter))
-		(puthash (car raw-commit) counter commit-map) ; revision -> index in list of commits
-		))
-	    commits)
-      ;; 2) calculate index -> parents indices and index -> children indices (in alists)
-      (mapc (lambda (raw-commit)
-       	      (let* ((id (car raw-commit))
-       		     (index (gethash id commit-map))
-		     (parents (nth 5 raw-commit))
-       		     (parent-ids (if parents (split-string parents) nil))
-       		     (parent-indices nil) ; will hold list of parent indices
-       		     )
-       		; go through list of parents and find indices; also update children
-       		(setq parent-indices
-       		      (mapcar (lambda (parent-id)
-       				(let* ((parent-index (gethash parent-id commit-map))
-				       (children-indices (cdr (assoc parent-index children-alist)))
-       				       )
-       				  ; side-effect: add index to list of children
-				  (setq children-indices (cons index children-indices))
-				  (setq children-alist
+      ;; build commit graph 
+      (let ((authors (mapcar (lambda (v) (cons (list (car v) (cadr v)) (nth 2 v))) 
+			     (ltc-method-call "get_authors" session-id)))
+	    (parents-alist nil)
+	    (children-alist nil)
+	    (circle-alist '((0 0))) ; index -> circle column, start with 0 -> 0
+	    (incoming-alist nil)    ; index -> set of incoming columns
+	    (outgoing-alist nil)    ; index -> set of outgoing columns
+	    (passing-alist nil)     ; index -> set of passing columns
+	    (current-columns nil)   ; set of current columns
+	    )
+	;; NOTE: this is modeled after CommitTableModel.update() in LTC Editor code!
+	;; 1) build up map : ID -> index in commits
+	(setq commit-map (make-hash-table :test 'equal :size (length commits)))
+	(setq counter -1) ; keep track of index in list of commits
+	(mapc (lambda (raw-commit)
+		(let ((id (car raw-commit))
+		      (author (list (nth 2 raw-commit) (nth 3 raw-commit))))
+		  ;; side-effect: build up map
+		  (setq counter (+ 1 counter))
+		  (puthash (car raw-commit) counter commit-map) ; revision -> index in list of commits
+		  ))
+	      commits)
+	;; 2) calculate index -> parents indices and index -> children indices (in alists)
+	(mapc (lambda (raw-commit)
+		(let* ((id (car raw-commit))
+		       (index (gethash id commit-map))
+		       (parents (nth 5 raw-commit))
+		       (parent-ids (if parents (split-string parents) nil))
+		       (parent-indices nil) ; will hold list of parent indices
+		       )
+		  ;; go through list of parents and find indices; also update children
+		  (setq parent-indices
+			(mapcar (lambda (parent-id)
+				  (let* ((parent-index (gethash parent-id commit-map))
+					 (children-indices (cdr (assoc parent-index children-alist)))
+					 )
+				    ;; side-effect: add index to list of children
+				    (setq children-indices (cons index children-indices))
+				    (setq children-alist
+					  (cons
+					   (cons parent-index children-indices)
+					   children-alist))
+				    parent-index))
+				parent-ids))
+		  (setq parents-alist 
+			(cons 
+			 (cons index parent-indices)
+			 parents-alist))
+		  ))
+	      commits)
+	;; 3) calculate graph column locations:
+	(mapc (lambda (raw-commit)
+		(let* ((id (car raw-commit))
+		       (index (gethash id commit-map))
+		       (circle (cadr (assoc index circle-alist)))
+		       (incoming (cdr (assoc index incoming-alist)))
+		       (parent-indices (cdr (assoc index parents-alist)))
+		       )
+		  ;; update current columns based on incoming set
+		  (setq current-columns (set-difference current-columns incoming)) ; remove incoming
+		  (setq current-columns (cons circle current-columns)) ; add circle column
+		  ;; passing columns = current columns \ {circle column}
+		  (setq passing-alist
+			(cons
+			 (cons index (set-difference current-columns (list circle)))
+			 passing-alist))
+		  ;; determine circle columns of parents:
+		  (mapc (lambda (parent-index)
+			  (let* ((outgoing (cdr (assoc index outgoing-alist)))
+				 (passing (cdr (assoc index passing-alist)))
+				 (union (union outgoing passing))
+				 (lowest (get-lowest-not-in union))
+				 (parent-circle (cadr (assoc parent-index circle-alist)))
+				 )
+			    (if parent-circle
+				;; parent circle was set: move to the left?
+				(when (< lowest parent-circle)
+				  (setq current-columns (delete parent-circle current-columns)) ; remove old parent circle
+				  (setq circle-alist
 					(cons
-					 (cons parent-index children-indices)
-					 children-alist))
-       				  parent-index))
-       			      parent-ids))
-		(setq parents-alist 
-		      (cons 
-		       (cons index parent-indices)
-		       parents-alist))
-       		))
-       	    commits)
-      ;; 3) calculate graph column locations:
-      (mapc (lambda (raw-commit)
-	      (let* ((id (car raw-commit))
-       		     (index (gethash id commit-map))
-		     (circle (cadr (assoc index circle-alist)))
-		     (incoming (cdr (assoc index incoming-alist)))
-		     (parent-indices (cdr (assoc index parents-alist)))
-		     )
-		; update current columns based on incoming set
-		(setq current-columns (set-difference current-columns incoming)) ; remove incoming
-		(setq current-columns (cons circle current-columns)) ; add circle column
-		; passing columns = current columns \ {circle column}
-		(setq passing-alist
-		      (cons
-		       (cons index (set-difference current-columns (list circle)))
-		       passing-alist))
-		; determine circle columns of parents:
-		(mapc (lambda (parent-index)
-			(let* ((outgoing (cdr (assoc index outgoing-alist)))
-			       (passing (cdr (assoc index passing-alist)))
-			       (union (union outgoing passing))
-			       (lowest (get-lowest-not-in union))
-			       (parent-circle (cadr (assoc parent-index circle-alist)))
-			       )
-			  (if parent-circle
-			      ; parent circle was set: move to the left?
-			      (when (< lowest parent-circle)
-				(setq current-columns (delete parent-circle current-columns)) ; remove old parent circle
-				(setq circle-alist
-				      (cons
-				       (list parent-index lowest)
-				       circle-alist))) ; set parent circle to lowest
-			    ; parent circle not yet set: use lowest
-			    (setq circle-alist
+					 (list parent-index lowest)
+					 circle-alist))) ; set parent circle to lowest
+			      ;; parent circle not yet set: use lowest
+			      (setq circle-alist
+				    (cons
+				     (list parent-index lowest)
+				     circle-alist)))
+			    ;; maintain current columns: 
+			    ;; add latest parent circle (as one-element list) to it
+			    (setq parent-circle (cdr (assoc parent-index circle-alist)))
+			    (setq current-columns (union parent-circle current-columns))
+			    ;; update incoming columns of parent:
+			    ;; add latest parent circle to current incoming
+			    (setq incoming-alist
 				  (cons
-				   (list parent-index lowest)
-				   circle-alist)))
-			  ; maintain current columns: 
-			  ; add latest parent circle (as one-element list) to it
-			  (setq parent-circle (cdr (assoc parent-index circle-alist)))
-			  (setq current-columns (union parent-circle current-columns))
-			  ; update incoming columns of parent:
-			  ; add latest parent circle to current incoming
-			  (setq incoming-alist
-				(cons
-				 (cons parent-index (union 
-						     parent-circle 
-						     (cdr (assoc parent-index incoming-alist))))
-				 incoming-alist))
-			  ; update outgoing columns of index:
-			  ; add latest parent circle to current outgoing
-			  (setq outgoing-alist
-				(cons
-				 (cons index (union parent-circle outgoing))
-				 outgoing-alist))
-			  ))
-		      parent-indices)
-		; maintain current columns if there was a merge:
-		(if (not (member circle (cdr (assoc index outgoing-alist))))
-		    (setq current-columns (delete circle current-columns)))
-		))
-	    commits)
-      ;; 4) prepend first row and assemble graph structure in list as return value:
-      ;; each row:
-      ;;  (id date (name email) msg isActive isLast color graph)
-      ;;  where GRAPH is:
-      ;;   (column incoming-columns outgoing-columns passing-columns)
-      (cons 
-       ;; first row is item for self:
-       ;; - if optional FIRST given, look at last item and keep it if MODIFIED or ON_DISK, else 
-       ;; - if prior graph not empty, keep first ID, otherwise "" 
-       (list
-	;; determine ID of first item:
-	(or first
-;	    (concat first (car (member (car (last ids)) (list modified on_disk))))
-	    (if commit-graph (caar commit-graph) "")) ; keep first ID if prior graph exists
-	;; set rest of first item to empty and self:
-	"" (list (car self) (nth 1 self)) "" t nil (nth 2 self) '(0 nil nil nil))
-       ;; assemble rest of graph from list of commits and other data structures above:
-       (mapcar (lambda (raw-commit)
-		 (let* ((id (car raw-commit))
-			(author (list (nth 2 raw-commit) (nth 3 raw-commit)))
-			(index (gethash id commit-map)))
-		   (list 
-		    id ; revision
-		    (nth 4 raw-commit) ; date
-		    author ; (author-name author-email)
-		    ; limit message to first full stop, question or exclamation mark (followed by space) or newline (if any):
-		    (car (split-string (nth 1 raw-commit) "\\([.?!][:space:]+\\)\\|\n" t)) ; shortened message 
-		    (or (not active_ids)  ; isActive: if no ACTIVE_IDS, then t,
-			(not (not (member id active_ids))))  ; otherwise set to t (not the returned tail) if found
-		    (if last  ; isLast: if no LAST, then nil, otherwise compare ID with LAST
-			(string= last id))
-		    (cdr (assoc author authors)) ; color of author
-		    (list ; graph:
-		     (cadr (assoc index circle-alist))  ; circle column
-		     (cdr (assoc index incoming-alist)) ; incoming columns
-		     (cdr (assoc index outgoing-alist)) ; outgoing columns
-		     (cdr (assoc index passing-alist))  ; passing columns
-		     ))))
-	       commits)))
+				   (cons parent-index (union 
+						       parent-circle 
+						       (cdr (assoc parent-index incoming-alist))))
+				   incoming-alist))
+			    ;; update outgoing columns of index:
+			    ;; add latest parent circle to current outgoing
+			    (setq outgoing-alist
+				  (cons
+				   (cons index (union parent-circle outgoing))
+				   outgoing-alist))
+			    ))
+			parent-indices)
+		  ;; maintain current columns if there was a merge:
+		  (if (not (member circle (cdr (assoc index outgoing-alist))))
+		      (setq current-columns (delete circle current-columns)))
+		  ))
+	      commits)
+	;; 4) prepend first row and assemble graph structure in list as return value:
+	;; each row:
+	;;  (id date (name email) msg isActive isLast color graph)
+	;;  where GRAPH is:
+	;;   (column incoming-columns outgoing-columns passing-columns)
+	(cons 
+	 ;; first row is item for self:
+	 ;; - if optional FIRST given, look at last item and keep it if MODIFIED or ON_DISK, else 
+	 ;; - if prior graph not empty, keep first ID, otherwise "" 
+	 (list
+	  ;; determine ID of first item:
+	  (or first
+	      (if commit-graph (caar commit-graph) "")) ; keep first ID if prior graph exists
+	  ;; set rest of first item to empty and self:
+	  "" (list (car self) (nth 1 self)) "" t nil (nth 2 self) '(0 nil nil nil))
+	 ;; assemble rest of graph from list of commits and other data structures above:
+	 (mapcar (lambda (raw-commit)
+		   (let* ((id (car raw-commit))
+			  (author (list (nth 2 raw-commit) (nth 3 raw-commit)))
+			  (index (gethash id commit-map)))
+		     (list 
+		      id ; revision
+		      (nth 4 raw-commit) ; date
+		      author ; (author-name author-email)
+		      ;; limit message to first full stop, question or exclamation mark (followed by space) or newline (if any):
+		      (car (split-string (nth 1 raw-commit) "\\([.?!][:space:]+\\)\\|\n" t)) ; shortened message 
+		      (or (not active_ids)  ; isActive: if no ACTIVE_IDS, then t,
+			  (not (not (member id active_ids))))  ; otherwise set to t (not the returned tail) if found
+		      (if last  ; isLast: if no LAST, then nil, otherwise compare ID with LAST
+			  (string= last id))
+		      (cdr (assoc author authors)) ; color of author
+		      (list ; graph:
+		       (cadr (assoc index circle-alist))  ; circle column
+		       (cdr (assoc index incoming-alist)) ; incoming columns
+		       (cdr (assoc index outgoing-alist)) ; outgoing columns
+		       (cdr (assoc index passing-alist))  ; passing columns
+		       ))))
+		 commits)))
     nil) ; LTC session not valid: return NIL
   ) ;init-commit-graph
 
@@ -908,7 +910,7 @@ CIRCLE denotes the current position of the commit node.  COLUMNS is either the s
 
 The remaining arguments *-STRING denote the string representation of the characters needed for the left, middle, and right columns in the span that are either incoming or outgoing in nature."
   (setq graph-fmt "") ; build-up string for graph format
-  ; calculate span from union of circle column and columns:
+					; calculate span from union of circle column and columns:
   (setq left-col (apply 'min (union (list circle) columns)))
   (setq right-col (apply 'max (union (list circle) columns)))
   (dotimes (col (1+ max-circle)) ; go through all columns
@@ -918,25 +920,25 @@ The remaining arguments *-STRING denote the string representation of the charact
 	(setq c (string #x2502)))
     (when (= col left-col) ; at the left column of span?
       (if (= col circle) 
-	  ; circle column
+	  ;; circle column
 	  (setq c (if (member circle columns) (string #x251c) left-circle-string))
-	; not circle column: must be in columns, though!
+	;; not circle column: must be in columns, though!
 	(setq c (if (member col passing) (string #x251c) left-column-string))
 	))
     (when (and (> col right-col) (< col right-col)) ; middle of span?
       (if (= col circle) 
-	  ; circle column in middle
+	  ;; circle column in middle
 	  (setq c (if (member circle columns) (string #x253c) middle-circle-string))
-	; column in middle but not circle:
+	;; column in middle but not circle:
 	(setq c (string #x2500)) ; default is "-"
 	(if (member col columns) (setq c middle-column-string)) 
 	(if (member col passing) (setq c (string #x253c))) ; cross
 	))
     (when (= col right-col) ; at the right column of span?
       (if (= col circle)
-	  ; circle column
+	  ;; circle column
 	  (setq c (if (member circle columns) (string #x2524) right-circle-string))
-	; not circle column: must be in columns, though!
+	;; not circle column: must be in columns, though!
 	(setq c (if (member col passing) (string #x2524) right-column-string))
 	))
     (if (and (> col right-col)     ; right of any joints
@@ -952,7 +954,7 @@ The remaining arguments *-STRING denote the string representation of the charact
       (let ((rev-map (make-sparse-keymap))
 	    (date-map (make-sparse-keymap))
 	    (author-map (make-sparse-keymap))
-	    ; Unicode characters from box-drawing set:
+	    ;; Unicode characters from box-drawing set:
 	    (commit-top-bottom #x255e) ;#x251d)
 	    (commit-top #x2558) ;#x2515)
 	    (commit-bottom #x2552) ;#x250d)
@@ -971,10 +973,10 @@ The remaining arguments *-STRING denote the string representation of the charact
 		(let ((circle (caar (last commit)))
 		      (author (length (author-to-string (nth 2 commit))))
 		      )
-		  ; column
+		  ;; column
 		  (if (> circle max-circle) 
 		      (setq max-circle circle))
-		  ; length of author string
+		  ;; length of author string
 		  (if (> author max-author)
 		      (setq max-author author))
 		  ))
@@ -1001,16 +1003,16 @@ The remaining arguments *-STRING denote the string representation of the charact
 						    (setq n -1) 
 						    (mapcar (lambda (x) (setq n (1+ n)) (+ n x)) (make-list circle 0))))
 				 (setq after-seq (progn 
-						    (setq n circle) 
-						    (mapcar (lambda (x) (setq n (1+ n)) (+ n x)) (make-list (- max-circle circle) 0))))
+						   (setq n circle) 
+						   (mapcar (lambda (x) (setq n (1+ n)) (+ n x)) (make-list (- max-circle circle) 0))))
 				 (concat
 				  (if (set-difference incoming (list circle)) ; extra line to draw incoming branches?
 				      (draw-branches " " "\n" circle incoming max-circle passing
 						     (string #x250c) (string #x2514)
 						     (string #x252c) (string #x2534)
 						     (string #x2510) (string #x2518)))
-				  ; all graph characters in default foreground color:
-				  ;  this line only contains the passing lines and the commit column (circle)
+				  ;; all graph characters in default foreground color:
+				  ;;  this line only contains the passing lines and the commit column (circle)
 				  (apply 'format 
 					 (concat
 					  " "
@@ -1019,7 +1021,7 @@ The remaining arguments *-STRING denote the string representation of the charact
 					  (mapconcat (lambda (x) (if (member x passing-after) "%c" " ")) after-seq "")
 					  " ")
 					 (append (make-list (length passing-before) #x2502) ; passing lines before
-						 ; circle column: depends on incoming and outgoing, as well as whether last:
+						 ;; circle column: depends on incoming and outgoing, as well as whether last:
 						 (list (if (member circle incoming)
 							   (if outgoing 
 							       (if is-last commit-top-bottom-last commit-top-bottom)
@@ -1164,20 +1166,35 @@ it will only set the new, chosen color if it is different than the old one."
 
 (defun ltc-add-edit-hooks ()
   "Add hooks to capture user's edits."
-  (add-hook 'before-change-functions 'ltc-hook-before-change nil t)
-  (add-hook 'after-change-functions 'ltc-hook-after-change nil t)
+  (add-hook 'before-change-functions 'ltc-hook-before-change nil t) ; at beginning
+  (add-hook 'after-change-functions 'ltc-hook-after-change t t) ; at end
   )
 
 (defun ltc-remove-edit-hooks ()
   "Remove hooks to capture user's edits."
   (remove-hook 'before-change-functions 'ltc-hook-before-change t)
   (remove-hook 'after-change-functions 'ltc-hook-after-change t)
+  (remove-hook 'post-command-hook 'ltc-hook-post-command t)
+  )
+
+(defun ltc-hook-first-change ()
+  "Update commit graph with ''modified'' in first row"
+  (ltc-log-debug "first change hook!")
+  (if commit-graph
+      ;; if at least one entry and the first element is "" or "on disk" then replace first ID with "modified"
+      (let ((head (car commit-graph)))
+	(when (and head (or (string= "" (car head)) (string= on_disk (car head))))
+	  (setcar head modified)
+	  (setcar commit-graph head)
+	  (update-info-buffer))))
   )
 
 (defun ltc-hook-after-change (beg end len)
-  "Hook to capture user's insertions while LTC mode is running."
+  "Hook to capture user's edits while LTC mode is running."
   (ltc-log-debug " --- after change with beg=%d and end=%d and len=%d" beg end len)
-  (when (and self (= 0 len))
+  (when (and self 
+	     (= 0 len))
+    (setq insstring "") ; reset insertion string (if any)
     ;; color text and use addition face
     (ltc-log-debug " ------ marking as added: \"%s\" between %d and %d" (buffer-substring beg end) beg end)
     (add-text-properties beg end (list 'face 
@@ -1187,92 +1204,100 @@ it will only set the new, chosen color if it is different than the old one."
   (when (and (> len 0)
 	     (string< "" insstring))
     (ltc-log-debug " ------ inserting: \"%s\" at %d" insstring (point))
-    (let ((inhibit-modification-hooks t)) ; temporarily disable modification hooks
-      (insert insstring)) ; this moves point to end of insertion
+    (insert insstring) ; without calling buffer modification hooks, as 'inhibit-modification-hooks is temporarily set non-nil while executing `after-change-functions'; this moves point to end of insertion
+    ;; determine end position:
+    (add-hook 'post-command-hook 'ltc-hook-post-command t t) ; adjust point after modification hooks ran
+    (setq after-deletion-pos nil) ; use this variable to communicate the new position to post command hook
     (ltc-log-debug " ------ last char: %S" last-input-event)
     (cond ((or (eq 'backspace last-input-event) ; if last key was BACKSPACE, move point to beginning
 	       (eq 'M-backspace last-input-event))
-	   (ltc-log-debug " -------- moving to beginning of deleted string")
-	   (goto-char beg))
+	   (ltc-log-debug " -------- moving to beginning of deletion") 
+	   (setq after-deletion-pos beg)
+	   )
 	  ((or (eq 'kp-delete last-input-event) ; if last key was FORWARD DELETE, move point to end of inserted string
 	       (eq 134217828 last-input-event)  ; M-d (delete word forward)
+	       (eq 134217835 last-input-event)  ; M-k (delete to end of sentence)
 	       (eq 4 last-input-event)          ; C-d (delete char forward)
 	       (eq 11 last-input-event))        ; C-k (delete forward rest of line)
-	   (ltc-log-debug " -------- moving to end of deleted string")
-	   (goto-char (+ beg (length insstring))))
+	   (ltc-log-debug " -------- moving to end of deletion")
+	   (setq after-deletion-pos (+ beg (length insstring)))
+	   )
 	  (t ; move point back to original location in region (possibly adjusted)
 	   (ltc-log-debug " ------ now moving back from %d to %d " (point) origpoint)
-	   (goto-char origpoint)) ; adjust original point
-	  ))
-  (ltc-log-debug " ------ point is %d " (point))
+	  (setq after-deletion-pos origpoint) ; TODO: adjust original point
+	   )
+	  )
+    (setq insstring "")) ; reset to avoid inserting again
   )
 
 (defun ltc-hook-before-change (beg end)
   "Hook to capture user's deletions while LTC mode is running."
   (ltc-log-debug " --- before change with beg=%d and end=%d at point %d" beg end (point))
-  ;; if modified but first row does not show this then update commit graph
-  (if (and (buffer-modified-p) commit-graph)
-    ;; manipulate commit graph: if at least one entry and the first element is "" or "on disk" then replace first ID with "modified"
-    (let ((head (car commit-graph)))
-      (when (and head (or (string= "" (car head)) (string= on_disk (car head))))
-	(setcar head modified)
-	(setcar commit-graph head)
-	(update-info-buffer))))
-  (if (or (not self) (= beg end))
-      (setq insstring "") ; no deletion or no information about self: nothing to insert after change
-    ; else forms: we have a deletion by SELF
-    (let ((offset (if (>= (point) beg) (1+ (- (point) beg)) 0)) ; calculate offset of point in temp buffer
-	  (self-color (caddr self)) ; obtain color for upcoming change
-	  (delstring (buffer-substring beg end)) ; string /w text props about to be deleted
-	  )
-      (ltc-log-debug " ------ offset is %d " offset)
-      (ltc-log-debug " ------ deleting: \"%s\"" delstring)
-      ;; calculate string (/w properties) to insert after change
-      ;; use idiom to manipulate deletion string in temp buffer before returning to current buffer
-      (setq insstring  ; calculate insertion string
-	    (with-temp-buffer
-	      (insert delstring)
-	      (if (and (> offset 0)
-		       (< offset (point-max)))
-		  (goto-char offset))
-	      (ltc-log-debug " ---temp--- point after inserting is: %d" (point))
-	      ;; go through upcoming deletion's characters one-by-one
-	      (let ((newface (list 'ltc-deletion (list :foreground self-color))) ; new face properties for characters that are inserted by other or not marked up
-		    (newindices nil) ; collect indices which need new text properties here
-		    )
-		(setq index 1)
-		(while (< index (point-max))
-		  (let ((delface (get-text-property index 'face))) ; face properties (if any)
-		    (if (member 'ltc-deletion delface)
-			;; character already deleted: keep with same properties
-			(setq index (1+ index)) ; advance index
-		      (if (and (member 'ltc-addition delface)
-			       (equal (color-values (mapconcat (function (lambda (x) (plist-get x :foreground)))
-							       delface "")) ; obtain foreground color (if any)
-				      (color-values self-color))) ; text is addition with color for self
-			  ;; text inserted by self: remove character
-			  (delete-region index (1+ index)) ; delete character and don't advance index in this branch!
-			;; text inserted by other or not marked up: replace with new mark-up 
-			(add-text-properties index (1+ index) (list 'face newface
-								    'help-echo "rev: modified"
-								    'ltc-change-rev modified))
-			(setq index (1+ index)) ; advance index
-			)))))
-	      (ltc-log-debug " ---temp--- point after going through buffer is: %d" (point))
-	      (setq deltapoint (1- (point))) ; calculate delta for real buffer
-	      (buffer-string))) ; return the contents of the temp buffer
-      ;; calculate original point for after-change
-      (if (= offset 0)
-	  (setq origpoint (point)) ; keep original point
-	; else-forms:
-	(if (> (point) end) 
-	    ; point is past region to be deleted 
-	    (setq origpoint (+ (+ beg deltapoint) (- (point) end)))
-	  ; else-forms: point is inside region to be deleted (including borders)
-	  (setq origpoint (+ beg deltapoint))
-	  ))
-      (ltc-log-debug " ------ orig point is %d " origpoint)
-      )))
+  (if (and self               ; ignore if we currently don't have a sense of SELF
+	   (not (= beg end))) ; we have a DELETION
+      (let ((offset (if (>= (point) beg) (1+ (- (point) beg)) 0)) ; calculate offset of point in temp buffer
+	    (self-color (caddr self)) ; obtain color for upcoming change
+	    (delstring (buffer-substring beg end)) ; string /w text props about to be deleted
+	    )
+	(ltc-log-debug " ------ offset is %d " offset)
+	(ltc-log-debug " ------ deleting: \"%s\"" delstring)
+	;; calculate string (/w properties) to insert after change
+	;; use idiom to manipulate deletion string in temp buffer before returning to current buffer
+	(setq insstring  ; calculate insertion string
+	      (with-temp-buffer
+		(insert delstring)
+		(if (and (> offset 0)
+			 (< offset (point-max)))
+		    (goto-char offset))
+		(ltc-log-debug " ---temp--- point after inserting is: %d" (point))
+		;; go through upcoming deletion's characters one-by-one
+		(let ((newface (list 'ltc-deletion (list :foreground self-color))) ; new face properties for characters that are inserted by other or not marked up
+		      (newindices nil) ; collect indices which need new text properties here
+		      )
+		  (setq index 1)
+		  (while (< index (point-max))
+		    (let ((delface (get-text-property index 'face))) ; face properties (if any)
+		      (if (member 'ltc-deletion delface)
+			  ;; character already deleted: keep with same properties
+			  (setq index (1+ index)) ; advance index
+			(if (and (member 'ltc-addition delface)
+				 (equal (color-values (mapconcat (function (lambda (x) (plist-get x :foreground)))
+								 delface "")) ; obtain foreground color (if any)
+					(color-values self-color))) ; text is addition with color for self
+			    ;; text inserted by self: remove character
+			    (delete-region index (1+ index)) ; delete character and don't advance index in this branch!
+			  ;; text inserted by other or not marked up: replace with new mark-up 
+			  (add-text-properties index (1+ index) (list 'face newface
+								      'help-echo "rev: modified"
+								      'ltc-change-rev modified))
+			  (setq index (1+ index)) ; advance index
+			  )))))
+		(ltc-log-debug " ---temp--- point after going through buffer is: %d" (point))
+		(setq deltapoint (1- (point))) ; calculate delta for real buffer
+		(buffer-string))) ; return the contents of the temp buffer
+	;; calculate original point for after-change:
+	(if (= offset 0)
+	    (setq origpoint (point)) ; keep original point
+	  ;; else-forms:
+	  (if (> (point) end) 
+	      ;; point is past region to be deleted 
+	      (setq origpoint (+ (+ beg deltapoint) (- (point) end)))
+	    ;; else-forms: point is inside region to be deleted (including borders)
+	    (setq origpoint (+ beg deltapoint))
+	    ))
+	(ltc-log-debug " ------ orig point is %d " origpoint)
+	(ltc-log-debug " ------ point is (end of 'before') %d " (point))
+	))
+  )
+
+(defun ltc-hook-post-command ()
+  (ltc-log-debug " --- post command %S" this-command)
+  (when after-deletion-pos
+    (ltc-log-debug " ----- after deletion position is %d" after-deletion-pos)
+    (goto-char after-deletion-pos)
+    (setq after-deletion-pos nil))
+  (remove-hook 'post-command-hook 'ltc-hook-post-command t)
+  )
 
 ;;; --- undo change
 
@@ -1360,7 +1385,7 @@ This function returns the end position after the change was undone."
   ;; do we have a region marked?
   (if (= start end)
       (ltc-log "Cannot undo changes in region as the region's length is 0.")
-    ; else-forms:
+					; else-forms:
     (ltc-log-debug " ~~ region is [%d, %d] and point is %d" start end (point))
     ;; narrow to region and then go through changes from beginning to end and flip them:
     (save-restriction

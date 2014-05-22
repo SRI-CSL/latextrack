@@ -1,26 +1,24 @@
+%!TEX TS-program = xelatex
+%!TEX encoding = UTF-8 Unicode
 \documentclass[twoside]{report}
 
 % ----- useful packages
-\usepackage[letterpaper,verbose,pdftex]{geometry}
+\usepackage[letterpaper,verbose,xetex]{geometry}
 \usepackage[cc]{titlepic} % for picture in title
 \usepackage{graphicx} % for including figures
 \usepackage{tikz} % for portable graphics
-%\usepackage{amsmath} % align and other math constructs
-\usepackage{amssymb} % math symbols
 \usepackage{hhline} % for double \cline's in tables
-%\usepackage{booktabs,colortbl,tabularx} % tables in publication quality with color etc.
-\usepackage{fancyvrb,courier} % for more elaborate verbatim envs 
-                              % (and bold-face fonts)
+\usepackage{fancyvrb} % for more elaborate verbatim envs 
 \usepackage[parfill]{parskip} % paragraphs begin with empty line rather than indent
 \usepackage{url} % for typesetting URL's
 \usepackage{color}
-\usepackage[%pdftex, % driver
+\usepackage[%
+  unicode,pdfencoding=auto, % to make xelatex work 
   hyperfootnotes=false, % if using "footnotes" package
   colorlinks=true, 
   bookmarks=true,bookmarksnumbered=true, % show numbered bookmarks
   pdfsubject={},pdftitle={},pdfauthor={Linda Briesemeister} % document info
 ]{hyperref} % more hyperlinks in PDF
-\usepackage{ifpdf} % to detect whether pdflatex or htlatex is runnning
 \usepackage{caption}[2013/02/03]
 \usepackage{fancyhdr}
 \usepackage{ulem} % for strike-out font
@@ -29,6 +27,25 @@
 \usepackage{xparse} % for \Menu command definition
 \usepackage{hanging} % for hanging paragraphs
 \usepackage{wrapfig}
+\usepackage[subfigure]{tocloft} % sans-serif fonts in TOC etc.
+
+%% distinguish tex4ht and xelatex...
+\makeatletter
+\@ifpackageloaded{tex4ht}{%
+	\usepackage[utf8]{inputenc}
+%	\usepackage{devng4ht}
+}{%
+	\usepackage{fontspec}
+	\usepackage{xltxtra}
+	\usepackage{xunicode} % unicode character macros 
+	\setmainfont[Ligatures=TeX,Numbers=OldStyle]{TeX Gyre Bonum}
+	\setsansfont[Ligatures=TeX,Numbers=OldStyle]{TeX Gyre Adventor}
+	\setmonofont[Ligatures=TeX,Numbers=OldStyle,Scale=0.9]{TeX Gyre Cursor}
+	\newfontface\lining[Numbers=Lining]{TeX Gyre Pagella}
+	% headings in sans serif and bold 
+	\usepackage[sf,bf]{titlesec}%
+}
+\makeatother
 
 %% pgf/tikz customization
 \usepgflibrary{shapes.arrows}
@@ -36,21 +53,26 @@
 \usetikzlibrary{arrows,automata}
 \usetikzlibrary{positioning}
 \tikzsetexternalprefix{figures/} % all generated figures go into this subdirectory
-%% using tikz pictures with tex4ht:
+\tikzset{
+    external/system call={%
+    xelatex \tikzexternalcheckshellescape
+    -halt-on-error -interaction=batchmode --shell-escape
+    -jobname "\image" "\texsource"}}
+% using tikz pictures with tex4ht:
 % (see: http://tex.stackexchange.com/questions/40135/htlatex-and-tikz-creates-sometimes-incorrect-svgs)
 \makeatletter
-\@ifpackageloaded{tex4ht}{
+\@ifpackageloaded{tex4ht}{%
   \tikzexternalize[mode=only graphics]
   \tikzset{png export/.style={/pgf/images/external info,/pgf/images/include external/.code={%
     \includegraphics[width=\pgfexternalwidth,height=\pgfexternalheight]{##1.png}%
   }}}
   \tikzset{png export}% 
-  }{% else
+}{% else
   \tikzexternalize[mode=list and make]%
   \tikzset{pdf export/.style={/pgf/images/external info,/pgf/images/include external/.code={%
     \includegraphics[width=\pgfexternalwidth,height=\pgfexternalheight]{##1.pdf}%
   }}}
-  \tikzset{pdf export}% 
+  \tikzset{pdf export}%
 }
 \makeatother
 
@@ -75,53 +97,82 @@
 
 %% specifying different links for PDF vs. HTML
 % 1 - URL for pdf, 2 - URL for html, 3 - text of link
-\newcommand{\hlink}[3]{%
-\ifpdf 
-  \href{#1}{#3} 
-\else 
-  \href{#2}{#3} 
-\fi
+\makeatletter
+\@ifpackageloaded{tex4ht}{%
+  \newcommand{\hlink}[3]{\href{#2}{#3}}%
+}{% else
+  \newcommand{\hlink}[3]{\href{#1}{#3}}%
 }
+\makeatother
 
 %% custom verbatim commands and environments (PDF vs. HTML)
 %\DefineVerbatimEnvironment{BaseVerbatim}{Verbatim}{fontsize=\normalsize} % common definitions to PDF and HTML
 \definecolor{BoxBackground}{gray}{0.1} % 10%
-\ifpdf
-  \DefineVerbatimEnvironment{CodeVerbatim}{Verbatim}{fontsize=\small,frame=single}
-  \DefineVerbatimEnvironment{FileVerbatim}{Verbatim}{fontsize=\small,frame=lines}
-  \newcommand{\Code}[1]{{\small\tt #1}}
-\else 
+\makeatletter
+\@ifpackageloaded{tex4ht}{%
   \DefineVerbatimEnvironment{CodeVerbatim}{Verbatim}{frame=none}
   \DefineVerbatimEnvironment{FileVerbatim}{Verbatim}{frame=lines}
-  \newcommand{\Code}[1]{{\tt #1}}
-\fi
+  \newcommand{\Code}[1]{{\tt #1}}%
+}{% else
+  \DefineVerbatimEnvironment{CodeVerbatim}{Verbatim}{fontsize=\small,frame=single}
+  \DefineVerbatimEnvironment{FileVerbatim}{Verbatim}{fontsize=\small,frame=lines}
+  \newcommand{\Code}[1]{{\small\tt #1}}%
+}
+\makeatother
 
 %% figures under PDF and HTML
 %\graphicspath{{./figures/}}
 \DeclareGraphicsExtensions{.png}
-\ifpdf
-  \newcommand{\mygraphics}[2]{\includegraphics[#1]{#2}}
-\else
-  \newcommand{\mygraphics}[2]{\includegraphics{#2}}
-\fi
+\makeatletter
+\@ifpackageloaded{tex4ht}{%
+  \newcommand{\mygraphics}[2]{\includegraphics{#2}}%
+}{% else
+  \newcommand{\mygraphics}[2]{\includegraphics[#1]{#2}}%
+}
+\makeatother
+
+%% LaTeX pseudoconditional to distinguish HTML and PDF generation in document body:
+% see: http://tex.stackexchange.com/a/53943/12211
+% use: \iftexforht{<code for TeX4ht>}{<code when TeX4ht isn't used>}
+\makeatletter
+\@ifpackageloaded{tex4ht}
+  {\let\iftexforht\@firstoftwo}
+  {\let\iftexforht\@secondoftwo}
+\makeatother
 
 %% captions customization
-\captionsetup{font=small,format=hang,justification=RaggedRight}
+\captionsetup{font={small,sf},format=hang,justification=RaggedRight}
 
 %% fancy headers and footers
 % clear default layout:
 \fancyhead{}
 \fancyfoot{}
-% remove lines:
+% handle lines:
 \renewcommand{\headrulewidth}{0.2pt} 
 \renewcommand{\footrulewidth}{0pt}
 % custom header: chapter on left, section on right for odd; even reversed
-\fancyhead[LE,RO]{\nouppercase\rightmark}
-\fancyhead[LO,RE]{\nouppercase\leftmark}
+\fancyhead[LE,RO]{\sffamily\nouppercase\rightmark}
+\fancyhead[LO,RE]{\sffamily\nouppercase\leftmark}
 % custom footer: version -- copyright -- page number for odd; even reversed
-\fancyfoot[LO,RE]{\small{LTC v\version}}
+\fancyfoot[LO,RE]{\small{LTC\lining~v\version}}
 \fancyfoot[C]{\small{\textcopyright~SRI International}}
-\fancyfoot[RO,LE]{\small{\thepage}}
+\fancyfoot[RO,LE]{\sffamily\small{\thepage}}
+
+%% TOC fonts etc.
+% see also http://www.khirevich.com/latex/font/
+% ToC
+\renewcommand{\cfttoctitlefont}{\sffamily\Huge\bfseries} % ToC title            
+\renewcommand{\cftchapfont}{\sffamily\bfseries}
+\renewcommand{\cftchappagefont}{\sffamily\bfseries}
+\renewcommand{\cftsecfont}{\sffamily}
+\renewcommand{\cftsecpagefont}{\sffamily}
+\renewcommand{\cftsubsecfont}{\sffamily}
+\renewcommand{\cftsubsecpagefont}{\sffamily}
+% LoF
+\renewcommand{\cftloftitlefont}{\sffamily\Huge\bfseries} % LoF title            
+\renewcommand\cftfignumwidth{3em}
+\renewcommand{\cftfigfont}{\sffamily}
+\renewcommand{\cftfigpagefont}{\sffamily}
 
 %% colors
 \definecolor{LightGray}{gray}{0.8}
@@ -133,11 +184,11 @@
 	\ProcessList{#1}{\insertitem}%
 	$\,$% add a tiny bit of space     
 }
-\newcommand\insertitem[1]{\ $\vartriangleright$\ \fbox{\small #1}}
+\newcommand\insertitem[1]{\ $\triangleright$\ \fbox{\small #1}}
 
 
 % ----- title information
-\title{The \LaTeX{} Track Changes Manual \\ {\large v\version}}
+\title{The \LaTeX{} Track Changes Manual \\ {\large\lining v\version}}
 \author{%
 Linda Briesemeister\\
 \texttt{linda.briesemeister@sri.com}\\
@@ -166,21 +217,20 @@ Public License for more details.
 See Appendix~\ref{ch:license} or \url{http://www.gnu.org/licenses/} for the complete license.
 
 \thispagestyle{plain}
-\tableofcontents
+\clearpage % due to tocloft package\tableofcontents
 \thispagestyle{empty}
 
-\ifpdf
-  \listoffigures
-  \thispagestyle{empty}
-\else
-\fi
+\iftexforht{}{% else
+  \clearpage % due to tocloft package  \listoffigures % list of figures only in PDF version
+  \thispagestyle{empty}%
+}
 
 % for the first page of each chapter adjust 'plain' style:
 \fancypagestyle{plain}{%
   \fancyhf{} % clear all header and footer fields
-  \fancyfoot[LO,RE]{\small{LTC v\version}}
+  \fancyfoot[LO,RE]{\small{LTC\lining~v\version}}
   \fancyfoot[C]{\small{\textcopyright~SRI International}}
-  \fancyfoot[RO,LE]{\small{\thepage}}
+  \fancyfoot[RO,LE]{\sffamily\small{\thepage}}
 }
 \pagestyle{fancy}
 \input{installation}
@@ -196,11 +246,5 @@ See Appendix~\ref{ch:license} or \url{http://www.gnu.org/licenses/} for the comp
 \appendix
 \chapter{License} \label{ch:license}
 \VerbatimInput[fontsize=\footnotesize]{../../../../LICENSE}
-
-% ----- references 
-%
-%\bibliographystyle{plain}
-%\bibliography{ltc}
-%\addcontentsline{toc}{chapter}{Bibliography} 
 
 \end{document}     

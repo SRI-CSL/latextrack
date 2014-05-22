@@ -27,6 +27,16 @@
         <author email="lilalinda at users.sourceforge.net">Linda Briesemeister</author>
     </properties>
     <body>
+        <release version="1.0.6" date="2014-05-22">
+            <action dev="lilalinda" type="fix" issue="51" due-to="Peter">
+                Now deploying byte-compiled versions of the Emacs libraries.  Please also update your ltc-install.sh by
+                omitting the -s flag to be able to extract the .elc files.
+            </action>
+            <action dev="lilalinda" type="fix" issue="50" due-to="Peter">
+                Fixed issue with ending at wrong cursor position in Emacs when doing FORWARD deletion short-cuts.
+            </action>
+        </release>
+
         <release version="1.0.5" date="2014-02-05">
             <action dev="lilalinda" type="fix" issue="48" due-to="Peter">
                 Fixed intermittent communication issues between Emacs mode and LTC Server for long text files with a

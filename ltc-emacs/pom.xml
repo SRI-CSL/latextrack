@@ -7,7 +7,7 @@
     <parent>
         <groupId>com.sri.ltc</groupId>
         <artifactId>LTC</artifactId>
-        <version>1.0.5</version>
+        <version>1.0.6</version>
     </parent>
 
     <artifactId>ltc-emacs</artifactId>
@@ -34,6 +34,63 @@
                         <phase>package</phase>
                         <configuration>
                             <shadedArtifactAttached>true</shadedArtifactAttached>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <!-- byte-compile Emacs lisp files -->
+            <plugin>
+                <artifactId>maven-resources-plugin</artifactId>
+                <version>2.6</version>
+                <executions>
+                    <execution>
+                        <id>generate-emacs-script</id>
+                        <phase>initialize</phase>
+                        <goals>
+                            <goal>copy-resources</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>${project.basedir}/target</outputDirectory>
+                            <resources>
+                                <resource>
+                                    <directory>${project.build.scriptSourceDirectory}</directory>
+                                    <includes>
+                                        <include>byte-compile.el</include>
+                                    </includes>
+                                    <filtering>true</filtering>
+                                </resource>
+                            </resources>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>exec-maven-plugin</artifactId>
+                <version>1.3</version>
+                <executions>
+                    <execution>
+                        <id>make-generated-script-executable</id>
+                        <phase>generate-resources</phase>
+                        <goals>
+                            <goal>exec</goal>
+                        </goals>
+                        <configuration>
+                            <executable>chmod</executable>
+                            <arguments>
+                                <argument>+x</argument>
+                                <argument>${project.basedir}/target/byte-compile.el</argument>
+                            </arguments>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>byte-compile-Emacs-files</id>
+                        <phase>process-resources</phase>
+                        <goals>
+                            <goal>exec</goal>
+                        </goals>
+                        <configuration>
+                            <executable>${project.basedir}/target/byte-compile.el</executable>
                         </configuration>
                     </execution>
                 </executions>

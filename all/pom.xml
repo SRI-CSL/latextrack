@@ -7,7 +7,7 @@
     <parent>
         <groupId>com.sri.ltc</groupId>
         <artifactId>LTC</artifactId>
-        <version>1.0.5</version>
+        <version>1.0.6</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
@@ -277,7 +277,7 @@
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>exec-maven-plugin</artifactId>
-                <version>1.2.1</version>
+                <version>1.3</version>
                 <executions>
                     <!-- converting images for manual -->
                     <execution>
@@ -314,6 +314,12 @@
                 <artifactId>maven-latex-plugin</artifactId>
                 <version>1.2</version>
                 <inherited>false</inherited>
+                <configuration>
+                    <settings>
+                        <texCommand>xelatex</texCommand>
+                        <tex4htCommand>htxelatex</tex4htCommand>
+                    </settings>
+                </configuration>
                 <executions>
                     <execution>
                         <phase>site</phase>
