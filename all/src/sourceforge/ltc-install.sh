@@ -4,7 +4,7 @@
 # #%L
 # LaTeX Track Changes (LTC) allows collaborators on a version-controlled LaTeX writing project to view and query changes in the .tex documents.
 # %%
-# Copyright (C) 2009 - 2012 SRI International
+# Copyright (C) 2009 - 2014 SRI International
 # %%
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as
@@ -320,7 +320,7 @@ if [ -n "$EMACS_DIR" ]; then
     fi
     [[ "$EMACS_DIR" =~ ^"$HOME"(/|$) ]] && EMACS_DIR="~${EMACS_DIR#$HOME}"
     printf "\nIf Emacs is running, you should now reload the new emacs file with the command:\n\n"
-    printf "  \e[34mM-x load-file <RET> %s/ltc-mode.el\e[0m\n\n" $EMACS_DIR
+    printf "  \e[34mM-x load-file <RET> %s/ltc-mode.elc\e[0m\n\n" $EMACS_DIR
 fi
 
 ################################################################################
