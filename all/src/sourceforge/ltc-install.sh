@@ -295,7 +295,7 @@ case $FETCH_TYPE in
 	;;
     2) 
 	printf "Downloading LTC-<version>.jar via curl:\n\n"
-	JAR_FILE=`curl -LIs $DOWNLOAD_URL | grep -e "^Content-Disposition: attachment; filename=" | sed "s/^Content-Disposition: attachment; filename=\"\(LTC-.*\.jar\)\"/\1/"`
+	JAR_FILE=`curl -LIs $DOWNLOAD_URL | grep -ie "^Content-Disposition: attachment; filename=" | cut -d\" -f 2`
 	if [ -z "$JAR_FILE" ]; then
 	    usage "Couldn't obtain latest JAR_FILE name with 'curl' -- exiting."; exit 6
 	fi
