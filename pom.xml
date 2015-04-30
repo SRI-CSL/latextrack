@@ -128,6 +128,12 @@
             <version>4.12</version>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>com.google.code.findbugs</groupId>
+            <artifactId>jsr305</artifactId>
+            <version>3.0.0</version>
+            <scope>provided</scope>
+        </dependency>
     </dependencies>
 
     <pluginRepositories>
@@ -209,13 +215,23 @@
                         </configuration>
                     </execution>
                     <execution>
-                        <id>timestamp-property</id>
+                        <id>set-current-year</id>
                         <goals>
                             <goal>timestamp-property</goal>
                         </goals>
                         <configuration>
+                            <locale>en,US</locale>
                             <name>current.year</name>
                             <pattern>yyyy</pattern>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>set-compile-time</id>
+                        <goals>
+                            <goal>timestamp-property</goal>
+                        </goals>
+                        <configuration>
+                            <locale>en,US</locale>
                             <name>compile.time</name>
                             <pattern>yyyy-MM-dd HH:mm:ss z</pattern>
                         </configuration>

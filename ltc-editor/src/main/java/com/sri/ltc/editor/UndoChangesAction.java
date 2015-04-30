@@ -21,8 +21,7 @@
  */
 package com.sri.ltc.editor;
 
-import com.sun.istack.internal.NotNull;
-
+import javax.annotation.Nonnull;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
@@ -51,8 +50,10 @@ public final class UndoChangesAction extends AbstractAction {
     private Point clickLocation;
     private DotMark selectionLocation;
 
-    public UndoChangesAction(@NotNull LatexPane latexPane, @NotNull UndoType type, Point clickLocation, DotMark selectionLocation) {
+    public UndoChangesAction(@Nonnull LatexPane latexPane, @Nonnull UndoType type, Point clickLocation, DotMark selectionLocation) {
         super(type.name);
+        if (latexPane == null || type == null)
+            throw new IllegalArgumentException("Cannot instantiate undo changes action with NULL arguments.");
         this.latexPane = latexPane;
         this.type = type;
         this.clickLocation = clickLocation;
