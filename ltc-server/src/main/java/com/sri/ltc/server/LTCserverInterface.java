@@ -88,7 +88,8 @@ public interface LTCserverInterface {
      * the key {@link #KEY_TEXT}.
      * The value under {@link #KEY_CARET} contains the cursor position transformed from
      * the one given as an argument to the method to the new text.
-     *
+     * <p>
+     * If the given current text is empty, an exception with code 3 is thrown.
      *
      *
      * @param sessionID identifies the session
@@ -99,6 +100,7 @@ public interface LTCserverInterface {
      * @throws XmlRpcException <ul>
      *   <li>with error code = 1 if the given identifier does not denote a known session.
      *   <li>with error code = 2 if a BadLocationException occurs while removing deletions from current text.
+     *   <li>with error code = 3 if an empty text is given
      * </ul>
      */
     public Map close_session(int sessionID, byte[] currentText64, List deletions, int caretPosition)
