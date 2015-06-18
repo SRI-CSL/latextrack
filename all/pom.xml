@@ -65,7 +65,7 @@
             <extension>
                 <groupId>org.apache.maven.wagon</groupId>
                 <artifactId>wagon-ssh</artifactId>
-                <version>1.0-beta-6</version>
+                <version>1.0</version>
             </extension>
         </extensions>
 
@@ -78,7 +78,7 @@
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>license-maven-plugin</artifactId>
-                <version>1.5</version>
+                <version>1.8</version>
                 <configuration>
                     <licenseName>gpl_v3</licenseName>
                     <licenseFile>LICENSE</licenseFile>
@@ -149,7 +149,7 @@
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>wagon-maven-plugin</artifactId>
-                <version>1.0-beta-4</version>
+                <version>1.0</version>
                 <configuration>
                     <serverId>sourceforge</serverId>
                     <fromFile>${project.build.directory}/${ueber.jar}.jar</fromFile>
@@ -277,7 +277,7 @@
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>exec-maven-plugin</artifactId>
-                <version>1.3</version>
+                <version>1.4.0</version>
                 <executions>
                     <!-- converting images for manual -->
                     <execution>

@@ -176,6 +176,41 @@
                         <skip>true</skip>
                     </configuration>
                 </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-failsafe-plugin</artifactId>
+                    <version>2.18.1</version>
+                    <!-- the following manually selects the juniit47 provider to distinguish unit from integration tests -->
+                    <dependencies>
+                        <dependency>
+                            <groupId>org.apache.maven.surefire</groupId>
+                            <artifactId>surefire-junit47</artifactId>
+                            <version>2.18.1</version>
+                        </dependency>
+                    </dependencies>
+                    <executions>
+                        <execution>
+                            <id>integration-test</id>
+                            <goals>
+                                <goal>integration-test</goal>
+                            </goals>
+                        </execution>
+                        <execution>
+                            <id>verify</id>
+                            <goals>
+                                <goal>verify</goal>
+                            </goals>
+                        </execution>
+                    </executions>
+                    <configuration>
+                        <!-- we have to explicitly add the Java files otherwise they don't get picked up: -->
+                        <includes>
+                            <include>**/*.java</include>
+                        </includes>
+                        <groups>com.sri.ltc.categories.IntegrationTests</groups>
+                        <forkCount>1</forkCount> <!-- TODO: do not fork JVM -->
+                    </configuration>
+                </plugin>
             </plugins>
         </pluginManagement>
 
@@ -199,7 +234,7 @@
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>build-helper-maven-plugin</artifactId>
-                <version>1.8</version>
+                <version>1.9.1</version>
                 <executions>
                     <execution>
                         <id>regex-property</id>
@@ -237,14 +272,15 @@
                         </configuration>
                     </execution>
                 </executions>
-            </plugin><plugin>
-            <artifactId>maven-compiler-plugin</artifactId>
-            <version>3.1</version>
-            <configuration>
-                <source>1.6</source>
-                <target>1.6</target>
-            </configuration>
-        </plugin>
+            </plugin>
+            <plugin>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.1</version>
+                <configuration>
+                    <source>1.6</source>
+                    <target>1.6</target>
+                </configuration>
+            </plugin>
             <plugin>
                 <artifactId>maven-site-plugin</artifactId>
                 <configuration>
@@ -255,7 +291,7 @@
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>license-maven-plugin</artifactId>
-                <version>1.5</version>
+                <version>1.8</version>
                 <configuration>
                     <verbose>false</verbose>
                     <licenseName>gpl_v3</licenseName>
@@ -268,30 +304,18 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
-                <version>2.16</version>
+                <version>2.18.1</version>
+                <!-- the following manually selects the juniit47 provider to distinguish unit from integration tests -->
+                <dependencies>
+                    <dependency>
+                        <groupId>org.apache.maven.surefire</groupId>
+                        <artifactId>surefire-junit47</artifactId>
+                        <version>2.18.1</version>
+                    </dependency>
+                </dependencies>
                 <configuration>
                     <excludedGroups>com.sri.ltc.categories.IntegrationTests</excludedGroups>
                     <skipTests>${skipSurefireTests}</skipTests>
-                </configuration>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-failsafe-plugin</artifactId>
-                <version>2.16</version>
-                <executions>
-                    <execution>
-                        <goals>
-                            <goal>integration-test</goal>
-                            <goal>verify</goal>
-                        </goals>
-                    </execution>
-                </executions>
-                <configuration>
-                    <!-- we have to explicitly add the Java files otherwise they don't get picked up: -->
-                    <includes>
-                        <include>**/*.java</include>
-                    </includes>
-                    <groups>com.sri.ltc.categories.IntegrationTests</groups>
                 </configuration>
             </plugin>
         </plugins>

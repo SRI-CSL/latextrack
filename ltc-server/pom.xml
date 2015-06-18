@@ -18,7 +18,7 @@
     </description>
 
     <properties>
-        <jettyVersion>9.3.0.M2</jettyVersion>
+        <jettyVersion>9.3.0.RC1</jettyVersion>
         <slf4jVersion>1.7.12</slf4jVersion>
     </properties>
 
@@ -81,7 +81,7 @@
         <dependency>
             <groupId>com.joestelmach</groupId>
             <artifactId>natty</artifactId>
-            <version>0.10.1</version>
+            <version>0.11</version>
         </dependency>
 
         <!-- Jetty web server -->
@@ -154,7 +154,7 @@
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>license-maven-plugin</artifactId>
-                <version>1.5</version>
+                <version>1.8</version>
                 <configuration>
                     <licenseName>gpl_v3</licenseName>
                     <licenseFile>LICENSE</licenseFile>
@@ -254,6 +254,12 @@
                         </configuration>
                     </execution>
                 </executions>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-failsafe-plugin</artifactId>
+                <version>2.18.1</version>
             </plugin>
         </plugins>
 
