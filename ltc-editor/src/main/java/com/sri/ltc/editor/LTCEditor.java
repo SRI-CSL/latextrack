@@ -32,10 +32,7 @@ import com.sri.ltc.server.LTCserverImpl;
 import com.sri.ltc.server.LTCserverInterface;
 import com.wordpress.tips4java.ComponentBorder;
 import org.apache.xmlrpc.XmlRpcException;
-import org.kohsuke.args4j.Argument;
-import org.kohsuke.args4j.CmdLineException;
-import org.kohsuke.args4j.CmdLineParser;
-import org.kohsuke.args4j.Option;
+import org.kohsuke.args4j.*;
 
 import javax.swing.*;
 import javax.swing.Timer;
@@ -647,7 +644,7 @@ public final class LTCEditor extends LTCGui {
 
     public static void main(String[] args) {
         // parse arguments
-        CmdLineParser.registerHandler(Level.class, LevelOptionHandler.class);
+        OptionHandlerRegistry.getRegistry().registerHandler(Level.class, LevelOptionHandler.class);
         final LTCEditorOptions options = new LTCEditorOptions();
         CmdLineParser parser = new CmdLineParser(options);
         try {
