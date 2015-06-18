@@ -26,10 +26,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.sri.ltc.CommonUtils;
 import com.sri.ltc.logging.LevelOptionHandler;
-import org.kohsuke.args4j.Argument;
-import org.kohsuke.args4j.CmdLineException;
-import org.kohsuke.args4j.CmdLineParser;
-import org.kohsuke.args4j.Option;
+import org.kohsuke.args4j.*;
 
 import java.io.*;
 import java.util.*;
@@ -427,7 +424,7 @@ public final class LatexDiff {
 
     public static void main(String args[]) {
         // parse arguments
-        CmdLineParser.registerHandler(Level.class, LevelOptionHandler.class);
+        OptionHandlerRegistry.getRegistry().registerHandler(Level.class, LevelOptionHandler.class);
         final LatexDiffOptions options = new LatexDiffOptions();
         CmdLineParser parser = new CmdLineParser(options);
         try {

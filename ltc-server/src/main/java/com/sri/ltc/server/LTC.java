@@ -31,6 +31,7 @@ import org.eclipse.jetty.servlet.ServletHolder;
 import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
+import org.kohsuke.args4j.OptionHandlerRegistry;
 
 import javax.swing.*;
 import java.io.*;
@@ -126,7 +127,7 @@ public final class LTC {
 
     public static void main(String[] args) {
         // parse arguments
-        CmdLineParser.registerHandler(Level.class, LevelOptionHandler.class);
+        OptionHandlerRegistry.getRegistry().registerHandler(Level.class, LevelOptionHandler.class);
         LTCOptions options = new LTCOptions();
         CmdLineParser parser = new CmdLineParser(options);
         try {
