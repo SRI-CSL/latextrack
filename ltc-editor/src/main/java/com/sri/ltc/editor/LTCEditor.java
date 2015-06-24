@@ -88,8 +88,8 @@ public final class LTCEditor extends LTCGui {
             LOGGER.log(Level.SEVERE, e.getMessage(), e);
         }
     }
-    private final static int CLICK_INTERVAL = (Integer)Toolkit.getDefaultToolkit().
-            getDesktopProperty("awt.multiClickInterval");
+    private final static Object hack = Toolkit.getDefaultToolkit().getDesktopProperty("awt.multiClickInterval");
+    private final static int CLICK_INTERVAL = hack instanceof Integer?(Integer) hack:200;
     private final static ImmutableSet<String> FIRST_IDS =
             ImmutableSet.of(LTCserverInterface.ON_DISK, LTCserverInterface.MODIFIED);
 
