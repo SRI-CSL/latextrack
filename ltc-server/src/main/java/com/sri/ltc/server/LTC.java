@@ -32,12 +32,16 @@ import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
 import org.kohsuke.args4j.OptionHandlerRegistry;
+import org.kohsuke.args4j.spi.StringArrayOptionHandler;
 
 import javax.swing.*;
 import java.io.*;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.LogManager;
 import java.util.logging.Logger;
+import java.util.prefs.BackingStoreException;
+import java.util.prefs.Preferences;
 
 /**
  * Main class to run base system of Latex Track Changes as a server.
@@ -127,7 +131,6 @@ public final class LTC {
 
     public static void main(String[] args) {
         // parse arguments
-        OptionHandlerRegistry.getRegistry().registerHandler(Level.class, LevelOptionHandler.class);
         LTCOptions options = new LTCOptions();
         CmdLineParser parser = new CmdLineParser(options);
         try {
@@ -145,6 +148,16 @@ public final class LTC {
 
         if (options.displayLicense) {
             System.out.println("LTC is licensed under:\n\n" + CommonUtils.getLicense());
+            return;
+        }
+
+        if (options.editPrefs != null) {
+            try {
+                System.out.println("LTC preferences: "+options.editPrefs+System.getProperty("line.separator"));
+                options.editPrefs.perform();
+            } catch (BackingStoreException e) {
+                System.err.println(e.getMessage());
+            }
             return;
         }
 
@@ -180,7 +193,7 @@ public final class LTC {
     }
 
     static class LTCOptions {
-        @Option(name="-l",usage="set console log level\nSEVERE, WARNING, INFO, CONFIG (default), FINE, FINER, FINEST")
+        @Option(name="-l",handler=LevelOptionHandler.class,usage="set console log level\nSEVERE, WARNING, INFO, CONFIG (default), FINE, FINER, FINEST")
         Level consoleLogLevel = Level.CONFIG;
 
         @Option(name="-h",usage="display usage and exit")
@@ -188,6 +201,12 @@ public final class LTC {
 
         @Option(name="-c",usage="display copyright/license information and exit")
         boolean displayLicense = false;
+
+        @Option(name="-e",handler=EditPreferencesOptionHandler.class,usage="display or edit preferences and exit (default: D)\n"+
+                "D [<pattern>] - display all settings that contain <pattern>\n"+
+                "S <key> <value> - set or overwrite <key> <value> pair\n"+
+                "R <key>|<pattern> - remove <key> or all that contain <pattern>")
+        EditPreferences editPrefs = null;
 
         @Option(name="-p",usage="port on localhost used for XML-RPC")
         static int port = LTCserverInterface.PORT;
