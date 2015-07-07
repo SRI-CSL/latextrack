@@ -31,17 +31,14 @@ import org.eclipse.jetty.servlet.ServletHolder;
 import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
-import org.kohsuke.args4j.OptionHandlerRegistry;
-import org.kohsuke.args4j.spi.StringArrayOptionHandler;
 
 import javax.swing.*;
+import java.awt.*;
 import java.io.*;
-import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.LogManager;
 import java.util.logging.Logger;
 import java.util.prefs.BackingStoreException;
-import java.util.prefs.Preferences;
 
 /**
  * Main class to run base system of Latex Track Changes as a server.
@@ -161,6 +158,15 @@ public final class LTC {
             return;
         }
 
+        if (options.toConvert != null) {
+            System.out.println("Color conversion [R:"+
+                    options.toConvert.getRed()+" G:"+
+                    options.toConvert.getGreen()+" B:"+
+                    options.toConvert.getBlue()+"] = "+
+                    options.toConvert.getRGB());
+            return;
+        }
+
         // configure logging
         try {
             LogConfiguration logConfig = new LogConfiguration();
@@ -207,6 +213,9 @@ public final class LTC {
                 "S <key> <value> - set or overwrite <key> <value> pair\n"+
                 "R <key>|<pattern> - remove <key> or all that contain <pattern>")
         EditPreferences editPrefs = null;
+
+        @Option(name="-a",handler=ConvertColorOptionHandler.class,usage="convert color between single or three values (0-255) and exit")
+        Color toConvert = null;
 
         @Option(name="-p",usage="port on localhost used for XML-RPC")
         static int port = LTCserverInterface.PORT;
