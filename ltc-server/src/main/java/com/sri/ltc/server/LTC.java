@@ -214,7 +214,7 @@ public final class LTC {
                 "R <key> - remove <key>")
         EditPreferences editPrefs = null;
 
-        @Option(name="-a",handler=ConvertColorOptionHandler.class,usage="convert color between single or three values (0-255) and exit")
+        @Option(name="-a",handler=ConvertColorOptionHandler.class,usage="convert color between single (decimal or hex) or three (0-255) values and exit")
         Color toConvert = null;
 
         @Option(name="-p",usage="port on localhost used for XML-RPC")

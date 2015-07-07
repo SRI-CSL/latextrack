@@ -21,10 +21,8 @@
  */
 package com.sri.ltc.server;
 
-import com.google.common.base.Charsets;
 import com.google.common.base.Function;
 import com.google.common.collect.*;
-import com.google.common.io.Files;
 import com.sri.ltc.CommonUtils;
 import com.sri.ltc.ProgressReceiver;
 import com.sri.ltc.filter.Author;

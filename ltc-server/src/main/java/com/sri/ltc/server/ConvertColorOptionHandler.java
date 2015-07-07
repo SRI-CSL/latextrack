@@ -42,7 +42,7 @@ public class ConvertColorOptionHandler extends OptionHandler<Color> {
     @Override
     public int parseArguments(Parameters parameters) throws CmdLineException {
         if (parameters.size() == 1) {
-            setter.addValue(new Color(Integer.decode(parameters.getParameter(0))));
+            setter.addValue(Color.decode(parameters.getParameter(0)));
             return 1;
         }
         if (parameters.size() == 3) {
@@ -57,6 +57,6 @@ public class ConvertColorOptionHandler extends OptionHandler<Color> {
 
     @Override
     public String getDefaultMetaVariable() {
-        return "RGB | R G B";
+        return "int | R G B";
     }
 }
