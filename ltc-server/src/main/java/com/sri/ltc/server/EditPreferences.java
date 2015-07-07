@@ -23,8 +23,6 @@ package com.sri.ltc.server;
 
 import com.google.common.collect.Sets;
 
-import java.util.Scanner;
-import java.util.Set;
 import java.util.prefs.BackingStoreException;
 import java.util.prefs.Preferences;
 
@@ -52,8 +50,8 @@ public final class EditPreferences {
         if (!Command.DISPLAY.equals(this.command))
             if (key == null)
                 throw new IllegalArgumentException("Cannot create preference edit data for SET or REMOVE with NULL key!");
-        this.key = key;
-        this.value = value;
+        this.key = key.trim();
+        this.value = value.trim();
     }
 
     public void perform() throws BackingStoreException {
@@ -61,34 +59,18 @@ public final class EditPreferences {
             case DISPLAY:
                 for (String key : PREFERENCES.keys())
                     if (this.key == null || key.contains(this.key))
-                        System.out.println(key + " => " + PREFERENCES.get(key, null));
+                        System.out.println("\"" + key + "\" => " + PREFERENCES.get(key, null));
                 break;
             case SET:
                 PREFERENCES.put(key, value);
-                System.out.println("SET " + key + " => " + PREFERENCES.get(key, null));
+                System.out.println("SET \"" + key + "\" => " + PREFERENCES.get(key, null));
                 break;
             case REMOVE:
-                // collect all that are matching:
-                Set<String> keys = Sets.newHashSet();
-                for (String key : PREFERENCES.keys())
-                    if (key.contains(this.key))
-                        keys.add(key);
-                if (keys.isEmpty()) {
-                    System.out.println("Nothing matches for REMOVE.");
-                    return;
-                }
-                System.out.println("Do you really want to remove "+keys.size()+" [Y/N]?");
-                Scanner scanner = new Scanner(System.in);
-                switch (scanner.next().toLowerCase().charAt(0)) {
-                    case 'y':
-                        for (String key : keys) {
-                            System.out.println("REMOVE " + key);
-                            PREFERENCES.remove(key);
-                        }
-                        break;
-                    default:
-                        System.out.println("REMOVE aborted.");
-                }
+                if (Sets.newHashSet(PREFERENCES.keys()).contains(key)) {
+                    PREFERENCES.remove(key);
+                    System.out.println("REMOVE \"" + key + "\"");
+                } else
+                    System.err.println("Cannot remove \"" + key + "\" as preference with this key does not exist!");
                 break;
         }
     }

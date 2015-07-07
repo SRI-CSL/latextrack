@@ -211,7 +211,7 @@ public final class LTC {
         @Option(name="-e",handler=EditPreferencesOptionHandler.class,usage="display or edit preferences and exit (default: D)\n"+
                 "D [<pattern>] - display all settings that contain <pattern>\n"+
                 "S <key> <value> - set or overwrite <key> <value> pair\n"+
-                "R <key>|<pattern> - remove <key> or all that contain <pattern>")
+                "R <key> - remove <key>")
         EditPreferences editPrefs = null;
 
         @Option(name="-a",handler=ConvertColorOptionHandler.class,usage="convert color between single or three values (0-255) and exit")
