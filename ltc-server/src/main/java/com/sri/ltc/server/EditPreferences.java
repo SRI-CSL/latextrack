@@ -50,8 +50,8 @@ public final class EditPreferences {
         if (!Command.DISPLAY.equals(this.command))
             if (key == null)
                 throw new IllegalArgumentException("Cannot create preference edit data for SET or REMOVE with NULL key!");
-        this.key = key.trim();
-        this.value = value.trim();
+        this.key = key == null?null:key.trim();
+        this.value = value == null?null:value.trim();
     }
 
     public void perform() throws BackingStoreException {
