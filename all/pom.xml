@@ -153,7 +153,7 @@
                 <configuration>
                     <serverId>sourceforge</serverId>
                     <fromFile>${project.build.directory}/${ueber.jar}.jar</fromFile>
-                    <url>scp://lilalinda@shell.sourceforge.net/home/frs/project/l/la/latextrack/LTC/${project.version}</url>
+                    <url>scp://lilalinda@shell.sourceforge.net/home/frs/project/latextrack/LTC/${project.version}</url>
                 </configuration>
                 <executions>
                     <execution>
