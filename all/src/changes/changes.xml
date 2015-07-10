@@ -27,6 +27,18 @@
         <author email="lilalinda at users.sourceforge.net">Linda Briesemeister</author>
     </properties>
     <body>
+        <release version="1.0.7" date="2015-07-10">
+            <action dev="lilalinda" type="add" due-to="Peter">
+                Added two new command line switches -e and -a to edit preferences and to calculate color on the
+                command line when starting LTC server.  Use the -h switch to see details.
+            </action>
+            <action dev="lilalinda" type="update" due-to="Peter">
+                Improved LTC Emacs mode to handle multi-byte issues better.  The user still has to decide what to do
+                with offending text (because we cannot guess if the multi-byte character is superfluous) but it fails
+                with better error messages and also prevents some nasty state confusion.
+            </action>
+        </release>
+
         <release version="1.0.6" date="2014-05-22">
             <action dev="lilalinda" type="fix" issue="51" due-to="Peter">
                 Now deploying byte-compiled versions of the Emacs libraries.  Please also update your ltc-install.sh by
