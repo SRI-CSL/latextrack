@@ -105,8 +105,8 @@ Use the "shutdown" command to destroy the shell before the time limit.
 For path information and login help, type "sf-help".
 
 -bash-3.2$ rm -rf /home/project-web/latextrack/htdocs/*
--bash-3.2$ rm -rf /home/frs/project/l/la/latextrack/LTC/1.0
--bash-3.2$ mkdir /home/frs/project/l/la/latextrack/LTC/1.0
+-bash-3.2$ rm -rf /home/frs/project/latextrack/LTC/1.0
+-bash-3.2$ mkdir /home/frs/project/latextrack/LTC/1.0
 <LATER: copy README.txt?>
 +---
 

@@ -7,7 +7,7 @@
     <parent>
         <groupId>com.sri.ltc</groupId>
         <artifactId>LTC</artifactId>
-        <version>1.1-SNAPSHOT</version>
+        <version>1.0.7</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
@@ -153,7 +153,7 @@
                 <configuration>
                     <serverId>sourceforge</serverId>
                     <fromFile>${project.build.directory}/${ueber.jar}.jar</fromFile>
-                    <url>scp://lilalinda@shell.sourceforge.net/home/frs/project/l/la/latextrack/LTC/${project.version}</url>
+                    <url>scp://lilalinda@shell.sourceforge.net/home/frs/project/latextrack/LTC/${project.version}</url>
                 </configuration>
                 <executions>
                     <execution>
