@@ -516,7 +516,7 @@ the parsed XML response is returned."
     (let ((resp (xml-rpc-xml-list-to-value xml)))
       (setq xml-rpc-fault-string (nth 2 resp))
       (setq xml-rpc-fault-code   (nth 1 resp))
-      (error "XML-RPC fault `%s'" xml-rpc-fault-string)))
+      (error "XML-RPC fault %d: `%s'" xml-rpc-fault-code xml-rpc-fault-string)))
 
    ;; Interpret the XML list and produce a more useful data structure
    (t

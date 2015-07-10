@@ -33,10 +33,12 @@ import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
 
 import javax.swing.*;
+import java.awt.*;
 import java.io.*;
 import java.util.logging.Level;
 import java.util.logging.LogManager;
 import java.util.logging.Logger;
+import java.util.prefs.BackingStoreException;
 
 /**
  * Main class to run base system of Latex Track Changes as a server.
@@ -126,7 +128,6 @@ public final class LTC {
 
     public static void main(String[] args) {
         // parse arguments
-        CmdLineParser.registerHandler(Level.class, LevelOptionHandler.class);
         LTCOptions options = new LTCOptions();
         CmdLineParser parser = new CmdLineParser(options);
         try {
@@ -144,6 +145,25 @@ public final class LTC {
 
         if (options.displayLicense) {
             System.out.println("LTC is licensed under:\n\n" + CommonUtils.getLicense());
+            return;
+        }
+
+        if (options.editPrefs != null) {
+            try {
+                System.out.println("LTC preferences: "+options.editPrefs+System.getProperty("line.separator"));
+                options.editPrefs.perform();
+            } catch (BackingStoreException e) {
+                System.err.println(e.getMessage());
+            }
+            return;
+        }
+
+        if (options.toConvert != null) {
+            System.out.println("Color conversion [R:"+
+                    options.toConvert.getRed()+" G:"+
+                    options.toConvert.getGreen()+" B:"+
+                    options.toConvert.getBlue()+"] = "+
+                    options.toConvert.getRGB());
             return;
         }
 
@@ -179,7 +199,7 @@ public final class LTC {
     }
 
     static class LTCOptions {
-        @Option(name="-l",usage="set console log level\nSEVERE, WARNING, INFO, CONFIG (default), FINE, FINER, FINEST")
+        @Option(name="-l",handler=LevelOptionHandler.class,usage="set console log level\nSEVERE, WARNING, INFO, CONFIG (default), FINE, FINER, FINEST")
         Level consoleLogLevel = Level.CONFIG;
 
         @Option(name="-h",usage="display usage and exit")
@@ -187,6 +207,15 @@ public final class LTC {
 
         @Option(name="-c",usage="display copyright/license information and exit")
         boolean displayLicense = false;
+
+        @Option(name="-e",handler=EditPreferencesOptionHandler.class,usage="display or edit preferences and exit (default: D)\n"+
+                "D [<pattern>] - display all settings that contain <pattern>\n"+
+                "S <key> <value> - set or overwrite <key> <value> pair\n"+
+                "R <key> - remove <key>")
+        EditPreferences editPrefs = null;
+
+        @Option(name="-a",handler=ConvertColorOptionHandler.class,usage="convert color between single (decimal or hex) or three (0-255) values and exit")
+        Color toConvert = null;
 
         @Option(name="-p",usage="port on localhost used for XML-RPC")
         static int port = LTCserverInterface.PORT;

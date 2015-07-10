@@ -71,6 +71,7 @@ public abstract class FileHistory {
      * @throws IOException
      * @throws VersionControlException
      */
+    @SuppressWarnings("unchecked")
     public final List<Object[]> update() throws ParseException, IOException, VersionControlException {
         List<Commit> commits = updateCommits();
 

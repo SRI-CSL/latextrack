@@ -179,6 +179,8 @@ public final class LTCserverImpl implements LTCserverInterface {
 
         // translate current text
         String currentText = new String(Base64.decodeBase64(currentText64));
+        if ("".equals(currentText))
+            logAndThrow(3, new RuntimeException("WARNING: Closing session with empty current text attempted"));
 
         LOGGER.info("Server: close_session for file \""+session.getTrackedFile().getFile().getAbsolutePath()+"\", "+
                 "text with "+currentText.length()+" characters, "+
@@ -251,13 +253,13 @@ public final class LTCserverImpl implements LTCserverInterface {
         // translate current text
         String currentText = new String(Base64.decodeBase64(currentText64));
 
-        LOGGER.info("Server: get_changes for file \""+session.getTrackedFile().getFile().getAbsolutePath()+"\", "+
-                (isModified?"":"not ")+"modified, "+
-                "text with "+ currentText.length()+" characters, "+
-                (deletions != null?
-                        deletions.size()+" deletions, ":
-                        "")+
-                "and caret at "+caretPosition+" called.");
+        LOGGER.info("Server: get_changes for file \"" + session.getTrackedFile().getFile().getAbsolutePath() + "\", " +
+                (isModified ? "" : "not ") + "modified, " +
+                "text with " + currentText.length() + " characters, " +
+                (deletions != null ?
+                        deletions.size() + " deletions, " :
+                        "") +
+                "and caret at " + caretPosition + " called.");
         updateProgress(5);
 
         // apply deletions to current text and update caret position

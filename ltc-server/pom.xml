@@ -7,7 +7,7 @@
     <parent>
         <groupId>com.sri.ltc</groupId>
         <artifactId>LTC</artifactId>
-        <version>1.0.6</version>
+        <version>1.0.7</version>
     </parent>
 
     <artifactId>ltc-server</artifactId>
@@ -18,7 +18,8 @@
     </description>
 
     <properties>
-        <jettyVersion>8.1.14.v20131031</jettyVersion>
+        <jettyVersion>9.3.0.M2</jettyVersion>
+        <slf4jVersion>1.7.12</slf4jVersion>
     </properties>
 
     <repositories>
@@ -59,23 +60,17 @@
         <dependency>
             <groupId>com.google.guava</groupId>
             <artifactId>guava</artifactId>
-            <version>16.0.1</version>
-        </dependency>
-        <dependency>
-            <groupId>com.google.code.findbugs</groupId>
-            <artifactId>jsr305</artifactId>
-            <version>2.0.3</version>
-            <scope>provided</scope>
+            <version>18.0</version>
         </dependency>
 
         <!-- JGit core library -->
         <dependency>
             <groupId>org.eclipse.jgit</groupId>
             <artifactId>org.eclipse.jgit</artifactId>
-            <version>3.2.0.201312181205-r</version>
+            <version>4.0.0.201506090130-r</version>
         </dependency>
 
-        <!-- SVN Kit dependencies -->
+        <!-- SVN Kit dependencies: make sure to stay at 1.7.x! -->
         <dependency>
             <groupId>org.tmatesoft.svnkit</groupId>
             <artifactId>svnkit</artifactId>
@@ -86,7 +81,7 @@
         <dependency>
             <groupId>com.joestelmach</groupId>
             <artifactId>natty</artifactId>
-            <version>0.8</version>
+            <version>0.11</version>
         </dependency>
 
         <!-- Jetty web server -->
@@ -104,12 +99,12 @@
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>
-            <version>1.7.5</version>
+            <version>${slf4jVersion}</version>
         </dependency>
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-log4j12</artifactId>
-            <version>1.7.5</version>
+            <version>${slf4jVersion}</version>
         </dependency>
     </dependencies>
 
@@ -159,7 +154,7 @@
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>license-maven-plugin</artifactId>
-                <version>1.5</version>
+                <version>1.8</version>
                 <configuration>
                     <licenseName>gpl_v3</licenseName>
                     <licenseFile>LICENSE</licenseFile>
@@ -259,6 +254,12 @@
                         </configuration>
                     </execution>
                 </executions>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-failsafe-plugin</artifactId>
+                <version>2.18.1</version>
             </plugin>
         </plugins>
 

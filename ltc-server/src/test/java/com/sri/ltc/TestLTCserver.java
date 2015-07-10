@@ -31,11 +31,17 @@ import static org.junit.Assert.assertEquals;
 /**
  * @author linda
  */
+@Ignore
+// ignore this test because failsafe & jetty (used by LTC) are tricky:
+//   http://maven.apache.org/surefire/maven-failsafe-plugin/usage.html
+// but jetty-maven-plugin requires Java 1.7!
 @Category(IntegrationTests.class)
 public final class TestLTCserver {
 
     private static LTC ltc;
-    static {
+
+    @BeforeClass
+    public static void getLTC() {
         ltc = LTC.getInstance();
     }
 

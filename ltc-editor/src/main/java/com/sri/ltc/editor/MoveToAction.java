@@ -22,8 +22,8 @@
 package com.sri.ltc.editor;
 
 import com.google.common.collect.Sets;
-import com.sun.istack.internal.NotNull;
 
+import javax.annotation.Nonnull;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
@@ -38,8 +38,10 @@ public final class MoveToAction extends AbstractAction {
     private final boolean isForward;
     private Point clickLocation;
 
-    public MoveToAction(@NotNull LatexPane latexPane, boolean forward, Point clickLocation) {
+    public MoveToAction(@Nonnull LatexPane latexPane, boolean forward, Point clickLocation) {
         super("Move to "+(forward?"next":"previous")+" change");
+        if (latexPane == null)
+            throw new IllegalArgumentException("Cannot instantiate move to action with NULL argument.");
         this.latexPane = latexPane;
         isForward = forward;
         this.clickLocation = clickLocation;

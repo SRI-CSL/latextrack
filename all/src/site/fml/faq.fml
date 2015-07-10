@@ -243,7 +243,22 @@ If you want to carry on connecting just once, without adding the key to the cach
                     matching versions.  In that case the user is not prompted for input.
                 </p>
             </answer>
+        </faq>
 
+        <faq id="multibyte-issue">
+            <question>
+                When starting or updating LTC mode, or saving my text in Emacs, it says
+                "LTC Error: While updating: Multibyte character in data for base64 encoding"
+                What should I do?
+            </question>
+            <answer>
+                <p>The text in the Emacs buffer contains so-called multibyte characters.  Commonly, these are from international
+                character sets.  A sequence of two or more bytes are used to represent individual non-ASCII characters.</p>
+                <p>LTC mode does not convert these characters for you because this would result in loss of information.
+                Instead, the author has to decide what to do about those characters.  One option is to use the Emacs command
+                "M-x eval-expression &lt;RET&gt; (set-buffer-multibyte nil) &lt;RET&gt;" to force Emacs into changing
+                the coding system.  This is best done before starting LTC mode.</p>
+            </answer>
         </faq>
 
         <faq id="strikethrough-emacs">

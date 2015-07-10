@@ -141,7 +141,7 @@
 
 ;;; regular and debugging output
 (defun ltc-log (formatstr &rest args)
-  "Produce consistent output in *Messages* buffer using ORMATSTR with ARGS like the function `message`"
+  "Produce consistent output in *Messages* buffer using FORMATSTR with ARGS like the function `message`"
   (apply #'message (concat  "LTC: " formatstr) args))
 (defun ltc-error (formatstr &rest args)
   "Produce consistent error messages in *Messages* buffer using FORMATSTR with ARGS like the function `message`"
@@ -163,6 +163,9 @@
 
 (defvar orig-coding-sytem nil "Keep information on original coding system.")
 (make-variable-buffer-local 'orig-coding-sytem)
+
+(defvar canceled-ltc-off nil "Set to `true' if user canceled toggling off LTC due to multibyte characters.")
+(make-variable-buffer-local 'canceled-ltc-off)
 
 ;; Defining key maps with prefix
 (defvar ltc-prefix-map nil "LTC mode prefix keymap.")
@@ -203,12 +206,11 @@
   :keymap ltc-mode-map
   :group 'ltc
   (if ltc-mode
-      (progn
-	;; Mode was turned on
-	(ltc-mode-start))
-    ;; Mode was turned off
-    (ltc-mode-stop)
-    )
+      (if canceled-ltc-off
+	  (setq canceled-ltc-off nil) ; Mode was turned back on from cancelling ltc-mode-stop!
+	(ltc-mode-start) ; Mode was turned on from scratch
+	)
+    (ltc-mode-stop)) ; Mode was turned off
   )
 
 ;; adding LTC to context menu of latex mode
@@ -314,12 +316,12 @@
 	  (progn 
 	    ;; check whether buffer has a file name:
 	    (if (not (buffer-file-name))
-		(error "%s" "While starting LTC mode: Buffer has no file name associated")
+		(error "%s" "While starting: Buffer has no file name associated")
 	      (ltc-log "Starting LTC mode for file \"%s\"..." (buffer-file-name)))
 	    ;; testing xml-rpc version:
 	    (ltc-log "Using `xml-rpc' package version: %s" xml-rpc-version)
 	    (and (version< xml-rpc-version min-xml-rpc-version)
-		 (error "LTC requires `xml-rpc' package v%s or later" min-xml-rpc-version))
+		 (error "While starting: LTC requires `xml-rpc' package v%s or later" min-xml-rpc-version))
 	    ;; test whether server reports version and if so, whether version (prefixes) match
 	    (condition-case version-error
 		(let* ((ltc-server-version (ltc-method-call "get_version")))
@@ -344,6 +346,14 @@
 			(if (string= "Why? url-http-response-status is nil" (error-message-string version-error))
 			    "\nPerhaps the LTC server is not running?"
 			  ""))))))
+	    ;; run base64 encoding to check for multibyte
+	    ;; (NOTE: multibyte-string-p is too broad; it will yield true if only flag is set
+	    ;;        not detect if actual characters are present!)
+;	    (condition-case base64-err
+	    (base64-encode-string (buffer-string) t)
+;	      ('error ; propagate up
+;	       (multibyte-error-message base64-err "While starting")
+;	       (signal 'base64-error nil))) 
 	    ;; update boolean settings:
 	    (mapc (lambda (show-var) 
 		    (set show-var (ltc-method-call "get_bool_pref" (cdr (assoc show-var show-map)))))
@@ -377,52 +387,71 @@
 	    (add-hook 'first-change-hook 'ltc-hook-first-change nil t) ; change commit graph upon first modification
 	    (ltc-add-edit-hooks)
 	    ;; run first update
-	    (ltc-update)
-	    t) ; success
-	;; handle any error
-	('error (ltc-error "%s" (error-message-string err)) nil)) ; return NIL to signal error
-    (ltc-mode 0)) ; an error occurred: toggle mode off again
+	    (ltc-update))
+	;; handle errors:
+	('error
+	 (multibyte-error-message err "")
+	 nil)) ; return NIL to signal error
+    (ltc-mode -1)) ; an error occurred: turn mode off again
   ) ;ltc-mode-start
 
 (defun ltc-mode-stop ()
-  "stop LTC mode"  
-  (setq commit-graph nil) ; reset commit graph
-  (setq self nil) ; reset information about current author
-  (ltc-remove-edit-hooks) ; remove (local) hooks to capture user's edits
-  (remove-hook 'first-change-hook 'ltc-hook-first-change t)
-  (remove-hook 'write-file-functions 'ltc-hook-before-save t) ; remove (local) hook to intercept saving to file
-  (remove-hook 'kill-buffer-hook 'ltc-hook-before-kill t) ; remove hook to intercept closing buffer
-  ;; close session and obtain text for buffer without track changes
-  (if session-id
-      (progn
-	(ltc-log "Stopping mode for file \"%s\"..." (buffer-file-name))
-	(condition-case err 
-	    (let ((map (ltc-method-call "close_session" session-id 
-					(list :base64 (base64-encode-string (buffer-string) t))
-					(compile-deletions)
-					(1- (point))))
-		  (old-buffer-modified-p (buffer-modified-p))) ; maintain modified flag
-	      ;; replace text in buffer with return value from closing session
-	      (erase-buffer)
-	      (insert (base64-decode-string (nth 1 (cdr (assoc-string "text64" map))))) 
-	      (goto-char (1+ (cdr (assoc-string "caret" map)))) ; Emacs starts counting from 1!
-	      (set-buffer-modified-p old-buffer-modified-p))
-	  ('error 
-	   (ltc-error "While closing session (reverting to text from file): %s" (error-message-string err))
-	   ;; replace buffer with text from file
-	   (erase-buffer)
-	   (insert-file-contents (buffer-file-name))
-	   (set-buffer-modified-p nil)
-	   nil))
-	(setq session-id nil)))
-  ;; close any open temp info buffer 
-  (when (setq b (get-buffer ltc-info-buffer))
-    (delete-windows-on b t) ; kill window containing temp buffer
-    (kill-buffer b)) ; kill temp buffer
-  (setq ltc-info-buffer "")
-  (font-lock-mode 1) ; turn latex font-lock mode back on
-  (setq buffer-file-coding-system orig-coding-sytem)
-  (setq orig-coding-sytem nil)
+  "stop LTC mode"
+  (ltc-log "Stopping mode for file \"%s\"..." (buffer-file-name))
+  ;; first, test whether base64 encoding will throw an error in order to properly close the session
+  (let* ((encoded-buffer
+	  (condition-case base64-err
+	      (base64-encode-string (buffer-string) t)
+	    ('error
+	     (multibyte-error-message base64-err "While stopping")
+	     ;; ask user to revert by hand or to proceed with stopping?
+	     (if (yes-or-no-p
+		  "Warning: Proceeding with stopping LTC will result in loss of any unsaved edits! Continue anyways? ")
+		 "" ; user wants to proceed
+	       nil)))) ; user wants to abort
+	 (current-point (if (string= encoded-buffer "") 0 (1- (point)))))
+    (if encoded-buffer
+	(progn
+	  (setq commit-graph nil) ; reset commit graph
+	  (setq self nil) ; reset information about current author
+	  (ltc-remove-edit-hooks) ; remove (local) hooks to capture user's edits
+	  (remove-hook 'first-change-hook 'ltc-hook-first-change t)
+	  (remove-hook 'write-file-functions 'ltc-hook-before-save t) ; remove (local) hook to intercept saving to file
+	  (remove-hook 'kill-buffer-hook 'ltc-hook-before-kill t) ; remove hook to intercept closing buffer
+	  ;; close session and obtain text for buffer without track changes
+	  (if session-id
+	      (progn
+		(condition-case err
+		    (let ((map (ltc-method-call "close_session" session-id 
+						(list :base64 encoded-buffer)
+						(compile-deletions)
+						current-point))
+			  (old-buffer-modified-p (buffer-modified-p))) ; maintain modified flag
+		      ;; replace text in buffer with return value from closing session
+		      (erase-buffer)
+		      (insert (base64-decode-string (nth 1 (cdr (assoc-string "text64" map))))) 
+		      (goto-char (1+ (cdr (assoc-string "caret" map)))) ; Emacs starts counting from 1!
+		      (set-buffer-modified-p old-buffer-modified-p))
+		  ('error
+		   (unless (string-prefix-p "XML-RPC fault 3:" (error-message-string err))
+		     (ltc-error "While closing session (reverting to text from file): %s" (error-message-string err)))
+		   ;; replace buffer with text from file
+		   (erase-buffer)
+		   (insert-file-contents (buffer-file-name))
+		   (set-buffer-modified-p nil)
+		   nil))
+		(setq session-id nil)))
+	  ;; close any open temp info buffer 
+	  (when (setq b (get-buffer ltc-info-buffer))
+	    (delete-windows-on b t) ; kill window containing temp buffer
+	    (kill-buffer b)) ; kill temp buffer
+	  (setq ltc-info-buffer "")
+	  (font-lock-mode 1) ; turn latex font-lock mode back on
+	  (setq buffer-file-coding-system orig-coding-sytem)
+	  (setq orig-coding-sytem nil))
+      ;; else forms: user wants to cancel stopping LTC
+      (setq canceled-ltc-off t) ; make sure mode starting procedure is not run!
+      (ltc-mode 1))) ; this toggles the mode back on
   ) ;ltc-mode-stop
 
 (defun ltc-update ()
@@ -491,11 +520,19 @@
 	    (update-info-buffer)
 	    (set-buffer-modified-p old-buffer-modified-p) ; restore modification flag
 	    t)
-	('error 
-	 (ltc-error "While updating: %s" (error-message-string err))
+	('error
+	 (multibyte-error-message err "While updating")
 	 nil))
-    (ltc-log "Warning: cannot update because LTC mode not active")) ; TODO: change cursor back
+    (ltc-log "Warning: cannot update because LTC mode not active")
+    nil) ; TODO: change cursor back?
   ) ;ltc-update
+
+(defun multibyte-error-message (err prefix)
+  "Unified handling when error message is about multibyte"
+  (if (string= "Multibyte character in data for base64 encoding" (error-message-string err))
+      (ltc-error "%s: Multibyte character in data for base64 encoding\n    Consider converting buffer to unibyte using M-x eval-expression <RET> (set-buffer-multibyte nil) <RET>" prefix) 
+    (ltc-error "%s: %s" prefix (error-message-string err)))
+  )
 
 ;;; --- capture save, close, and TODO: save-as (set-visited-file-name) operations 
 
@@ -504,18 +541,24 @@
   (if (not ltc-mode)
       nil
     (ltc-log-debug "Before saving file %s for session %d" (buffer-file-name) session-id)
-    (ltc-method-call "save_file" session-id
- 		     (list :base64 (base64-encode-string (buffer-string) t))
-		     (compile-deletions))
-    (clear-visited-file-modtime) ; prevent Emacs from complaining about modtime diff's as we are writing file from Java
-    (set-buffer-modified-p nil) ; reset modification flag
-    ;; manipulate commit graph: if at least one entry replace first ID with "on disk"
-    (when commit-graph 
-      (let ((head (car commit-graph)))
-	(when head
-	  (setcar head on_disk)
-	  (setcar commit-graph head)
-	  (update-info-buffer))))
+    (condition-case err
+	(progn
+	  (ltc-method-call "save_file" session-id
+			   (list :base64 (base64-encode-string (buffer-string) t))
+			   (compile-deletions))
+	  (clear-visited-file-modtime) ; prevent Emacs from complaining about modtime diff's as we are writing file from Java
+	  (set-buffer-modified-p nil) ; reset modification flag
+	  ;; manipulate commit graph: if at least one entry replace first ID with "on disk"
+	  (when commit-graph 
+	    (let ((head (car commit-graph)))
+	      (when head
+		(setcar head on_disk)
+		(setcar commit-graph head)
+		(update-info-buffer))))
+	  )
+      ('error
+       (multibyte-error-message err "While saving")
+       nil))
     t)) ; prevents actual saving in Emacs as we have already written the file
 
 (defun ltc-hook-before-kill ()
