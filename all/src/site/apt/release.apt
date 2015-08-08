@@ -86,7 +86,7 @@ $> git commit -am "updated change log"
   If needed, publish the release branch for others to help hardening the release.
 
 +---
-$> git flow release publish v1.0
+$> git flow release publish v$VERSION
 +---
 
 Clean Up Destination & Deploy JAR and Site
@@ -126,7 +126,7 @@ Finish Release Branch
   tag message.
 
 +---
-$> git flow release finish v1.0
+$> git flow release finish v$VERSION
 +---
 
   Then, make sure to be back on the <<<'develop'>>> branch to bump the version number and

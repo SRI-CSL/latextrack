@@ -27,6 +27,12 @@
         <author email="lilalinda at users.sourceforge.net">Linda Briesemeister</author>
     </properties>
     <body>
+        <release version="1.0.8" date="2014-08-08">
+            <action dev="lilalinda" type="fix" due-to="Peter">
+                Downgrading Jetty to still support Java 6.
+            </action>
+        </release>
+
         <release version="1.0.7" date="2015-07-10">
             <action dev="lilalinda" type="add" due-to="Peter">
                 Added two new command line switches -e and -a to edit preferences and to calculate color on the
