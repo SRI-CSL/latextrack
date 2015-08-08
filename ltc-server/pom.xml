@@ -18,7 +18,7 @@
     </description>
 
     <properties>
-        <jettyVersion>9.3.0.M2</jettyVersion>
+        <jettyVersion>8.1.14.v20131031</jettyVersion>
         <slf4jVersion>1.7.12</slf4jVersion>
     </properties>
 
@@ -67,7 +67,7 @@
         <dependency>
             <groupId>org.eclipse.jgit</groupId>
             <artifactId>org.eclipse.jgit</artifactId>
-            <version>4.0.0.201506090130-r</version>
+            <version>4.0.1.201506240215-r</version>
         </dependency>
 
         <!-- SVN Kit dependencies: make sure to stay at 1.7.x! -->
