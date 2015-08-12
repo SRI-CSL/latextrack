@@ -197,6 +197,10 @@ located and do:
 
   $> mvn -DskipSurefireTests=true -Dit.test=<TEST_CLASS_NAME> verify
 
+To test with different Java versions (on Mac OS X 10.8), e.g. for Java 6:
+
+  $> /usr/libexec/java_home -v 1.6.0 --exec java -jar LTC.jar
+
 
 Git Repositories etc.
 ---------------------
