@@ -27,6 +27,12 @@
         <author email="lilalinda at users.sourceforge.net">Linda Briesemeister</author>
     </properties>
     <body>
+        <release version="1.0.9" date="2014-08-12">
+            <action dev="lilalinda" type="fix" due-to="Peter">
+                Downgrading jGit to still support Java 6.
+            </action>
+        </release>
+
         <release version="1.0.8" date="2014-08-08">
             <action dev="lilalinda" type="fix" due-to="Peter">
                 Downgrading Jetty to still support Java 6.
