@@ -24,9 +24,15 @@
           xsi:schemaLocation="http://maven.apache.org/changes/1.0.0 http://maven.apache.org/xsd/changes-1.0.0.xsd">
     <properties>
         <title>Changes in LTC</title>
-        <author email="lilalinda at users.sourceforge.net">Linda Briesemeister</author>
+        <author email="linda.briesemeister@sri.com">Linda Briesemeister</author>
     </properties>
     <body>
+        <release version="1.2.1" date="2020-01-31">
+            <action dev="lilalinda" type="add">
+                Moving to hosting and deploying at https://github.com/SRI-CSL/latextrack
+            </action>
+        </release>
+
         <release version="1.0.9" date="2014-08-12">
             <action dev="lilalinda" type="fix" due-to="Peter">
                 Downgrading jGit to still support Java 6.

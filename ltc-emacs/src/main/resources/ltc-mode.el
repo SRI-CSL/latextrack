@@ -731,7 +731,7 @@
 		(delete-file filename))
 	    (append-to-file (buffer-string) nil filename))))
     (let ((file (ltc-method-call "create_bug_report" session-id msg includeSrc (expand-file-name directory))))
-      (ltc-log "Created bug report at %s (please email to lilalinda@users.sourceforge.net)" file))))
+      (ltc-log "Created bug report at %s (please email to linda.briesemeister@sri.com)" file))))
 
 ;;; --- info buffer functions
 

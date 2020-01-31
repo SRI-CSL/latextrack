@@ -27,7 +27,7 @@
 # variables with default values
 
 declare JAR_FILE=
-declare DOWNLOAD_URL=http://sourceforge.net/projects/latextrack/files/latest/download
+declare DOWNLOAD_URL=https://github.com/SRI-CSL/latextrack/ # OLD: sf.net /projects/latextrack/files/latest/download
 declare DOWNLOAD_DIR=""
 declare EMACS_DIR=""
 declare ONLINE_TYPE=-1  # how to contact the web site for updates
@@ -39,7 +39,7 @@ declare SKIP_UPDATE=""
 
 usage ()  # print error message if given as argument and then general usage
 {
-    if [ $# -gt 0 ]; then
+    if [[ $# -gt 0 ]]; then
 	printf " *** ERROR: %s\n" "$1"
     fi
     cat << EOF
@@ -73,17 +73,17 @@ EOF
 testdir () # test given DIR ($1) for PERMISSIONS ($3)
            # use NAME ($2) for error messages
 {
-    if [ ! -d "$1" ]; then
+    if [[ ! -d "$1" ]]; then
 	usage "$2 directory is not a directory"; exit 1
     fi
     case $3 in
 	r) 
-	    if [ ! -r "$1" ]; then
+	    if [[ ! -r "$1" ]]; then
 		usage "$2 directory is not readable"; exit 1
 	    fi
 	    ;;
 	w)
-	    if [ ! -w "$1" ]; then
+	    if [[ ! -w "$1" ]]; then
 		usage "$2 directory is not writable"; exit 1
 	    fi
 	    ;;
@@ -96,16 +96,16 @@ testdir () # test given DIR ($1) for PERMISSIONS ($3)
 makedir_absolute () # if DIR ($1) does not exist, ask whether to create dir or abort
                     # then make absolute and set ABS_DIR
 {
-    if [ ! -e "$1" ]; then
+    if [[ ! -e "$1" ]]; then
 	while true; do
 	    printf " *** WARNING: The specified directory %s does not exist.\n" $1
             printf "              Would you like to create it and continue (C) or abort the installation (A)?\n"
 	    read -n1 -p "Enter 'c' or 'a': " yn
 	    echo
-	    case $yn in
+	    case ${yn} in
 		[Cc]* ) 
 		    mkdir -pv $1
-		    if [ $? -gt 0 ]; then
+		    if [[ $? -gt 0 ]]; then
 			echo "Couldn't create directory $1; giving up."; exit 1
 		    fi 
 		    break
@@ -123,13 +123,13 @@ makedir_absolute () # if DIR ($1) does not exist, ask whether to create dir or a
 
 findlatest () # find the latest LTC-<version>.jar in given DIR ($1) and set JAR_FILE
 {
-    if [ ! -d "$1" ]; then
+    if [[ ! -d "$1" ]]; then
 	usage "$1 is not a directory (findlatest)"; exit 1
     fi
     LTC_CANDIDATES=`ls -t $1/LTC-*.jar`
-    LTC_ARR=($LTC_CANDIDATES)
+    LTC_ARR=(${LTC_CANDIDATES})
     JAR_FILE=`echo ${LTC_ARR[0]} | sed "s/.*\(LTC-.*\.jar\)/\1/"`
-    if [ -z "$JAR_FILE" ]; then
+    if [[ -z "$JAR_FILE" ]]; then
 	usage "Cannot find matching LTC-<version>.jar file."; exit 1
     fi
 }
@@ -138,9 +138,9 @@ findlatest () # find the latest LTC-<version>.jar in given DIR ($1) and set JAR_
 # test options and arguments
 
 ARGUMENTS="$*"  # preserve in case we need to restart script after update
-while getopts “hd:s” OPTION
+while getopts "hd:s" OPTION
 do
-    case $OPTION in
+    case ${OPTION} in
         h|\?)
             usage; exit 1
             ;;
@@ -155,22 +155,22 @@ do
 done
 
 # now $@ has remaining arguments:
-if [ $# -lt 1 ]; then
+if [[ $# -lt 1 ]]; then
     usage "need at least 1 argument"; exit 1
 fi
 
-# make absolut and test java directory
+# make absolute and test java directory
 makedir_absolute $1
-JAVA_DIR=$ABS_DIR
+JAVA_DIR=${ABS_DIR}
 testdir "$JAVA_DIR" "Java" "w"
 
 # test Emacs directory (if given)
-if [ $# -gt 1 ]; then
+if [[ $# -gt 1 ]]; then
     makedir_absolute $2
-    EMACS_DIR=$ABS_DIR
+    EMACS_DIR=${ABS_DIR}
     testdir "$EMACS_DIR" "Emacs" "w"
     which unzip &>/dev/null
-    if [ $? -gt 0 ]; then
+    if [[ $? -gt 0 ]]; then
 	usage "Cannot find executable of 'unzip' to extract Emacs Lisp files"; exit 1
     fi
 fi
@@ -180,30 +180,30 @@ fi
 
 # determine online access type: prefer wget over curl
 which wget &>/dev/null
-if [ $? -eq 0 ]; then
+if [[ $? -eq 0 ]]; then
     ONLINE_TYPE=1  # indicates wget
 else
     which curl &>/dev/null
-    if [ $? -eq 0 ]; then
+    if [[ $? -eq 0 ]]; then
 	ONLINE_TYPE=2  # indicates curl
     fi
 fi
 
 # check for updates of this install script online unless specified to skip
-if [ -z "$SKIP_UPDATE" ]; then
-    if [ $ONLINE_TYPE -lt 1 ]; then
+if [[ -z "$SKIP_UPDATE" ]]; then
+    if [[ ${ONLINE_TYPE} -lt 1 ]]; then
 	printf " *** ERROR: Cannot find executable of 'wget' or 'curl' to check for updates.\n"
         printf "            Please install one of these utilities or skip the update check with -s\n\n"
 	exit 2
     fi
     # determine location of install script:
     makedir_absolute $( dirname $0 )
-    SCRIPT_DIR=$ABS_DIR
+    SCRIPT_DIR=${ABS_DIR}
     # download to same location:
-    case $ONLINE_TYPE in
+    case ${ONLINE_TYPE} in
 	1)
 	    printf "\nChecking for updates of 'ltc-install.sh' via wget...\n"
-	    wget --quiet -N -P $SCRIPT_DIR http://sourceforge.net/projects/latextrack/files/ltc-install.sh/download
+	    wget --quiet -N -P ${SCRIPT_DIR} http://sourceforge.net/projects/latextrack/files/ltc-install.sh/download
 	    if [ $? -gt 0 ]; then
 		usage "Something went wrong during update check with 'wget' -- exiting."; exit 5
 	    fi

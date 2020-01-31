@@ -393,7 +393,7 @@ public final class LTCSession {
                     String file = get();
                     String message = "<html>The bug report has been filed under<pre>  "+file+
                             "</pre>Please attach it to an email and send it to"+
-                            "<pre>  lilalinda@users.sourceforge.net</pre></html>";
+                            "<pre>  linda.briesemeister@sri.com</pre></html>";
                     if (Desktop.isDesktopSupported()) {
                         // add button to invoke email client with mailto: URI
                         // see: http://stackoverflow.com/questions/527719/how-to-add-hyperlink-in-jlabel
@@ -407,7 +407,7 @@ public final class LTCSession {
                                 options, options[0]) == JOptionPane.YES_OPTION) {
                             String subject = URLEncoder.encode("LTC bug report", "utf-8").replace("+", "%20");
                             String body = URLEncoder.encode("Please attach the file "+file, "utf-8").replace("+", "%20");
-                            String email = "lilalinda@users.sourceforge.net".replace("+", "%2B");
+                            String email = "linda.briesemeister@sri.com".replace("+", "%2B");
                             String link = String.format("mailto:%s?subject=%s&body=%s", email, subject, body);
                             Desktop.getDesktop().mail(URI.create(link));
                         }
