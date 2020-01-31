@@ -14,7 +14,7 @@
     <name>ltc-mode</name>
     <description>A minor mode for Emacs to interact with LTC.</description>
     <packaging>jar</packaging>
-    <url>http://latextrack.sourceforge.net</url>
+    <url>https://github.com/SRI-CSL/latextrack</url>
 
     <build>
         <resources>

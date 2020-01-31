@@ -18,7 +18,7 @@
     </description>
 
     <properties>
-        <jettyVersion>8.1.14.v20131031</jettyVersion>
+        <jettyVersion>9.3.24.v20180605</jettyVersion>
         <slf4jVersion>1.7.12</slf4jVersion>
     </properties>
 
@@ -110,13 +110,6 @@
 
     <build>
         <plugins>
-            <plugin>
-                <artifactId>maven-site-plugin</artifactId>
-                <configuration>
-                    <skip>true</skip>
-                </configuration>
-            </plugin>
-
             <plugin>
                 <groupId>de.jflex</groupId>
                 <artifactId>maven-jflex-plugin</artifactId>

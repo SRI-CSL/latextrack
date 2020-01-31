@@ -18,29 +18,24 @@
         under a version control system (such as git or svn).
     </description>
     <packaging>jar</packaging>
-    <url>http://latextrack.sourceforge.net</url>
+    <url>https://github.com/SRI-CSL/latextrack</url>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <ueber.jar>LTC-${project.version}</ueber.jar>
     </properties>
 
-    <distributionManagement>
-        <site>
-            <id>latextrack.sf.net</id>
-            <url>scp://lilalinda@shell.sourceforge.net/home/project-web/latextrack/htdocs</url>
-        </site>
-    </distributionManagement>
+<!--    <distributionManagement>-->
+<!--        <site>-->
+<!--            <id>latextrack.sf.net</id>-->
+<!--            <url>scp://lilalinda@shell.sourceforge.net/home/project-web/latextrack/htdocs</url>-->
+<!--        </site>-->
+<!--    </distributionManagement>-->
 
-    <issueManagement>
-        <system>SourceForge2</system>
-        <url>http://sourceforge.net/p/latextrack/tickets/</url>
-    </issueManagement>
-
-    <scm>
-        <!--<connection>scm:git:http://git.code.sf.net/p/latextrack/code</connection>-->
-        <url>http://sourceforge.net/p/latextrack/code/</url>
-    </scm>
+<!--    <issueManagement>-->
+<!--        <system>SourceForge2</system>-->
+<!--        <url>http://sourceforge.net/p/latextrack/tickets/</url>-->
+<!--    </issueManagement>-->
 
     <dependencies>
         <dependency>
@@ -61,13 +56,13 @@
     </dependencies>
 
     <build>
-        <extensions>
-            <extension>
-                <groupId>org.apache.maven.wagon</groupId>
-                <artifactId>wagon-ssh</artifactId>
-                <version>1.0</version>
-            </extension>
-        </extensions>
+<!--        <extensions>-->
+<!--            <extension>-->
+<!--                <groupId>org.apache.maven.wagon</groupId>-->
+<!--                <artifactId>wagon-ssh</artifactId>-->
+<!--                <version>1.0</version>-->
+<!--            </extension>-->
+<!--        </extensions>-->
 
         <plugins>
             <!-- === Default Lifecycle === -->
@@ -103,6 +98,7 @@
             <!-- assemble ueber-jar with all dependencies during package phase -->
             <plugin>
                 <artifactId>maven-shade-plugin</artifactId>
+                <version>3.2.1</version>
                 <executions>
                     <execution>
                         <id>assemble-ltc-all-with-dependencies</id>
@@ -143,243 +139,243 @@
 
             <!-- ~~~ deploy ~~~ -->
 
-            <!-- custom deploy: upload JAR -->
-            <!-- TODO: delete & create remote subdirectory with version number in phase "install"?;
-                 maybe sshexec plugin? (http://evgeny-goldin.com/wiki/Sshexec-maven-plugin) -->
-            <plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>wagon-maven-plugin</artifactId>
-                <version>1.0</version>
-                <configuration>
-                    <serverId>sourceforge</serverId>
-                    <fromFile>${project.build.directory}/${ueber.jar}.jar</fromFile>
-                    <url>scp://lilalinda@shell.sourceforge.net/home/frs/project/latextrack/LTC/${project.version}</url>
-                </configuration>
-                <executions>
-                    <execution>
-                        <id>custom-deploy</id>
-                        <phase>deploy</phase>
-                        <goals>
-                            <goal>upload-single</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
+<!--            &lt;!&ndash; custom deploy: upload JAR &ndash;&gt;-->
+<!--            &lt;!&ndash; TODO: delete & create remote subdirectory with version number in phase "install"?;-->
+<!--                 maybe sshexec plugin? (http://evgeny-goldin.com/wiki/Sshexec-maven-plugin) &ndash;&gt;-->
+<!--            <plugin>-->
+<!--                <groupId>org.codehaus.mojo</groupId>-->
+<!--                <artifactId>wagon-maven-plugin</artifactId>-->
+<!--                <version>1.0</version>-->
+<!--                <configuration>-->
+<!--                    <serverId>sourceforge</serverId>-->
+<!--                    <fromFile>${project.build.directory}/${ueber.jar}.jar</fromFile>-->
+<!--                    <url>scp://lilalinda@shell.sourceforge.net/home/frs/project/latextrack/LTC/${project.version}</url>-->
+<!--                </configuration>-->
+<!--                <executions>-->
+<!--                    <execution>-->
+<!--                        <id>custom-deploy</id>-->
+<!--                        <phase>deploy</phase>-->
+<!--                        <goals>-->
+<!--                            <goal>upload-single</goal>-->
+<!--                        </goals>-->
+<!--                    </execution>-->
+<!--                </executions>-->
+<!--            </plugin>-->
 
             <!-- === Site Lifecycle === -->
 
-            <!-- handling resources for site -->
-            <plugin>
-                <artifactId>maven-resources-plugin</artifactId>
-                <version>2.6</version>
-                <executions>
-                    <!-- ~~~ pre-site ~~~ -->
-                    <execution>
-                        <id>generate-txt-for-manual</id>
-                        <phase>pre-site</phase>
-                        <goals>
-                            <goal>copy-resources</goal>
-                        </goals>
-                        <configuration>
-                            <outputDirectory>${project.basedir}/src/site/tex/manual</outputDirectory>
-                            <resources>
-                                <resource>
-                                    <directory>src/site/resources</directory>
-                                    <includes>
-                                        <include>version.txt</include>
-                                        <include>baseurl.txt</include>
-                                    </includes>
-                                    <filtering>true</filtering>
-                                </resource>
-                            </resources>
-                        </configuration>
-                    </execution>
-                    <execution>
-                        <id>generate-txt-for-github-tutorial</id>
-                        <phase>pre-site</phase>
-                        <goals>
-                            <goal>copy-resources</goal>
-                        </goals>
-                        <configuration>
-                            <outputDirectory>${project.basedir}/src/site/tex/github-tutorial</outputDirectory>
-                            <resources>
-                                <resource>
-                                    <directory>src/site/resources</directory>
-                                    <includes>
-                                        <include>version.txt</include>
-                                    </includes>
-                                    <filtering>true</filtering>
-                                </resource>
-                            </resources>
-                        </configuration>
-                    </execution>
-                    <!-- copy logo to figures for manual -->
-                    <execution>
-                        <id>copy-logo</id>
-                        <phase>pre-site</phase>
-                        <goals>
-                            <goal>copy-resources</goal>
-                        </goals>
-                        <configuration>
-                            <outputDirectory>${project.basedir}/src/site/tex/manual/figures</outputDirectory>
-                            <resources>
-                                <resource>
-                                    <directory>${project.basedir}/src/site/resources/images</directory>
-                                    <includes>
-                                        <include>LTC-logo.png</include>
-                                    </includes>
-                                </resource>
-                            </resources>
-                        </configuration>
-                    </execution>
-                    <!-- ~~~ site ~~~ -->
-                    <!-- copy all *.png files to (1) html_singlepage, and (2) html_multipage -->
-                    <execution>
-                        <id>copy-png-files-to-single</id>
-                        <phase>site</phase>
-                        <goals>
-                            <goal>copy-resources</goal>
-                        </goals>
-                        <configuration>
-                            <outputDirectory>${project.reporting.outputDirectory}/html_singlepage/manual/figures</outputDirectory>
-                            <resources>
-                                <resource>
-                                    <directory>src/site/tex/manual/figures</directory>
-                                    <includes>
-                                        <include>**/*.png</include>
-                                    </includes>
-                                </resource>
-                            </resources>
-                        </configuration>
-                    </execution>
-                    <execution>
-                        <id>copy-png-files-to-multi</id>
-                        <phase>site</phase>
-                        <goals>
-                            <goal>copy-resources</goal>
-                        </goals>
-                        <configuration>
-                            <outputDirectory>${project.reporting.outputDirectory}/html_multipage/manual/figures</outputDirectory>
-                            <resources>
-                                <resource>
-                                    <directory>src/site/tex/manual/figures</directory>
-                                    <includes>
-                                        <include>**/*.png</include>
-                                    </includes>
-                                </resource>
-                            </resources>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
+<!--            &lt;!&ndash; handling resources for site &ndash;&gt;-->
+<!--            <plugin>-->
+<!--                <artifactId>maven-resources-plugin</artifactId>-->
+<!--                <version>2.6</version>-->
+<!--                <executions>-->
+<!--                    &lt;!&ndash; ~~~ pre-site ~~~ &ndash;&gt;-->
+<!--                    <execution>-->
+<!--                        <id>generate-txt-for-manual</id>-->
+<!--                        <phase>pre-site</phase>-->
+<!--                        <goals>-->
+<!--                            <goal>copy-resources</goal>-->
+<!--                        </goals>-->
+<!--                        <configuration>-->
+<!--                            <outputDirectory>${project.basedir}/src/site/tex/manual</outputDirectory>-->
+<!--                            <resources>-->
+<!--                                <resource>-->
+<!--                                    <directory>src/site/resources</directory>-->
+<!--                                    <includes>-->
+<!--                                        <include>version.txt</include>-->
+<!--                                        <include>baseurl.txt</include>-->
+<!--                                    </includes>-->
+<!--                                    <filtering>true</filtering>-->
+<!--                                </resource>-->
+<!--                            </resources>-->
+<!--                        </configuration>-->
+<!--                    </execution>-->
+<!--                    <execution>-->
+<!--                        <id>generate-txt-for-github-tutorial</id>-->
+<!--                        <phase>pre-site</phase>-->
+<!--                        <goals>-->
+<!--                            <goal>copy-resources</goal>-->
+<!--                        </goals>-->
+<!--                        <configuration>-->
+<!--                            <outputDirectory>${project.basedir}/src/site/tex/github-tutorial</outputDirectory>-->
+<!--                            <resources>-->
+<!--                                <resource>-->
+<!--                                    <directory>src/site/resources</directory>-->
+<!--                                    <includes>-->
+<!--                                        <include>version.txt</include>-->
+<!--                                    </includes>-->
+<!--                                    <filtering>true</filtering>-->
+<!--                                </resource>-->
+<!--                            </resources>-->
+<!--                        </configuration>-->
+<!--                    </execution>-->
+<!--                    &lt;!&ndash; copy logo to figures for manual &ndash;&gt;-->
+<!--                    <execution>-->
+<!--                        <id>copy-logo</id>-->
+<!--                        <phase>pre-site</phase>-->
+<!--                        <goals>-->
+<!--                            <goal>copy-resources</goal>-->
+<!--                        </goals>-->
+<!--                        <configuration>-->
+<!--                            <outputDirectory>${project.basedir}/src/site/tex/manual/figures</outputDirectory>-->
+<!--                            <resources>-->
+<!--                                <resource>-->
+<!--                                    <directory>${project.basedir}/src/site/resources/images</directory>-->
+<!--                                    <includes>-->
+<!--                                        <include>LTC-logo.png</include>-->
+<!--                                    </includes>-->
+<!--                                </resource>-->
+<!--                            </resources>-->
+<!--                        </configuration>-->
+<!--                    </execution>-->
+<!--                    &lt;!&ndash; ~~~ site ~~~ &ndash;&gt;-->
+<!--                    &lt;!&ndash; copy all *.png files to (1) html_singlepage, and (2) html_multipage &ndash;&gt;-->
+<!--                    <execution>-->
+<!--                        <id>copy-png-files-to-single</id>-->
+<!--                        <phase>site</phase>-->
+<!--                        <goals>-->
+<!--                            <goal>copy-resources</goal>-->
+<!--                        </goals>-->
+<!--                        <configuration>-->
+<!--                            <outputDirectory>${project.reporting.outputDirectory}/html_singlepage/manual/figures</outputDirectory>-->
+<!--                            <resources>-->
+<!--                                <resource>-->
+<!--                                    <directory>src/site/tex/manual/figures</directory>-->
+<!--                                    <includes>-->
+<!--                                        <include>**/*.png</include>-->
+<!--                                    </includes>-->
+<!--                                </resource>-->
+<!--                            </resources>-->
+<!--                        </configuration>-->
+<!--                    </execution>-->
+<!--                    <execution>-->
+<!--                        <id>copy-png-files-to-multi</id>-->
+<!--                        <phase>site</phase>-->
+<!--                        <goals>-->
+<!--                            <goal>copy-resources</goal>-->
+<!--                        </goals>-->
+<!--                        <configuration>-->
+<!--                            <outputDirectory>${project.reporting.outputDirectory}/html_multipage/manual/figures</outputDirectory>-->
+<!--                            <resources>-->
+<!--                                <resource>-->
+<!--                                    <directory>src/site/tex/manual/figures</directory>-->
+<!--                                    <includes>-->
+<!--                                        <include>**/*.png</include>-->
+<!--                                    </includes>-->
+<!--                                </resource>-->
+<!--                            </resources>-->
+<!--                        </configuration>-->
+<!--                    </execution>-->
+<!--                </executions>-->
+<!--            </plugin>-->
 
-            <!-- ~~~ pre-site and clean ~~~ -->
-            <plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>exec-maven-plugin</artifactId>
-                <version>1.4.0</version>
-                <executions>
-                    <!-- converting images for manual -->
-                    <execution>
-                        <id>pictures-for-manual</id>
-                        <phase>pre-site</phase>
-                        <configuration>
-                            <executable>make</executable>
-                            <workingDirectory>${project.basedir}/src/site/tex/manual/figures</workingDirectory>
-                        </configuration>
-                        <goals>
-                            <goal>exec</goal>
-                        </goals>
-                    </execution>
-                    <!-- converting images for github tutorial -->
-                    <execution>
-                        <id>pictures-for-github-tutorial</id>
-                        <phase>pre-site</phase>
-                        <configuration>
-                            <executable>make</executable>
-                            <workingDirectory>${project.basedir}/src/site/tex/github-tutorial/figures</workingDirectory>
-                        </configuration>
-                        <goals>
-                            <goal>exec</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
+<!--            &lt;!&ndash; ~~~ pre-site and clean ~~~ &ndash;&gt;-->
+<!--            <plugin>-->
+<!--                <groupId>org.codehaus.mojo</groupId>-->
+<!--                <artifactId>exec-maven-plugin</artifactId>-->
+<!--                <version>1.4.0</version>-->
+<!--                <executions>-->
+<!--                    &lt;!&ndash; converting images for manual &ndash;&gt;-->
+<!--                    <execution>-->
+<!--                        <id>pictures-for-manual</id>-->
+<!--                        <phase>pre-site</phase>-->
+<!--                        <configuration>-->
+<!--                            <executable>make</executable>-->
+<!--                            <workingDirectory>${project.basedir}/src/site/tex/manual/figures</workingDirectory>-->
+<!--                        </configuration>-->
+<!--                        <goals>-->
+<!--                            <goal>exec</goal>-->
+<!--                        </goals>-->
+<!--                    </execution>-->
+<!--                    &lt;!&ndash; converting images for github tutorial &ndash;&gt;-->
+<!--                    <execution>-->
+<!--                        <id>pictures-for-github-tutorial</id>-->
+<!--                        <phase>pre-site</phase>-->
+<!--                        <configuration>-->
+<!--                            <executable>make</executable>-->
+<!--                            <workingDirectory>${project.basedir}/src/site/tex/github-tutorial/figures</workingDirectory>-->
+<!--                        </configuration>-->
+<!--                        <goals>-->
+<!--                            <goal>exec</goal>-->
+<!--                        </goals>-->
+<!--                    </execution>-->
+<!--                </executions>-->
+<!--            </plugin>-->
 
-            <!-- ~~~ site ~~~ -->
+<!--            &lt;!&ndash; ~~~ site ~~~ &ndash;&gt;-->
 
-            <!-- running latex and htlatex on manual for site -->
-            <plugin>
-                <groupId>de.akquinet.jbosscc.latex</groupId>
-                <artifactId>maven-latex-plugin</artifactId>
-                <version>1.2</version>
-                <inherited>false</inherited>
-                <configuration>
-                    <settings>
-                        <texCommand>xelatex</texCommand>
-                        <tex4htCommand>htxelatex</tex4htCommand>
-                    </settings>
-                </configuration>
-                <executions>
-                    <execution>
-                        <phase>site</phase>
-                        <goals>
-                            <goal>latex</goal>
-                        </goals>
-                    </execution>
-                    <execution>
-                        <id>HTML multipage</id>
-                        <configuration>
-                            <settings>
-                                <cleanUp>true</cleanUp>
-                                <tempDirectory>m2latex_multipage</tempDirectory>
-                                <outputDirectory>html_multipage</outputDirectory>
-                                <tex4htCommandArgs>
-                                    <tex4htCommandArg>manual,2,png</tex4htCommandArg>
-                                    <tex4htCommandArg></tex4htCommandArg>
-                                    <tex4htCommandArg></tex4htCommandArg>
-                                    <tex4htCommandArg>-interaction=nonstopmode --src-specials</tex4htCommandArg>
-                                </tex4htCommandArgs>
-                            </settings>
-                        </configuration>
-                        <phase>site</phase>
-                        <goals>
-                            <goal>tex4ht</goal>
-                        </goals>
-                    </execution>
-                    <execution>
-                        <id>HTML singlepage</id>
-                        <configuration>
-                            <settings>
-                                <cleanUp>true</cleanUp>
-                                <tempDirectory>m2latex_singlepage</tempDirectory>
-                                <outputDirectory>html_singlepage</outputDirectory>
-                                <tex4htCommandArgs>
-                                    <tex4htCommandArg>manual,0,png</tex4htCommandArg>
-                                    <tex4htCommandArg></tex4htCommandArg>
-                                    <tex4htCommandArg></tex4htCommandArg>
-                                    <tex4htCommandArg>-interaction=nonstopmode --src-specials</tex4htCommandArg>
-                                </tex4htCommandArgs>
-                            </settings>
-                        </configuration>
-                        <phase>site</phase>
-                        <goals>
-                            <goal>tex4ht</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
+<!--            &lt;!&ndash; running latex and htlatex on manual for site &ndash;&gt;-->
+<!--            <plugin>-->
+<!--                <groupId>de.akquinet.jbosscc.latex</groupId>-->
+<!--                <artifactId>maven-latex-plugin</artifactId>-->
+<!--                <version>1.2</version>-->
+<!--                <inherited>false</inherited>-->
+<!--                <configuration>-->
+<!--                    <settings>-->
+<!--                        <texCommand>xelatex</texCommand>-->
+<!--                        <tex4htCommand>htxelatex</tex4htCommand>-->
+<!--                    </settings>-->
+<!--                </configuration>-->
+<!--                <executions>-->
+<!--                    <execution>-->
+<!--                        <phase>site</phase>-->
+<!--                        <goals>-->
+<!--                            <goal>latex</goal>-->
+<!--                        </goals>-->
+<!--                    </execution>-->
+<!--                    <execution>-->
+<!--                        <id>HTML multipage</id>-->
+<!--                        <configuration>-->
+<!--                            <settings>-->
+<!--                                <cleanUp>true</cleanUp>-->
+<!--                                <tempDirectory>m2latex_multipage</tempDirectory>-->
+<!--                                <outputDirectory>html_multipage</outputDirectory>-->
+<!--                                <tex4htCommandArgs>-->
+<!--                                    <tex4htCommandArg>manual,2,png</tex4htCommandArg>-->
+<!--                                    <tex4htCommandArg></tex4htCommandArg>-->
+<!--                                    <tex4htCommandArg></tex4htCommandArg>-->
+<!--                                    <tex4htCommandArg>-interaction=nonstopmode &#45;&#45;src-specials</tex4htCommandArg>-->
+<!--                                </tex4htCommandArgs>-->
+<!--                            </settings>-->
+<!--                        </configuration>-->
+<!--                        <phase>site</phase>-->
+<!--                        <goals>-->
+<!--                            <goal>tex4ht</goal>-->
+<!--                        </goals>-->
+<!--                    </execution>-->
+<!--                    <execution>-->
+<!--                        <id>HTML singlepage</id>-->
+<!--                        <configuration>-->
+<!--                            <settings>-->
+<!--                                <cleanUp>true</cleanUp>-->
+<!--                                <tempDirectory>m2latex_singlepage</tempDirectory>-->
+<!--                                <outputDirectory>html_singlepage</outputDirectory>-->
+<!--                                <tex4htCommandArgs>-->
+<!--                                    <tex4htCommandArg>manual,0,png</tex4htCommandArg>-->
+<!--                                    <tex4htCommandArg></tex4htCommandArg>-->
+<!--                                    <tex4htCommandArg></tex4htCommandArg>-->
+<!--                                    <tex4htCommandArg>-interaction=nonstopmode &#45;&#45;src-specials</tex4htCommandArg>-->
+<!--                                </tex4htCommandArgs>-->
+<!--                            </settings>-->
+<!--                        </configuration>-->
+<!--                        <phase>site</phase>-->
+<!--                        <goals>-->
+<!--                            <goal>tex4ht</goal>-->
+<!--                        </goals>-->
+<!--                    </execution>-->
+<!--                </executions>-->
+<!--            </plugin>-->
 
-            <!-- generating site for this module -->
-            <plugin>
-                <artifactId>maven-site-plugin</artifactId>
-                <configuration>
-                    <skip>false</skip>
-                    <skipDeploy>false</skipDeploy>
-                    <!-- while they are fixing the new configuration of the maven-site-plugin,
-                         we need to use the classic style; so removed <reportPlugins> here! -->
-                </configuration>
-            </plugin>
+<!--            &lt;!&ndash; generating site for this module &ndash;&gt;-->
+<!--            <plugin>-->
+<!--                <artifactId>maven-site-plugin</artifactId>-->
+<!--                <configuration>-->
+<!--                    <skip>false</skip>-->
+<!--                    <skipDeploy>false</skipDeploy>-->
+<!--                    &lt;!&ndash; while they are fixing the new configuration of the maven-site-plugin,-->
+<!--                         we need to use the classic style; so removed <reportPlugins> here! &ndash;&gt;-->
+<!--                </configuration>-->
+<!--            </plugin>-->
 
             <!-- === Clean Lifecycle === -->
 
