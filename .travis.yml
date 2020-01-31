@@ -13,4 +13,5 @@ deploy:
   - all/target/LTC-*.jar
   - all/src/sourceforge/ltc-install.sh
   on:
+    tags: true
     repo: SRI-CSL/latextrack

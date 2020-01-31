@@ -33,7 +33,18 @@ To create the site:
 
     $> mvn verify site
 
-## Deploying the site
+## Deploying 
+
+We are now deploying automatically upon pushing tags.  Do this (for now):
+
+    [ git flow stuff and finally merging with master ]
+    $ git checkout master
+    $ git push origin master
+    $ git tag v1.3 -m "releasing LTC v1.3"
+    $ git push origin v1.3
+    [... wait for Travis to build and release ~3 minutes, should result in an email ...]
+    
+## OLD: the site
 
 Before deploying the site, create a shell at sourceforge and delete the current content:
 
@@ -266,19 +277,19 @@ $> for file in *.tiff; do convert $file `basename $file .tiff`.png; done
 
 NOTE: When changing or adding TikZ pictures in the manual, do the following steps:
 
-$> cd all/src/site/tex/manual
-$> cd figures; make clean; rm -fv manual-figure*; cd ..
-$> cd figures; make; cd ..
-$> xelatex manual --shell-escape
-$> xelatex manual --shell-escape
-   # fix makefile: (see: http://stackoverflow.com/questions/5398395/how-can-i-insert-a-tab-character-with-sed-on-os-x)
-$> cat manual.makefile | sed "s/\^\^I/<TAB>/g" > manual.makefile2  # to get TAB character in bash on OS X: Ctrl+V TAB
-$> make -f manual.makefile2
-$> xelatex manual --shell-escape
-$> xelatex manual --shell-escape
-$> cd figures; make; cd ..
-$> htxelatex manual "manual,0,png" "" "" "-interaction=nonstopmode --src-specials"
-$> xelatex manual
+    $> cd all/src/site/tex/manual
+    $> cd figures; make clean; rm -fv manual-figure*; cd ..
+    $> cd figures; make; cd ..
+    $> xelatex manual --shell-escape
+    $> xelatex manual --shell-escape
+       # fix makefile: (see: http://stackoverflow.com/questions/5398395/how-can-i-insert-a-tab-character-with-sed-on-os-x)
+    $> cat manual.makefile | sed "s/\^\^I/<TAB>/g" > manual.makefile2  # to get TAB character in bash on OS X: Ctrl+V TAB
+    $> make -f manual.makefile2
+    $> xelatex manual --shell-escape
+    $> xelatex manual --shell-escape
+    $> cd figures; make; cd ..
+    $> htxelatex manual "manual,0,png" "" "" "-interaction=nonstopmode --src-specials"
+    $> xelatex manual
 
 ## Incrementing version number
 
@@ -322,87 +333,87 @@ Interactive Emacs Lisp: M-x ielm
 
  a) Create svn repository (in your home)
 
-  $> cd
-  $> svnadmin create svnrepos
+    $> cd
+    $> svnadmin create svnrepos
 
   Now edit svnrepos/conf/svnserve.conf and svnrepos/conf/passwd to contain & start server:
 
-  $> grep -v "^#" svnrepos/conf/svnserve.conf
-
-  [general]
-  anon-access = none
-  auth-access = write
-  password-db = passwd
-
-  [sasl]
-  $> grep -v "^#" svnrepos/conf/passwd
-
-  [users]
-  franklin = ltc
-  adams = ltc
-  sherman = ltc
-  jefferson = ltc
-  $> svnserve -d -r /Users/linda/svnrepos
+    $> grep -v "^#" svnrepos/conf/svnserve.conf
+    
+    [general]
+    anon-access = none
+    auth-access = write
+    password-db = passwd
+    
+    [sasl]
+    $> grep -v "^#" svnrepos/conf/passwd
+    
+    [users]
+    franklin = ltc
+    adams = ltc
+    sherman = ltc
+    jefferson = ltc
+    $> svnserve -d -r /Users/linda/svnrepos
 
  b) Fill with first commit
 
-  $> cd ~/tmp/Tutorial
-  $> mkdir initial-svn
-  $> cd initial-svn
-  $> cp ../independence1.tex independence.tex
-  $> svn import --username jefferson -m "first version" ~/tmp/Tutorial/initial-svn file:///Users/linda/svnrepos/tutorial-svn
-  Adding         /Users/linda/tmp/Tutorial/initial-svn/independence.tex
-
-  Committed revision 1.
+    $> cd ~/tmp/Tutorial
+    $> mkdir initial-svn
+    $> cd initial-svn
+    $> cp ../independence1.tex independence.tex
+    $> svn import --username jefferson -m "first version" ~/tmp/Tutorial/initial-svn file:///Users/linda/svnrepos/tutorial-svn
+    Adding         /Users/linda/tmp/Tutorial/initial-svn/independence.tex
+    
+    Committed revision 1.
 
  c) Checkout and create other versions
 
-  $> cd ~/tmp/Tutorial
-  $> svn co --username adams svn://localhost/tutorial-svn
-  Authentication realm: <svn://localhost:3690> 8b541c79-ea44-4304-8055-ab4e1cd7933f
-  Password for 'adams':
-  A    tutorial-svn/independence.tex
-  Checked out revision 1.
-  $> cp ../independence2.tex independence.tex
-  $> svn commit -m "second version" --username adams independence.tex
-  Sending        independence.tex
-  Transmitting file data .
-  Committed revision 2.
-  $> svn up
-  At revision 2.
+      $> cd ~/tmp/Tutorial
+      $> svn co --username adams svn://localhost/tutorial-svn
+      Authentication realm: <svn://localhost:3690> 8b541c79-ea44-4304-8055-ab4e1cd7933f
+      Password for 'adams':
+      A    tutorial-svn/independence.tex
+      Checked out revision 1.
+      $> cp ../independence2.tex independence.tex
+      $> svn commit -m "second version" --username adams independence.tex
+      Sending        independence.tex
+      Transmitting file data .
+      Committed revision 2.
+      $> svn up
+      At revision 2.
 
   ... and repeat for versions 3 through 6.
 
-  $> svn up
-  At revision 6.
-  $> svn log -q
-  ------------------------------------------------------------------------
-  r6 | sherman | 2012-11-13 13:01:00 -0600 (Tue, 13 Nov 2012)
-  ------------------------------------------------------------------------
-  r5 | sherman | 2012-11-13 13:00:35 -0600 (Tue, 13 Nov 2012)
-  ------------------------------------------------------------------------
-  r4 | jefferson | 2012-11-13 12:59:45 -0600 (Tue, 13 Nov 2012)
-  ------------------------------------------------------------------------
-  r3 | franklin | 2012-11-13 12:59:03 -0600 (Tue, 13 Nov 2012)
-  ------------------------------------------------------------------------
-  r2 | adams | 2012-11-13 12:58:04 -0600 (Tue, 13 Nov 2012)
-  ------------------------------------------------------------------------
-  r1 | jefferson | 2012-11-13 12:51:35 -0600 (Tue, 13 Nov 2012)
-  ------------------------------------------------------------------------
+      $> svn up
+      At revision 6.
+      $> svn log -q
+      ------------------------------------------------------------------------
+      r6 | sherman | 2012-11-13 13:01:00 -0600 (Tue, 13 Nov 2012)
+      ------------------------------------------------------------------------
+      r5 | sherman | 2012-11-13 13:00:35 -0600 (Tue, 13 Nov 2012)
+      ------------------------------------------------------------------------
+      r4 | jefferson | 2012-11-13 12:59:45 -0600 (Tue, 13 Nov 2012)
+      ------------------------------------------------------------------------
+      r3 | franklin | 2012-11-13 12:59:03 -0600 (Tue, 13 Nov 2012)
+      ------------------------------------------------------------------------
+      r2 | adams | 2012-11-13 12:58:04 -0600 (Tue, 13 Nov 2012)
+      ------------------------------------------------------------------------
+      r1 | jefferson | 2012-11-13 12:51:35 -0600 (Tue, 13 Nov 2012)
+      ------------------------------------------------------------------------
 
  d) Dump repository into file
 
-  $> cd
-  $> svnadmin dump svnrepos > tutorialsvn
-  * Dumped revision 0.
-  * Dumped revision 1.
-  * Dumped revision 2.
-  * Dumped revision 3.
-  * Dumped revision 4.
-  * Dumped revision 5.
-  * Dumped revision 6.
-  $> gzip -v tutorialsvn
-  tutorialsvn:	 77.7% -- replaced with tutorialsvn.gz
+    $> cd
+    $> svnadmin dump svnrepos > tutorialsvn
+    * Dumped revision 0.
+    * Dumped revision 1.
+    * Dumped revision 2.
+    * Dumped revision 3.
+    * Dumped revision 4.
+    * Dumped revision 5.
+    * Dumped revision 6.
+    $> gzip -v tutorialsvn
+    tutorialsvn:	 77.7% -- replaced with tutorialsvn.gz
 
 2. Replace repository at sf.net (does not work as the non-Classic projects at sf.net don't support this)
 
