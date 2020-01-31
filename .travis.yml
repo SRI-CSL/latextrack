@@ -9,12 +9,13 @@ cache:
   
 script:
 - mvn package -Dmaven.javadoc.skip=true -B -V
-- ls -la all/target
+- ls -la all/target/LTC-*.jar
 
 deploy:
   provider: releases
   api_key: "GITHUB OAUTH TOKEN"
-  file: "FILE TO UPLOAD"
+  file:
+  - all/target/LTC-*.jar
   skip_cleanup: true
   on:
     tags: true
