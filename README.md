@@ -1,46 +1,41 @@
-README for LTC with Maven 3
-===========================
+# README for LTC with Maven 3
 
-Requirements
-------------
+## Requirements
 
-- Java 6 or higher
+- Java 8 or higher
 - git 1.7.2.2 or higher
 - Maven 3
 - modern LaTeX and fonts; including xelatex and htxelatex (for building manual)
 
-
-Developing
-----------
+## Developing
 
 Common Maven goals are:
 
-$> mvn clean
-$> mvn compile
-$> mvn test
+    $> mvn clean
+    $> mvn compile
+    $> mvn test
 
 To create the distributable:
 
-$> mvn clean package
+    $> mvn clean package
 
-To view the contents of a JAR file without expanding it, use Firefox:
-  jar:file:///Users/linda/git/LTC/all/target/LTC-<version>-SNAPSHOT.jar!/
+To view the contents of a JAR file without expanding it, use Firefox location:
+  `jar:file:///Users/linda/git/LTC/all/target/LTC-<version>-SNAPSHOT.jar!/`
 and then browse
 
 To perform tests labeled as
-@Category(IntegrationTests.class)
+`@Category(IntegrationTests.class)`
 run goal "verify" (not "integration-test" to allow post integration test phase be run)
 
 To create the site:
 
-$> mvn verify site
+    $> mvn verify site
 
-
-Deploying the site
-------------------
+## Deploying the site
 
 Before deploying the site, create a shell at sourceforge and delete the current content:
 
+```
 +----
 $> ssh -t lilalinda,latextrack@shell.sf.net create
 
@@ -54,13 +49,15 @@ For path information and login help, type "sf-help".
 
 -bash-3.2$ rm -rf /home/project-web/latextrack/htdocs/*
 +----
+```
 
 When this has finished and you see the prompt, you are ready to regenerate the information and upload it:
 
-$> mvn clean verify site site:deploy
+    $> mvn clean verify site site:deploy
 
 When this has finished, go back to your shell and shut it down.  You may look at the uploaded files if you wish:
 
+```
 +----
 -bash-3.2$ ls -la /home/project-web/latextrack/htdocs/
 [...]
@@ -75,167 +72,167 @@ Connection to shell-24002 closed by remote host.
 Connection to shell-24002 closed.
 Connection to shell.sf.net closed.
 +----
+```
 
-
-Branching Model
----------------
+## Branching Model
 
 We are now following the ideas behind
-  http://nvie.com/posts/a-successful-git-branching-model/
+* http://nvie.com/posts/a-successful-git-branching-model/
+
 and also start using "git-flow" as explained in
-  http://jeffkreeftmeijer.com/2010/why-arent-you-using-git-flow/
+* http://jeffkreeftmeijer.com/2010/why-arent-you-using-git-flow/
 
 We are using the default branch prefixes.  In short, if working on a bigger feature, create a new feature branch from
 your current 'develop' branch:
-  $> git flow feature start <feature name>
+
+    $> git flow feature start <feature name>
 When finishing the bigger feature:
-  $> git flow feature finish <feature name>
+
+    $> git flow feature finish <feature name>
 
 When you’re feature complete, simply start a release branch — again, based on 'develop' — to bump the version number
 and fix the last bugs before releasing:
-  $> git flow release start v1.0
+
+    $> git flow release start v1.0
     [do minor fixes if needed]
-  $> mvn versions:set -DnewVersion=1.0
-  $> mvn versions:commit
-  $> git commit -am "preparing release of v1.0"
+    $> mvn versions:set -DnewVersion=1.0
+    $> mvn versions:commit
+    $> git commit -am "preparing release of v1.0"
     [in sf.net shell before:]
         rm -rf /home/project-web/latextrack/htdocs/*
         rm -rf /home/frs/project/l/la/latextrack/LTC/1.0
         mkdir /home/frs/project/l/la/latextrack/LTC/1.0
         <copy README.txt?>
-  $> mvn clean deploy site site:deploy
-  $> git flow release finish v1.0
+    $> mvn clean deploy site site:deploy
+    $> git flow release finish v1.0
     [supply tag message]
-  $> mvn versions:set -DnewVersion=1.1-SNAPSHOT
-  $> mvn versions:commit
-  $> git commit -am "bumping next release number to v1.1-SNAPSHOT"
+    $> mvn versions:set -DnewVersion=1.1-SNAPSHOT
+    $> mvn versions:commit
+    $> git commit -am "bumping next release number to v1.1-SNAPSHOT"
 
 If cutting a release while in the middle of a (larger) feature branch, merge the feature when stable into 'develop'
 and then continue the release on develop.  When done, switch back to feature.
-  $> git flow feature finish -k FOO
-  Checking out files: 100% (22/22), done.
-  Switched to branch 'develop'
-  ...
-  Summary of actions:
-  - The feature branch 'feature/FOO' was merged into 'develop'
-  - Feature branch 'feature/FOO' is still available
-  - You are now on branch 'develop'
 
-  $> git st
-  # On branch develop
-  nothing to commit, working directory clean
-  $> git flow release start vX.Y.Z
-  Switched to a new branch 'release/vX.Y.Z'
-  ...
-  [make release and possible more changes on develop]
-  $> git flow feature rebase FOO
-  Will try to rebase 'FOO'...
-  First, rewinding head to replay your work on top of it...
-  Fast-forwarded feature/FOO to develop.
+    $> git flow feature finish -k FOO
+    Checking out files: 100% (22/22), done.
+    Switched to branch 'develop'
+    ...
+    Summary of actions:
+    - The feature branch 'feature/FOO' was merged into 'develop'
+    - Feature branch 'feature/FOO' is still available
+    - You are now on branch 'develop'
+    
+    $> git st
+    # On branch develop
+    nothing to commit, working directory clean
+    $> git flow release start vX.Y.Z
+    Switched to a new branch 'release/vX.Y.Z'
+    ...
+    [make release and possible more changes on develop]
+    $> git flow feature rebase FOO
+    Will try to rebase 'FOO'...
+    First, rewinding head to replay your work on top of it...
+    Fast-forwarded feature/FOO to develop.
 etc.
 
-
-Running
--------
+## Running
 
 (after "mvn package")
 
-a) Server
+### Server
 
   After packaging or wherever you downloaded the JAR:
 
-  $> java -jar all/target/LTC-<version>.jar
+    $> java -jar all/target/LTC-<version>.jar
 
   To debug remotely on <PORT> (i.e., when using with Emacs ltc-mode):
 
-  $> java -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=<PORT> -jar all/target/LTC-<version>.jar
+    $> java -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=<PORT> -jar all/target/LTC-<version>.jar
 
-b) Java Editor and Viewer
+### Java Editor and Viewer
 
-  $> java -cp all/target/LTC-<version>.jar com.sri.ltc.editor.LTCEditor -h
-  This editor mimics all functionality of an editor plug-in except it doesn't use XML-RPC to communicate with the
-  LTC base system.  Instead, it simply calls the Java methods in the JVM.
+    $> java -cp all/target/LTC-<version>.jar com.sri.ltc.editor.LTCEditor -h
+    This editor mimics all functionality of an editor plug-in except it doesn't use XML-RPC to communicate with the
+    LTC base system.  Instead, it simply calls the Java methods in the JVM.
+    
+    $> java -cp all/target/LTC-<version>.jar com.sri.ltc.editor.LTCFileViewer -h
+    The file viewer utility by-passes all git specific history and instead allows for a list of files to be
+    compared and changes accumulated.  The text is not editable.
 
-  $> java -cp all/target/LTC-<version>.jar com.sri.ltc.editor.LTCFileViewer -h
-  The file viewer utility by-passes all git specific history and instead allows for a list of files to be
-  compared and changes accumulated.  The text is not editable.
-
-c) Utilities
+### Utilities
 
  To perform lexical analysis of a .tex file, use either one:
 
-  $> java -cp all/target/LTC-<version>.jar com.sri.ltc.latexdiff.Lexer <FILE>
-  or
-  $> cat <FILE> | java -cp all/target/LTC-<version>.jar com.sri.ltc.latexdiff.Lexer
+    $> java -cp all/target/LTC-<version>.jar com.sri.ltc.latexdiff.Lexer <FILE>
+or
+  
+    $> cat <FILE> | java -cp all/target/LTC-<version>.jar com.sri.ltc.latexdiff.Lexer
 
  To compare 2 versions of .tex files, use this utility.  Note that you can trigger XML output using "-x":
 
-  $> java -cp all/target/LTC-<version>.jar com.sri.ltc.latexdiff.LatexDiff -h
+    $> java -cp all/target/LTC-<version>.jar com.sri.ltc.latexdiff.LatexDiff -h
 
  To test the XML-RPC server, use this tool.  You should have the LTC server running:
 
-  $> java -cp all/target/LTC-<version>.jar com.sri.ltc.server.HelloLTC -h
+    $> java -cp all/target/LTC-<version>.jar com.sri.ltc.server.HelloLTC -h
 
-
-Testing
--------
+## Testing
 
 For unit tests:
 
-  $> mvn clean test
+    $> mvn clean test
 
 For integration tests (labeled with IntegrationTests category):
 
-  $> mvn verify
+    $> mvn verify
 
 To skip all tests:
 
-  $> mvn verify -Dmaven.test.skip=true
+    $> mvn verify -Dmaven.test.skip=true
 
 To run an integration test but skip all unit tests, go into the module directory where the test class of interest is
 located and do:
 
-  $> mvn -DskipSurefireTests=true -Dit.test=<TEST_CLASS_NAME> verify
+    $> mvn -DskipSurefireTests=true -Dit.test=<TEST_CLASS_NAME> verify
 
 To test with different Java versions (on Mac OS X 10.8), e.g. for Java 6:
 
-  $> /usr/libexec/java_home -v 1.6.0 --exec java -jar LTC.jar
+    $> /usr/libexec/java_home -v 1.6.0 --exec java -jar LTC.jar
 
-
-Git Repositories etc.
----------------------
+## Git Repositories etc.
 
 a) bundling git repositories for download as examples.  See:
   http://stackoverflow.com/questions/2545765/how-can-i-email-someone-a-git-repository
   http://progit.org/2010/03/10/bundles.html
 
-  $> cd independence
-  $> git bundle create ../independence.bundle --all
-  $> cd $Tutorial
-  $> git clone ../LTCmanual/independence.bundle independence
+      $> cd independence
+      $> git bundle create ../independence.bundle --all
+      $> cd $Tutorial
+      $> git clone ../LTCmanual/independence.bundle independence
 
 b) retrieving file versions (using first 6 digits of SHA1):
-  $> git show <SHA1>:<TEX-FILE> [ > <TEX-FILE>.<SHA1> ]
+
+      $> git show <SHA1>:<TEX-FILE> [ > <TEX-FILE>.<SHA1> ]
 
 c) obtaining git tree by hand (for specified file):
   in root of git repository:
-  $> git log --topo-order --graph --date=iso8601 \
-             --format=format:"commit %H%nAuthor: %an <%ae>%nDate: %ad%nParents: %P%n%s%n" \
-             <RELATIVE-PATH-TO-TEX-FILE>
+
+      $> git log --topo-order --graph --date=iso8601 \
+                 --format=format:"commit %H%nAuthor: %an <%ae>%nDate: %ad%nParents: %P%n%s%n" \
+                 <RELATIVE-PATH-TO-TEX-FILE>
 
 d) if extracting 'bundle.git' from a bug report:
-  $> git clone report/bundle.git
-  Cloning into 'bundle.git'...
-  ...
-  warning: remote HEAD refers to nonexistent ref, unable to checkout.
-  $> cd bundle.git/
-  $> git checkout -b master origin/master
-  Branch master set up to track remote branch master from origin.
-  Already on 'master'
 
+      $> git clone report/bundle.git
+      Cloning into 'bundle.git'...
+      ...
+      warning: remote HEAD refers to nonexistent ref, unable to checkout.
+      $> cd bundle.git/
+      $> git checkout -b master origin/master
+      Branch master set up to track remote branch master from origin.
+      Already on 'master'
 
-Building manual by hand
------------------------
+## Building manual by hand
 
 * To build:
 
@@ -281,39 +278,33 @@ $> cd figures; make; cd ..
 $> htxelatex manual "manual,0,png" "" "" "-interaction=nonstopmode --src-specials"
 $> xelatex manual
 
+## Incrementing version number
 
-Incrementing version number
----------------------------
+Using the Maven versions plugin (https://www.mojohaus.org/versions-maven-plugin/):
 
-Using the Maven versions plugin:
-http://weblogs.java.net/blog/johnsmart/archive/2010/08/18/managing-version-numbers-maven-maven-version-plugin
+    $> mvn versions:display-dependency-updates      => to show, which dependencies have updates
+    $> mvn versions:use-latest-versions             => to update all dependencies
+    $> mvn versions:display-plugin-updates          => to show, which plugins have updates (still edit by hand?)
+    
+    $> mvn clean package site                       => to test
+    $> mvn versions:commit                          => to remove backup info
+    or
+    $> mvn versions:revert                          => to use backup info and roll back
+    
+    $> mvn versions:set -DnewVersion=1.0.2-SNAPSHOT => now updating LTC version information
+    $> mvn versions:commit                          => to remove backup info
+    or
+    $> mvn versions:revert                          => to use backup info and roll back
 
- $> mvn versions:display-dependency-updates      => to show, which dependencies have updates
- $> mvn versions:use-latest-versions             => to update all dependencies
- $> mvn versions:display-plugin-updates          => to show, which plugins have updates (still edit by hand?)
-
- $> mvn clean package site                       => to test
- $> mvn versions:commit                          => to remove backup info
-or
- $> mvn versions:revert                          => to use backup info and roll back
-
- $> mvn versions:set -DnewVersion=1.0.2-SNAPSHOT => now updating LTC version information
- $> mvn versions:commit                          => to remove backup info
-or
- $> mvn versions:revert                          => to use backup info and roll back
-
-
-License and Copyright information
----------------------------------
+## License and Copyright information
 
 We use the Maven plugin to update the project license files using:
-  $> mvn license:update-project-license
+
+    $> mvn license:update-project-license
 
 The default Maven lifecycle will manage the copyright statements at the beginning of all source files.
 
-
-Programming Emacs mode
-----------------------
+## Programming Emacs mode
 
 Cursor position: C-x =
 (note that Emacs starts counting from position 1 but Java document starts from position 0!)
@@ -323,9 +314,7 @@ Interactive Emacs Lisp: M-x ielm
     ELISP> (setq buf (get-buffer "independence.tex"))
     #<buffer independence.tex>
 
-
-Creating SVN repository for tutorial
-------------------------------------
+## Creating SVN repository for tutorial
 
 1. Create local repository and dump
 

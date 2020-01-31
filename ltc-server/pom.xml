@@ -7,7 +7,7 @@
     <parent>
         <groupId>com.sri.ltc</groupId>
         <artifactId>LTC</artifactId>
-        <version>1.0.9</version>
+        <version>1.2</version>
     </parent>
 
     <artifactId>ltc-server</artifactId>
@@ -60,28 +60,28 @@
         <dependency>
             <groupId>com.google.guava</groupId>
             <artifactId>guava</artifactId>
-            <version>18.0</version>
+            <version>28.2-jre</version>
         </dependency>
 
         <!-- JGit core library -->
         <dependency>
             <groupId>org.eclipse.jgit</groupId>
             <artifactId>org.eclipse.jgit</artifactId>
-            <version>3.7.1.201504261725-r</version>
+            <version>5.6.0.201912101111-r</version>
         </dependency>
 
         <!-- SVN Kit dependencies: make sure to stay at 1.7.x! -->
         <dependency>
             <groupId>org.tmatesoft.svnkit</groupId>
             <artifactId>svnkit</artifactId>
-            <version>1.7.11</version>
+            <version>1.10.2-snapshot20191129091257</version>
         </dependency>
 
         <!-- natural language parsing for dates -->
         <dependency>
             <groupId>com.joestelmach</groupId>
             <artifactId>natty</artifactId>
-            <version>0.11</version>
+            <version>0.13</version>
         </dependency>
 
         <!-- Jetty web server -->
@@ -229,6 +229,7 @@
 
             <plugin>
                 <artifactId>maven-shade-plugin</artifactId>
+                <version>3.2.1</version>
                 <executions>
                     <execution>
                         <goals>
@@ -280,40 +281,4 @@
             </resource>
         </resources>
     </build>
-
-    <!-- TODO: Mac OS X bundle from maven doesn't currently work: -->
-    <profiles>
-        <profile>
-            <id>ltc-server-osx-bundle</id>
-            <activation>
-                <os><family>mac-SKIP</family></os>
-            </activation>
-            <build>
-                <plugins>
-
-                    <!-- building a Mac OS X installer -->
-                    <plugin>
-                        <groupId>org.codehaus.mojo</groupId>
-                        <artifactId>osxappbundle-maven-plugin</artifactId>
-                        <version>1.0-alpha-2</version>
-                        <configuration>
-                            <mainClass>com.sri.ltc.server.LTC</mainClass>
-                            <bundleName>LTC Server</bundleName>
-                            <jvmVersion>1.6+</jvmVersion>
-                            <!--<dictionaryFile>${basedir}/src/main/app-resources/Info.plist</dictionaryFile>-->
-                        </configuration>
-                        <executions>
-                            <execution>
-                                <phase>package</phase>
-                                <goals>
-                                    <goal>bundle</goal>
-                                </goals>
-                            </execution>
-                        </executions>
-                    </plugin>
-
-                </plugins>
-            </build>
-        </profile>
-    </profiles>
 </project>
