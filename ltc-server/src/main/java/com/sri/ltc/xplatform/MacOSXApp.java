@@ -21,8 +21,8 @@
  */
 package com.sri.ltc.xplatform;
 
-import com.apple.eawt.AboutHandler;
-import com.apple.eawt.AppEvent;
+//import com.apple.eawt.AboutHandler;
+//import com.apple.eawt.AppEvent;
 import com.sri.ltc.CommonUtils;
 
 import javax.swing.*;
@@ -44,39 +44,39 @@ public final class MacOSXApp implements AppInterface {
     public void customize() {
         AppInterface.LOGGER.fine("Customizing Mac OS X application");
 
-        com.apple.eawt.Application application = com.apple.eawt.Application.getApplication();
+//        com.apple.eawt.Application application = com.apple.eawt.Application.getApplication();
 
-        if (image != null) {
-            URL imageURL = Console.class.getResource(image);
-            if (imageURL != null) {
-                ImageIcon icon = new ImageIcon(imageURL);
-                application.setDockIconImage(icon.getImage());
-            }
-        }
+//        if (image != null) {
+//            URL imageURL = Console.class.getResource(image);
+//            if (imageURL != null) {
+//                ImageIcon icon = new ImageIcon(imageURL);
+//                application.setDockIconImage(icon.getImage());
+//            }
+//        }
 
-        application.setAboutHandler(null);
-        application.setAboutHandler(new AboutHandler() {
-            @Override
-            public void handleAbout(AppEvent.AboutEvent aboutEvent) {
-                // display copyright/license information
-                JOptionPane.showMessageDialog(null,
-                        "LTC version "+CommonUtils.getVersion()+"\n"+
-                                "Build number "+CommonUtils.getBuildInfo()+"\n\n"+
-                                CommonUtils.getNotice(),
-                        "About LaTeX Track Changes (LTC)",
-                        JOptionPane.PLAIN_MESSAGE,
-                        CommonUtils.getLogo());
-            }
-        });
-
-        application.setQuitHandler(new com.apple.eawt.QuitHandler() {
-            @Override
-            public void handleQuitRequestWith(com.apple.eawt.AppEvent.QuitEvent quitEvent,
-                                              com.apple.eawt.QuitResponse quitResponse) {
-                // TODO: do anything here?
-                quitResponse.performQuit();
-            }
-        });
+//        application.setAboutHandler(null);
+//        application.setAboutHandler(new AboutHandler() {
+//            @Override
+//            public void handleAbout(AppEvent.AboutEvent aboutEvent) {
+//                // display copyright/license information
+//                JOptionPane.showMessageDialog(null,
+//                        "LTC version "+CommonUtils.getVersion()+"\n"+
+//                                "Build number "+CommonUtils.getBuildInfo()+"\n\n"+
+//                                CommonUtils.getNotice(),
+//                        "About LaTeX Track Changes (LTC)",
+//                        JOptionPane.PLAIN_MESSAGE,
+//                        CommonUtils.getLogo());
+//            }
+//        });
+//
+//        application.setQuitHandler(new com.apple.eawt.QuitHandler() {
+//            @Override
+//            public void handleQuitRequestWith(com.apple.eawt.AppEvent.QuitEvent quitEvent,
+//                                              com.apple.eawt.QuitResponse quitResponse) {
+//                // TODO: do anything here?
+//                quitResponse.performQuit();
+//            }
+//        });
         // TODO: enable preferences and set handler?
     }
 

@@ -29,6 +29,7 @@ import org.junit.rules.TemporaryFolder;
 import org.tmatesoft.svn.core.SVNDepth;
 import org.tmatesoft.svn.core.SVNURL;
 import org.tmatesoft.svn.core.wc.*;
+import org.tmatesoft.svn.core.wc2.SvnOperationFactory;
 
 import java.io.File;
 import java.io.IOException;
@@ -54,7 +55,7 @@ public class TemporarySVNRepository extends TemporaryFolder{
         // check out SVN test repo
         File svnRoot = new File(this.getRoot().toString() + "/" + TEST_REPO);
         System.out.println("Creating an SVN repo at " + svnRoot.getAbsolutePath());
-        SVNClientManager clientManager = SVNClientManager.newInstance(null);
+        SVNClientManager clientManager = SVNClientManager.newInstance((SvnOperationFactory) null);
         SVNUpdateClient updateClient = clientManager.getUpdateClient();
         updateClient.doCheckout(SVNURL.parseURIEncoded(TEST_URL + "/" + TEST_REPO),
                 svnRoot,
