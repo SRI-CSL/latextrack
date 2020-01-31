@@ -27,7 +27,8 @@
 # variables with default values
 
 declare JAR_FILE=
-declare DOWNLOAD_URL=https://github.com/SRI-CSL/latextrack/ # OLD: sf.net /projects/latextrack/files/latest/download
+declare DOWNLOAD_URL=https://github.com/SRI-CSL/latextrack/releases/latest/download
+declare RELEASES_URL=https://api.github.com/repos/SRI-CSL/latextrack/releases/latest
 declare DOWNLOAD_DIR=""
 declare EMACS_DIR=""
 declare ONLINE_TYPE=-1  # how to contact the web site for updates
@@ -203,16 +204,16 @@ if [[ -z "$SKIP_UPDATE" ]]; then
     case ${ONLINE_TYPE} in
 	1)
 	    printf "\nChecking for updates of 'ltc-install.sh' via wget...\n"
-	    wget --quiet -N -P ${SCRIPT_DIR} http://sourceforge.net/projects/latextrack/files/ltc-install.sh/download
-	    if [ $? -gt 0 ]; then
-		usage "Something went wrong during update check with 'wget' -- exiting."; exit 5
+	    wget --quiet -N -P ${SCRIPT_DIR} ${DOWNLOAD_URL}/ltc-install.sh
+	    if [[ $? -gt 0 ]]; then
+		    usage "Something went wrong during update check with 'wget' -- exiting."; exit 5
 	    fi
 	    ;;
 	2) 
 	    printf "\nChecking for updates of 'ltc-install.sh' via curl...\n"
-	    curl --silent -L http://sourceforge.net/projects/latextrack/files/ltc-install.sh/download -o $SCRIPT_DIR/download -z $SCRIPT_DIR/ltc-install.sh
-	    if [ $? -gt 0 ]; then
-		usage "Something went wrong during update check with 'curl' -- exiting."; exit 5
+	    curl --silent -L ${DOWNLOAD_URL}/ltc-install.sh -o ${SCRIPT_DIR}/download -z ${SCRIPT_DIR}/ltc-install.sh
+	    if [[ $? -gt 0 ]]; then
+		    usage "Something went wrong during update check with 'curl' -- exiting."; exit 5
 	    fi
 	    ;;
 	*)
@@ -220,22 +221,22 @@ if [[ -z "$SKIP_UPDATE" ]]; then
 	    ;;
     esac
     # test how new online version is:
-    if [ $SCRIPT_DIR/download -nt $SCRIPT_DIR/ltc-install.sh ] ; then 
+    if [[ ${SCRIPT_DIR}/download -nt ${SCRIPT_DIR}/ltc-install.sh ]] ; then
 	printf " *** ATTENTION: Newer install script available!\n"
 	while true; do
 	    read -p "                Do you wish to update the install script and start over? " -n 1 yn
 	    echo
-	    case $yn in
+	    case ${yn} in
 		[Yy]*)
 		    # Spawn update script
 		    cat > updateScript.sh << EOF
 #!/bin/bash
 # Overwrite old file with new and restart new script
-if mv $SCRIPT_DIR/download $SCRIPT_DIR/ltc-install.sh; then
+if mv ${SCRIPT_DIR}/download ${SCRIPT_DIR}/ltc-install.sh; then
   echo "done."
-  printf " *** Restarting with: bash %s/ltc-install.sh %s\n" $SCRIPT_DIR "$ARGUMENTS"
+  printf " *** Restarting with: bash %s/ltc-install.sh %s\n" ${SCRIPT_DIR} "${ARGUMENTS}"
   rm \$0
-  exec bash $SCRIPT_DIR/ltc-install.sh $ARGUMENTS
+  exec bash ${SCRIPT_DIR}/ltc-install.sh $ARGUMENTS
 else
   echo "Failed to update!"
   exit 1
@@ -254,7 +255,7 @@ EOF
     else
 	printf "You are running the latest version of the install script.\n"
     fi
-    rm -f $SCRIPT_DIR/download
+    rm -f ${SCRIPT_DIR}/download
 else
     printf "\nSkipping check for updates of 'ltc-install.sh'\n"
 fi
@@ -263,17 +264,17 @@ fi
 # copy or download JAR file
 
 # test download directory (if given) or determine method for download
-if [ -n "$DOWNLOAD_DIR" ]; then
+if [[ -n "$DOWNLOAD_DIR" ]]; then
     testdir "$DOWNLOAD_DIR" "Download" "r"
     # find latest LTC-<version>.jar file there: set JAR_FILE
-    findlatest $DOWNLOAD_DIR 
+    findlatest ${DOWNLOAD_DIR}
     FETCH_TYPE=0  # indicates using download directory
 else
-    FETCH_TYPE=$ONLINE_TYPE
-    if [ $FETCH_TYPE -lt 0 ]; then
+    FETCH_TYPE=${ONLINE_TYPE}
+    if [[ ${FETCH_TYPE} -lt 0 ]]; then
 	printf " *** ERROR: Cannot find executable of 'wget' or 'curl' to download JAR file\n"
         printf "            Please download manually from\n"
-	printf "     %s\n"  $DOWNLOAD_URL
+	printf "     %s\n"  ${DOWNLOAD_URL}
         printf "            and then use\n"
 	printf "     %s -d <DOWNLOAD_DIR>\n\n" $0
 	exit 2
@@ -281,30 +282,29 @@ else
 fi
 
 echo
-case $FETCH_TYPE in
-    0)
+case ${FETCH_TYPE} in
+0)
 	cp -pv "$DOWNLOAD_DIR/$JAR_FILE" "$JAVA_DIR"
 	;;
-    1)
+1)
 	printf "Downloading LTC-<version>.jar via wget:\n\n"
-	wget --trust-server-names -N -P $JAVA_DIR $DOWNLOAD_URL
-	if [ $? -gt 0 ]; then
+	curl -s ${RELEASES_URL} | grep "browser_download_url.*LTC.*jar" | cut -d : -f 2,3 | tr -d \" | xargs wget -N -P ${JAVA_DIR}
+	if [[ $? -gt 0 ]]; then
 	    usage "Something went wrong during downloading with 'wget' -- exiting."; exit 5
 	fi
-	findlatest $JAVA_DIR
+	findlatest ${JAVA_DIR}
 	;;
-    2) 
+2)  # use cURL: must switch to target directory
 	printf "Downloading LTC-<version>.jar via curl:\n\n"
-	JAR_FILE=`curl -LIs $DOWNLOAD_URL | grep -ie "^Content-Disposition: attachment; filename=" | cut -d\" -f 2`
-	if [ -z "$JAR_FILE" ]; then
-	    usage "Couldn't obtain latest JAR_FILE name with 'curl' -- exiting."; exit 6
-	fi
-	curl -L $DOWNLOAD_URL -o $JAVA_DIR/$JAR_FILE
-	if [ $? -gt 0 ]; then
+    CWD=$PWD
+    cd ${JAVA_DIR}
+    curl -s ${RELEASES_URL} | grep "browser_download_url.*LTC.*jar" | cut -d : -f 2,3 | tr -d \" | xargs curl -fLO
+	if [[ $? -gt 0 ]]; then
 	    usage "Something went wrong during downloading with 'curl' -- exiting."; exit 5
 	fi
+    cd ${CWD}
 	;;
-    *)
+*)
 	printf "Unknown FETCH_TYPE -- exiting."; exit 7
 	;;
 esac
@@ -312,22 +312,22 @@ esac
 ################################################################################
 # (optionally) extract Emacs Lisp files
 
-if [ -n "$EMACS_DIR" ]; then
+if [[ -n "$EMACS_DIR" ]]; then
     echo "Inflating Emacs Lisp files in ${EMACS_DIR}:"
     unzip -o "$JAVA_DIR/$JAR_FILE" '*.el*' -d "$EMACS_DIR"
-    if [ $? -gt 0 ]; then
+    if [[ $? -gt 0 ]]; then
 	usage "Something went wrong when extracting Emacs Lisp files -- exiting."; exit 3
     fi
     [[ "$EMACS_DIR" =~ ^"$HOME"(/|$) ]] && EMACS_DIR="~${EMACS_DIR#$HOME}"
     printf "\nIf Emacs is running, you should now reload the new emacs file with the command:\n\n"
-    printf "  \e[34mM-x load-file <RET> %s/ltc-mode.elc\e[0m\n\n" $EMACS_DIR
+    printf "  \e[34mM-x load-file <RET> %s/ltc-mode.elc\e[0m\n\n" ${EMACS_DIR}
 fi
 
 ################################################################################
 # removing and creating new softlink
 
-rm -f $JAVA_DIR/LTC.jar
-ln -v -s $JAR_FILE $JAVA_DIR/LTC.jar
+rm -f ${JAVA_DIR}/LTC.jar
+ln -v -s ${JAR_FILE} ${JAVA_DIR}/LTC.jar
 
 ################################################################################
 # message
@@ -335,5 +335,5 @@ ln -v -s $JAR_FILE $JAVA_DIR/LTC.jar
 [[ "$JAVA_DIR" =~ ^"$HOME"(/|$) ]] && JAVA_DIR="~${JAVA_DIR#$HOME}"
 echo "Done with installing LTC in ${JAVA_DIR}"
 printf "To start LTC server with default options, use the following command:\n\n"
-printf "  \e[31mjava -jar %s/LTC.jar\e[0m\n\n" $JAVA_DIR
+printf "  \e[31mjava -jar %s/LTC.jar\e[0m\n\n" ${JAVA_DIR}
 
