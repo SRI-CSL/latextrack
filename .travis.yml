@@ -1,14 +1,11 @@
 language: java
 jdk:
 - openjdk8
-cache:
-  directories:
-  - $HOME/.m2
 script:
 - mvn package -Dmaven.test.skip=true -Dmaven.javadoc.skip=true -B -V
 deploy:
   provider: releases
-  cleanup: false
+  skip_cleanup: true
   api_key:
     secure: U13dijA85cr5JRad+Axi7tMEIYJUikiIV7QDfdNaa2ahzCDCjqmylDAyyp7tGV5WhGYe4kR27HGBOvG381Vys2p1rHSB+s0futtis/2ErGwHjtqqgTpp1TXXoN51tWo5PjCJKq5aVfQgi4YSqVpna8IkKtV3wsslbwHURe9FbjkYfZeuwt+9izbHnHmiGfLP1KfgdfflZVLsCqpmMKt2JV8fWS0Ml0XnBANU/4GJKQ3ieCqmuGqnOPz3AhcfZeWWUM6TDw2ONWgDO+FZp+lq5LsTibJElyAd/9xRPPh1x0aQV/GY71G7RmgbzoqPQGt0SDSoCKwhuVV5UFpqXGnN6RzTCTfK2Rvp+9nu5IZ0qLEwRo0CdHREt11s7493gar9gYnpqpRujHnVo8CsHipuEcX4t20PYfWg+FMMZZPbCygSQO67L3T8yVdjFC1byUDh21KhtbpuUkj8hcpN04lEKkirZNunoCUGJtl5GxKOMDfNImylbczm/j2mZCBtsVTcT2gKolDMk+ys7RCBVyGlSk0miwu5UjY4ksdwpiQM5Yul8HvnAIgnFx57QZgTFs52zPUc+iyuVApoe2Lx/ha4CflT0zJnM/skNJ1QqFN3iTXUQoL8Z69Ye7cNhNj4vb8araiXIgslClBLgomfv/7hseTD62PCcTcFxNKct28WS8w=
   file_glob: true
