@@ -1,5 +1,7 @@
 # README for LTC with Maven 3
 
+[![Build Status](https://travis-ci.com/SRI-CSL/latextrack.svg?branch=master)](https://travis-ci.com/SRI-CSL/latextrack)
+
 ## Requirements
 
 - Java 8 or higher
