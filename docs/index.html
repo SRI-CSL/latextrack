@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>LaTeX Track Changes Documentation</title>
+    <link rel="shortcut icon" href="resources/favicon.ico" />
+</head>
+<body>
+
+<h1>LaTeX Track Changes</h1>
+
+
+The LaTeX Track Changes (LTC) system allows collaborators on a LaTeX writing project to view changes in .tex files.
+Author changes are presented in color in an Emacs buffer or in a stand-alone Java application.  The history of changes
+is stored by managing the writing project in the git or svn version control system, which also facilitates
+collaboration by enabling concurrent and distributed document updating.
+
+In contrast to Microsoft Word, for example, changes do not need to be manually accepted or rejected. Instead, the
+full history of document changes is always available, but the author can use LTC to filter how recent a set of
+changes are displayed at a given moment, such as showing changes made since the author last worked on the document.
+
+Our current version provides a stand-alone Java application to view changes and edit text, as well as an Emacs minor
+mode. Plugins for LTC to support other popular LaTeX editors such as TeXShop are planned or could be implemented by
+the community using our open API.
+
+<h2>Acknowledgements</h2>
+
+The LaTeX Track Changes project was conceived by Peter Karp. Linda Briesemeister led the implementation.  Grit Denker
+and Skip Breidbach also contributed to its development.
+
+</body>
+</html>
