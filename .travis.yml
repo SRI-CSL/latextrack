@@ -5,6 +5,7 @@ jdk:
 
 script:
 - mvn package -Dmaven.javadoc.skip=true -B -V
+- ls -la all/target
 
 deploy:
   provider: releases
