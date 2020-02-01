@@ -125,13 +125,13 @@ makedir_absolute () # if DIR ($1) does not exist, ask whether to create dir or a
 findlatest () # find the latest LTC-<version>.jar in given DIR ($1) and set JAR_FILE
 {
     if [[ ! -d "$1" ]]; then
-	usage "$1 is not a directory (findlatest)"; exit 1
+	    usage "$1 is not a directory (findlatest)"; exit 1
     fi
     LTC_CANDIDATES=`ls -t $1/LTC-*.jar`
     LTC_ARR=(${LTC_CANDIDATES})
     JAR_FILE=`echo ${LTC_ARR[0]} | sed "s/.*\(LTC-.*\.jar\)/\1/"`
     if [[ -z "$JAR_FILE" ]]; then
-	usage "Cannot find matching LTC-<version>.jar file."; exit 1
+	    usage "Cannot find matching LTC-<version>.jar file."; exit 1
     fi
 }
 
@@ -303,6 +303,7 @@ case ${FETCH_TYPE} in
 	    usage "Something went wrong during downloading with 'curl' -- exiting."; exit 5
 	fi
     cd ${CWD}
+    findlatest ${JAVA_DIR}
 	;;
 *)
 	printf "Unknown FETCH_TYPE -- exiting."; exit 7
@@ -316,7 +317,7 @@ if [[ -n "$EMACS_DIR" ]]; then
     echo "Inflating Emacs Lisp files in ${EMACS_DIR}:"
     unzip -o "$JAVA_DIR/$JAR_FILE" '*.el*' -d "$EMACS_DIR"
     if [[ $? -gt 0 ]]; then
-	usage "Something went wrong when extracting Emacs Lisp files -- exiting."; exit 3
+	    usage "Something went wrong when extracting Emacs Lisp files -- exiting."; exit 3
     fi
     [[ "$EMACS_DIR" =~ ^"$HOME"(/|$) ]] && EMACS_DIR="~${EMACS_DIR#$HOME}"
     printf "\nIf Emacs is running, you should now reload the new emacs file with the command:\n\n"
