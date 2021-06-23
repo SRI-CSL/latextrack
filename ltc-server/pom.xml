@@ -18,7 +18,7 @@
     </description>
 
     <properties>
-        <jettyVersion>9.3.27.v20190418</jettyVersion>
+        <jettyVersion>9.4.41.v20210516</jettyVersion>
         <slf4jVersion>1.7.12</slf4jVersion>
     </properties>
 
